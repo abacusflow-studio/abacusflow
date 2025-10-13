@@ -1,0 +1,25 @@
+{
+  "name": "@abacusflow/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AbacusFlow Desktop App",
+  "author": "AbacusFlow",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "lint": "eslint .",
+    "pack": "electron-builder"
+  },
+  "build": {
+    "appId": "org.abacusflow.desktop",
+    "productName": "AbacusFlow Desktop"
+  },
+  "dependencies": {
+    "@abacusflow/core": "*"
+  },
+  "devDependencies": {
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.0"
+  }
+}

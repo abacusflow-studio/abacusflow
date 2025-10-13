@@ -1,0 +1,9 @@
+{
+  "name": "@abacusflow/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "files": [
+    "eslint-preset.js"
+  ]
+}
