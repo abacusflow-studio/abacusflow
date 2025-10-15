@@ -1,25 +1,15 @@
 {
-  "name": "@abacusflow/desktop",
-  "version": "1.0.0",
-  "private": true,
-  "description": "AbacusFlow Desktop App",
-  "author": "AbacusFlow",
-  "main": "src/main.js",
+  "name": "abacusflow-desktop",
+  "version": "0.1.0",
+  "description": "",
+  "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "lint": "eslint .",
-    "pack": "electron-builder"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "build": {
-    "appId": "org.abacusflow.desktop",
-    "productName": "AbacusFlow Desktop"
-  },
-  "dependencies": {
-    "@abacusflow/core": "*"
-  },
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "electron": "^30.5.1",
-    "electron-builder": "^24.13.3",
-    "eslint": "^8.57.0"
+    "electron": "^38.2.2"
   }
 }
