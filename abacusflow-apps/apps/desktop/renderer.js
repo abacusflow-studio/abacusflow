@@ -1,9 +1,8 @@
-const information = document.getElementById('info')
-information.innerText = `本应用正在使用 Chrome (v${versions.chrome()}), Node.js (v${versions.node()}), 和 Electron (v${versions.electron()})`
+const { getGreetingMessage } = require('@abacusflow/core');
 
-const func = async () => {
-  const response = await window.versions.ping()
-  console.log(response) // 打印 'pong'
-}
-
-func()
+window.addEventListener('DOMContentLoaded', () => {
+  const messageElement = document.getElementById('shared-message');
+  if (messageElement) {
+    messageElement.innerText = getGreetingMessage();
+  }
+});
