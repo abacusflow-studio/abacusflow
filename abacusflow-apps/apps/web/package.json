@@ -3,17 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
+    "build-turbopack": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@abacusflow/core": "*",
+    "@abacusflow/ui": "*",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.5",
-    "@abacusflow/core": "*",
-    "@abacusflow/ui": "*"
+    "react-native-web": "0.21.1",
+    "next": "15.5.5"
   },
   "devDependencies": {
     "typescript": "^5",

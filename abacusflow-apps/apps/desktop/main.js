@@ -11,7 +11,8 @@ const createWindow = () => {
     },
   });
 
-  win.loadFile("index.html");
+  // win.loadFile("index.html");
+  win.loadFile(path.join(__dirname, "../web/out/index.html"));
 };
 
 app.whenReady().then(() => {

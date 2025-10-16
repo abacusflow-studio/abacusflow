@@ -10,7 +10,6 @@
     "@abacusflow/config": "*"
   },
   "dependencies": {
-    "@abacusflow/utils": "*",
-    "react": "^18.2.0"
+    "@abacusflow/utils": "*"
   }
 }

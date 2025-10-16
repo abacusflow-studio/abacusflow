@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, Alert } from 'react-native';
+"use client";
+
 import { getGreetingMessage } from '@abacusflow/core';
+import { Alert, Text, View } from 'react-native';
 import { Button } from './Button';
 
 export const Greeting = () => {
@@ -13,7 +14,7 @@ export const Greeting = () => {
   return (
     <View style={{ padding: 16, backgroundColor: '#f0f0f0', borderRadius: 8 }}>
       <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>{message}</Text>
-      <Button onClick={handlePress} text="Click Me (Shared Button)" />
+      <Button onClick={handlePress} label="Click Me (Shared Button)" />
     </View>
   );
 };
