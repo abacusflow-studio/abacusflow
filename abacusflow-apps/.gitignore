@@ -69,7 +69,11 @@ build/
 
 # IDEs
 .idea/
-.vscode/
+# 忽略 VS Code 用户个性设置，但保留项目级配置
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
 *.suo
 *.ntvs*
 *.njsproj
