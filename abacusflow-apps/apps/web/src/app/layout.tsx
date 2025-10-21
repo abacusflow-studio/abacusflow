@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "小算盘-AbacusFlow",
-  description: "AbacusFlow 是一款面向零售的智能进销存系统，支持采购管理、库存监控、销售分析，助力企业高效运转。",
+  description:
+    "AbacusFlow 是一款面向零售的智能进销存系统，支持采购管理、库存监控、销售分析，助力企业高效运转。",
 };
 
 export default function RootLayout({
