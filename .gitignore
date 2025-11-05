@@ -38,10 +38,11 @@ bin/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
+### VS Code ###1220
+
 # 忽略 VS Code 用户个性设置，但保留项目级配置
 .vscode/*
-!.vscode/launch.json
+!.vscode/launch.js
 !.vscode/tasks.json
 !.vscode/extensions.json
 
