@@ -55,6 +55,7 @@ data class InventoryUnitForExportTO(
     val purchaseOrderNo: UUID,
     val saleOrderNos: List<UUID>,
     val depotName: String?,
+    val supplierName: String,
     val initialQuantity: Long,
     val quantity: Long,
     val remainingQuantity: Long,

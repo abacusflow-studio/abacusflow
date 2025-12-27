@@ -8,6 +8,7 @@ import org.abacusflow.generated.jooq.Tables.PRODUCT
 import org.abacusflow.generated.jooq.Tables.PRODUCT_CATEGORY
 import org.abacusflow.generated.jooq.Tables.PURCHASE_ORDER
 import org.abacusflow.generated.jooq.Tables.SALE_ORDER
+import org.abacusflow.generated.jooq.Tables.SUPPLIER
 import org.abacusflow.generated.jooq.enums.ProductTypeDbEnum
 import org.abacusflow.inventory.InventoryUnit
 import org.abacusflow.usecase.inventory.BasicInventoryUnitTO
@@ -230,12 +231,15 @@ class InventoryUnitQueryServiceImpl(
                     PRODUCT.SPECIFICATION,
                     PURCHASE_ORDER.NO,
                     DSL.arrayAgg(SALE_ORDER.NO).`as`("sale_order_nos"),
+                    SUPPLIER.NAME
                 )
                 .from(INVENTORY_UNIT)
                 .leftJoin(INVENTORY).on(INVENTORY.ID.eq(INVENTORY_UNIT.INVENTORY_ID)) // 关联 INVENTORY 表
                 .leftJoin(PRODUCT).on(PRODUCT.ID.eq(INVENTORY.PRODUCT_ID)) // 关联 Product 表
                 .leftJoin(PURCHASE_ORDER)
                 .on(PURCHASE_ORDER.ID.eq(INVENTORY_UNIT.PURCHASE_ORDER_ID)) // 关联 PurchaseOrder 表
+                .leftJoin(SUPPLIER)
+                .on(SUPPLIER.ID.eq(PURCHASE_ORDER.SUPPLIER_ID)) // 关联 Supplier 表
                 .leftJoin(SALE_ORDER).on(
                     DSL.condition("{0} = ANY({1})", SALE_ORDER.ID, INVENTORY_UNIT.SALE_ORDER_IDS),
                 )
@@ -259,6 +263,7 @@ class InventoryUnitQueryServiceImpl(
                     PRODUCT.SPECIFICATION,
                     PURCHASE_ORDER.NO,
                     INVENTORY_UNIT.CREATED_AT,
+                    SUPPLIER.NAME
                 )
                 .orderBy(INVENTORY_UNIT.CREATED_AT.desc())
                 .fetch()
@@ -412,9 +417,11 @@ class InventoryUnitQueryServiceImpl(
         return InventoryUnitForExportTO(
             title = title,
             type = unitType.name, // 通常是枚举/字符串，如 "INSTANCE" 或 "BATCH"
+            status = this[INVENTORY_UNIT.STATUS].name,
             purchaseOrderNo = this[PURCHASE_ORDER.NO]!!,
             saleOrderNos = saleOrderNos,
             depotName = this[DEPOT.NAME],
+            supplierName = this[SUPPLIER.NAME]!!,
             initialQuantity = this[INVENTORY_UNIT.INITIAL_QUANTITY] ?: 0L,
             quantity = quantity,
             remainingQuantity = quantity - frozenQuantity,
@@ -422,7 +429,6 @@ class InventoryUnitQueryServiceImpl(
             receivedAt = this[INVENTORY_UNIT.RECEIVED_AT]?.toInstant() ?: Instant.EPOCH,
             batchCode = this[INVENTORY_UNIT.BATCH_CODE],
             serialNumber = this[INVENTORY_UNIT.SERIAL_NUMBER],
-            status = this[INVENTORY_UNIT.STATUS].name,
         )
     }
 

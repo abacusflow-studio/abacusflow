@@ -48,7 +48,7 @@ class InventoryReportServiceImpl(
         val headers =
             listOf(
                 "库存名称", "类型", "状态", "当前数量", "可用数量", "单价(元)",
-                "收货时间", "序列号", "批次号", "存储点",
+                "收货时间", "供应商", "序列号", "批次号", "存储点",
             )
 
         // 表头样式
@@ -84,9 +84,10 @@ class InventoryReportServiceImpl(
             row.createCell(4).setCellValue(unit.remainingQuantity.toDouble())
             row.createCell(5).setCellValue(unit.unitPrice.toDouble())
             row.createCell(6).setCellValue(formatter.format(unit.receivedAt))
-            row.createCell(7).setCellValue(unit.serialNumber ?: "-")
-            row.createCell(8).setCellValue(unit.batchCode?.toString() ?: "-")
-            row.createCell(9).setCellValue(unit.depotName ?: "-")
+            row.createCell(7).setCellValue(unit.supplierName)
+            row.createCell(8).setCellValue(unit.serialNumber ?: "-")
+            row.createCell(9).setCellValue(unit.batchCode?.toString() ?: "-")
+            row.createCell(10).setCellValue(unit.depotName ?: "-")
         }
 
         // 自动列宽
@@ -119,15 +120,15 @@ class InventoryReportServiceImpl(
         document.add(title)
 
         val table =
-            PdfPTable(10).apply {
+            PdfPTable(11).apply {
                 widthPercentage = 100f
-                setWidths(floatArrayOf(5f, 1.5f, 1.0f, 1.0f, 1.0f, 1.5f, 2.5f, 3f, 2.5f, 2.5f))
+                setWidths(floatArrayOf(5f, 1.5f, 1.0f, 1.0f, 1.0f, 1.5f, 2.5f, 2.5f, 3f, 2.5f, 2.5f))
             }
 
         val headers =
             listOf(
                 "库存名称", "类型", "状态", "当前数量", "可用数量", "单价(元)",
-                "收货时间", "序列号", "批次号", "存储点",
+                "收货时间", "供应商", "序列号", "批次号", "存储点",
             )
 
         // 检查表头与表格列数是否匹配
@@ -149,6 +150,7 @@ class InventoryReportServiceImpl(
             table.addCell(Phrase(unit.remainingQuantity.toString(), font))
             table.addCell(Phrase(unit.unitPrice.toPlainString(), font))
             table.addCell(Phrase(formatter.format(unit.receivedAt), font))
+            table.addCell(Phrase(unit.supplierName, font))
             table.addCell(Phrase(unit.serialNumber ?: "-", font))
             table.addCell(Phrase(unit.batchCode?.toString() ?: "-", font))
             table.addCell(Phrase(unit.depotName ?: "-", font))
