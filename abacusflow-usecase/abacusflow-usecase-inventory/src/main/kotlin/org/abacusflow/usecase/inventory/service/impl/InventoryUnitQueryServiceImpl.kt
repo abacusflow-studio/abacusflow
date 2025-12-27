@@ -231,7 +231,7 @@ class InventoryUnitQueryServiceImpl(
                     PRODUCT.SPECIFICATION,
                     PURCHASE_ORDER.NO,
                     DSL.arrayAgg(SALE_ORDER.NO).`as`("sale_order_nos"),
-                    SUPPLIER.NAME
+                    SUPPLIER.NAME,
                 )
                 .from(INVENTORY_UNIT)
                 .leftJoin(INVENTORY).on(INVENTORY.ID.eq(INVENTORY_UNIT.INVENTORY_ID)) // 关联 INVENTORY 表
@@ -263,7 +263,7 @@ class InventoryUnitQueryServiceImpl(
                     PRODUCT.SPECIFICATION,
                     PURCHASE_ORDER.NO,
                     INVENTORY_UNIT.CREATED_AT,
-                    SUPPLIER.NAME
+                    SUPPLIER.NAME,
                 )
                 .orderBy(INVENTORY_UNIT.CREATED_AT.desc())
                 .fetch()
