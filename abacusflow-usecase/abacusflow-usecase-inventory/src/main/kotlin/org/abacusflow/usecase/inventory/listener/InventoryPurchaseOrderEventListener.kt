@@ -47,12 +47,12 @@ class InventoryPurchaseOrderEventListener(
                     ?: throw NoSuchElementException("Product with id $productId not found")
 
             // 验证同一产品的单价一致
-            check(items.map { it.unitPrice }.distinct().size == 1) {
+            check(batchItems.map { it.unitPrice }.distinct().size == 1) {
                 "Product $productId has inconsistent unit prices"
             }
 
             // 验证同一产品的批次代码一致
-            check(items.map { it.batchCode }.distinct().size == 1) {
+            check(batchItems.map { it.batchCode }.distinct().size == 1) {
                 "Product $productId has inconsistent batch codes"
             }
 
@@ -60,7 +60,7 @@ class InventoryPurchaseOrderEventListener(
             val totalQuantity = batchItems.sumOf { it.quantity.toLong() }
 
             val batchCode =
-                checkNotNull(items.first().batchCode) {
+                checkNotNull(batchItems.first().batchCode) {
                     "Product $productId missing batch code"
                 }
 
