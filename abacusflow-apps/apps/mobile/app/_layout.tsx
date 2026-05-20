@@ -8,6 +8,10 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { initMobileAuth } from "@/lib/auth-provider";
+
+// Initialize auth on app start
+initMobileAuth();
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -36,12 +40,16 @@ export default function RootLayout() {
         <Stack.Screen name="order/purchase/add" options={{ title: "新增采购单" }} />
         <Stack.Screen name="order/sale/add" options={{ title: "新增销售单" }} />
         {/* Partner screens */}
+        <Stack.Screen name="partner/customer/index" options={{ title: "客户管理" }} />
         <Stack.Screen name="partner/customer/[id]" options={{ title: "客户详情" }} />
         <Stack.Screen name="partner/customer/add" options={{ title: "新增客户" }} />
         <Stack.Screen name="partner/customer/edit/[id]" options={{ title: "编辑客户" }} />
+        <Stack.Screen name="partner/supplier/index" options={{ title: "供应商管理" }} />
         <Stack.Screen name="partner/supplier/[id]" options={{ title: "供应商详情" }} />
         <Stack.Screen name="partner/supplier/add" options={{ title: "新增供应商" }} />
         <Stack.Screen name="partner/supplier/edit/[id]" options={{ title: "编辑供应商" }} />
+        {/* User screens */}
+        <Stack.Screen name="user/index" options={{ title: "用户管理" }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

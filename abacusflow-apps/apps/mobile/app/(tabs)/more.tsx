@@ -6,43 +6,20 @@ const MENU_SECTIONS = [
   {
     title: "合作伙伴",
     items: [
-      { href: "/(tabs)/more", label: "客户管理", icon: "👤", action: "customer" },
-      { href: "/(tabs)/more", label: "供应商管理", icon: "🏪", action: "supplier" },
+      { label: "客户管理", icon: "👤", route: "/partner/customer" as any },
+      { label: "供应商管理", icon: "🏪", route: "/partner/supplier" as any },
     ],
   },
   {
     title: "仓储管理",
     items: [
-      { href: "/(tabs)/depots", label: "储存点管理", icon: "🏠", action: "depot" },
-    ],
-  },
-  {
-    title: "系统",
-    items: [
-      { href: "/(tabs)/more", label: "用户管理", icon: "⚙️", action: "user" },
+      { label: "储存点管理", icon: "🏠", route: "/(tabs)/depots" as any },
     ],
   },
 ];
 
 export default function MoreScreen() {
   const router = useRouter();
-
-  const handleAction = (action: string) => {
-    switch (action) {
-      case "customer":
-        router.push("/partner/customer");
-        break;
-      case "supplier":
-        router.push("/partner/supplier");
-        break;
-      case "depot":
-        router.push("/(tabs)/depots");
-        break;
-      case "user":
-        router.push("/user");
-        break;
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -53,9 +30,9 @@ export default function MoreScreen() {
             <View style={styles.sectionCard}>
               {section.items.map((item, idx) => (
                 <TouchableOpacity
-                  key={item.action}
+                  key={item.label}
                   style={[styles.menuItem, idx < section.items.length - 1 && styles.menuItemBorder]}
-                  onPress={() => handleAction(item.action)}
+                  onPress={() => router.push(item.route)}
                 >
                   <Text style={styles.menuIcon}>{item.icon}</Text>
                   <Text style={styles.menuLabel}>{item.label}</Text>
