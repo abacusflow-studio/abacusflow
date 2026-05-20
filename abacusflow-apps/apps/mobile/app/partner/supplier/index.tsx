@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { productApi, type BasicProduct } from "@abacusflow/core";
-import { translateProductType, translateProductUnit } from "@abacusflow/utils";
+import { supplierApi, type Supplier } from "@abacusflow/core";
 
-export default function ProductsScreen() {
+export default function SupplierListScreen() {
   const router = useRouter();
-  const [data, setData] = useState<BasicProduct[]>([]);
+  const [data, setData] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState("");
   const [pageIndex, setPageIndex] = useState(1);
@@ -20,7 +19,7 @@ export default function ProductsScreen() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await productApi.listBasicProductsPage({
+      const res = await supplierApi.listSuppliersPage({
         pageIndex,
         pageSize: 20,
         name: searchName || undefined,
@@ -39,20 +38,21 @@ export default function ProductsScreen() {
     loadData();
   };
 
-  const renderItem = ({ item }: { item: BasicProduct }) => (
-    <TouchableOpacity style={styles.card} onPress={() => router.push(`/product/${item.id}` as any)}>
+  const renderItem = ({ item }: { item: Supplier }) => (
+    <TouchableOpacity style={styles.card} onPress={() => router.push(`/partner/supplier/${item.id}` as any)}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.name}</Text>
-        <View style={[styles.badge, { backgroundColor: item.enabled ? "#f6ffed" : "#fff1f0" }]}>
-          <Text style={[styles.badgeText, { color: item.enabled ? "#52c41a" : "#ff4d4f" }]}>
-            {item.enabled ? "启用" : "禁用"}
-          </Text>
-        </View>
+        {item.totalOrders != null && (
+          <Text style={styles.orderCount}>{item.totalOrders} 单</Text>
+        )}
       </View>
-      <Text style={styles.cardDetail}>类型: {translateProductType(item.type)}</Text>
-      <Text style={styles.cardDetail}>单位: {translateProductUnit(item.unit)}</Text>
-      {item.categoryName && <Text style={styles.cardDetail}>类别: {item.categoryName}</Text>}
-      {item.specification && <Text style={styles.cardDetail}>规格: {item.specification}</Text>}
+      {item.contactPerson && <Text style={styles.cardDetail}>联系人: {item.contactPerson}</Text>}
+      {item.phone && <Text style={styles.cardDetail}>电话: {item.phone}</Text>}
+      {item.email && <Text style={styles.cardDetail}>邮箱: {item.email}</Text>}
+      {item.address && <Text style={styles.cardDetail}>地址: {item.address}</Text>}
+      {item.totalAmount != null && (
+        <Text style={styles.cardAmount}>累计: ¥{item.totalAmount.toLocaleString("zh-CN")}</Text>
+      )}
     </TouchableOpacity>
   );
 
@@ -63,11 +63,11 @@ export default function ProductsScreen() {
           style={styles.searchInput}
           value={searchName}
           onChangeText={setSearchName}
-          placeholder="搜索产品名称"
+          placeholder="搜索供应商名称"
           onSubmitEditing={handleSearch}
           returnKeyType="search"
         />
-        <TouchableOpacity style={styles.addBtn} onPress={() => router.push("/product/add" as any)}>
+        <TouchableOpacity style={styles.addBtn} onPress={() => router.push("/partner/supplier/add" as any)}>
           <Text style={styles.addBtnText}>新增</Text>
         </TouchableOpacity>
       </View>
@@ -130,9 +130,9 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  badgeText: { fontSize: 12, fontWeight: "500" },
+  orderCount: { fontSize: 12, color: "#1677ff", backgroundColor: "#e6f4ff", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   cardDetail: { fontSize: 13, color: "#666", marginTop: 2 },
+  cardAmount: { fontSize: 14, fontWeight: "600", color: "#1677ff", marginTop: 8 },
   loadMore: { paddingVertical: 16, alignItems: "center" },
   loadMoreText: { fontSize: 14, color: "#1677ff" },
 });

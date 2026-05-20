@@ -1,24 +1,31 @@
 import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, TextInput } from "react-native";
+import { FlatList, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { depotApi, type BasicDepot } from "@abacusflow/core";
+import { customerApi, type Customer } from "@abacusflow/core";
 
-export default function DepotsScreen() {
+export default function CustomerListScreen() {
   const router = useRouter();
-  const [data, setData] = useState<BasicDepot[]>([]);
+  const [data, setData] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState("");
+  const [pageIndex, setPageIndex] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [pageIndex]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await depotApi.listBasicDepots();
-      setData(res);
+      const res = await customerApi.listCustomersPage({
+        pageIndex,
+        pageSize: 20,
+        name: searchName || undefined,
+      });
+      setData(res.content);
+      setTotal(res.totalElements);
     } catch (err) {
       console.error(err);
     } finally {
@@ -26,20 +33,24 @@ export default function DepotsScreen() {
     }
   };
 
-  const filtered = searchName ? data.filter((d) => d.name.includes(searchName)) : data;
+  const handleSearch = () => {
+    setPageIndex(1);
+    loadData();
+  };
 
-  const renderItem = ({ item }: { item: BasicDepot }) => (
-    <TouchableOpacity style={styles.card} onPress={() => router.push(`/depot/${item.id}` as any)}>
+  const renderItem = ({ item }: { item: Customer }) => (
+    <TouchableOpacity style={styles.card} onPress={() => router.push(`/partner/customer/${item.id}` as any)}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.name}</Text>
-        <View style={[styles.badge, { backgroundColor: item.enabled ? "#f6ffed" : "#fff1f0" }]}>
-          <Text style={[styles.badgeText, { color: item.enabled ? "#52c41a" : "#ff4d4f" }]}>
-            {item.enabled ? "启用" : "禁用"}
-          </Text>
-        </View>
+        {item.totalOrders != null && (
+          <Text style={styles.orderCount}>{item.totalOrders} 单</Text>
+        )}
       </View>
-      {item.location && <Text style={styles.cardDetail}>地址: {item.location}</Text>}
-      {item.capacity != null && <Text style={styles.cardDetail}>容量: {item.capacity}</Text>}
+      {item.phone && <Text style={styles.cardDetail}>电话: {item.phone}</Text>}
+      {item.address && <Text style={styles.cardDetail}>地址: {item.address}</Text>}
+      {item.totalAmount != null && (
+        <Text style={styles.cardAmount}>累计: ¥{item.totalAmount.toLocaleString("zh-CN")}</Text>
+      )}
     </TouchableOpacity>
   );
 
@@ -50,25 +61,34 @@ export default function DepotsScreen() {
           style={styles.searchInput}
           value={searchName}
           onChangeText={setSearchName}
-          placeholder="搜索储存点名称"
+          placeholder="搜索客户名称"
+          onSubmitEditing={handleSearch}
+          returnKeyType="search"
         />
-        <TouchableOpacity style={styles.addBtn} onPress={() => router.push("/depot/add" as any)}>
+        <TouchableOpacity style={styles.addBtn} onPress={() => router.push("/partner/customer/add" as any)}>
           <Text style={styles.addBtnText}>新增</Text>
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {loading && data.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#1677ff" />
         </View>
       ) : (
         <FlatList
-          data={filtered}
+          data={data}
           renderItem={renderItem}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.list}
-          onRefresh={loadData}
+          onRefresh={() => { setPageIndex(1); loadData(); }}
           refreshing={loading}
+          ListFooterComponent={
+            total > pageIndex * 20 ? (
+              <TouchableOpacity style={styles.loadMore} onPress={() => setPageIndex((p) => p + 1)}>
+                <Text style={styles.loadMoreText}>加载更多</Text>
+              </TouchableOpacity>
+            ) : null
+          }
         />
       )}
     </SafeAreaView>
@@ -108,7 +128,9 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  badgeText: { fontSize: 12, fontWeight: "500" },
+  orderCount: { fontSize: 12, color: "#1677ff", backgroundColor: "#e6f4ff", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   cardDetail: { fontSize: 13, color: "#666", marginTop: 2 },
+  cardAmount: { fontSize: 14, fontWeight: "600", color: "#1677ff", marginTop: 8 },
+  loadMore: { paddingVertical: 16, alignItems: "center" },
+  loadMoreText: { fontSize: 14, color: "#1677ff" },
 });

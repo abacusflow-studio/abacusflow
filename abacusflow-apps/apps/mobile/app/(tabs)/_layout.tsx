@@ -38,6 +38,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>💱</Text>,
         }}
       />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: "更多",
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>⋯</Text>,
+        }}
+      />
+      <Tabs.Screen name="depots" options={{ href: null }} />
     </Tabs>
   );
 }

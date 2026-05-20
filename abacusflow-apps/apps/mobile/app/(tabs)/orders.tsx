@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View, ActivityIndicator, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { transactionApi, type PurchaseOrder, type SaleOrder } from "@abacusflow/core";
 import { translateOrderStatus, dateToFormattedString } from "@abacusflow/utils";
 
@@ -14,6 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function OrdersScreen() {
+  const router = useRouter();
   const [data, setData] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,10 @@ export default function OrdersScreen() {
   };
 
   const renderItem = ({ item }: { item: OrderItem }) => (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => router.push((item._type === "purchase" ? `/order/purchase/${item.id}` : `/order/sale/${item.id}`) as any)}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.orderNo}</Text>
         <View style={[styles.badge, { backgroundColor: (STATUS_COLORS[item.status] || "#999") + "20" }]}>
@@ -74,6 +79,14 @@ export default function OrdersScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.actionBar}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => router.push("/order/purchase/add" as any)}>
+          <Text style={styles.actionBtnText}>+ 采购单</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.actionBtn, styles.saleBtn]} onPress={() => router.push("/order/sale/add" as any)}>
+          <Text style={styles.actionBtnText}>+ 销售单</Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={data}
         renderItem={renderItem}
@@ -89,6 +102,16 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  actionBar: { flexDirection: "row", padding: 16, gap: 12, backgroundColor: "#fff" },
+  actionBtn: {
+    flex: 1,
+    backgroundColor: "#1677ff",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saleBtn: { backgroundColor: "#722ed1" },
+  actionBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   list: { padding: 16, gap: 12 },
   card: {
     backgroundColor: "#fff",
