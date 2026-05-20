@@ -1,0 +1,19 @@
+{
+  "name": "@abacusflow/ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "peerDependencies": {
+    "react": "^19.1.0"
+  },
+  "dependencies": {
+    "@abacusflow/utils": "*"
+  },
+  "devDependencies": {
+    "@abacusflow/config": "*",
+    "react": "^19.1.0"
+  }
+}

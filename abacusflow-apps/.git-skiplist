@@ -1,0 +1,5 @@
+git update-index --skip-worktree docker-compose-base.yml
+git update-index --no-skip-worktree docker-compose-base.yml
+
+git update-index --skip-worktree abacusflow-usecase/src/main/resources/application-core.yml
+git update-index --no-skip-worktree abacusflow-usecase/src/main/resources/application-core.yml

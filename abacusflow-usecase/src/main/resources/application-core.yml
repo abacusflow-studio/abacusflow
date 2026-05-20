@@ -1,10 +1,4 @@
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # Auth0 Domain，这是Spring Security获取公钥的地方
-          issuer-uri: https://dev-st5cs3qsjm2174ua.us.auth0.com/
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:abacusflow}
     username: ${POSTGRES_USER:abacusflow}
