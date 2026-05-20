@@ -1,15 +1,42 @@
 {
   "name": "abacusflow-desktop",
   "version": "0.1.0",
-  "description": "",
+  "description": "AbacusFlow Desktop Application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "electron-builder",
+    "dist": "cd ../web && npm run build && cd ../desktop && electron-builder"
   },
-  "author": "",
+  "author": "abacusflow",
   "license": "ISC",
+  "build": {
+    "appId": "com.abacusflow.admin",
+    "productName": "AbacusFlow-Admin",
+    "directories": {
+      "output": "out/${platform}"
+    },
+    "files": [
+      "package.json",
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "../web/out/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "linux": {
+      "target": [{ "target": "AppImage", "arch": ["x64"] }]
+    }
+  },
   "devDependencies": {
-    "electron": "^38.2.2"
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12"
   }
 }

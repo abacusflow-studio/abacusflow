@@ -1,23 +1,56 @@
 <!doctype html>
-<html>
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>小算盘 - AbacusFlow Admin</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+      }
+      .container {
+        text-align: center;
+      }
+      .logo {
+        font-size: 64px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        font-size: 32px;
+        margin: 0 0 8px;
+      }
+      p {
+        opacity: 0.8;
+        margin: 4px 0;
+      }
+      .version {
+        margin-top: 24px;
+        font-size: 12px;
+        opacity: 0.6;
+      }
+    </style>
   </head>
   <body>
-    <h1>Desktop App</h1>
-    <p>
-      Message from shared code: <strong id="shared-message">Loading...</strong>
-    </p>
+    <div class="container">
+      <div class="logo">🧮</div>
+      <h1>小算盘</h1>
+      <p>AbacusFlow Admin</p>
+      <p>请先构建 Web 应用: <code>cd ../web && npm run build</code></p>
+      <div class="version" id="version"></div>
+    </div>
+    <script>
+      if (window.electronAPI) {
+        window.electronAPI.getVersion().then((v) => {
+          document.getElementById("version").textContent = `v${v}`;
+        });
+      }
+    </script>
   </body>
-  <script src="./renderer.js"></script>
 </html>

@@ -1,11 +1,5 @@
-import { Greeting } from "@abacusflow/ui";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return (
-    <main style={{ fontFamily: "sans-serif", padding: "2rem" }}>
-      <h1>Web App</h1>
-      <p>This component is imported from the shared `ui` package:</p>
-      <Greeting />
-    </main>
-  );
+export default function Home() {
+  redirect("/dashboard");
 }

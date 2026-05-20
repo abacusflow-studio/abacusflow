@@ -36,8 +36,6 @@ jobs:
           name: build-artifacts
           path: |
             abacusflow-server/build/
-            abacusflow-app/abacusflow-webapp/build/
-            abacusflow-app/abacusflow-webapp/dist/
             build/
             .gradle/
           retention-days: 1
@@ -72,7 +70,7 @@ jobs:
         uses: ./.github/actions/parse-git-tag
 
       - name: Set package.json version
-        working-directory: ./abacusflow-app/abacusflow-webapp
+        working-directory: ./abacusflow-apps/apps/web
         shell: bash
         run: |
           TAG="${{ github.ref_name }}"
@@ -92,22 +90,22 @@ jobs:
           prerelease: ${{ steps.parse-git-tag.outputs.release_type == 'pre' }}
           allowUpdates: true
           artifacts: |
-            abacusflow-app/abacusflow-webapp/out/linux/*.AppImage
-            abacusflow-app/abacusflow-webapp/out/linux/*.deb
-            abacusflow-app/abacusflow-webapp/out/linux/*.rpm
-            abacusflow-app/abacusflow-webapp/out/linux/*.tar.gz
-            abacusflow-app/abacusflow-webapp/out/linux/*.snap
-            abacusflow-app/abacusflow-webapp/out/linux/*.pacman
-            abacusflow-app/abacusflow-webapp/out/linux/*.freebsd
-            abacusflow-app/abacusflow-webapp/out/win32/*.exe
-            abacusflow-app/abacusflow-webapp/out/win32/*.msi
-            abacusflow-app/abacusflow-webapp/out/win32/*.zip
-            abacusflow-app/abacusflow-webapp/out/win32/*.7z
-            abacusflow-app/abacusflow-webapp/out/darwin/*.dmg
-            abacusflow-app/abacusflow-webapp/out/darwin/*.pkg
-            abacusflow-app/abacusflow-webapp/out/darwin/*.zip
-            abacusflow-app/abacusflow-webapp/out/darwin/*.app
-            abacusflow-app/abacusflow-webapp/out/**/*.blockmap
+            abacusflow-apps/apps/web/out/linux/*.AppImage
+            abacusflow-apps/apps/web/out/linux/*.deb
+            abacusflow-apps/apps/web/out/linux/*.rpm
+            abacusflow-apps/apps/web/out/linux/*.tar.gz
+            abacusflow-apps/apps/web/out/linux/*.snap
+            abacusflow-apps/apps/web/out/linux/*.pacman
+            abacusflow-apps/apps/web/out/linux/*.freebsd
+            abacusflow-apps/apps/web/out/win32/*.exe
+            abacusflow-apps/apps/web/out/win32/*.msi
+            abacusflow-apps/apps/web/out/win32/*.zip
+            abacusflow-apps/apps/web/out/win32/*.7z
+            abacusflow-apps/apps/web/out/darwin/*.dmg
+            abacusflow-apps/apps/web/out/darwin/*.pkg
+            abacusflow-apps/apps/web/out/darwin/*.zip
+            abacusflow-apps/apps/web/out/darwin/*.app
+            abacusflow-apps/apps/web/out/**/*.blockmap
 
   release-docker:
     runs-on: ubuntu-latest
@@ -168,8 +166,8 @@ jobs:
         id: build-and-push-webapp
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
-          context: ./abacusflow-app/abacusflow-webapp
-          file: ./abacusflow-app/abacusflow-webapp/Dockerfile
+          context: ./abacusflow-apps/apps/web
+          file: ./abacusflow-apps/apps/web/Dockerfile
           push: true
           tags: ${{ steps.meta-webapp.outputs.tags }}
           labels: ${{ steps.meta-webapp.outputs.labels }}

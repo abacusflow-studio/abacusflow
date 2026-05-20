@@ -1,2 +1,4 @@
 export * from "./Button";
-export * from "./Greeting";
+export * from "./PageHeader";
+export * from "./DataTable";
+export * from "./StatusTag";

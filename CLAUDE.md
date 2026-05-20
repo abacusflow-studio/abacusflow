@@ -35,11 +35,15 @@ The project follows Clean Architecture with DDD:
 
 - **Server Layer (`abacusflow-server/`)**: Main Spring Boot application startup
 
-### Frontend Applications (`abacusflow-app/`)
-Three client applications with different priorities:
-- **`abacusflow-webapp`**: Vue 3 + TypeScript web application (active development)
-- **`abacusflow-nativeapp`**: Flutter mobile app for iOS/Android (highest priority)
-- **`abacusflow-miniprogram`**: UniApp mini-program (no active development)
+### Frontend Applications (`abacusflow-apps/`)
+Monorepo-based client applications (npm workspaces):
+- **`apps/web`**: Next.js 15 + React 19 web application (Admin SPA)
+- **`apps/mobile`**: Expo (React Native) mobile app for iOS/Android
+- **`apps/desktop`**: Electron desktop application (loads web app static export)
+- **`packages/config`**: App configuration (env vars, version, announcements)
+- **`packages/utils`**: Pure utility functions (formatting, translations, timestamps)
+- **`packages/core`**: API client, auth service, TypeScript types (framework-agnostic)
+- **`packages/ui`**: Shared React UI components (DataTable, Button, PageHeader, StatusTag)
 
 ## Key Commands
 
@@ -61,43 +65,33 @@ Three client applications with different priorities:
 ./gradlew clean build
 ```
 
-### Web Application (abacusflow-webapp)
+### Frontend Applications
 ```bash
-cd abacusflow-app/abacusflow-webapp
-npm install
+# Install all dependencies (from repo root)
+cd abacusflow-apps && npm install
+
+# Web Application (Next.js)
+cd abacusflow-apps/apps/web
 npm run dev                # Development server
 npm run build             # Production build
-npm run type-check        # TypeScript checking
 npm run lint              # ESLint
-npm run generate          # Generate OpenAPI client
-./gradlew :abacusflow-webapp:build  # Gradle build
-./gradlew :abacusflow-webapp:webappBuildImage  # Docker build
-```
 
-### Flutter App (abacusflow-nativeapp)
-```bash
-cd abacusflow-app/abacusflow-nativeapp
-flutter pub get
-flutter pub run build_runner build --delete-conflicting-outputs
-flutter run               # Development
-flutter build apk         # Android build
-flutter build ios         # iOS build
-```
+# Mobile Application (Expo)
+cd abacusflow-apps/apps/mobile
+npx expo start            # Development
+npx expo start --android  # Android
+npx expo start --ios      # iOS
 
-### Mini Program (abacusflow-miniprogram)
-```bash
-cd abacusflow-app/abacusflow-miniprogram
-npm install
-npm run dev:mp-weixin     # WeChat development
-npm run build:mp-weixin   # WeChat build
+# Desktop Application (Electron)
+cd abacusflow-apps/apps/desktop
+npm start                 # Launch Electron app
 ```
 
 ## Development Workflow
 
 ### OpenAPI Client Generation
 - Backend generates OpenAPI spec at `abacusflow-portal/abacusflow-portal-web/src/main/resources/static/openapi.yaml`
-- Web app: `npm run generate` in `abacusflow-webapp/`
-- Flutter app: Clients generated in `build/generated/openapi/`
+- Frontend clients consume the API via shared `@abacusflow/core` package
 
 ### Code Formatting
 - Pre-push Git hook enforces code formatting
@@ -114,14 +108,8 @@ npm run build:mp-weixin   # WeChat build
 # Backend tests
 ./gradlew test
 
-# Web app type checking
-cd abacusflow-app/abacusflow-webapp
-npm run type-check
-npm run lint
-
-# Flutter tests
-cd abacusflow-app/abacusflow-nativeapp
-flutter test
+# Frontend lint
+cd abacusflow-apps && npm run lint
 ```
 
 ## Key Technologies
@@ -133,9 +121,10 @@ flutter test
 - **API**: OpenAPI/Swagger documentation
 
 ### Frontend Stack
-- **Web**: Vue 3, TypeScript, Vite, Ant Design Vue, Pinia
-- **Mobile**: Flutter with Dart
-- **Mini Program**: UniApp (Vue 2 based)
+- **Web**: Next.js 15, React 19, TypeScript
+- **Mobile**: Expo (React Native), TypeScript
+- **Desktop**: Electron
+- **Shared**: Monorepo with npm workspaces, shared packages (`@abacusflow/core`, `@abacusflow/ui`, `@abacusflow/utils`)
 
 ### Development Tools
 - Git hooks for code formatting
@@ -149,4 +138,4 @@ flutter test
 - Each domain has its own core, use case, and potentially portal modules
 - OpenAPI specs drive client code generation across platforms
 - Pre-push hooks ensure code quality and formatting consistency
-- Flutter app has highest development priority among client applications
+- Frontend apps share code via `abacusflow-apps/packages/` monorepo

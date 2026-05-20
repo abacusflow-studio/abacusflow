@@ -1,99 +1,106 @@
-import { Image } from "expo-image";
-import { StyleSheet } from "react-native";
-
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Greeting } from "@abacusflow/ui";
+import { StyleSheet, ScrollView, View, Text, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
+
+const MENU_ITEMS = [
+  { href: "/(tabs)/products", title: "产品管理", icon: "📋", desc: "查看和管理产品信息" },
+  { href: "/(tabs)/inventory", title: "库存管理", icon: "📦", desc: "查看库存状态和预警" },
+  { href: "/(tabs)/orders", title: "订单管理", icon: "💱", desc: "采购单和销售单" },
+  { href: "/(tabs)/depots", title: "储存点", icon: "🏠", desc: "管理仓库和储存点" },
+];
 
 export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Shared Component Demo</ThemedText>
-        <ThemedText>
-          This component is imported from the shared `ui` package:
-        </ThemedText>
-        <Greeting />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction
-              title="Action"
-              icon="cube"
-              onPress={() => alert("Action pressed")}
-            />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.logo}>🧮</Text>
+          <Text style={styles.title}>小算盘</Text>
+          <Text style={styles.subtitle}>AbacusFlow 移动端</Text>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.grid}>
+          {MENU_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href as any} asChild>
+              <TouchableOpacity style={styles.card}>
+                <Text style={styles.cardIcon}>{item.icon}</Text>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardDesc}>{item.desc}</Text>
+              </TouchableOpacity>
+            </Link>
+          ))}
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>abacusflow ©2025</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
   },
-  stepContainer: {
-    gap: 8,
+  scrollContent: {
+    padding: 16,
+  },
+  header: {
+    alignItems: "center",
+    paddingVertical: 32,
+  },
+  logo: {
+    fontSize: 48,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#999",
+    marginTop: 4,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    width: "48%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardIcon: {
+    fontSize: 32,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  cardDesc: {
+    fontSize: 12,
+    color: "#999",
+  },
+  footer: {
+    alignItems: "center",
+    paddingVertical: 24,
+  },
+  footerText: {
+    fontSize: 12,
+    color: "#ccc",
   },
 });

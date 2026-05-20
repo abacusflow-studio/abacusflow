@@ -1,38 +1,41 @@
 import { Tabs } from "expo-router";
 import React from "react";
-
-import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Text } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarActiveTintColor: "#1677ff",
+        headerShown: true,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
+          title: "首页",
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏠</Text>,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="products"
         options={{
-          title: "Explore",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
+          title: "产品",
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📋</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="inventory"
+        options={{
+          title: "库存",
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📦</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: "订单",
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>💱</Text>,
         }}
       />
     </Tabs>

@@ -6,6 +6,9 @@
   "scripts": {
     "lint": "eslint ."
   },
+  "dependencies": {
+    "dayjs": "^1.11.13"
+  },
   "devDependencies": {
     "@abacusflow/config": "*"
   }

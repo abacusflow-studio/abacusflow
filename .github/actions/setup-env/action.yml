@@ -15,5 +15,5 @@ runs:
       with:
         node-version: 22
         cache: npm
-        cache-dependency-path: abacusflow-app/abacusflow-webapp/package-lock.json
+        cache-dependency-path: abacusflow-apps/package-lock.json
 

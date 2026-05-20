@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint ."
   },
-  "devDependencies": {
-    "@abacusflow/config": "*"
+  "dependencies": {
+    "@abacusflow/config": "*",
+    "@abacusflow/utils": "*"
   }
 }

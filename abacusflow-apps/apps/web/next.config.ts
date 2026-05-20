@@ -3,17 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
 
-  // transpile packages that are not transpiled by default
-  transpilePackages: ["react-native", "@abacusflow/ui"],
-
-  // TODO: build-turbopack fail
-  // turbopack: {
-  //   resolveAlias: {
-  //     // Transform all direct `react-native` imports to `react-native-web`
-  //     "react-native": "react-native-web",
-  //   },
-  //   resolveExtensions: [".web.js", ".web.jsx", ".web.ts", ".web.tsx"],
-  // },
+  transpilePackages: ["@abacusflow/core", "@abacusflow/ui", "@abacusflow/utils", "@abacusflow/config"],
 
   webpack: (config) => {
     config.resolve.alias = {

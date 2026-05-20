@@ -1,5 +1,5 @@
 {
-  "name": "abacusflow-moblie",
+  "name": "abacusflow-mobile",
   "main": "expo-router/entry",
   "version": "0.1.0",
   "scripts": {
@@ -11,8 +11,10 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@abacusflow/config": "*",
     "@abacusflow/core": "*",
     "@abacusflow/ui": "*",
+    "@abacusflow/utils": "*",
     "@expo/vector-icons": "^15.0.2",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
