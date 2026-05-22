@@ -25,13 +25,13 @@ location /api/ {
     proxy_pass http://${ABACUSFLOW_SERVER_HOST}:${ABACUSFLOW_SERVER_PORT}/;
 }
 
+# Cube.js API 代理
 location /cubejs-api/ {
     client_max_body_size 0;
     proxy_pass http://${ABACUSFLOW_CUBE_HOST}:${ABACUSFLOW_CUBE_PORT}/cubejs-api/;
 }
 
-
-# 前端静态页面（SPA）
+# 前端静态页面 SPA
 location / {
     try_files $uri $uri/ /index.html;
 }

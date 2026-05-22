@@ -1,0 +1,29 @@
+map "${ENABLE_HTTPS}" $redirect_url {
+    default "";
+    "true" "https://$host$request_uri";
+    "false" "";
+}
+
+map $http_x_forwarded_proto $forwarded_proto {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
+
+server {
+    listen 80;
+    server_name ${ABACUSFLOW_WEBAPP};
+
+    # 基础的反向代理请求头
+    proxy_set_header        Host               $host;
+    proxy_set_header        X-Real-IP          $remote_addr;
+    proxy_set_header        X-Forwarded-For    $proxy_add_x_forwarded_for;
+    proxy_set_header        X-Forwarded-Proto  $forwarded_proto;
+    proxy_set_header        X-Forwarded-Port   $server_port;
+
+    # ENABLE_HTTPS=true 时，HTTP 自动跳转 HTTPS
+    if ($redirect_url) {
+        return 301 $redirect_url;
+    }
+
+    include /etc/nginx/conf.d/common_spa.inc;
+}

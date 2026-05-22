@@ -1,0 +1,26 @@
+server {
+    listen 443 ssl;
+    http2 on;
+
+    server_name ${ABACUSFLOW_WEBAPP};
+
+    # SSL 证书配置
+    ssl_certificate     /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+
+    # SSL 安全配置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # 基础的反向代理请求头
+    proxy_set_header        Host               $host;
+    proxy_set_header        X-Real-IP          $remote_addr;
+    proxy_set_header        X-Forwarded-For    $proxy_add_x_forwarded_for;
+    proxy_set_header        X-Forwarded-Proto  $scheme;
+    proxy_set_header        X-Forwarded-Port   $server_port;
+
+    include /etc/nginx/conf.d/common_spa.inc;
+}
