@@ -8,6 +8,9 @@ export ABACUSFLOW_WEBAPP="${ABACUSFLOW_WEBAPP:-_}"
 echo "ENABLE_HTTPS=${ENABLE_HTTPS}"
 echo "ABACUSFLOW_WEBAPP=${ABACUSFLOW_WEBAPP}"
 
+# 删除 nginx 官方默认配置，避免 server: localhost 抢占请求
+rm -f /etc/nginx/conf.d/default.conf
+
 # 防止上一次启动残留 HTTPS 模板或配置
 rm -f /etc/nginx/templates/default.https.conf.template
 rm -f /etc/nginx/conf.d/default.https.conf

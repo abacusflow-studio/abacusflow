@@ -6,6 +6,10 @@ LABEL org.opencontainers.image.description="这是一个用于构建 AbacusFlow 
 ENV ENABLE_HTTPS=false
 ENV ABACUSFLOW_WEBAPP=_
 
+# 删除 nginx 官方默认站点，避免它抢占请求
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+
 # 复制构建好的前端代码到 Nginx 静态目录
 COPY dist /usr/share/nginx/html
 
