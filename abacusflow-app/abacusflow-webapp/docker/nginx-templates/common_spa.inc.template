@@ -4,31 +4,31 @@ index index.html;
 
 # 静态资源接口转发
 location /static {
-    proxy_pass http://${ABACUSFLOW_SERVER_HOST}:${ABACUSFLOW_SERVER_PORT}/static;
+    proxy_pass ${ABACUSFLOW_SERVER_BASE_URL}/static;
 }
 
 # 登录接口
 location /login {
-    proxy_pass http://${ABACUSFLOW_SERVER_HOST}:${ABACUSFLOW_SERVER_PORT}/login;
+    proxy_pass ${ABACUSFLOW_SERVER_BASE_URL}/login;
     proxy_redirect http://$host/ http://$host:${ABACUSFLOW_WEBAPP_PORT}/;
 }
 
 # 登出接口
 location /logout {
-    proxy_pass http://${ABACUSFLOW_SERVER_HOST}:${ABACUSFLOW_SERVER_PORT}/logout;
+    proxy_pass ${ABACUSFLOW_SERVER_BASE_URL}/logout;
 }
 
 # API 代理（支持大请求体）
 location /api/ {
     client_max_body_size 0;
     rewrite ^/api/(.*)$ /$1 break;
-    proxy_pass http://${ABACUSFLOW_SERVER_HOST}:${ABACUSFLOW_SERVER_PORT}/;
+    proxy_pass ${ABACUSFLOW_SERVER_BASE_URL}/;
 }
 
 # Cube.js API 代理
 location /cubejs-api/ {
     client_max_body_size 0;
-    proxy_pass http://${ABACUSFLOW_CUBE_HOST}:${ABACUSFLOW_CUBE_PORT}/cubejs-api/;
+    proxy_pass ${ABACUSFLOW_CUBE_BASE_URL}/cubejs-api/;
 }
 
 # 前端静态页面 SPA
