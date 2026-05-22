@@ -39,7 +39,7 @@ export default function UsersPage() {
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex gap-2">
           {record.name !== "admin" && (
             <>
               <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
@@ -58,7 +58,7 @@ export default function UsersPage() {
         extra={<Button type="primary" label="新增用户" onClick={() => { setEditItem(null); setShowForm(true); }} />}
       />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>用户名</label>
             <input
@@ -81,7 +81,7 @@ export default function UsersPage() {
         />
       </div>
       <Modal open={showForm} title={editItem ? "编辑用户" : "新增用户"} onClose={() => setShowForm(false)}>
-        <p style={{ color: "#999", textAlign: "center", padding: 32 }}>表单开发中...</p>
+        <p className="text-gray-400 text-center py-8">表单开发中...</p>
       </Modal>
     </div>
   );

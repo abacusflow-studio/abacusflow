@@ -41,7 +41,7 @@ export default function SuppliersPage() {
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex gap-2">
           <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
           <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
         </div>
@@ -56,7 +56,7 @@ export default function SuppliersPage() {
         extra={<Button type="primary" label="新增供应商" onClick={() => { setEditItem(null); setShowForm(true); }} />}
       />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>供应商名称</label>
             <input
@@ -79,7 +79,7 @@ export default function SuppliersPage() {
         />
       </div>
       <Modal open={showForm} title={editItem ? "编辑供应商" : "新增供应商"} onClose={() => setShowForm(false)}>
-        <p style={{ color: "#999", textAlign: "center", padding: 32 }}>表单开发中...</p>
+        <p className="text-gray-400 text-center py-8">表单开发中...</p>
       </Modal>
     </div>
   );

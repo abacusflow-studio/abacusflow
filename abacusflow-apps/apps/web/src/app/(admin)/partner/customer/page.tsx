@@ -44,7 +44,7 @@ export default function CustomersPage() {
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex gap-2">
           <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
           <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
         </div>
@@ -59,7 +59,7 @@ export default function CustomersPage() {
         extra={<Button type="primary" label="新增客户" onClick={() => { setEditItem(null); setShowForm(true); }} />}
       />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>客户名称</label>
             <input
@@ -82,7 +82,7 @@ export default function CustomersPage() {
         />
       </div>
       <Modal open={showForm} title={editItem ? "编辑客户" : "新增客户"} onClose={() => setShowForm(false)}>
-        <p style={{ color: "#999", textAlign: "center", padding: 32 }}>表单开发中...</p>
+        <p className="text-gray-400 text-center py-8">表单开发中...</p>
       </Modal>
     </div>
   );

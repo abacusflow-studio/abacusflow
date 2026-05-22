@@ -83,7 +83,7 @@ export function OrderListPage({
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex gap-2">
           <Button type="link" label="详情" onClick={() => {}} />
           {record.status === "pending" && (
             <>
@@ -106,7 +106,7 @@ export function OrderListPage({
         extra={<Button type="primary" label={`新增${orderType === "purchase" ? "采购" : "销售"}单`} onClick={() => {}} />}
       />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>订单编号</label>
             <input

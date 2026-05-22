@@ -80,36 +80,25 @@ export default function DashboardPage() {
     <div>
       <PageHeader title="仪表盘" />
       {loading ? (
-        <div style={{ textAlign: "center", padding: 60, color: "#999" }}>加载中...</div>
+        <div className="text-center py-16 text-gray-400">加载中...</div>
       ) : stats ? (
         <>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-              gap: 16,
-              marginBottom: 24,
-            }}
-          >
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
             {STAT_CARDS.map((card) => (
-              <div
-                key={card.key}
-                className="card"
-                style={{ display: "flex", alignItems: "center", gap: 12 }}
-              >
-                <span style={{ fontSize: 28 }}>{card.icon}</span>
+              <div key={card.key} className="card flex items-center gap-3">
+                <span className="text-3xl">{card.icon}</span>
                 <div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: card.color }}>
+                  <div className="text-2xl font-bold" style={{ color: card.color }}>
                     {stats[card.key]}
                   </div>
-                  <div style={{ fontSize: 12, color: "#999" }}>{card.label}</div>
+                  <div className="text-xs text-gray-400">{card.label}</div>
                 </div>
               </div>
             ))}
           </div>
           <div className="card">
-            <h3 style={{ margin: "0 0 16px", fontSize: 15 }}>快捷操作</h3>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            <h3 className="text-sm font-medium mb-4">快捷操作</h3>
+            <div className="flex flex-wrap gap-3">
               <Button type="primary" label="新增采购单" onClick={() => {}} />
               <Button type="primary" label="新增销售单" onClick={() => {}} />
               <Button label="查看低库存" onClick={() => {}} />

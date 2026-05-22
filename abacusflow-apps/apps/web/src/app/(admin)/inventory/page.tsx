@@ -99,19 +99,19 @@ export default function InventoryPage() {
       title: "库存健康",
       render: (_, record) => {
         if (record.safetyStock && record.quantity < record.safetyStock) {
-          return <span style={{ color: "#ff4d4f" }}>低于安全库存</span>;
+          return <span className="text-red-500">低于安全库存</span>;
         }
         if (record.maxStock && record.quantity > record.maxStock) {
-          return <span style={{ color: "#fa8c16" }}>超出最大库存</span>;
+          return <span className="text-orange-500">超出最大库存</span>;
         }
-        return <span style={{ color: "#52c41a" }}>正常</span>;
+        return <span className="text-green-500">正常</span>;
       },
     },
     {
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex gap-2">
           <Button type="link" label="分配储存点" onClick={() => openDepotModal(record)} />
           <Button type="link" label="调整预警线" onClick={() => openWarningModal(record)} />
         </div>
@@ -123,7 +123,7 @@ export default function InventoryPage() {
     <div>
       <PageHeader title="库存管理" />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>产品名称</label>
             <input
@@ -153,12 +153,12 @@ export default function InventoryPage() {
         onOk={handleAssignDepot}
         okLoading={submitting}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label style={{ fontSize: 13, color: "#666" }}>选择储存点</label>
+        <div className="flex flex-col gap-3">
+          <label className="text-sm text-gray-500">选择储存点</label>
           <select
             value={selectedDepotId ?? ""}
             onChange={(e) => setSelectedDepotId(Number(e.target.value) || undefined)}
-            style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid #d9d9d9" }}
+            className="px-3 py-1.5 rounded-md border border-gray-300"
           >
             <option value="">请选择</option>
             {depots.map((d) => (
@@ -175,9 +175,9 @@ export default function InventoryPage() {
         onOk={handleUpdateWarning}
         okLoading={submitting}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="flex flex-col gap-3">
           <div className="form-item">
-            <label style={{ fontSize: 13, color: "#666" }}>安全库存</label>
+            <label className="text-sm text-gray-500">安全库存</label>
             <input
               type="number"
               value={safetyStock}
@@ -186,7 +186,7 @@ export default function InventoryPage() {
             />
           </div>
           <div className="form-item">
-            <label style={{ fontSize: 13, color: "#666" }}>最大库存</label>
+            <label className="text-sm text-gray-500">最大库存</label>
             <input
               type="number"
               value={maxStock}

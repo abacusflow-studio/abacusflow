@@ -49,9 +49,7 @@ export function initWebAuth() {
     },
 
     async logout() {
-      currentToken = null;
-      currentUser = null;
-      localStorage.removeItem("auth_token");
+      clearAuthToken();
       window.location.href = "/login";
     },
 
@@ -80,4 +78,16 @@ export function setAuthToken(token: string, user?: UserProfile) {
   currentToken = token;
   currentUser = user ?? null;
   localStorage.setItem("auth_token", token);
+  // Set cookie for middleware to check
+  document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+}
+
+/**
+ * Clear auth token.
+ */
+export function clearAuthToken() {
+  currentToken = null;
+  currentUser = null;
+  localStorage.removeItem("auth_token");
+  document.cookie = "auth_token=; path=/; max-age=0";
 }
