@@ -47,11 +47,13 @@ export default function EditDepotScreen() {
         { key: "name", label: "储存点名称", type: "text", placeholder: "请输入名称", required: true },
         { key: "location", label: "地址", type: "text", placeholder: "请输入地址" },
         { key: "capacity", label: "容量", type: "number", placeholder: "请输入容量" },
+        { key: "enabled", label: "启用状态", type: "switch" },
       ]}
       initialValues={{
         name: data.name,
         location: data.location,
         capacity: data.capacity,
+        enabled: data.enabled,
       }}
       onSubmit={async (values) => {
         await depotApi.updateDepot({
@@ -59,6 +61,7 @@ export default function EditDepotScreen() {
           name: values.name as string,
           location: values.location as string | undefined,
           capacity: values.capacity as number | undefined,
+          enabled: values.enabled as boolean,
         });
       }}
       submitLabel="保存修改"

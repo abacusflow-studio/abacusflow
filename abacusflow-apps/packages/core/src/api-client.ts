@@ -1,5 +1,6 @@
 import { getConfig } from "@abacusflow/config";
 import { getAuthClient } from "./auth";
+import { redirect } from "./platform";
 import type {
   BasicDepot,
   BasicProduct,
@@ -72,9 +73,9 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
     if (response.status === 401) {
       try {
         const auth = getAuthClient();
-        await auth.login(window.location.pathname);
+        await auth.login("/");
       } catch {
-        window.location.href = "/";
+        redirect("/");
       }
     }
     const error = await response.json().catch(() => ({ message: "Request failed" }));
@@ -146,6 +147,7 @@ export const depotApi = {
 export const inventoryApi = {
   listInventoriesPage: (params: ListInventoriesPageRequest) =>
     get<PageResponse<InventoryUnit>>("/inventories", params as unknown as Record<string, string | number | boolean | undefined>),
+  getInventory: (id: number) => get<InventoryUnit>(`/inventories/${id}`),
   assignDepot: (data: AssignDepotRequest) => put<void>(`/inventories/${data.inventoryId}/depot`, data),
   updateWarningLine: (data: UpdateWarningLineRequest) =>
     put<void>(`/inventories/${data.inventoryId}/warning-line`, data),

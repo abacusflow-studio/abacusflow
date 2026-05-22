@@ -56,6 +56,7 @@ export interface CreateProductRequest {
 
 export interface UpdateProductRequest extends CreateProductRequest {
   id: number;
+  enabled?: boolean;
 }
 
 // ---- Product Category ----
@@ -98,6 +99,7 @@ export interface CreateDepotRequest {
 
 export interface UpdateDepotRequest extends CreateDepotRequest {
   id: number;
+  enabled?: boolean;
 }
 
 // ---- Inventory ----

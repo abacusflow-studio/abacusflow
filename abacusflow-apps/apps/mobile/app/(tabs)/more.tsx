@@ -16,6 +16,12 @@ const MENU_SECTIONS = [
       { label: "储存点管理", icon: "🏠", route: "/(tabs)/depots" as any },
     ],
   },
+  {
+    title: "系统管理",
+    items: [
+      { label: "用户管理", icon: "👥", route: "/user/index" as any },
+    ],
+  },
 ];
 
 export default function MoreScreen() {

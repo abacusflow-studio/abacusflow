@@ -2,14 +2,7 @@
 
 import React from "react";
 import type { OrderStatus } from "@abacusflow/utils";
-import { translateOrderStatus } from "@abacusflow/utils";
-
-const STATUS_COLORS: Record<OrderStatus, { bg: string; color: string }> = {
-  pending: { bg: "#fff7e6", color: "#fa8c16" },
-  completed: { bg: "#f6ffed", color: "#52c41a" },
-  canceled: { bg: "#fff1f0", color: "#ff4d4f" },
-  reversed: { bg: "#f0f0f0", color: "#8c8c8c" },
-};
+import { translateOrderStatus, STATUS_COLORS } from "@abacusflow/utils";
 
 interface StatusTagProps {
   status: OrderStatus;

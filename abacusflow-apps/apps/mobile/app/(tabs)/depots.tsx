@@ -1,39 +1,41 @@
-import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, TextInput } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState, useCallback } from "react";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { depotApi, type BasicDepot } from "@abacusflow/core";
+import { COLORS } from "@abacusflow/utils";
+import { ListScreen } from "@/components/list-screen";
 
 export default function DepotsScreen() {
   const router = useRouter();
   const [data, setData] = useState<BasicDepot[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await depotApi.listBasicDepots();
       setData(res);
     } catch (err) {
+      setError("加载失败");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const filtered = searchName ? data.filter((d) => d.name.includes(searchName)) : data;
 
-  const renderItem = ({ item }: { item: BasicDepot }) => (
+  const renderItem = (item: BasicDepot) => (
     <TouchableOpacity style={styles.card} onPress={() => router.push(`/depot/${item.id}` as any)}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.name}</Text>
         <View style={[styles.badge, { backgroundColor: item.enabled ? "#f6ffed" : "#fff1f0" }]}>
-          <Text style={[styles.badgeText, { color: item.enabled ? "#52c41a" : "#ff4d4f" }]}>
+          <Text style={[styles.badgeText, { color: item.enabled ? COLORS.success : COLORS.danger }]}>
             {item.enabled ? "启用" : "禁用"}
           </Text>
         </View>
@@ -44,69 +46,27 @@ export default function DepotsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.searchBar}>
-        <TextInput
-          style={styles.searchInput}
-          value={searchName}
-          onChangeText={setSearchName}
-          placeholder="搜索储存点名称"
-        />
-        <TouchableOpacity style={styles.addBtn} onPress={() => router.push("/depot/add" as any)}>
-          <Text style={styles.addBtnText}>新增</Text>
-        </TouchableOpacity>
-      </View>
-
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1677ff" />
-        </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          renderItem={renderItem}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={styles.list}
-          onRefresh={loadData}
-          refreshing={loading}
-        />
-      )}
-    </SafeAreaView>
+    <ListScreen
+      data={filtered}
+      loading={loading}
+      searchPlaceholder="搜索储存点名称"
+      searchValue={searchName}
+      onSearchChange={setSearchName}
+      onSearch={() => {}}
+      onRefresh={loadData}
+      renderItem={renderItem}
+      addLabel="新增"
+      onAdd={() => router.push("/depot/add" as any)}
+      error={error}
+      onRetry={loadData}
+      keyExtractor={(item) => String(item.id)}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  searchBar: { flexDirection: "row", padding: 16, gap: 12, backgroundColor: "#fff" },
-  searchInput: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
-  addBtn: {
-    backgroundColor: "#1677ff",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    justifyContent: "center",
-  },
-  addBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  list: { padding: 16, gap: 12 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  card: { paddingVertical: 4 },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
   cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
   badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   badgeText: { fontSize: 12, fontWeight: "500" },
