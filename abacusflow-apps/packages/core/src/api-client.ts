@@ -78,7 +78,7 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
         redirect("/");
       }
     }
-    const error = await response.json().catch(() => ({ message: "Request failed" }));
+    const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 
@@ -124,12 +124,12 @@ export const productApi = {
 // ---- Product Category API ----
 
 export const productCategoryApi = {
-  listCategories: () => get<ProductCategory[]>("/products/categories"),
-  getCategory: (id: number) => get<ProductCategory>(`/products/categories/${id}`),
-  createCategory: (data: CreateProductCategoryRequest) => post<ProductCategory>("/products/categories", data),
+  listCategories: () => get<ProductCategory[]>("/product-categories"),
+  getCategory: (id: number) => get<ProductCategory>(`/product-categories/${id}`),
+  createCategory: (data: CreateProductCategoryRequest) => post<ProductCategory>("/product-categories", data),
   updateCategory: (data: UpdateProductCategoryRequest) =>
-    put<ProductCategory>(`/products/categories/${data.id}`, data),
-  deleteCategory: (id: number) => del<void>(`/products/categories/${id}`),
+    put<ProductCategory>(`/product-categories/${data.id}`, data),
+  deleteCategory: (id: number) => del<void>(`/product-categories/${id}`),
 };
 
 // ---- Depot API ----
@@ -148,20 +148,20 @@ export const inventoryApi = {
   listInventoriesPage: (params: ListInventoriesPageRequest) =>
     get<PageResponse<InventoryUnit>>("/inventories", params as unknown as Record<string, string | number | boolean | undefined>),
   getInventory: (id: number) => get<InventoryUnit>(`/inventories/${id}`),
-  assignDepot: (data: AssignDepotRequest) => put<void>(`/inventories/${data.inventoryId}/depot`, data),
+  assignDepot: (data: AssignDepotRequest) => put<void>(`/inventory-units/${data.inventoryId}/assign-depot`, data),
   updateWarningLine: (data: UpdateWarningLineRequest) =>
-    put<void>(`/inventories/${data.inventoryId}/warning-line`, data),
+    put<void>(`/inventories/${data.inventoryId}/adjust-warning-line`, data),
 };
 
 // ---- Customer API ----
 
 export const customerApi = {
   listCustomersPage: (params: { pageIndex: number; pageSize: number; name?: string; phone?: string; address?: string }) =>
-    get<PageResponse<Customer>>("/partners/customers", params as unknown as Record<string, string | number | boolean | undefined>),
-  getCustomer: (id: number) => get<Customer>(`/partners/customers/${id}`),
-  createCustomer: (data: CreateCustomerRequest) => post<Customer>("/partners/customers", data),
-  updateCustomer: (data: UpdateCustomerRequest) => put<Customer>(`/partners/customers/${data.id}`, data),
-  deleteCustomer: (id: number) => del<void>(`/partners/customers/${id}`),
+    get<PageResponse<Customer>>("/customers", params as unknown as Record<string, string | number | boolean | undefined>),
+  getCustomer: (id: number) => get<Customer>(`/customers/${id}`),
+  createCustomer: (data: CreateCustomerRequest) => post<Customer>("/customers", data),
+  updateCustomer: (data: UpdateCustomerRequest) => put<Customer>(`/customers/${data.id}`, data),
+  deleteCustomer: (id: number) => del<void>(`/customers/${id}`),
 };
 
 // ---- Supplier API ----
@@ -175,32 +175,32 @@ export const supplierApi = {
     phone?: string;
     address?: string;
   }) =>
-    get<PageResponse<Supplier>>("/partners/suppliers", params as unknown as Record<string, string | number | boolean | undefined>),
-  getSupplier: (id: number) => get<Supplier>(`/partners/suppliers/${id}`),
-  createSupplier: (data: CreateSupplierRequest) => post<Supplier>("/partners/suppliers", data),
-  updateSupplier: (data: UpdateSupplierRequest) => put<Supplier>(`/partners/suppliers/${data.id}`, data),
-  deleteSupplier: (id: number) => del<void>(`/partners/suppliers/${id}`),
+    get<PageResponse<Supplier>>("/suppliers", params as unknown as Record<string, string | number | boolean | undefined>),
+  getSupplier: (id: number) => get<Supplier>(`/suppliers/${id}`),
+  createSupplier: (data: CreateSupplierRequest) => post<Supplier>("/suppliers", data),
+  updateSupplier: (data: UpdateSupplierRequest) => put<Supplier>(`/suppliers/${data.id}`, data),
+  deleteSupplier: (id: number) => del<void>(`/suppliers/${id}`),
 };
 
 // ---- Transaction API (Purchase & Sale Orders) ----
 
 export const transactionApi = {
   listPurchaseOrdersPage: (params: ListOrdersPageRequest) =>
-    get<PageResponse<PurchaseOrder>>("/transactions/purchase-orders", params as unknown as Record<string, string | number | boolean | undefined>),
-  getPurchaseOrder: (id: number) => get<PurchaseOrder>(`/transactions/purchase-orders/${id}`),
+    get<PageResponse<PurchaseOrder>>("/purchase-orders", params as unknown as Record<string, string | number | boolean | undefined>),
+  getPurchaseOrder: (id: number) => get<PurchaseOrder>(`/purchase-orders/${id}`),
   createPurchaseOrder: (data: CreatePurchaseOrderRequest) =>
-    post<PurchaseOrder>("/transactions/purchase-orders", data),
-  completePurchaseOrder: (id: number) => put<void>(`/transactions/purchase-orders/${id}/complete`),
-  cancelPurchaseOrder: (id: number) => put<void>(`/transactions/purchase-orders/${id}/cancel`),
-  reversePurchaseOrder: (id: number) => put<void>(`/transactions/purchase-orders/${id}/reverse`),
+    post<PurchaseOrder>("/purchase-orders", data),
+  completePurchaseOrder: (id: number) => put<void>(`/purchase-orders/${id}/complete`),
+  cancelPurchaseOrder: (id: number) => put<void>(`/purchase-orders/${id}/cancel`),
+  reversePurchaseOrder: (id: number) => put<void>(`/purchase-orders/${id}/reverse`),
 
   listSaleOrdersPage: (params: ListOrdersPageRequest) =>
-    get<PageResponse<SaleOrder>>("/transactions/sale-orders", params as unknown as Record<string, string | number | boolean | undefined>),
-  getSaleOrder: (id: number) => get<SaleOrder>(`/transactions/sale-orders/${id}`),
-  createSaleOrder: (data: CreateSaleOrderRequest) => post<SaleOrder>("/transactions/sale-orders", data),
-  completeSaleOrder: (id: number) => put<void>(`/transactions/sale-orders/${id}/complete`),
-  cancelSaleOrder: (id: number) => put<void>(`/transactions/sale-orders/${id}/cancel`),
-  reverseSaleOrder: (id: number) => put<void>(`/transactions/sale-orders/${id}/reverse`),
+    get<PageResponse<SaleOrder>>("/sale-orders", params as unknown as Record<string, string | number | boolean | undefined>),
+  getSaleOrder: (id: number) => get<SaleOrder>(`/sale-orders/${id}`),
+  createSaleOrder: (data: CreateSaleOrderRequest) => post<SaleOrder>("/sale-orders", data),
+  completeSaleOrder: (id: number) => put<void>(`/sale-orders/${id}/complete`),
+  cancelSaleOrder: (id: number) => put<void>(`/sale-orders/${id}/cancel`),
+  reverseSaleOrder: (id: number) => put<void>(`/sale-orders/${id}/reverse`),
 };
 
 // ---- User API ----
