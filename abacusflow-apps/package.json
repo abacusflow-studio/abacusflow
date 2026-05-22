@@ -6,6 +6,12 @@
     "packages/*"
   ],
   "scripts": {
+    "dev:web": "npm run dev -w abacusflow-web",
+    "dev:mobile": "npm run start -w abacusflow-mobile -- --tunnel",
+    "dev:mobile:android": "npm run android -w abacusflow-mobile -- --tunnel",
+    "dev:mobile:ios": "npm run ios -w abacusflow-mobile -- --tunnel",
+    "dev:mobile:web": "npm run web -w abacusflow-mobile -- --tunnel",
+    "dev:desktop": "npm run start -w abacusflow-desktop",
     "build": "npm run build -ws --if-present",
     "lint": "npm run lint -ws --if-present",
     "test": "npm run test -ws --if-present",
