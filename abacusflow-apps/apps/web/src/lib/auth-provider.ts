@@ -1,4 +1,4 @@
-import { setAuthClient, type AuthClient, type UserProfile } from "@abacusflow/core";
+import { setAuthClient, setRedirect, type AuthClient, type UserProfile } from "@abacusflow/core";
 import { getConfig } from "@abacusflow/config";
 
 let currentToken: string | null = null;
@@ -8,7 +8,7 @@ let currentUser: UserProfile | null = null;
  * Web auth provider using Auth0 SPA SDK.
  * In demo mode (no Auth0 configured), works without authentication.
  */
-export function initWebAuth() {
+export async function initWebAuth(): Promise<void> {
   const config = getConfig();
   const hasAuth0 = config.auth0.clientId && config.auth0.domain;
 
@@ -68,7 +68,10 @@ export function initWebAuth() {
   };
 
   setAuthClient(client);
-  client.initialize();
+  setRedirect((path) => {
+    window.location.href = path;
+  });
+  await client.initialize();
 }
 
 /**

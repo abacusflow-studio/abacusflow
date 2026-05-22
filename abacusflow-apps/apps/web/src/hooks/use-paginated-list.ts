@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { PageResponse } from "@abacusflow/core";
 
 interface UsePaginatedListOptions<T, F> {
@@ -37,10 +37,13 @@ export function usePaginatedList<T, F extends object>({
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<Partial<F>>(defaultFilters);
 
+  const fetchFnRef = useRef(fetchFn);
+  fetchFnRef.current = fetchFn;
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetchFn({
+      const res = await fetchFnRef.current({
         pageIndex,
         pageSize,
         ...filters,
@@ -52,7 +55,7 @@ export function usePaginatedList<T, F extends object>({
     } finally {
       setLoading(false);
     }
-  }, [fetchFn, pageIndex, pageSize, filters]);
+  }, [pageIndex, pageSize, filters]);
 
   useEffect(() => {
     fetchData();

@@ -37,6 +37,8 @@ import type {
 
 type FetchOptions = RequestInit & { params?: Record<string, string | number | boolean | undefined> };
 
+let isRedirectingToLogin = false;
+
 async function request<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const config = getConfig();
   const { params, ...init } = options;
@@ -61,7 +63,9 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
     const auth = getAuthClient();
     if (await auth.isAuthenticated()) {
       const token = await auth.getAccessToken();
-      headers.set("Authorization", `Bearer ${token}`);
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
     }
   } catch {
     // not authenticated
@@ -71,11 +75,14 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
 
   if (!response.ok) {
     if (response.status === 401) {
-      try {
-        const auth = getAuthClient();
-        await auth.login("/");
-      } catch {
-        redirect("/");
+      if (!isRedirectingToLogin) {
+        isRedirectingToLogin = true;
+        try {
+          const auth = getAuthClient();
+          await auth.login("/");
+        } catch {
+          redirect("/");
+        }
       }
     }
     const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
