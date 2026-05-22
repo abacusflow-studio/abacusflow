@@ -53,27 +53,14 @@ function MenuItem({ item, pathname, collapsed }: { item: NavItem; pathname: stri
       <div>
         <div
           onClick={() => setOpen(!open)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "10px 16px",
-            cursor: "pointer",
-            fontSize: 14,
-            color: "#333",
-            borderRadius: 6,
-            margin: "2px 8px",
-            transition: "background 0.2s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#e6f4ff")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          className="flex items-center gap-2 px-4 py-2.5 cursor-pointer text-sm text-gray-800 rounded-md mx-2 hover:bg-blue-50 transition-colors"
         >
           <span>{item.icon}</span>
-          {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
-          {!collapsed && <span style={{ fontSize: 10 }}>{open ? "▼" : "▶"}</span>}
+          {!collapsed && <span className="flex-1">{item.label}</span>}
+          {!collapsed && <span className="text-[10px]">{open ? "▼" : "▶"}</span>}
         </div>
         {open && !collapsed && (
-          <div style={{ paddingLeft: 16 }}>
+          <div className="pl-4">
             {item.children.map((child) => (
               <MenuItem key={child.key} item={child} pathname={pathname} collapsed={collapsed} />
             ))}
@@ -86,26 +73,11 @@ function MenuItem({ item, pathname, collapsed }: { item: NavItem; pathname: stri
   return (
     <Link
       href={item.key}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "10px 16px",
-        fontSize: 14,
-        color: isActive ? "#1677ff" : "#333",
-        backgroundColor: isActive ? "#e6f4ff" : "transparent",
-        borderRadius: 6,
-        margin: "2px 8px",
-        textDecoration: "none",
-        fontWeight: isActive ? 600 : 400,
-        transition: "all 0.2s",
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive) e.currentTarget.style.backgroundColor = "#f5f5f5";
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
-      }}
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm no-underline rounded-md mx-2 transition-all ${
+        isActive
+          ? "text-blue-500 bg-blue-50 font-semibold"
+          : "text-gray-800 hover:bg-gray-100"
+      }`}
     >
       <span>{item.icon}</span>
       {!collapsed && <span>{item.label}</span>}
@@ -116,44 +88,19 @@ function MenuItem({ item, pathname, collapsed }: { item: NavItem; pathname: stri
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const sidebarWidth = collapsed ? 80 : 200;
+  const sidebarWidth = collapsed ? "w-20" : "w-50";
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: sidebarWidth,
-          backgroundColor: "#ebedef",
-          overflowY: "auto",
-          transition: "width 0.2s",
-          zIndex: 101,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style={{
-            height: 48,
-            margin: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "0 12px",
-          }}
-        >
-          <span style={{ fontSize: 24 }}>🧮</span>
+      <aside className={`fixed top-0 left-0 bottom-0 ${sidebarWidth} bg-[#ebedef] overflow-y-auto transition-all z-[101] flex flex-col`}>
+        <div className="h-12 mx-4 my-3 flex items-center gap-2 px-3">
+          <span className="text-2xl">🧮</span>
           {!collapsed && (
-            <span style={{ fontSize: 18, fontWeight: 600, color: "#333", whiteSpace: "nowrap" }}>
-              小算盘
-            </span>
+            <span className="text-lg font-semibold text-gray-800 whitespace-nowrap">小算盘</span>
           )}
         </div>
-        <nav style={{ flex: 1, paddingTop: 8 }}>
+        <nav className="flex-1 pt-2">
           {NAV_ITEMS.map((item) => (
             <MenuItem key={item.key} item={item} pathname={pathname} collapsed={collapsed} />
           ))}
@@ -161,40 +108,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main content */}
-      <div style={{ flex: 1, marginLeft: sidebarWidth, transition: "margin-left 0.2s" }}>
+      <div className={`flex-1 ${collapsed ? "ml-20" : "ml-50"} transition-all`}>
         {/* Header */}
-        <header
-          style={{
-            position: "fixed",
-            top: 0,
-            left: sidebarWidth,
-            right: 0,
-            height: 64,
-            backgroundColor: "#fdfdfc",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "0 24px",
-            zIndex: 100,
-            transition: "left 0.2s",
-            borderBottom: "1px solid #f0f0f0",
-          }}
-        >
-          <div style={{ cursor: "pointer", fontSize: 18 }} onClick={() => setCollapsed(!collapsed)}>
+        <header className="fixed top-0 right-0 h-16 bg-[#fdfdfc] flex justify-between items-center px-6 z-[100] border-b border-gray-100" style={{ left: collapsed ? 80 : 200 }}>
+          <div className="cursor-pointer text-lg" onClick={() => setCollapsed(!collapsed)}>
             {collapsed ? "☰" : "✕"}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 14 }}>
+          <div className="flex items-center gap-4 text-sm">
             <span>超级管理员</span>
           </div>
         </header>
 
         {/* Content */}
-        <main style={{ padding: "80px 24px 24px", minHeight: "calc(100vh - 64px)" }}>
+        <main className="pt-20 px-6 pb-6 min-h-[calc(100vh-64px)]">
           {children}
         </main>
 
         {/* Footer */}
-        <footer style={{ textAlign: "center", padding: "16px 0", color: "#999", fontSize: 13 }}>
+        <footer className="text-center py-4 text-gray-400 text-sm">
           abacusflow ©2025
         </footer>
       </div>

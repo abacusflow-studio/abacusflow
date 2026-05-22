@@ -1,45 +1,33 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, type DataTableColumn } from "@abacusflow/ui";
-import { productApi, type BasicProduct, type Product } from "@abacusflow/core";
+import { PageHeader, Button, DataTable, Modal, type DataTableColumn } from "@abacusflow/ui";
+import { productApi, type BasicProduct } from "@abacusflow/core";
 import { translateProductType, translateProductUnit } from "@abacusflow/utils";
+import { usePaginatedList } from "../../../hooks/use-paginated-list";
+import { useToast } from "../../../hooks/use-toast";
 
 export default function ProductsPage() {
-  const [data, setData] = useState<BasicProduct[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchName, setSearchName] = useState("");
-  const [pageIndex, setPageIndex] = useState(1);
-  const [total, setTotal] = useState(0);
+  const { addToast } = useToast();
+  const [editItem, setEditItem] = useState<BasicProduct | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await productApi.listBasicProductsPage({
-        pageIndex,
-        pageSize: 10,
-        name: searchName || undefined,
-      });
-      setData(res.content);
-      setTotal(res.totalElements);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchData();
-  }, [pageIndex]);
+  const {
+    data, loading, pageIndex, total, filters,
+    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
+  } = usePaginatedList<BasicProduct, { name?: string }>({
+    fetchFn: (params) => productApi.listBasicProductsPage(params as Parameters<typeof productApi.listBasicProductsPage>[0]),
+    defaultFilters: { name: undefined },
+  });
 
   const handleDelete = async (id: number) => {
     if (!confirm("确定删除该产品？")) return;
     try {
       await productApi.deleteProduct(id);
-      fetchData();
+      addToast("success", "删除成功");
+      refresh();
     } catch (err) {
-      console.error(err);
+      addToast("error", err instanceof Error ? err.message : "删除失败");
     }
   };
 
@@ -62,7 +50,7 @@ export default function ProductsPage() {
       key: "enabled",
       title: "启用状态",
       render: (_, record) => (
-        <span style={{ color: record.enabled ? "#52c41a" : "#ff4d4f" }}>
+        <span className={record.enabled ? "text-green-500" : "text-red-500"}>
           {record.enabled ? "启用" : "禁用"}
         </span>
       ),
@@ -71,8 +59,8 @@ export default function ProductsPage() {
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button type="link" label="编辑" onClick={() => {}} />
+        <div className="flex gap-2">
+          <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
           <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
         </div>
       ),
@@ -83,26 +71,20 @@ export default function ProductsPage() {
     <div>
       <PageHeader
         title="产品管理"
-        extra={<Button type="primary" label="新增产品" onClick={() => {}} />}
+        extra={<Button type="primary" label="新增产品" onClick={() => { setEditItem(null); setShowForm(true); }} />}
       />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>产品名称</label>
             <input
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
+              value={filters.name ?? ""}
+              onChange={(e) => updateFilter("name", e.target.value || undefined)}
               placeholder="请输入产品名称"
             />
           </div>
-          <Button type="primary" label="搜索" onClick={() => { setPageIndex(1); fetchData(); }} />
-          <Button
-            label="重置"
-            onClick={() => {
-              setSearchName("");
-              setPageIndex(1);
-            }}
-          />
+          <Button type="primary" label="搜索" onClick={handleSearch} />
+          <Button label="重置" onClick={handleReset} />
         </div>
       </div>
       <div className="card">
@@ -114,6 +96,9 @@ export default function ProductsPage() {
           pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
         />
       </div>
+      <Modal open={showForm} title={editItem ? "编辑产品" : "新增产品"} onClose={() => setShowForm(false)}>
+        <p className="text-gray-400 text-center py-8">表单开发中...</p>
+      </Modal>
     </div>
   );
 }

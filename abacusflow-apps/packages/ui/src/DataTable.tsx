@@ -2,18 +2,32 @@
 
 import React from "react";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+export interface DataTableLabels {
+  loading?: string;
+  empty?: string;
+  total?: string;
+  prev?: string;
+  next?: string;
+}
 
-export interface DataTableColumn<T = any> {
+const DEFAULT_LABELS: Required<DataTableLabels> = {
+  loading: "加载中...",
+  empty: "暂无数据",
+  total: "共 {total} 条",
+  prev: "上一页",
+  next: "下一页",
+};
+
+export interface DataTableColumn<T> {
   key: string;
   title: string;
   dataIndex?: keyof T & string;
   width?: number;
   ellipsis?: boolean;
-  render?: (value: any, record: T, index: number) => React.ReactNode;
+  render?: (value: T[keyof T] | undefined, record: T, index: number) => React.ReactNode;
 }
 
-interface DataTableProps<T = any> {
+interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   data: T[];
   rowKey?: keyof T & string | ((record: T) => string | number);
@@ -24,12 +38,13 @@ interface DataTableProps<T = any> {
     total: number;
     onChange: (page: number, pageSize: number) => void;
   };
+  labels?: DataTableLabels;
 }
 
-function getRowKey<T>(record: T, index: number, rowKey?: string | ((record: T) => string | number)): string | number {
+function getRowKey<T>(record: T, index: number, rowKey?: keyof T & string | ((record: T) => string | number)): string | number {
   if (!rowKey) return index;
   if (typeof rowKey === "function") return rowKey(record);
-  return ((record as any)[rowKey] as string | number) ?? index;
+  return (record[rowKey] as string | number) ?? index;
 }
 
 export function DataTable<T>({
@@ -38,7 +53,10 @@ export function DataTable<T>({
   rowKey,
   loading = false,
   pagination,
+  labels: customLabels,
 }: DataTableProps<T>) {
+  const labels = { ...DEFAULT_LABELS, ...customLabels };
+
   return (
     <div style={{ overflowX: "auto" }}>
       <table
@@ -72,23 +90,23 @@ export function DataTable<T>({
           {loading ? (
             <tr>
               <td colSpan={columns.length} style={{ textAlign: "center", padding: 32, color: "#999" }}>
-                加载中...
+                {labels.loading}
               </td>
             </tr>
           ) : data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} style={{ textAlign: "center", padding: 32, color: "#999" }}>
-                暂无数据
+                {labels.empty}
               </td>
             </tr>
           ) : (
             data.map((record, index) => (
               <tr
-                key={getRowKey(record, index, rowKey as any)}
+                key={getRowKey(record, index, rowKey)}
                 style={{ borderBottom: "1px solid #f0f0f0" }}
               >
                 {columns.map((col) => {
-                  const cellValue = col.dataIndex ? (record as any)[col.dataIndex] : undefined;
+                  const cellValue = col.dataIndex ? record[col.dataIndex] : undefined;
                   return (
                     <td
                       key={col.key}
@@ -124,13 +142,13 @@ export function DataTable<T>({
             fontSize: 13,
           }}
         >
-          <span style={{ color: "#999" }}>共 {pagination.total} 条</span>
+          <span style={{ color: "#999" }}>{labels.total.replace("{total}", String(pagination.total))}</span>
           <button
             disabled={pagination.current <= 1}
             onClick={() => pagination.onChange(pagination.current - 1, pagination.pageSize)}
             style={{ padding: "4px 10px", cursor: "pointer" }}
           >
-            上一页
+            {labels.prev}
           </button>
           <span>
             {pagination.current} / {Math.ceil(pagination.total / pagination.pageSize) || 1}
@@ -140,7 +158,7 @@ export function DataTable<T>({
             onClick={() => pagination.onChange(pagination.current + 1, pagination.pageSize)}
             style={{ padding: "4px 10px", cursor: "pointer" }}
           >
-            下一页
+            {labels.next}
           </button>
         </div>
       )}

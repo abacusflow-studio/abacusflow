@@ -47,6 +47,17 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
     }
     return initial;
   });
+  // Track raw text for number fields to allow decimal input
+  const [textValues, setTextValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const field of fields) {
+      if (field.type === "number") {
+        const val = initialValues?.[field.key] ?? field.value;
+        initial[field.key] = val != null ? String(val) : "";
+      }
+    }
+    return initial;
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const setValue = useCallback((key: string, value: string | number | boolean | undefined) => {
@@ -112,10 +123,12 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
               ) : (
                 <TextInput
                   style={[styles.input, field.type === "textarea" && styles.textarea]}
-                  value={String(values[field.key] ?? "")}
+                  value={field.type === "number" ? (textValues[field.key] ?? "") : String(values[field.key] ?? "")}
                   onChangeText={(text) => {
                     if (field.type === "number") {
-                      setValue(field.key, text ? Number(text) : undefined);
+                      setTextValues((prev) => ({ ...prev, [field.key]: text }));
+                      const num = Number(text);
+                      setValue(field.key, text === "" ? undefined : isNaN(num) ? values[field.key] : num);
                     } else {
                       setValue(field.key, text);
                     }

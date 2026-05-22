@@ -1,44 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, type DataTableColumn } from "@abacusflow/ui";
+import { PageHeader, Button, DataTable, Modal, type DataTableColumn } from "@abacusflow/ui";
 import { customerApi, type Customer } from "@abacusflow/core";
+import { usePaginatedList } from "../../../../hooks/use-paginated-list";
+import { useToast } from "../../../../hooks/use-toast";
 
 export default function CustomersPage() {
-  const [data, setData] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchName, setSearchName] = useState("");
-  const [pageIndex, setPageIndex] = useState(1);
-  const [total, setTotal] = useState(0);
+  const { addToast } = useToast();
+  const [editItem, setEditItem] = useState<Customer | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await customerApi.listCustomersPage({
-        pageIndex,
-        pageSize: 10,
-        name: searchName || undefined,
-      });
-      setData(res.content);
-      setTotal(res.totalElements);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchData();
-  }, [pageIndex]);
+  const {
+    data, loading, pageIndex, total, filters,
+    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
+  } = usePaginatedList<Customer, { name?: string; phone?: string; address?: string }>({
+    fetchFn: (params) => customerApi.listCustomersPage(params as Parameters<typeof customerApi.listCustomersPage>[0]),
+    defaultFilters: { name: undefined, phone: undefined, address: undefined },
+  });
 
   const handleDelete = async (id: number) => {
     if (!confirm("确定删除该客户？")) return;
     try {
       await customerApi.deleteCustomer(id);
-      fetchData();
+      addToast("success", "删除成功");
+      refresh();
     } catch (err) {
-      console.error(err);
+      addToast("error", err instanceof Error ? err.message : "删除失败");
     }
   };
 
@@ -56,8 +44,8 @@ export default function CustomersPage() {
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button type="link" label="编辑" onClick={() => {}} />
+        <div className="flex gap-2">
+          <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
           <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
         </div>
       ),
@@ -68,20 +56,20 @@ export default function CustomersPage() {
     <div>
       <PageHeader
         title="客户管理"
-        extra={<Button type="primary" label="新增客户" onClick={() => {}} />}
+        extra={<Button type="primary" label="新增客户" onClick={() => { setEditItem(null); setShowForm(true); }} />}
       />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>客户名称</label>
             <input
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
+              value={filters.name ?? ""}
+              onChange={(e) => updateFilter("name", e.target.value || undefined)}
               placeholder="请输入客户名称"
             />
           </div>
-          <Button type="primary" label="搜索" onClick={() => { setPageIndex(1); fetchData(); }} />
-          <Button label="重置" onClick={() => { setSearchName(""); setPageIndex(1); }} />
+          <Button type="primary" label="搜索" onClick={handleSearch} />
+          <Button label="重置" onClick={handleReset} />
         </div>
       </div>
       <div className="card">
@@ -93,6 +81,9 @@ export default function CustomersPage() {
           pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
         />
       </div>
+      <Modal open={showForm} title={editItem ? "编辑客户" : "新增客户"} onClose={() => setShowForm(false)}>
+        <p className="text-gray-400 text-center py-8">表单开发中...</p>
+      </Modal>
     </div>
   );
 }

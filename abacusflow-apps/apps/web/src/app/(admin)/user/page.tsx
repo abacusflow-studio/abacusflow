@@ -1,44 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, type DataTableColumn } from "@abacusflow/ui";
+import { PageHeader, Button, DataTable, Modal, type DataTableColumn } from "@abacusflow/ui";
 import { userApi, type User } from "@abacusflow/core";
+import { usePaginatedList } from "../../../hooks/use-paginated-list";
+import { useToast } from "../../../hooks/use-toast";
 
 export default function UsersPage() {
-  const [data, setData] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchName, setSearchName] = useState("");
-  const [pageIndex, setPageIndex] = useState(1);
-  const [total, setTotal] = useState(0);
+  const { addToast } = useToast();
+  const [editItem, setEditItem] = useState<User | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await userApi.listUsersPage({
-        pageIndex,
-        pageSize: 10,
-        name: searchName || undefined,
-      });
-      setData(res.content);
-      setTotal(res.totalElements);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchData();
-  }, [pageIndex]);
+  const {
+    data, loading, pageIndex, total, filters,
+    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
+  } = usePaginatedList<User, { name?: string }>({
+    fetchFn: (params) => userApi.listUsersPage(params as Parameters<typeof userApi.listUsersPage>[0]),
+    defaultFilters: { name: undefined },
+  });
 
   const handleDelete = async (id: number) => {
     if (!confirm("确定删除该用户？")) return;
     try {
       await userApi.deleteUser(id);
-      fetchData();
+      addToast("success", "删除成功");
+      refresh();
     } catch (err) {
-      console.error(err);
+      addToast("error", err instanceof Error ? err.message : "删除失败");
     }
   };
 
@@ -51,10 +39,10 @@ export default function UsersPage() {
       key: "action",
       title: "操作",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex gap-2">
           {record.name !== "admin" && (
             <>
-              <Button type="link" label="编辑" onClick={() => {}} />
+              <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
               <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
             </>
           )}
@@ -67,20 +55,20 @@ export default function UsersPage() {
     <div>
       <PageHeader
         title="用户管理"
-        extra={<Button type="primary" label="新增用户" onClick={() => {}} />}
+        extra={<Button type="primary" label="新增用户" onClick={() => { setEditItem(null); setShowForm(true); }} />}
       />
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <div className="form-inline mb-4">
           <div className="form-item">
             <label>用户名</label>
             <input
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
+              value={filters.name ?? ""}
+              onChange={(e) => updateFilter("name", e.target.value || undefined)}
               placeholder="请输入用户名"
             />
           </div>
-          <Button type="primary" label="搜索" onClick={() => { setPageIndex(1); fetchData(); }} />
-          <Button label="重置" onClick={() => { setSearchName(""); setPageIndex(1); }} />
+          <Button type="primary" label="搜索" onClick={handleSearch} />
+          <Button label="重置" onClick={handleReset} />
         </div>
       </div>
       <div className="card">
@@ -92,6 +80,9 @@ export default function UsersPage() {
           pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
         />
       </div>
+      <Modal open={showForm} title={editItem ? "编辑用户" : "新增用户"} onClose={() => setShowForm(false)}>
+        <p className="text-gray-400 text-center py-8">表单开发中...</p>
+      </Modal>
     </div>
   );
 }

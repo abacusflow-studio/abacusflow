@@ -86,6 +86,7 @@ export default function EditProductScreen() {
           barcode: values.barcode as string | undefined,
           unit: values.unit as any,
           note: values.note as string | undefined,
+          enabled: values.enabled as boolean,
         });
       }}
       submitLabel="保存修改"

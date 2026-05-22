@@ -1,22 +1,24 @@
-import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState, useCallback } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { userApi, type User } from "@abacusflow/core";
+import { COLORS } from "@abacusflow/utils";
+import { ListScreen } from "@/components/list-screen";
 
 export default function UserListScreen() {
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchName, setSearchName] = useState("");
   const [pageIndex, setPageIndex] = useState(1);
   const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    loadData();
-  }, [pageIndex]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async (page = pageIndex) => {
     setLoading(true);
     try {
-      const res = await userApi.listUsersPage({ pageIndex, pageSize: 20 });
+      const res = await userApi.listUsersPage({
+        pageIndex: page,
+        pageSize: 20,
+        name: searchName || undefined,
+      });
       setData(res.content);
       setTotal(res.totalElements);
     } catch (err) {
@@ -24,6 +26,13 @@ export default function UserListScreen() {
     } finally {
       setLoading(false);
     }
+  }, [pageIndex, searchName]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleSearch = () => {
+    setPageIndex(1);
+    loadData(1);
   };
 
   const handleDelete = (id: number, name: string) => {
@@ -48,7 +57,7 @@ export default function UserListScreen() {
     ]);
   };
 
-  const renderItem = ({ item }: { item: User }) => (
+  const renderItem = (item: User) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.name}</Text>
@@ -70,60 +79,36 @@ export default function UserListScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {loading && data.length === 0 ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1677ff" />
-        </View>
-      ) : (
-        <FlatList
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={styles.list}
-          onRefresh={() => { setPageIndex(1); loadData(); }}
-          refreshing={loading}
-          ListFooterComponent={
-            total > pageIndex * 20 ? (
-              <TouchableOpacity style={styles.loadMore} onPress={() => setPageIndex((p) => p + 1)}>
-                <Text style={styles.loadMoreText}>加载更多</Text>
-              </TouchableOpacity>
-            ) : null
-          }
-        />
-      )}
-    </SafeAreaView>
+    <ListScreen
+      data={data}
+      loading={loading}
+      searchPlaceholder="搜索用户名称"
+      searchValue={searchName}
+      onSearchChange={setSearchName}
+      onSearch={handleSearch}
+      onRefresh={() => { setPageIndex(1); loadData(1); }}
+      onLoadMore={() => setPageIndex((p) => p + 1)}
+      hasMore={total > pageIndex * 20}
+      renderItem={renderItem}
+      keyExtractor={(item) => String(item.id)}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  list: { padding: 16, gap: 12 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  card: { paddingVertical: 4 },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
   cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
-  adminBadge: { backgroundColor: "#e6f4ff", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  adminBadgeText: { fontSize: 12, color: "#1677ff", fontWeight: "500" },
+  adminBadge: { backgroundColor: COLORS.primaryLight, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  adminBadgeText: { fontSize: 12, color: COLORS.primary, fontWeight: "500" },
   cardDetail: { fontSize: 13, color: "#666", marginTop: 2 },
   deleteBtn: {
     marginTop: 12,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: "#fff1f0",
+    backgroundColor: COLORS.dangerLight,
     borderRadius: 6,
     alignSelf: "flex-start",
   },
-  deleteBtnText: { color: "#ff4d4f", fontSize: 13, fontWeight: "500" },
-  loadMore: { paddingVertical: 16, alignItems: "center" },
-  loadMoreText: { fontSize: 14, color: "#1677ff" },
+  deleteBtnText: { color: COLORS.danger, fontSize: 13, fontWeight: "500" },
 });
