@@ -38,6 +38,9 @@ x-error-responses:
     schema:
       $ref: "#/components/schemas/ErrorResponse"
 
+security:
+  - bearerAuth: []
+
 paths:
   /users:
     get:
@@ -1420,6 +1423,11 @@ paths:
           description: Purchase order marked as reversed
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     # ============= User schemas =============
     User:

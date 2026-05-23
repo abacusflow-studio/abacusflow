@@ -1,69 +1,61 @@
+import { createAuth0Client, Auth0Client } from "@auth0/auth0-spa-js";
 import { setAuthClient, setRedirect, type AuthClient, type UserProfile } from "@abacusflow/core";
 import { getConfig } from "@abacusflow/config";
 
-let currentToken: string | null = null;
-let currentUser: UserProfile | null = null;
+let auth0Client: Auth0Client | null = null;
 
-/**
- * Web auth provider using Auth0 SPA SDK.
- * In demo mode (no Auth0 configured), works without authentication.
- */
 export async function initWebAuth(): Promise<void> {
   const config = getConfig();
-  const hasAuth0 = config.auth0.clientId && config.auth0.domain;
+
+  auth0Client = await createAuth0Client({
+    domain: config.auth0.domain,
+    clientId: config.auth0.clientId,
+    authorizationParams: {
+      audience: config.auth0.audience,
+      redirect_uri: window.location.origin + "/callback",
+    },
+  });
 
   const client: AuthClient = {
-    async initialize() {
-      if (!hasAuth0) return;
-      // Auth0 SPA SDK initialization would go here
-      // For now, check if there's a stored token
-      const stored = localStorage.getItem("auth_token");
-      if (stored) {
-        currentToken = stored;
-        try {
-          const payload = JSON.parse(atob(stored.split(".")[1]));
-          currentUser = payload as UserProfile;
-        } catch {
-          // invalid token
-          currentToken = null;
-        }
-      }
-    },
+    async initialize() {},
 
     async login(returnTo?: string) {
-      if (!hasAuth0) {
-        console.log("Auth: demo mode - login skipped");
-        return;
-      }
-      // In a real implementation, redirect to Auth0
-      // For now, store the return path
       if (returnTo) {
         sessionStorage.setItem("auth_return_to", returnTo);
       }
-      window.location.href = "/login";
+      await auth0Client!.loginWithRedirect();
     },
 
     async handleRedirectCallback() {
-      // In a real implementation, parse the Auth0 callback
-      // For demo mode, this is a no-op
+      await auth0Client!.handleRedirectCallback();
     },
 
     async logout() {
-      clearAuthToken();
-      window.location.href = "/login";
+      auth0Client!.logout({ logoutParams: { returnTo: window.location.origin + "/login" } });
     },
 
     async isAuthenticated() {
-      if (!hasAuth0) return true;
-      return !!currentToken;
+      return auth0Client!.isAuthenticated();
     },
 
     async getAccessToken() {
-      return currentToken ?? "";
+      try {
+        return await auth0Client!.getTokenSilently();
+      } catch {
+        return "";
+      }
     },
 
     async getUser() {
-      return currentUser ?? undefined;
+      const user = await auth0Client!.getUser();
+      if (!user) return undefined;
+      return {
+        sub: user.sub,
+        name: user.name,
+        nickname: user.nickname,
+        picture: user.picture,
+        email: user.email,
+      } as UserProfile;
     },
   };
 
@@ -72,25 +64,4 @@ export async function initWebAuth(): Promise<void> {
     window.location.href = path;
   });
   await client.initialize();
-}
-
-/**
- * Set auth token after successful login.
- */
-export function setAuthToken(token: string, user?: UserProfile) {
-  currentToken = token;
-  currentUser = user ?? null;
-  localStorage.setItem("auth_token", token);
-  // Set cookie for middleware to check
-  document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
-}
-
-/**
- * Clear auth token.
- */
-export function clearAuthToken() {
-  currentToken = null;
-  currentUser = null;
-  localStorage.removeItem("auth_token");
-  document.cookie = "auth_token=; path=/; max-age=0";
 }

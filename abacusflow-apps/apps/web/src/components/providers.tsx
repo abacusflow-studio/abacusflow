@@ -8,7 +8,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    initWebAuth().then(() => setReady(true));
+    initWebAuth()
+      .then(() => setReady(true))
+      .catch((err) => {
+        console.error("[providers] initWebAuth failed:", err);
+        setReady(true); // still render children so login page can work
+      });
   }, []);
 
   if (!ready) {

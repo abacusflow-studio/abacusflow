@@ -74,7 +74,10 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
   const response = await fetch(url, { ...init, headers });
 
   if (!response.ok) {
+    console.error(`[api-client] ${response.status} ${options.method || "GET"} ${path}`);
     if (response.status === 401) {
+      const body = await response.clone().json().catch(() => null);
+      console.error("[api-client] 401 body:", body);
       if (!isRedirectingToLogin) {
         isRedirectingToLogin = true;
         try {

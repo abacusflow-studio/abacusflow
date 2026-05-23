@@ -3,5 +3,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # Auth0 Domain，这是Spring Security获取公钥的地方
-          issuer-uri: https://dev-st5cs3qsjm2174ua.us.auth0.com/
+          # Spring Security resolves provider keys from the configured OIDC issuer.
+          issuer-uri: ${ABACUSFLOW_OIDC_ISSUER_URI:https://dev-st5cs3qsjm2174ua.us.auth0.com/}
+          audiences:
+            - ${ABACUSFLOW_OIDC_AUDIENCE:https://admin.abacusflow.cn}

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@abacusflow/ui";
+import { getAuthClient } from "@abacusflow/core";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -11,11 +12,11 @@ export default function LoginPage() {
     try {
       setLoading(true);
       setError(null);
-      // Auth0 login redirect
-      window.location.href = "/api/auth/login";
-    } catch {
+      const auth = getAuthClient();
+      await auth.login("/dashboard");
+    } catch (err) {
+      console.error("[login] error:", err);
       setError("登录失败，请重试");
-    } finally {
       setLoading(false);
     }
   };
@@ -52,7 +53,7 @@ export default function LoginPage() {
           <Button
             type="primary"
             size="large"
-            label="使用 Auth0 登录"
+            label={loading ? "跳转中..." : "使用 Auth0 登录"}
             loading={loading}
             onClick={handleLogin}
             block

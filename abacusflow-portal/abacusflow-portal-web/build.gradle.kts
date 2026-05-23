@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.spring.boot.starter.oauth2.resource.server)
     implementation(libs.spring.security.oauth2.jose)
     implementation(project(":abacusflow-usecase"))
+    testImplementation(libs.spring.boot.starter.test)
 }
 
 openApiGenerate {
