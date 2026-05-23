@@ -2,19 +2,24 @@
 
 ## Goal
 
-Diagnose why Web API requests under `/api` return 404 during local verification and fix the routing/configuration gap with a focused change.
+Rebuild the Web app under `abacusflow-apps/apps/web` by using `abacusflow-app/abacusflow-webapp` as the functional reference: identify what each screen requests, how responses are combined for display, then implement the web-first version in the apps workspace.
 
 ## Phases
 
-1. [complete] Trace API URL construction, Next routing, and backend route shape.
-2. [complete] Implement the smallest change that sends Web API requests to the backend.
-3. [complete] Verify the routing behavior and record remaining runtime assumptions.
+1. [complete] Inventory the reference webapp routes, pages, API calls, and response composition patterns.
+2. [complete] Compare the current `apps/web` and shared packages against the reference behavior.
+3. [complete] Implement the missing web screens/data wiring with the existing apps workspace conventions.
+4. [complete] Verify lint/type/build behavior and record any backend/runtime assumptions.
+
+## Decisions
+
+- Prefer the existing `abacusflow-apps` stack and shared packages over introducing a second framework.
+- Evaluate Ant Design only after checking current dependencies and UI conventions; do not add it unless the implementation benefits enough to justify the dependency.
 
 ## Errors Encountered
 
 | Error | Attempt | Resolution |
 | --- | --- | --- |
-| Web API requests report 404 / `Request failed` | Initial report | Investigating client base URL and Next proxy handling. |
-| `rg` searched missing `abacusflow-configure` path | CORS/security search | Continue with files found under `abacusflow-portal-web`. |
-| `npm run build -w abacusflow-web` exits during static export | Verification | Existing `middleware.ts` is incompatible with `output: "export"`; verify dev proxy separately and report this remaining build issue. |
-| Web dev server cannot bind `0.0.0.0:3000` in sandbox | Runtime verification | Escalation was rejected by automatic review; continue with config/build checks only. |
+| Previous session catchup reported an older `DataTable` runtime issue | Startup | `git status` and `git diff --stat` are clean, so continue without reverting anything. |
+| Shared API client used stale HTTP verbs for inventory/order actions | OpenAPI comparison | Updated the shared API client to use the backend's `POST` action endpoints. |
+| Inventory page conditional `DataTable` render produced a generic type mismatch | TypeScript check | Split the inventory summary and inventory-unit table renders into separate branches. |

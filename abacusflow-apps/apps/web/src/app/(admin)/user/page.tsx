@@ -6,7 +6,7 @@ import {
   FormField, FormInput, FormSelect,
   type DataTableColumn,
 } from "@abacusflow/ui";
-import { userApi, type User, type CreateUserRequest } from "@abacusflow/core";
+import { userApi, type User, type CreateUserRequest, type Sex } from "@abacusflow/core";
 import { isNonEmpty } from "@abacusflow/utils";
 import { usePaginatedList } from "../../../hooks/use-paginated-list";
 import { useToast } from "../../../hooks/use-toast";
@@ -20,9 +20,9 @@ interface UserForm {
 
 const emptyForm: UserForm = { name: "", nick: "", age: "", sex: "" };
 
-const sexOptions = [
-  { label: "男", value: "男" },
-  { label: "女", value: "女" },
+const sexOptions: { label: string; value: Sex }[] = [
+  { label: "男", value: "male" },
+  { label: "女", value: "female" },
 ];
 
 export default function UsersPage() {
@@ -82,6 +82,7 @@ export default function UsersPage() {
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof UserForm, string>> = {};
     if (!isNonEmpty(form.name)) newErrors.name = "请输入用户名";
+    if (!isNonEmpty(form.nick)) newErrors.nick = "请输入姓名";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -94,7 +95,7 @@ export default function UsersPage() {
         name: form.name,
         nick: form.nick || undefined,
         age: form.age ? Number(form.age) : undefined,
-        sex: form.sex || undefined,
+        sex: (form.sex || undefined) as Sex | undefined,
       };
       if (editItem) {
         await userApi.updateUser({ ...payload, id: editItem.id });
@@ -125,9 +126,17 @@ export default function UsersPage() {
 
   const columns: DataTableColumn<User>[] = [
     { key: "name", title: "用户名", dataIndex: "name" },
-    { key: "nick", title: "昵称", dataIndex: "nick" },
-    { key: "age", title: "年龄", dataIndex: "age" },
-    { key: "sex", title: "性别", dataIndex: "sex" },
+    { key: "nick", title: "姓名", dataIndex: "nick" },
+    {
+      key: "enabled",
+      title: "启用状态",
+      render: (_, record) => (record.enabled ? "启用" : "禁用"),
+    },
+    {
+      key: "locked",
+      title: "锁定状态",
+      render: (_, record) => (record.locked ? "锁定" : "正常"),
+    },
     {
       key: "action",
       title: "操作",
@@ -191,11 +200,12 @@ export default function UsersPage() {
             error={!!errors.name}
           />
         </FormField>
-        <FormField label="昵称">
+        <FormField label="姓名" required error={errors.nick}>
           <FormInput
             value={form.nick}
             onChange={(e) => setForm({ ...form, nick: e.target.value })}
-            placeholder="请输入昵称"
+            placeholder="请输入姓名"
+            error={!!errors.nick}
           />
         </FormField>
         <FormField label="年龄">
@@ -227,14 +237,22 @@ export default function UsersPage() {
         ) : detailItem ? (
           <div className="flex flex-col gap-3">
             <DetailRow label="用户名" value={detailItem.name} />
-            <DetailRow label="昵称" value={detailItem.nick} />
+            <DetailRow label="姓名" value={detailItem.nick} />
             <DetailRow label="年龄" value={detailItem.age} />
-            <DetailRow label="性别" value={detailItem.sex} />
+            <DetailRow label="性别" value={translateSex(detailItem.sex)} />
+            <DetailRow label="启用状态" value={detailItem.enabled ? "启用" : "禁用"} />
+            <DetailRow label="锁定状态" value={detailItem.locked ? "锁定" : "正常"} />
           </div>
         ) : null}
       </Modal>
     </div>
   );
+}
+
+function translateSex(value?: string): string {
+  if (value === "male") return "男";
+  if (value === "female") return "女";
+  return value ?? "";
 }
 
 function DetailRow({ label, value }: { label: string; value?: string | number | null }) {

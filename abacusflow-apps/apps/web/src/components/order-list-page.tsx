@@ -8,17 +8,20 @@ import {
 } from "@abacusflow/ui";
 import { usePaginatedList } from "../hooks/use-paginated-list";
 import { useToast } from "../hooks/use-toast";
-import { dateToFormattedString, timestampToLocaleString } from "@abacusflow/utils";
+import {
+  dateToFormattedString,
+  timestampToLocaleString,
+  translateInventoryUnitType,
+  translateOrderStatus,
+  type OrderStatus,
+} from "@abacusflow/utils";
 import type {
-  BasicProduct,
-  Customer,
-  InventoryUnit,
+  ListOrdersPageRequest,
+  OrderItem,
+  PageResponse,
   PurchaseOrder,
   SaleOrder,
-  OrderItem,
-  ListOrdersPageRequest,
-  PageResponse,
-  Supplier,
+  SelectableProduct,
 } from "@abacusflow/core";
 import {
   customerApi,
@@ -43,10 +46,7 @@ interface OrderListPageProps {
   reverseFn: (id: number) => Promise<void>;
 }
 
-interface OrderForm {
-  partnerId: string;
-  orderDate: string;
-  note: string;
+interface OrderItemForm {
   itemId: string;
   quantity: string;
   unitPrice: string;
@@ -54,15 +54,33 @@ interface OrderForm {
   discountFactor: string;
 }
 
-const emptyForm = (): OrderForm => ({
-  partnerId: "",
-  orderDate: new Date().toISOString().slice(0, 10),
-  note: "",
+interface OrderForm {
+  partnerId: string;
+  orderDate: string;
+  note: string;
+  items: OrderItemForm[];
+}
+
+const ORDER_STATUS_OPTIONS: { label: string; value: OrderStatus }[] = [
+  { label: "进行中", value: "pending" },
+  { label: "已完成", value: "completed" },
+  { label: "已取消", value: "canceled" },
+  { label: "已撤回", value: "reversed" },
+];
+
+const emptyItem = (): OrderItemForm => ({
   itemId: "",
   quantity: "1",
   unitPrice: "",
   serialNumber: "",
-  discountFactor: "",
+  discountFactor: "100",
+});
+
+const emptyForm = (): OrderForm => ({
+  partnerId: "",
+  orderDate: new Date().toISOString().slice(0, 10),
+  note: "",
+  items: [emptyItem()],
 });
 
 export function OrderListPage({
@@ -83,22 +101,42 @@ export function OrderListPage({
   const [submitting, setSubmitting] = useState(false);
   const [partnerOptions, setPartnerOptions] = useState<SelectOption[]>([]);
   const [itemOptions, setItemOptions] = useState<SelectOption[]>([]);
-  const [errors, setErrors] = useState<Partial<Record<keyof OrderForm, string>>>({});
+  const [products, setProducts] = useState<SelectableProduct[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [showDetail, setShowDetail] = useState(false);
   const [detailItem, setDetailItem] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const defaultFilters: Partial<ListOrdersPageRequest> =
+    orderType === "purchase"
+      ? {
+          orderNo: undefined,
+          supplierName: undefined,
+          status: undefined,
+          productName: undefined,
+          serialNumber: undefined,
+          orderDate: undefined,
+        }
+      : {
+          orderNo: undefined,
+          customerName: undefined,
+          status: undefined,
+          inventoryUnitName: undefined,
+          orderDate: undefined,
+        };
 
   const {
     data, loading, pageIndex, total, filters,
     updateFilter, setPageIndex, refresh, handleSearch, handleReset,
   } = usePaginatedList<Order, ListOrdersPageRequest>({
     fetchFn: listFn,
-    defaultFilters: { orderNo: undefined },
+    defaultFilters,
   });
 
   const orderLabel = orderType === "purchase" ? "采购" : "销售";
   const itemLabel = orderType === "purchase" ? "产品" : "库存单元";
+  const partnerFilterKey = orderType === "purchase" ? "supplierName" : "customerName";
 
   const openCreate = async () => {
     setForm(emptyForm());
@@ -107,37 +145,38 @@ export function OrderListPage({
     setFormLoading(true);
     try {
       if (orderType === "purchase") {
-        const [suppliers, products] = await Promise.all([
-          supplierApi.listSuppliersPage({ pageIndex: 1, pageSize: 100 }),
-          productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 100 }),
+        const [suppliers, selectableProducts] = await Promise.all([
+          supplierApi.listSelectableSuppliers(),
+          productApi.listSelectableProducts(),
         ]);
+        setProducts(selectableProducts);
         setPartnerOptions(
-          suppliers.content.map((supplier: Supplier) => ({
+          suppliers.map((supplier) => ({
             label: supplier.name,
             value: supplier.id,
           })),
         );
         setItemOptions(
-          products.content.map((product: BasicProduct) => ({
-            label: `${product.name}${product.specification ? ` / ${product.specification}` : ""}`,
+          selectableProducts.map((product) => ({
+            label: `${product.name} / ${product.barcode}`,
             value: product.id,
           })),
         );
       } else {
-        const [customers, inventories] = await Promise.all([
-          customerApi.listCustomersPage({ pageIndex: 1, pageSize: 100 }),
-          inventoryApi.listInventoriesPage({ pageIndex: 1, pageSize: 100 }),
+        const [customers, selectableInventoryUnits] = await Promise.all([
+          customerApi.listSelectableCustomers(),
+          inventoryApi.listSelectableInventoryUnits(["normal", "reversed"]),
         ]);
         setPartnerOptions(
-          customers.content.map((customer: Customer) => ({
+          customers.map((customer) => ({
             label: customer.name,
             value: customer.id,
           })),
         );
         setItemOptions(
-          inventories.content.map((inventory: InventoryUnit) => ({
-            label: `${inventory.productName} / 库存 ${inventory.quantity}`,
-            value: inventory.id,
+          selectableInventoryUnits.map((unit) => ({
+            label: `${unit.title} / ${translateInventoryUnitType(unit.type)}`,
+            value: unit.id,
           })),
         );
       }
@@ -162,19 +201,48 @@ export function OrderListPage({
     }
   };
 
+  const updateItem = (index: number, patch: Partial<OrderItemForm>) => {
+    setForm((prev) => ({
+      ...prev,
+      items: prev.items.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...patch } : item,
+      ),
+    }));
+  };
+
+  const addOrderItem = () => {
+    setForm((prev) => ({ ...prev, items: [...prev.items, emptyItem()] }));
+  };
+
+  const removeOrderItem = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      items: prev.items.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
   const validate = (): boolean => {
-    const nextErrors: Partial<Record<keyof OrderForm, string>> = {};
+    const nextErrors: Record<string, string> = {};
     if (!form.partnerId) nextErrors.partnerId = `请选择${partnerLabel}`;
     if (!form.orderDate) nextErrors.orderDate = "请选择订单日期";
-    if (!form.itemId) nextErrors.itemId = `请选择${itemLabel}`;
-    if (!form.quantity || Number(form.quantity) <= 0) nextErrors.quantity = "请输入大于 0 的数量";
-    if (!form.unitPrice || Number(form.unitPrice) < 0) nextErrors.unitPrice = "请输入不小于 0 的单价";
-    if (form.discountFactor) {
-      const discount = Number(form.discountFactor);
-      if (Number.isNaN(discount) || discount < 0 || discount > 1) {
-        nextErrors.discountFactor = "折扣率需在 0 到 1 之间";
+    if (form.items.length === 0) nextErrors.items = "请至少添加一条明细";
+
+    form.items.forEach((item, index) => {
+      if (!item.itemId) nextErrors[`item-${index}`] = `请选择${itemLabel}`;
+      if (!item.quantity || Number(item.quantity) <= 0) {
+        nextErrors[`quantity-${index}`] = "请输入大于 0 的数量";
       }
-    }
+      if (!item.unitPrice || Number(item.unitPrice) < 0) {
+        nextErrors[`unitPrice-${index}`] = "请输入不小于 0 的单价";
+      }
+      if (orderType === "sale") {
+        const discount = Number(item.discountFactor || "100");
+        if (Number.isNaN(discount) || discount < 0 || discount > 100) {
+          nextErrors[`discountFactor-${index}`] = "折扣率需在 0 到 100 之间";
+        }
+      }
+    });
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -188,28 +256,24 @@ export function OrderListPage({
           supplierId: Number(form.partnerId),
           orderDate: form.orderDate,
           note: form.note || undefined,
-          orderItems: [
-            {
-              productId: Number(form.itemId),
-              quantity: Number(form.quantity),
-              unitPrice: Number(form.unitPrice),
-              serialNumber: form.serialNumber || undefined,
-            },
-          ],
+          orderItems: form.items.map((item) => ({
+            productId: Number(item.itemId),
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            serialNumber: item.serialNumber || undefined,
+          })),
         });
       } else {
         await transactionApi.createSaleOrder({
           customerId: Number(form.partnerId),
           orderDate: form.orderDate,
           note: form.note || undefined,
-          orderItems: [
-            {
-              inventoryUnitId: Number(form.itemId),
-              quantity: Number(form.quantity),
-              unitPrice: Number(form.unitPrice),
-              discountFactor: form.discountFactor ? Number(form.discountFactor) : undefined,
-            },
-          ],
+          orderItems: form.items.map((item) => ({
+            inventoryUnitId: Number(item.itemId),
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            discountFactor: item.discountFactor ? Number(item.discountFactor) / 100 : 1,
+          })),
         });
       }
       addToast("success", `新增${orderLabel}单成功`);
@@ -224,7 +288,7 @@ export function OrderListPage({
 
   const handleAction = async (id: number, action: "complete" | "cancel" | "reverse") => {
     const labels = { complete: "完成", cancel: "取消", reverse: "撤回" };
-    if (!confirm(`确定${labels[action]}该${orderType === "purchase" ? "采购" : "销售"}单？`)) return;
+    if (!confirm(`确定${labels[action]}该${orderLabel}单？`)) return;
     try {
       if (action === "complete") await completeFn(id);
       if (action === "cancel") await cancelFn(id);
@@ -259,6 +323,13 @@ export function OrderListPage({
       title: "总金额",
       render: (_, record) => record.totalAmount?.toLocaleString("zh-CN") ?? "-",
     },
+    { key: "totalQuantity", title: "总数量", dataIndex: "totalQuantity" },
+    { key: "itemCount", title: "明细数", dataIndex: "itemCount" },
+    {
+      key: "autoCompleteDate",
+      title: "自动完成日期",
+      render: (_, record) => dateToFormattedString(record.autoCompleteDate),
+    },
     {
       key: "action",
       title: "操作",
@@ -285,6 +356,7 @@ export function OrderListPage({
       title: orderType === "purchase" ? "产品" : "库存单元",
       render: (_, record) =>
         record.productName ??
+        record.title ??
         (record.productId ? `产品 #${record.productId}` : undefined) ??
         (record.inventoryUnitId ? `库存单元 #${record.inventoryUnitId}` : "-"),
     },
@@ -333,6 +405,9 @@ export function OrderListPage({
   const formatTimestamp = (value?: string | number): string =>
     typeof value === "number" ? timestampToLocaleString(value) : value ?? "";
 
+  const isAssetProduct = (productId: string) =>
+    products.find((product) => String(product.id) === productId)?.type === "asset";
+
   return (
     <div>
       <PageHeader
@@ -346,9 +421,66 @@ export function OrderListPage({
             <input
               value={filters.orderNo ?? ""}
               onChange={(e) => updateFilter("orderNo", e.target.value || undefined)}
-              placeholder="请输入订单编号"
+              placeholder={`请输入${orderLabel}单号`}
             />
           </div>
+          <div className="form-item">
+            <label>订单日期</label>
+            <input
+              type="date"
+              value={filters.orderDate ?? ""}
+              onChange={(e) => updateFilter("orderDate", e.target.value || undefined)}
+            />
+          </div>
+          <div className="form-item">
+            <label>{partnerLabel}</label>
+            <input
+              value={(filters[partnerFilterKey] as string | undefined) ?? ""}
+              onChange={(e) => updateFilter(partnerFilterKey, e.target.value || undefined)}
+              placeholder={`请输入${partnerLabel}`}
+            />
+          </div>
+          <div className="form-item">
+            <label>状态</label>
+            <select
+              value={filters.status ?? ""}
+              onChange={(e) => updateFilter("status", (e.target.value || undefined) as OrderStatus | undefined)}
+            >
+              <option value="">全部</option>
+              {ORDER_STATUS_OPTIONS.map((status) => (
+                <option key={status.value} value={status.value}>{status.label}</option>
+              ))}
+            </select>
+          </div>
+          {orderType === "purchase" ? (
+            <>
+              <div className="form-item">
+                <label>产品名称</label>
+                <input
+                  value={filters.productName ?? ""}
+                  onChange={(e) => updateFilter("productName", e.target.value || undefined)}
+                  placeholder="请输入产品名称"
+                />
+              </div>
+              <div className="form-item">
+                <label>序列号</label>
+                <input
+                  value={filters.serialNumber ?? ""}
+                  onChange={(e) => updateFilter("serialNumber", e.target.value || undefined)}
+                  placeholder="请输入序列号"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="form-item">
+              <label>库存单元</label>
+              <input
+                value={filters.inventoryUnitName ?? ""}
+                onChange={(e) => updateFilter("inventoryUnitName", e.target.value || undefined)}
+                placeholder="请输入库存单元名"
+              />
+            </div>
+          )}
           <Button type="primary" label="搜索" onClick={handleSearch} />
           <Button label="重置" onClick={handleReset} />
         </div>
@@ -369,7 +501,7 @@ export function OrderListPage({
         onClose={() => setShowForm(false)}
         onOk={handleSubmit}
         okLoading={submitting}
-        width={640}
+        width={760}
       >
         {formLoading ? (
           <p className="text-gray-400 text-center py-8">加载中...</p>
@@ -392,58 +524,75 @@ export function OrderListPage({
                 error={!!errors.orderDate}
               />
             </FormField>
-            <FormField label={itemLabel} required error={errors.itemId}>
-              <FormSelect
-                value={form.itemId}
-                onChange={(e) => setForm({ ...form, itemId: e.target.value })}
-                placeholder={`请选择${itemLabel}`}
-                options={itemOptions}
-                error={!!errors.itemId}
-              />
-            </FormField>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="数量" required error={errors.quantity}>
-                <FormInput
-                  type="number"
-                  min={1}
-                  value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                  error={!!errors.quantity}
-                />
-              </FormField>
-              <FormField label="单价" required error={errors.unitPrice}>
-                <FormInput
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={form.unitPrice}
-                  onChange={(e) => setForm({ ...form, unitPrice: e.target.value })}
-                  error={!!errors.unitPrice}
-                />
-              </FormField>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-semibold">订单明细</span>
+              <Button type="primary" size="small" label="添加明细" onClick={addOrderItem} />
             </div>
-            {orderType === "purchase" ? (
-              <FormField label="序列号">
-                <FormInput
-                  value={form.serialNumber}
-                  onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
-                  placeholder="资产类产品可填写序列号"
-                />
-              </FormField>
-            ) : (
-              <FormField label="折扣率" error={errors.discountFactor}>
-                <FormInput
-                  type="number"
-                  min={0}
-                  max={1}
-                  step="0.01"
-                  value={form.discountFactor}
-                  onChange={(e) => setForm({ ...form, discountFactor: e.target.value })}
-                  placeholder="例如 0.9 表示九折"
-                  error={!!errors.discountFactor}
-                />
-              </FormField>
-            )}
+            {errors.items && <p className="text-red-500 text-sm">{errors.items}</p>}
+            <div className="flex flex-col gap-3">
+              {form.items.map((item, index) => (
+                <div key={index} className="border border-gray-100 rounded-md p-3">
+                  <div className="flex justify-between gap-3 mb-2">
+                    <span className="text-sm text-gray-500">明细 {index + 1}</span>
+                    {form.items.length > 1 && (
+                      <Button type="link" label="删除" onClick={() => removeOrderItem(index)} />
+                    )}
+                  </div>
+                  <FormField label={itemLabel} required error={errors[`item-${index}`]}>
+                    <FormSelect
+                      value={item.itemId}
+                      onChange={(e) => updateItem(index, { itemId: e.target.value })}
+                      placeholder={`请选择${itemLabel}`}
+                      options={itemOptions}
+                      error={!!errors[`item-${index}`]}
+                    />
+                  </FormField>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="数量" required error={errors[`quantity-${index}`]}>
+                      <FormInput
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(e) => updateItem(index, { quantity: e.target.value })}
+                        error={!!errors[`quantity-${index}`]}
+                      />
+                    </FormField>
+                    <FormField label="单价" required error={errors[`unitPrice-${index}`]}>
+                      <FormInput
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={item.unitPrice}
+                        onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
+                        error={!!errors[`unitPrice-${index}`]}
+                      />
+                    </FormField>
+                  </div>
+                  {orderType === "purchase" ? (
+                    <FormField label="序列号">
+                      <FormInput
+                        value={item.serialNumber}
+                        onChange={(e) => updateItem(index, { serialNumber: e.target.value })}
+                        placeholder={isAssetProduct(item.itemId) ? "资产类产品建议填写序列号" : "可选"}
+                      />
+                    </FormField>
+                  ) : (
+                    <FormField label="折扣率" error={errors[`discountFactor-${index}`]}>
+                      <FormInput
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="1"
+                        value={item.discountFactor}
+                        onChange={(e) => updateItem(index, { discountFactor: e.target.value })}
+                        placeholder="例如 90 表示九折"
+                        error={!!errors[`discountFactor-${index}`]}
+                      />
+                    </FormField>
+                  )}
+                </div>
+              ))}
+            </div>
             <FormField label="备注">
               <FormTextarea
                 value={form.note}
@@ -459,7 +608,7 @@ export function OrderListPage({
         open={showDetail}
         title={`${orderLabel}单详情`}
         onClose={() => setShowDetail(false)}
-        width={720}
+        width={760}
       >
         {detailLoading ? (
           <p className="text-gray-400 text-center py-8">加载中...</p>
@@ -469,19 +618,21 @@ export function OrderListPage({
               <DetailRow label="订单编号" value={detailItem.orderNo} />
               <DetailRow label="订单日期" value={dateToFormattedString(detailItem.orderDate)} />
               <DetailRow label={partnerLabel} value={getPartnerValue(detailItem)} />
-              <DetailRow label="状态" value={detailItem.status === "pending" ? "待处理" : detailItem.status === "completed" ? "已完成" : "已取消"} />
+              <DetailRow label="状态" value={translateOrderStatus(detailItem.status)} />
               <DetailRow label="总金额" value={getTotalAmount(detailItem)} />
-              {"discountFactor" in detailItem && (
-                <DetailRow label="折扣系数" value={(detailItem as SaleOrder).discountFactor?.toString()} />
-              )}
+              <DetailRow label="备注" value={detailItem.note} />
               <DetailRow label="创建时间" value={formatTimestamp(detailItem.createdAt)} />
+              <DetailRow label="更新时间" value={formatTimestamp(detailItem.updatedAt)} />
             </div>
             <div>
               <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>订单明细</h4>
               <DataTable
                 columns={itemColumns}
                 data={getOrderItems(detailItem)}
-                rowKey={(item) => item.id?.toString() ?? Math.random().toString()}
+                rowKey={(item) =>
+                  item.id?.toString() ??
+                  `${item.productId ?? item.inventoryUnitId ?? "item"}-${item.quantity}-${item.unitPrice}`
+                }
               />
             </div>
           </div>
@@ -494,7 +645,7 @@ export function OrderListPage({
 function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
   return (
     <div style={{ display: "flex", gap: 8 }}>
-      <span style={{ color: "#999", minWidth: 80, flexShrink: 0 }}>{label}：</span>
+      <span style={{ color: "#999", minWidth: 96, flexShrink: 0 }}>{label}：</span>
       <span>{value ?? "-"}</span>
     </div>
   );

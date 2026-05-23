@@ -129,7 +129,18 @@ export default function SuppliersPage() {
     { key: "phone", title: "联系电话", dataIndex: "phone" },
     { key: "email", title: "邮箱", dataIndex: "email" },
     { key: "address", title: "地址", dataIndex: "address" },
-    { key: "totalOrders", title: "历史订单数", dataIndex: "totalOrders" },
+    {
+      key: "totalOrderCount",
+      title: "历史订单数",
+      render: (_, record) => record.totalOrderCount ?? record.totalOrders ?? "-",
+    },
+    {
+      key: "totalOrderAmount",
+      title: "历史订单金额",
+      render: (_, record) =>
+        (record.totalOrderAmount ?? record.totalAmount)?.toLocaleString("zh-CN") ?? "-",
+    },
+    { key: "lastOrderDate", title: "最近交易日期", dataIndex: "lastOrderDate" },
     {
       key: "action",
       title: "操作",
@@ -157,6 +168,30 @@ export default function SuppliersPage() {
               value={filters.name ?? ""}
               onChange={(e) => updateFilter("name", e.target.value || undefined)}
               placeholder="请输入供应商名称"
+            />
+          </div>
+          <div className="form-item">
+            <label>联系人</label>
+            <input
+              value={filters.contactPerson ?? ""}
+              onChange={(e) => updateFilter("contactPerson", e.target.value || undefined)}
+              placeholder="请输入联系人"
+            />
+          </div>
+          <div className="form-item">
+            <label>电话</label>
+            <input
+              value={filters.phone ?? ""}
+              onChange={(e) => updateFilter("phone", e.target.value || undefined)}
+              placeholder="请输入电话"
+            />
+          </div>
+          <div className="form-item">
+            <label>地址</label>
+            <input
+              value={filters.address ?? ""}
+              onChange={(e) => updateFilter("address", e.target.value || undefined)}
+              placeholder="请输入地址"
             />
           </div>
           <Button type="primary" label="搜索" onClick={handleSearch} />
@@ -236,11 +271,22 @@ export default function SuppliersPage() {
             <DetailRow label="联系电话" value={detailItem.phone} />
             <DetailRow label="邮箱" value={detailItem.email} />
             <DetailRow label="地址" value={detailItem.address} />
-            <DetailRow label="历史订单数" value={detailItem.totalOrders} />
+            <DetailRow label="历史订单数" value={detailItem.totalOrderCount ?? detailItem.totalOrders} />
+            <DetailRow label="历史订单金额" value={(detailItem.totalOrderAmount ?? detailItem.totalAmount)?.toLocaleString("zh-CN")} />
             <DetailRow label="创建时间" value={detailItem.createdAt} />
+            <DetailRow label="更新时间" value={detailItem.updatedAt} />
           </div>
         ) : null}
       </Modal>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
+  return (
+    <div style={{ display: "flex", gap: 8 }}>
+      <span style={{ color: "#999", minWidth: 100, flexShrink: 0 }}>{label}：</span>
+      <span>{value ?? "-"}</span>
     </div>
   );
 }

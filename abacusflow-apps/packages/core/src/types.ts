@@ -5,7 +5,7 @@ import type { OrderStatus, ProductType, ProductUnit } from "@abacusflow/utils";
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;
-  totalPages: number;
+  totalPages?: number;
   size: number;
   number: number;
 }
@@ -14,6 +14,11 @@ export interface PageRequest {
   pageIndex: number;
   pageSize: number;
 }
+
+export type Sex = "male" | "female";
+export type InventoryUnitType = "instance" | "batch";
+export type InventoryUnitStatus = "normal" | "consumed" | "canceled" | "reversed";
+export type ExportInventoryFormat = "excel" | "pdf";
 
 // ---- Product ----
 
@@ -28,8 +33,8 @@ export interface Product {
   unit: ProductUnit;
   enabled: boolean;
   note?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: string | number;
+  updatedAt?: string | number;
 }
 
 export type BasicProduct = Pick<
@@ -44,6 +49,13 @@ export type BasicProduct = Pick<
   | "enabled"
   | "note"
 >;
+
+export interface SelectableProduct {
+  id: number;
+  name: string;
+  type: ProductType;
+  barcode: string;
+}
 
 export interface ListBasicProductsPageRequest extends PageRequest {
   name?: string;
@@ -73,8 +85,23 @@ export interface ProductCategory {
   id: number;
   name: string;
   parentId?: number;
+  parentName?: string;
   description?: string;
   children?: ProductCategory[];
+  createdAt?: string | number;
+  updatedAt?: string | number;
+}
+
+export type BasicProductCategory = Pick<
+  ProductCategory,
+  "id" | "name" | "parentName"
+>;
+
+export interface SelectableProductCategory {
+  id: number;
+  name: string;
+  parentId?: number;
+  parentName?: string;
 }
 
 export interface CreateProductCategoryRequest {
@@ -113,38 +140,93 @@ export interface UpdateDepotRequest extends CreateDepotRequest {
 
 // ---- Inventory ----
 
-export interface InventoryUnit {
+export interface BasicInventory {
+  id: number;
+  productName: string;
+  productType: ProductType;
+  productSpecification?: string;
+  productNote?: string;
+  initialQuantity: number;
+  quantity: number;
+  remainingQuantity: number;
+  depotNames: string[];
+  safetyStock: number;
+  maxStock: number;
+  units?: BasicInventoryUnit[];
+}
+
+export interface Inventory {
   id: number;
   productId: number;
-  productName: string;
-  productUnit: ProductUnit;
-  productType: ProductType;
-  depotId?: number;
+  safetyStock: number;
+  maxStock: number;
+  createdAt?: string | number;
+  updatedAt?: string | number;
+}
+
+export interface BasicInventoryUnit {
+  id: number;
+  type: InventoryUnitType;
+  status: InventoryUnitStatus;
+  title: string;
+  purchaseOrderNo: string;
+  saleOrderNos: string[];
   depotName?: string;
+  initialQuantity: number;
   quantity: number;
-  safetyStock?: number;
-  maxStock?: number;
-  categoryName?: string;
+  remainingQuantity: number;
+  unitPrice: number;
+  receivedAt: string | number;
+  batchCode?: string;
+  serialNumber?: string;
+}
+
+export interface InventoryUnit {
+  id: number;
+  unitType?: InventoryUnitType;
+  type?: InventoryUnitType;
+  inventoryId: number;
+  purchaseOrderId: number;
+  initialQuantity: number;
+  quantity: number;
+  remainingQuantity: number;
+  unitPrice: number;
+  depotId?: number;
+  status: InventoryUnitStatus;
+  saleOrderIds: number[];
+  receivedAt: string | number;
+  serialNumber?: string;
+  batchCode?: string;
+}
+
+export interface SelectableInventoryUnit {
+  id: number;
+  type: InventoryUnitType;
+  title: string;
+  status: InventoryUnitStatus;
 }
 
 export interface AssignDepotRequest {
-  inventoryId: number;
+  inventoryUnitId: number;
   depotId: number;
 }
 
 export interface UpdateWarningLineRequest {
   inventoryId: number;
-  safetyStock?: number;
-  maxStock?: number;
+  safetyStock: number;
+  maxStock: number;
 }
 
-export interface ListInventoriesPageRequest extends PageRequest {
+export interface ListInventoryRequest extends PageRequest {
+  productCategoryId?: number;
   productName?: string;
-  unitCode?: string;
   productType?: ProductType;
-  depotId?: number;
-  categoryId?: number;
+  inventoryUnitCode?: string;
+  depotName?: string;
 }
+
+export type ListInventoriesPageRequest = ListInventoryRequest;
+export type ListInventoryUnitsPageRequest = ListInventoryRequest;
 
 // ---- Partner (Customer / Supplier) ----
 
@@ -153,9 +235,18 @@ export interface Customer {
   name: string;
   phone?: string;
   address?: string;
+  totalOrderCount?: number;
+  totalOrderAmount?: number;
   totalOrders?: number;
   totalAmount?: number;
-  createdAt?: string;
+  lastOrderDate?: string;
+  createdAt?: string | number;
+  updatedAt?: string | number;
+}
+
+export interface SelectableCustomer {
+  id: number;
+  name: string;
 }
 
 export interface CreateCustomerRequest {
@@ -175,9 +266,18 @@ export interface Supplier {
   phone?: string;
   email?: string;
   address?: string;
+  totalOrderCount?: number;
+  totalOrderAmount?: number;
   totalOrders?: number;
   totalAmount?: number;
-  createdAt?: string;
+  lastOrderDate?: string;
+  createdAt?: string | number;
+  updatedAt?: string | number;
+}
+
+export interface SelectableSupplier {
+  id: number;
+  name: string;
 }
 
 export interface CreateSupplierRequest {
@@ -196,9 +296,10 @@ export interface UpdateSupplierRequest extends CreateSupplierRequest {
 
 export interface OrderItem {
   id?: number;
-  productId: number;
+  productId?: number;
   inventoryUnitId?: number;
   productName?: string;
+  title?: string;
   quantity: number;
   unitPrice: number;
   discountedPrice?: number;
@@ -216,6 +317,9 @@ export interface PurchaseOrder {
   orderItems?: OrderItem[];
   items?: OrderItem[];
   totalAmount?: number;
+  totalQuantity?: number;
+  itemCount?: number;
+  autoCompleteDate?: string;
   note?: string;
   createdAt?: string | number;
   updatedAt?: string | number;
@@ -225,7 +329,12 @@ export interface CreatePurchaseOrderRequest {
   supplierId: number;
   orderDate: string;
   note?: string;
-  orderItems: Omit<OrderItem, "id" | "productName" | "subtotal" | "discountedPrice" | "inventoryUnitId">[];
+  orderItems: Array<{
+    productId: number;
+    quantity: number;
+    unitPrice: number;
+    serialNumber?: string;
+  }>;
 }
 
 export interface SaleOrder {
@@ -238,6 +347,9 @@ export interface SaleOrder {
   orderItems?: OrderItem[];
   items?: OrderItem[];
   totalAmount?: number;
+  totalQuantity?: number;
+  itemCount?: number;
+  autoCompleteDate?: string;
   discountFactor?: number;
   note?: string;
   createdAt?: string | number;
@@ -259,9 +371,12 @@ export interface CreateSaleOrderRequest {
 export interface ListOrdersPageRequest extends PageRequest {
   orderNo?: string;
   orderDate?: string;
+  status?: OrderStatus;
+  supplierName?: string;
+  customerName?: string;
   productName?: string;
   serialNumber?: string;
-  partnerName?: string;
+  inventoryUnitName?: string;
 }
 
 // ---- User ----
@@ -271,18 +386,24 @@ export interface User {
   name: string;
   nick?: string;
   age?: number;
-  sex?: string;
+  sex?: Sex;
+  roleIds?: number[];
+  enabled?: boolean;
+  locked?: boolean;
+  createdAt?: string | number;
+  updatedAt?: string | number;
 }
 
 export interface CreateUserRequest {
   name: string;
   nick?: string;
   age?: number;
-  sex?: string;
+  sex?: Sex;
 }
 
-export interface UpdateUserRequest extends CreateUserRequest {
+export interface UpdateUserRequest extends Omit<CreateUserRequest, "name"> {
   id: number;
+  name?: string;
 }
 
 // ---- Auth ----

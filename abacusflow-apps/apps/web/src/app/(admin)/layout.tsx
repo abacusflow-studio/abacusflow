@@ -25,10 +25,13 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    key: "/product",
+    key: "/products",
     label: "产品中心",
     icon: "📋",
-    children: [{ key: "/products", label: "产品管理", icon: "📥" }],
+    children: [
+      { key: "/products", label: "产品管理", icon: "📥" },
+      { key: "/products/category", label: "产品类别管理", icon: "🏷️" },
+    ],
   },
   {
     key: "/partner",

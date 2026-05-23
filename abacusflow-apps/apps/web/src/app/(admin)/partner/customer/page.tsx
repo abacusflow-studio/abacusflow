@@ -120,12 +120,18 @@ export default function CustomersPage() {
     { key: "name", title: "客户名称", dataIndex: "name" },
     { key: "phone", title: "联系电话", dataIndex: "phone" },
     { key: "address", title: "地址", dataIndex: "address" },
-    { key: "totalOrders", title: "历史订单数", dataIndex: "totalOrders" },
     {
-      key: "totalAmount",
-      title: "历史订单金额",
-      render: (_, record) => record.totalAmount?.toLocaleString("zh-CN") ?? "-",
+      key: "totalOrderCount",
+      title: "历史订单数",
+      render: (_, record) => record.totalOrderCount ?? record.totalOrders ?? "-",
     },
+    {
+      key: "totalOrderAmount",
+      title: "历史订单金额",
+      render: (_, record) =>
+        (record.totalOrderAmount ?? record.totalAmount)?.toLocaleString("zh-CN") ?? "-",
+    },
+    { key: "lastOrderDate", title: "最近交易日期", dataIndex: "lastOrderDate" },
     {
       key: "action",
       title: "操作",
@@ -155,6 +161,22 @@ export default function CustomersPage() {
               placeholder="请输入客户名称"
             />
           </div>
+          <div className="form-item">
+            <label>电话</label>
+            <input
+              value={filters.phone ?? ""}
+              onChange={(e) => updateFilter("phone", e.target.value || undefined)}
+              placeholder="请输入电话"
+            />
+          </div>
+          <div className="form-item">
+            <label>地址</label>
+            <input
+              value={filters.address ?? ""}
+              onChange={(e) => updateFilter("address", e.target.value || undefined)}
+              placeholder="请输入地址"
+            />
+          </div>
           <Button type="primary" label="搜索" onClick={handleSearch} />
           <Button label="重置" onClick={handleReset} />
         </div>
@@ -177,49 +199,7 @@ export default function CustomersPage() {
         okLoading={submitting}
         width={520}
       >
-        <FormField label="客户名称" required error={errors.name}>
-          <FormInput
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="请输入客户名称"
-            error={!!errors.name}
-          />
-        </FormField>
-        <FormField label="联系电话" error={errors.phone}>
-          <FormInput
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            placeholder="请输入联系电话"
-            error={!!errors.phone}
-          />
-        </FormField>
-        <FormField label="地址">
-          <FormInput
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-            placeholder="请输入地址"
-          />
-        </FormField>
-      </Modal>
-
-      <Modal
-        open={showDetail}
-        title="客户详情"
-        onClose={() => setShowDetail(false)}
-        width={520}
-      >
-        {detailLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
-        ) : detailItem ? (
-          <div className="flex flex-col gap-3">
-            <DetailRow label="客户名称" value={detailItem.name} />
-            <DetailRow label="联系电话" value={detailItem.phone} />
-            <DetailRow label="地址" value={detailItem.address} />
-            <DetailRow label="历史订单数" value={detailItem.totalOrders} />
-            <DetailRow label="历史订单金额" value={detailItem.totalAmount?.toLocaleString("zh-CN")} />
-            <DetailRow label="创建时间" value={detailItem.createdAt} />
-          </div>
-        ) : null}
+        <p className="text-gray-400 text-center py-8">表单开发中...</p>
       </Modal>
     </div>
   );
