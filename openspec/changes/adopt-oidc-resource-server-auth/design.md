@@ -44,7 +44,7 @@ This keeps the API contract independent of whether a caller is a static Web SPA,
 
 The OIDC principal identity shall be keyed from a stable external identity tuple such as issuer plus subject. AbacusFlow shall own business user enablement, tenant or warehouse scope when introduced, roles, and permissions.
 
-The initial implementation may add the minimum identity mapping necessary for authenticated API calls and leave richer provisioning policy as a follow-up decision. Provider claims may seed identity data, but business permissions must not become dependent on a provider-specific role claim shape by accident.
+The initial implementation uses just-in-time provisioning for first-seen OIDC identities: a valid `issuer + subject` that has no local mapping creates a disabled AbacusFlow business user and `user_external_identity` row for administrator review. Provider claims may seed review data such as display name or email, but business permissions must not become dependent on a provider-specific role claim shape by accident.
 
 ### Use platform-specific OIDC public clients
 
@@ -74,6 +74,6 @@ Rollback is limited once clients depend on Bearer-only portal APIs. Before produ
 ## Open Questions
 
 - Which OIDC provider is the first deployment target: hosted Auth0, self-hosted Keycloak, Supabase Auth, or another provider?
-- How are local AbacusFlow users provisioned and linked to `issuer + sub`: just-in-time link, admin invite, or pre-provisioned mapping?
+- Should pending first-login users surface in the existing user list or get a dedicated approval queue?
 - Which business permissions must be enforced in the first protected endpoint pass beyond the current authenticated-only boundary?
 - Does the first Web production deployment accept direct browser token handling, or should the Web app stop static export and introduce a BFF before production?

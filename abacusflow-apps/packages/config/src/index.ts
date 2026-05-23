@@ -1,35 +1,90 @@
+export interface Auth0Config {
+  domain: string;
+  clientId: string;
+  audience: string;
+  redirectUri?: string;
+}
+
 export interface AppConfig {
   apiBaseUrl: string;
-  auth0: {
-    domain: string;
-    clientId: string;
-    audience: string;
-  };
+  auth0: Auth0Config;
   cubeEndpoint: string;
   version: string;
 }
 
-function getEnv(key: string, fallback = ""): string {
-  if (typeof process !== "undefined" && process.env) {
-    return process.env[key] ?? fallback;
-  }
-  return fallback;
+export interface AppConfigInput {
+  apiBaseUrl?: string;
+  auth0?: {
+    domain?: string;
+    clientId?: string;
+    audience?: string;
+    redirectUri?: string;
+  };
+  cubeEndpoint?: string;
+  version?: string;
 }
 
-export function getConfig(): AppConfig {
+export interface DefineAppConfigOptions {
+  requireAuth0?: boolean;
+}
+
+const DEFAULT_CONFIG: AppConfig = {
+  apiBaseUrl: "/api",
+  auth0: {
+    domain: "",
+    clientId: "",
+    audience: "https://admin.abacusflow.cn",
+  },
+  cubeEndpoint: "/cubejs-api",
+  version: "0.0.3",
+};
+
+let appConfig: AppConfig = DEFAULT_CONFIG;
+
+export function required(value: string | undefined, name: string): string {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+export function defineAppConfig(
+  input: AppConfigInput,
+  options: DefineAppConfigOptions = {},
+): AppConfig {
+  const auth0Domain = options.requireAuth0
+    ? required(input.auth0?.domain, "NEXT_PUBLIC_AUTH0_DOMAIN")
+    : input.auth0?.domain ?? DEFAULT_CONFIG.auth0.domain;
+  const auth0ClientId = options.requireAuth0
+    ? required(input.auth0?.clientId, "NEXT_PUBLIC_AUTH0_CLIENT_ID")
+    : input.auth0?.clientId ?? DEFAULT_CONFIG.auth0.clientId;
+
   return {
-    apiBaseUrl: getEnv("NEXT_PUBLIC_API_BASE_URL", "/api"),
+    apiBaseUrl: input.apiBaseUrl ?? DEFAULT_CONFIG.apiBaseUrl,
     auth0: {
-      domain: getEnv("NEXT_PUBLIC_AUTH0_DOMAIN", "dev-st5cs3qsjm2174ua.us.auth0.com"),
-      clientId: getEnv("NEXT_PUBLIC_AUTH0_CLIENT_ID", ""),
-      audience: getEnv("NEXT_PUBLIC_AUTH0_AUDIENCE", "https://admin.abacusflow.cn"),
+      domain: auth0Domain,
+      clientId: auth0ClientId,
+      audience: input.auth0?.audience ?? DEFAULT_CONFIG.auth0.audience,
+      redirectUri: input.auth0?.redirectUri,
     },
-    cubeEndpoint: getEnv("NEXT_PUBLIC_CUBE_ENDPOINT", "/cubejs-api"),
-    version: getEnv("NEXT_PUBLIC_APP_VERSION", "0.0.3"),
+    cubeEndpoint: input.cubeEndpoint ?? DEFAULT_CONFIG.cubeEndpoint,
+    version: input.version ?? DEFAULT_CONFIG.version,
   };
 }
 
-export const CURRENT_VERSION = getEnv("NEXT_PUBLIC_APP_VERSION", "0.0.3");
+export function setAppConfig(config: AppConfig): void {
+  appConfig = config;
+}
+
+export function getConfig(): AppConfig {
+  return appConfig;
+}
+
+export function getCurrentVersion(): string {
+  return getConfig().version;
+}
+
+export const CURRENT_VERSION = DEFAULT_CONFIG.version;
 
 export interface VersionAnnouncement {
   version: string;

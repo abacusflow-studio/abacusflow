@@ -1,19 +1,19 @@
-import { createAuth0Client, Auth0Client } from "@auth0/auth0-spa-js";
+import { Auth0Client } from "@auth0/auth0-spa-js";
 import { setAuthClient, setRedirect, type AuthClient, type UserProfile } from "@abacusflow/core";
-import { getConfig } from "@abacusflow/config";
+import { appConfig } from "../config/app-config";
 
 let auth0Client: Auth0Client | null = null;
 
 export async function initWebAuth(): Promise<void> {
-  const config = getConfig();
+  const authorizationParams = {
+    audience: appConfig.auth0.audience,
+    redirect_uri: appConfig.auth0.redirectUri ?? window.location.origin + "/callback",
+  };
 
-  auth0Client = await createAuth0Client({
-    domain: config.auth0.domain,
-    clientId: config.auth0.clientId,
-    authorizationParams: {
-      audience: config.auth0.audience,
-      redirect_uri: window.location.origin + "/callback",
-    },
+  auth0Client = new Auth0Client({
+    domain: appConfig.auth0.domain,
+    clientId: appConfig.auth0.clientId,
+    authorizationParams,
   });
 
   const client: AuthClient = {
@@ -23,7 +23,7 @@ export async function initWebAuth(): Promise<void> {
       if (returnTo) {
         sessionStorage.setItem("auth_return_to", returnTo);
       }
-      await auth0Client!.loginWithRedirect();
+      await auth0Client!.loginWithRedirect({ authorizationParams });
     },
 
     async handleRedirectCallback() {

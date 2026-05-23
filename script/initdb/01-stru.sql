@@ -30,6 +30,8 @@ create table user_external_identity (
                                         issuer varchar(500) not null,
                                         subject varchar(255) not null,
                                         user_id bigint not null constraint fk_user_external_identity_user_id references user_account,
+                                        email varchar(320),
+                                        display_name varchar(255),
                                         created_at timestamp(6) with time zone not null default now(),
                                         updated_at timestamp(6) with time zone not null default now(),
                                         constraint uq_user_external_identity_issuer_subject unique (issuer, subject)

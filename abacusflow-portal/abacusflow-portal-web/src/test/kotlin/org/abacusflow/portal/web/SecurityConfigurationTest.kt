@@ -121,6 +121,8 @@ class SecurityConfigurationTest(
                 override fun resolveAuthorizedUser(
                     issuer: String,
                     subject: String,
+                    email: String?,
+                    displayName: String?,
                 ): AuthenticatedUserTO? {
                     if (issuer != TEST_ISSUER) {
                         return null

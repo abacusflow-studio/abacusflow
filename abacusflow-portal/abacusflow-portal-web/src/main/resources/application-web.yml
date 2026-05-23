@@ -4,6 +4,6 @@ spring:
       resourceserver:
         jwt:
           # Spring Security resolves provider keys from the configured OIDC issuer.
-          issuer-uri: ${ABACUSFLOW_OIDC_ISSUER_URI:https://dev-st5cs3qsjm2174ua.us.auth0.com/}
+          issuer-uri: ${ABACUSFLOW_OIDC_ISSUER_URI:https://wls1964302791.us.auth0.com/}
           audiences:
             - ${ABACUSFLOW_OIDC_AUDIENCE:https://admin.abacusflow.cn}

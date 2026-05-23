@@ -50,4 +50,11 @@ class SecurityConfiguration {
 
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
+
+    @Bean
+    fun jwtAuthenticationConverter(
+        externalIdentityAuthenticationService: ExternalIdentityAuthenticationService,
+    ): AbacusFlowJwtAuthenticationConverter {
+        return AbacusFlowJwtAuthenticationConverter(externalIdentityAuthenticationService)
+    }
 }

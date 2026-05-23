@@ -27,13 +27,18 @@ Each protected API operation accepts Bearer access tokens. ID tokens identify a
 client session and are not portal API credentials.
 
 Spring Security extracts a validated JWT principal, then AbacusFlow resolves
-the external identity through `user_external_identity`:
+the external identity through `user_external_identity`. If a valid OIDC subject
+has not been seen before, AbacusFlow creates a disabled local business user and
+external identity record for administrator review, but still denies business API
+access until that user is enabled and assigned roles.
 
 | Column | Meaning |
 | --- | --- |
 | `issuer` | Exact token issuer |
 | `subject` | Stable OIDC `sub` claim |
 | `user_id` | Local `user_account` record |
+| `email` | Provider email claim captured for review when present |
+| `display_name` | Provider display name captured for review when present |
 
 The local user must still be enabled and unlocked. Local roles and permissions
 remain the source of business authorization after identity mapping.
@@ -91,15 +96,17 @@ plain renderer-side file or browser local storage.
 
 1. Configure the provider issuer, API audience, Web client ID, and Web callback
    URL for the environment under test.
-2. Create or provision a `user_external_identity` mapping for the OIDC user
-   that will sign in.
-3. Verify portal validation and authorization:
+2. Sign in once with a valid provider user. A missing mapping will create a
+   disabled pending AbacusFlow user plus `user_external_identity` row.
+3. Enable that local user and assign AbacusFlow roles/permissions before
+   expecting protected business API access.
+4. Verify portal validation and authorization:
 
    ```bash
    ./gradlew :abacusflow-portal:abacusflow-portal-web:test
    ```
 
-4. Verify the static Web client still builds without server-only auth features:
+5. Verify the static Web client still builds without server-only auth features:
 
    ```bash
    cd abacusflow-apps
@@ -107,7 +114,7 @@ plain renderer-side file or browser local storage.
    npm run build -w abacusflow-web
    ```
 
-5. Sign in through the provider and inspect a protected portal request. It
+6. Sign in through the provider and inspect a protected portal request. It
    should send `Authorization: Bearer <access_token>`. Missing, expired,
-   invalid, wrong-audience, unlinked, disabled, or locked identities must not
-   receive protected data.
+   invalid, wrong-audience, pending, disabled, locked, or insufficiently
+   authorized identities must not receive protected data.

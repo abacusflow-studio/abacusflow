@@ -33,6 +33,10 @@ class ExternalIdentity(
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
+    @Column(length = 320)
+    val email: String? = null,
+    @Column(name = "display_name")
+    val displayName: String? = null,
 ) : AbstractAggregateRoot<ExternalIdentity>() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -40,8 +40,13 @@ The portal SHALL expose a stable external OIDC identity to the application autho
 - **WHEN** a valid access token identifies an external subject linked to an enabled AbacusFlow user
 - **THEN** application authorization can evaluate that user's AbacusFlow roles and permissions
 
-#### Scenario: Unlinked or disabled identity
-- **WHEN** a valid external identity has no allowed AbacusFlow user mapping or maps to a disabled business user
+#### Scenario: First-seen external identity
+- **WHEN** a valid external identity has no AbacusFlow user mapping
+- **THEN** the portal records a disabled pending business user and external identity for administrator review
+- **AND** the portal denies business API access until that user is enabled and assigned business authorization
+
+#### Scenario: Disabled identity
+- **WHEN** a valid external identity maps to a disabled business user
 - **THEN** the portal denies business API access according to the configured authorization policy
 
 ### Requirement: OpenAPI declares Bearer protection

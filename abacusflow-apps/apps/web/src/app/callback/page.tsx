@@ -1,25 +1,33 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getAuthClient } from "@abacusflow/core";
 
+let isHandlingCallback = false;
+
 export default function CallbackPage() {
+  const router = useRouter();
+
   useEffect(() => {
     const handleCallback = async () => {
+      if (isHandlingCallback) return;
+      isHandlingCallback = true;
+
       try {
         const auth = getAuthClient();
         await auth.handleRedirectCallback();
 
         const returnTo = sessionStorage.getItem("auth_return_to") || "/dashboard";
         sessionStorage.removeItem("auth_return_to");
-        window.location.href = returnTo;
+        router.replace(returnTo);
       } catch (err) {
         console.error("[callback] error:", err);
-        window.location.href = "/login";
+        router.replace("/login");
       }
     };
     handleCallback();
-  }, []);
+  }, [router]);
 
   return (
     <div

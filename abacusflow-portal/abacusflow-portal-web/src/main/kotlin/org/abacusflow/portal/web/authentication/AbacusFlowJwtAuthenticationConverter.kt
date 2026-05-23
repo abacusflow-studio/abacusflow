@@ -2,7 +2,6 @@ package org.abacusflow.portal.web.authentication
 
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
-import org.jooq.Stringly
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -10,9 +9,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
-import org.springframework.stereotype.Component
 
-@Component
 class AbacusFlowJwtAuthenticationConverter(
     private val externalIdentityAuthenticationService: ExternalIdentityAuthenticationService,
 ) : Converter<Jwt, AbstractAuthenticationToken> {
@@ -20,7 +17,12 @@ class AbacusFlowJwtAuthenticationConverter(
         val issuer = jwt.issuer?.toString() ?: throw invalidExternalIdentity()
         val subject = jwt.subject.takeUnless { it.isNullOrBlank() } ?: throw invalidExternalIdentity()
         val user =
-            externalIdentityAuthenticationService.resolveAuthorizedUser(issuer, subject)
+            externalIdentityAuthenticationService.resolveAuthorizedUser(
+                issuer = issuer,
+                subject = subject,
+                email = jwt.getClaimAsString("email"),
+                displayName = jwt.getClaimAsString("name") ?: jwt.getClaimAsString("nickname"),
+            )
                 ?: throw invalidExternalIdentity()
 
         return JwtAuthenticationToken(
