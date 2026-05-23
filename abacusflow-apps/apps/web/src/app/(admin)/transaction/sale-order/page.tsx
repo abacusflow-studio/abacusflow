@@ -12,6 +12,7 @@ export default function SaleOrdersPage() {
       partnerLabel="客户"
       partnerKey="customerName"
       listFn={transactionApi.listSaleOrdersPage}
+      getDetailFn={transactionApi.getSaleOrder}
       completeFn={transactionApi.completeSaleOrder}
       cancelFn={transactionApi.cancelSaleOrder}
       reverseFn={transactionApi.reverseSaleOrder}

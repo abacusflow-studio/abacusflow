@@ -12,6 +12,7 @@ export default function PurchaseOrdersPage() {
       partnerLabel="供应商"
       partnerKey="supplierName"
       listFn={transactionApi.listPurchaseOrdersPage}
+      getDetailFn={transactionApi.getPurchaseOrder}
       completeFn={transactionApi.completePurchaseOrder}
       cancelFn={transactionApi.cancelPurchaseOrder}
       reverseFn={transactionApi.reversePurchaseOrder}

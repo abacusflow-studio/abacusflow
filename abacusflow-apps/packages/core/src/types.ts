@@ -197,9 +197,11 @@ export interface UpdateSupplierRequest extends CreateSupplierRequest {
 export interface OrderItem {
   id?: number;
   productId: number;
+  inventoryUnitId?: number;
   productName?: string;
   quantity: number;
   unitPrice: number;
+  discountedPrice?: number;
   serialNumber?: string;
   subtotal?: number;
 }
@@ -211,15 +213,19 @@ export interface PurchaseOrder {
   status: OrderStatus;
   supplierId: number;
   supplierName?: string;
-  items: OrderItem[];
+  orderItems?: OrderItem[];
+  items?: OrderItem[];
   totalAmount?: number;
-  createdAt?: string;
+  note?: string;
+  createdAt?: string | number;
+  updatedAt?: string | number;
 }
 
 export interface CreatePurchaseOrderRequest {
   supplierId: number;
   orderDate: string;
-  items: Omit<OrderItem, "id" | "productName" | "subtotal">[];
+  note?: string;
+  orderItems: Omit<OrderItem, "id" | "productName" | "subtotal" | "discountedPrice" | "inventoryUnitId">[];
 }
 
 export interface SaleOrder {
@@ -229,17 +235,25 @@ export interface SaleOrder {
   status: OrderStatus;
   customerId: number;
   customerName?: string;
-  items: OrderItem[];
+  orderItems?: OrderItem[];
+  items?: OrderItem[];
   totalAmount?: number;
   discountFactor?: number;
-  createdAt?: string;
+  note?: string;
+  createdAt?: string | number;
+  updatedAt?: string | number;
 }
 
 export interface CreateSaleOrderRequest {
   customerId: number;
   orderDate: string;
-  discountFactor?: number;
-  items: Omit<OrderItem, "id" | "productName" | "subtotal">[];
+  note?: string;
+  orderItems: Array<{
+    inventoryUnitId: number;
+    quantity: number;
+    unitPrice: number;
+    discountFactor?: number;
+  }>;
 }
 
 export interface ListOrdersPageRequest extends PageRequest {
