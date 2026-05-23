@@ -1,16 +1,18 @@
 # Progress
 
-## 2026-05-22
+## 2026-05-23
 
-- Read shared API URL construction, shared config, and Web middleware.
-- Started tracing Web `404` reports from `usePaginatedList` through `/api` handling.
-- Planning skill session catchup reported an unrelated prior worktree cleanup session.
-- Confirmed Web Next config currently has no `/api` proxy despite the shared `/api` default.
-- Checked backend OpenAPI and controller structure; backend local routes are rooted at `http://localhost:8080`.
-- Checked backend Web/Security configuration and started checking route mismatches beyond the `/api` prefix.
-- Compared generated OpenAPI routes with the shared API client and found several old shared resource paths.
-- Updated Web dev proxy configuration and shared API paths.
-- `npm run lint -w abacusflow-web` passed.
-- `npm run build -w abacusflow-web` reached static export and failed because existing middleware is incompatible with static export.
-- Tried to start the Web dev server for a live `/api` check; sandbox port binding failed and the escalation request was rejected.
-- `git diff --check` and `tsc --noEmit --project apps/web/tsconfig.json` passed.
+- Started the webapp migration/rebuild task.
+- Read relevant planning, frontend, and Next/React performance skill instructions.
+- Ran planning session catchup; no unsynced planning-file updates were found.
+- Confirmed the worktree is clean before making changes.
+- Located the Vue reference app and confirmed it uses Ant Design Vue.
+- Located the existing Next web pages and shared packages in `abacusflow-apps`.
+- Compared key reference page requests against backend OpenAPI.
+- Found method and behavior gaps in the shared API client and current Next pages.
+- Updated shared core types and API client methods to match the backend routes more closely.
+- Added the product category management page and linked it from the product center navigation.
+- Updated products, inventory, order, partner, user, and dashboard pages to match the reference request/response flow more closely.
+- Ran lint, TypeScript, production build, and whitespace checks successfully.
+- Started the Web dev server on `http://localhost:3001` because `3000` was already in use.
+- Confirmed `http://localhost:3001/products/category` responds with HTTP 200.

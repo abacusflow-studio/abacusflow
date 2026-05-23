@@ -3,6 +3,7 @@ export * from "./number";
 export * from "./time";
 export * from "./product";
 export * from "./order";
+export * from "./inventory";
 export * from "./version";
 export * from "./theme";
 export * from "./format";

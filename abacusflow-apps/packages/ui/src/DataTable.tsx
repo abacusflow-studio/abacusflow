@@ -57,7 +57,7 @@ function getRowKey<T>(
 
 export function DataTable<T>({
   columns,
-  data,
+  data = [] as T[],
   rowKey,
   loading = false,
   pagination,

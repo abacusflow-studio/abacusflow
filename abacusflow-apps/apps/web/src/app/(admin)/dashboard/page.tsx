@@ -69,7 +69,7 @@ export default function DashboardPage() {
         depots,
       ] = await Promise.all([
         productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 1 }),
-        inventoryApi.listInventoriesPage({ pageIndex: 1, pageSize: 100 }),
+        inventoryApi.listBasicInventoriesPage({ pageIndex: 1, pageSize: 100 }),
         transactionApi.listPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
         transactionApi.listSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
         customerApi.listCustomersPage({ pageIndex: 1, pageSize: 1 }),
@@ -78,7 +78,7 @@ export default function DashboardPage() {
       ]);
 
       const lowStock = inventories.content.filter(
-        (i) => i.safetyStock && i.quantity < i.safetyStock,
+        (i) => i.safetyStock !== undefined && i.quantity < i.safetyStock,
       ).length;
 
       setStats({
