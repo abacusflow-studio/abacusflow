@@ -8,7 +8,6 @@ import {
   Input,
   Select,
   Form,
-  Typography,
   Flex,
   Tag,
   App,
@@ -17,6 +16,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "../../../components/admin-page-header";
 import {
   userApi,
   type User,
@@ -248,17 +248,23 @@ export default function UsersPage() {
   ];
 
   return (
-    <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          用户管理
-        </Typography.Title>
+    <div className="af-crud-page">
+      <AdminPageHeader
+        eyebrow="团队身份 / 账号管理"
+        title="用户管理"
+        description="集中维护团队账号、基础资料和账号状态，保证业务操作都有清晰身份归属。"
+        metrics={[
+          { label: "用户总数", value: allUsers.length },
+          { label: "当前显示", value: total },
+        ]}
+        actions={
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           新增用户
         </Button>
-      </Flex>
+        }
+      />
 
-      <div className="card">
+      <div className="card af-filter-card">
         <Flex
           wrap="wrap"
           gap={12}
@@ -283,7 +289,7 @@ export default function UsersPage() {
         </Flex>
       </div>
 
-      <div className="card">
+      <div className="card af-table-card">
         <Table<BasicUser>
           columns={columns}
           dataSource={data}

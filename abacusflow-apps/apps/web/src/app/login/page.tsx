@@ -2,7 +2,28 @@
 
 import React, { useState } from "react";
 import { Button } from "antd";
+import {
+  BarChartOutlined,
+  CalculatorOutlined,
+  DatabaseOutlined,
+  LockOutlined,
+  SafetyCertificateOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
 import { getAuthClient } from "@abacusflow/core";
+
+const BOARD_LANES = [
+  { label: "采购入库", value: "84%", color: "#22c55e" },
+  { label: "库存同步", value: "67%", color: "#38bdf8" },
+  { label: "销售出库", value: "92%", color: "#f59e0b" },
+  { label: "风险预警", value: "11%", color: "#fb7185" },
+];
+
+const INSIGHTS = [
+  { label: "流转监测", value: "全天" },
+  { label: "库存信号", value: "实时" },
+  { label: "异常响应", value: "小于1分" },
+];
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -22,75 +43,101 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 400,
-          padding: 40,
-          background: "white",
-          borderRadius: 12,
-          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ marginBottom: 32 }}>
-          <h1
-            style={{
-              color: "#1677ff",
-              fontSize: 32,
-              fontWeight: "bold",
-              marginBottom: 8,
-            }}
-          >
-            小算盘
-          </h1>
-          <h3 style={{ color: "#666", fontSize: 16, margin: 0 }}>
-            AbacusFlow Admin
-          </h3>
-        </div>
+    <main className="af-login-page">
+      <section className="af-login-showcase" aria-label="小算盘概览">
+        <div className="af-kicker">小算盘业务指挥台</div>
+        <h1 className="af-login-title">
+          让库存流转像脉冲
+          <br />
+          一样清晰
+        </h1>
+        <p className="af-login-copy">
+          小算盘把产品、库存、采购、销售和伙伴网络压缩进一张实时业务面板，
+          让团队在高频出入库里保持判断速度。
+        </p>
 
-        <div style={{ marginBottom: 24 }}>
-          <Button
-            type="primary"
-            size="large"
-            loading={loading}
-            onClick={handleLogin}
-            block
-          >
-            {loading ? "跳转中..." : "使用 Auth0 登录"}
-          </Button>
-          {error && (
-            <div
-              style={{
-                marginTop: 16,
-                padding: "8px 12px",
-                background: "#fff2f0",
-                border: "1px solid #ffccc7",
-                borderRadius: 6,
-                color: "#ff4d4f",
-                fontSize: 14,
-              }}
-            >
-              {error}
+        <div className="af-login-insights">
+          {INSIGHTS.map((item) => (
+            <div className="af-insight-tile" key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
             </div>
-          )}
+          ))}
         </div>
 
-        <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 20 }}>
-          <p style={{ color: "#999", fontSize: 14, margin: 0 }}>
-            © 2025 AbacusFlow. All rights reserved.
-          </p>
+        <div className="af-flow-board" aria-hidden="true">
+          <div className="af-board-header">
+            <span>流转矩阵</span>
+            <span>同步中</span>
+          </div>
+          <div className="af-board-lanes">
+            {BOARD_LANES.map((lane) => (
+              <div
+                className="af-board-lane"
+                key={lane.label}
+                style={{ "--lane-color": lane.color } as React.CSSProperties}
+              >
+                <span>{lane.label}</span>
+                <strong>{lane.value}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="af-board-footer">
+            <span>统一认证网关</span>
+            <span>小算盘云</span>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      <section className="af-login-card" aria-label="登录">
+        <div className="af-login-brand">
+          <div className="af-brand-mark">
+            <CalculatorOutlined />
+          </div>
+          <div className="af-brand-copy">
+            <strong>小算盘</strong>
+            <span>库存智能中枢</span>
+          </div>
+        </div>
+
+        <h2 className="af-login-panel-title">进入业务指挥台</h2>
+        <p className="af-login-panel-copy">
+          通过统一身份认证安全登录，继续管理库存、订单和伙伴数据。
+        </p>
+
+        <Button
+          type="primary"
+          size="large"
+          loading={loading}
+          onClick={handleLogin}
+          block
+          icon={<LockOutlined />}
+          className="af-login-button"
+        >
+          {loading ? "正在跳转..." : "使用统一身份认证登录"}
+        </Button>
+
+        {error && <div className="af-login-error">{error}</div>}
+
+        <div className="af-login-checks">
+          <div className="af-login-check">
+            <SafetyCertificateOutlined />
+            <span>企业身份验证已启用</span>
+          </div>
+          <div className="af-login-check">
+            <DatabaseOutlined />
+            <span>库存数据实时同步</span>
+          </div>
+          <div className="af-login-check">
+            <ThunderboltOutlined />
+            <span>关键业务信号快速响应</span>
+          </div>
+        </div>
+
+        <div className="af-login-footer">
+          <BarChartOutlined /> 小算盘 © 2026
+        </div>
+      </section>
+    </main>
   );
 }

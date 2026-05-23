@@ -19,6 +19,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "./admin-page-header";
 import { usePaginatedList } from "../hooks/use-paginated-list";
 import {
   dateToFormattedString,
@@ -511,21 +512,31 @@ export function OrderListPage({
   const isAssetProduct = (productId: string) =>
     products.find((product) => String(product.id) === productId)?.type ===
     "asset";
+  const pageDescription =
+    orderType === "purchase"
+      ? "集中跟踪采购入库、供应商和产品明细，让补货链路保持清晰可控。"
+      : "集中跟踪销售出库、客户和库存单元，让交付链路保持稳定可追溯。";
 
   return (
-    <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          {title}
-        </Typography.Title>
+    <div className="af-crud-page">
+      <AdminPageHeader
+        eyebrow={`${orderLabel}链路 / 订单流转`}
+        title={title}
+        description={pageDescription}
+        metrics={[
+          { label: "订单总数", value: total },
+          { label: "当前页", value: data.length },
+        ]}
+        actions={
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={openCreate}
         >{`新增${orderLabel}单`}</Button>
-      </Flex>
+        }
+      />
 
-      <Card style={{ marginBottom: 16 }}>
+      <Card className="af-filter-card">
         <Flex wrap="wrap" gap={12} align="flex-end">
           <div className="form-item">
             <label>订单编号</label>
@@ -610,7 +621,7 @@ export function OrderListPage({
         </Flex>
       </Card>
 
-      <Card>
+      <Card className="af-table-card">
         <Table<Order>
           columns={columns}
           dataSource={data}

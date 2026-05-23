@@ -7,7 +7,6 @@ import {
   Modal,
   Input,
   Form,
-  Typography,
   Flex,
   App,
   Space,
@@ -15,6 +14,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "../../../../components/admin-page-header";
 import {
   partnerApi,
   type Customer,
@@ -177,17 +177,23 @@ export default function CustomersPage() {
   ];
 
   return (
-    <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          客户管理
-        </Typography.Title>
+    <div className="af-crud-page">
+      <AdminPageHeader
+        eyebrow="客户网络 / 需求侧资料"
+        title="客户管理"
+        description="统一维护客户名称、电话和地址，帮助销售出库与后续跟进保持清晰。"
+        metrics={[
+          { label: "客户总数", value: total },
+          { label: "当前页", value: data.length },
+        ]}
+        actions={
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           新增客户
         </Button>
-      </Flex>
+        }
+      />
 
-      <div className="card">
+      <div className="card af-filter-card">
         <Flex
           wrap="wrap"
           gap={12}
@@ -231,7 +237,7 @@ export default function CustomersPage() {
         </Flex>
       </div>
 
-      <div className="card">
+      <div className="card af-table-card">
         <Table<BasicCustomer>
           columns={columns}
           dataSource={data}

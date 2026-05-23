@@ -7,7 +7,6 @@ import {
   Modal,
   Input,
   Form,
-  Typography,
   Flex,
   App,
   Space,
@@ -15,6 +14,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "../../../../components/admin-page-header";
 import {
   partnerApi,
   type Supplier,
@@ -186,17 +186,23 @@ export default function SuppliersPage() {
   ];
 
   return (
-    <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          供应商管理
-        </Typography.Title>
+    <div className="af-crud-page">
+      <AdminPageHeader
+        eyebrow="供应网络 / 供给侧资料"
+        title="供应商管理"
+        description="沉淀供应商、联系人、电话和地址信息，让采购入库链路更稳定可追踪。"
+        metrics={[
+          { label: "供应商总数", value: total },
+          { label: "当前页", value: data.length },
+        ]}
+        actions={
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           新增供应商
         </Button>
-      </Flex>
+        }
+      />
 
-      <div className="card">
+      <div className="card af-filter-card">
         <Flex
           wrap="wrap"
           gap={12}
@@ -254,7 +260,7 @@ export default function SuppliersPage() {
         </Flex>
       </div>
 
-      <div className="card">
+      <div className="card af-table-card">
         <Table<BasicSupplier>
           columns={columns}
           dataSource={data}

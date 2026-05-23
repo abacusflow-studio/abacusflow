@@ -8,8 +8,6 @@ import {
   Input,
   InputNumber,
   Select,
-  Typography,
-  Flex,
   App,
   Space,
 } from "antd";
@@ -19,6 +17,7 @@ import {
   PrinterOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "../../../components/admin-page-header";
 import {
   depotApi,
   inventoryApi,
@@ -360,11 +359,17 @@ export default function InventoryPage() {
   ];
 
   return (
-    <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          库存管理
-        </Typography.Title>
+    <div className="af-crud-page">
+      <AdminPageHeader
+        eyebrow="库存雷达 / 出入库追踪"
+        title="库存管理"
+        description="按产品、仓点、序列号和库存单元追踪库存状态，让导出、打印和预警处理都更集中。"
+        metrics={[
+          { label: "当前记录", value: total },
+          { label: "产品类别", value: categories.length },
+          { label: "视图模式", value: viewMode === "inventories" ? "汇总" : "明细" },
+        ]}
+        actions={
         <Space wrap>
           <Button
             type="primary"
@@ -387,14 +392,15 @@ export default function InventoryPage() {
             打印库存
           </Button>
         </Space>
-      </Flex>
+        }
+      />
 
       <div className="grid grid-cols-[260px_1fr] gap-4 max-lg:grid-cols-1">
-        <div className="card self-start">
-          <div className="text-xs text-gray-500 mb-2 text-center">
+        <div className="card af-side-card self-start">
+          <div className="af-section-hint">
             打印/导出依据所选分类
           </div>
-          <div className="text-sm font-semibold mb-3">产品类别</div>
+          <div className="af-section-label">产品类别</div>
           <CategoryTree
             categories={categories}
             selectedId={filters.productCategoryId}
@@ -404,7 +410,7 @@ export default function InventoryPage() {
           />
         </div>
         <div>
-          <div className="card">
+          <div className="card af-filter-card">
             <div className="form-inline mb-4">
               <div className="form-item">
                 <label>产品名</label>
@@ -461,7 +467,7 @@ export default function InventoryPage() {
               <Button onClick={resetFilters}>重置</Button>
             </div>
           </div>
-          <div className="card">
+          <div className="card af-table-card">
             <div className="mb-3">
               <Button type="primary" size="small" onClick={switchViewMode}>
                 {viewMode === "inventories" ? "显示普通表格" : "显示内嵌表格"}

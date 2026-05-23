@@ -1,24 +1,25 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Layout, Menu } from "antd";
 import type { MenuProps } from "antd";
 import {
-  DashboardOutlined,
-  UserOutlined,
-  InboxOutlined,
-  TransactionOutlined,
-  ShoppingCartOutlined,
-  ShopOutlined,
-  ShoppingOutlined,
   AppstoreOutlined,
-  TeamOutlined,
   BankOutlined,
+  CalculatorOutlined,
+  DashboardOutlined,
   HomeOutlined,
+  InboxOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ShopOutlined,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+  TeamOutlined,
+  TransactionOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 
 const { Sider, Header, Content, Footer } = Layout;
@@ -99,6 +100,21 @@ const NAV_ITEMS: MenuItemType[] = [
   },
 ];
 
+const ROUTE_META = [
+  { key: "/dashboard", title: "业务仪表盘", subtitle: "全链路库存与订单信号" },
+  { key: "/user", title: "用户管理", subtitle: "团队身份与权限入口" },
+  { key: "/inventory", title: "库存管理", subtitle: "库存单元、仓点与安全库存" },
+  { key: "/transaction/purchase-order", title: "采购单管理", subtitle: "入库采购链路" },
+  { key: "/transaction/sale-order", title: "销售单管理", subtitle: "出库销售链路" },
+  { key: "/products/category", title: "产品类别管理", subtitle: "产品目录结构" },
+  { key: "/products", title: "产品管理", subtitle: "产品编码与产品资料" },
+  { key: "/partner/customer", title: "客户管理", subtitle: "客户网络与联系方式" },
+  { key: "/partner/supplier", title: "供应商管理", subtitle: "供应侧伙伴资料" },
+  { key: "/depots", title: "储存点管理", subtitle: "仓点位置与容量" },
+];
+
+const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
+
 export default function AdminLayout({
   children,
 }: {
@@ -108,22 +124,9 @@ export default function AdminLayout({
   const [collapsed, setCollapsed] = useState(false);
 
   const selectedKeys = useMemo(() => {
-    // Find the most specific matching key
-    const allKeys = [
-      "/dashboard",
-      "/user",
-      "/inventory",
-      "/transaction/purchase-order",
-      "/transaction/sale-order",
-      "/products",
-      "/products/category",
-      "/partner/customer",
-      "/partner/supplier",
-      "/depots",
-    ];
-    const match = allKeys
-      .filter((k) => pathname === k || pathname.startsWith(k + "/"))
-      .sort((a, b) => b.length - a.length)[0];
+    const match = ALL_ROUTE_KEYS.filter(
+      (key) => pathname === key || pathname.startsWith(key + "/"),
+    ).sort((a, b) => b.length - a.length)[0];
     return match ? [match] : [];
   }, [pathname]);
 
@@ -135,81 +138,76 @@ export default function AdminLayout({
     return keys;
   }, [selectedKeys]);
 
+  const routeMeta = useMemo(
+    () =>
+      ROUTE_META.filter(
+        (item) => pathname === item.key || pathname.startsWith(item.key + "/"),
+      ).sort((a, b) => b.key.length - a.key.length)[0] ?? ROUTE_META[0],
+    [pathname],
+  );
+
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout className="af-admin-shell">
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        width={200}
-        collapsedWidth={80}
-        style={{ background: "#ebedef" }}
+        breakpoint="lg"
+        onBreakpoint={setCollapsed}
+        width={236}
+        collapsedWidth={76}
+        className="af-sidebar"
         trigger={null}
       >
-        <div
-          style={{
-            height: 48,
-            margin: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "0 12px",
-          }}
-        >
-          <span style={{ fontSize: 24 }}>🧮</span>
+        <div className="af-brand">
+          <div className="af-brand-mark">
+            <CalculatorOutlined />
+          </div>
           {!collapsed && (
-            <span
-              style={{
-                fontSize: 18,
-                fontWeight: 600,
-                color: "#1f1f1f",
-                whiteSpace: "nowrap",
-              }}
-            >
-              小算盘
-            </span>
+            <div className="af-brand-text">
+              <strong>小算盘</strong>
+              <span>运营中枢</span>
+            </div>
           )}
         </div>
         <Menu
           mode="inline"
+          theme="dark"
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
           items={NAV_ITEMS}
-          style={{ background: "transparent", borderRight: 0 }}
         />
       </Sider>
 
       <Layout>
-        <Header
-          style={{
-            background: "#fdfdfc",
-            padding: "0 24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderBottom: "1px solid #f0f0f0",
-            height: 64,
-            lineHeight: "64px",
-          }}
-        >
-          <div
-            style={{ cursor: "pointer", fontSize: 18 }}
-            onClick={() => setCollapsed(!collapsed)}
-          >
-            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+        <Header className="af-admin-header">
+          <div className="af-header-left">
+            <button
+              type="button"
+              className="af-sidebar-toggle"
+              aria-label={collapsed ? "展开导航" : "收起导航"}
+              onClick={() => setCollapsed((value) => !value)}
+            >
+              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            </button>
+            <div className="af-route-title">
+              <strong>{routeMeta.title}</strong>
+              <span>{routeMeta.subtitle}</span>
+            </div>
           </div>
-          <span style={{ fontSize: 14 }}>超级管理员</span>
+
+          <div className="af-header-right">
+            <div className="af-status-chip">实时同步</div>
+            <div className="af-user-chip">
+              <span className="af-user-avatar">管</span>
+              <span>超级管理员</span>
+            </div>
+          </div>
         </Header>
 
-        <Content
-          style={{ padding: "24px 24px 24px", minHeight: "calc(100vh - 64px)" }}
-        >
-          {children}
-        </Content>
+        <Content className="af-admin-content">{children}</Content>
 
-        <Footer style={{ textAlign: "center", color: "#8c8c8c", fontSize: 14 }}>
-          abacusflow ©2025
-        </Footer>
+        <Footer className="af-admin-footer">小算盘业务指挥台 ©2026</Footer>
       </Layout>
     </Layout>
   );

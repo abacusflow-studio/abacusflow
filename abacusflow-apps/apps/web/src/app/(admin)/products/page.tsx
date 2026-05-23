@@ -8,8 +8,6 @@ import {
   Input,
   Select,
   Form,
-  Typography,
-  Flex,
   Tag,
   App,
   Space,
@@ -18,6 +16,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "../../../components/admin-page-header";
 import {
   productApi,
   type BasicProduct,
@@ -267,19 +266,25 @@ export default function ProductsPage() {
   ];
 
   return (
-    <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          产品管理
-        </Typography.Title>
+    <div className="af-crud-page">
+      <AdminPageHeader
+        eyebrow="产品中枢 / 资料维护"
+        title="产品管理"
+        description="维护产品资料、类别、类型和启用状态，给采购、库存与销售提供统一产品底座。"
+        metrics={[
+          { label: "产品总数", value: total },
+          { label: "类别数量", value: categories.length },
+        ]}
+        actions={
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           新增产品
         </Button>
-      </Flex>
+        }
+      />
 
       <div className="grid grid-cols-[260px_1fr] gap-4 max-lg:grid-cols-1">
-        <div className="card self-start">
-          <div className="text-sm font-semibold mb-3">产品类别</div>
+        <div className="card af-side-card self-start">
+          <div className="af-section-label">产品类别</div>
           <CategoryTree
             categories={categories}
             selectedId={filters.categoryId}
@@ -287,7 +292,7 @@ export default function ProductsPage() {
           />
         </div>
         <div>
-          <div className="card">
+          <div className="card af-filter-card">
             <div className="form-inline mb-4">
               <div className="form-item">
                 <label>产品名称</label>
@@ -338,7 +343,7 @@ export default function ProductsPage() {
               <Button onClick={resetAll}>重置</Button>
             </div>
           </div>
-          <div className="card">
+          <div className="card af-table-card">
             <Table<BasicProduct>
               columns={columns}
               dataSource={data}

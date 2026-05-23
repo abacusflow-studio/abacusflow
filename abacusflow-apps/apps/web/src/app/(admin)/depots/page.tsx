@@ -7,7 +7,6 @@ import {
   Modal,
   Input,
   Form,
-  Typography,
   Flex,
   Tag,
   App,
@@ -16,6 +15,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "../../../components/admin-page-header";
 import {
   depotApi,
   type BasicDepot,
@@ -181,17 +181,23 @@ export default function DepotsPage() {
     : data;
 
   return (
-    <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          储存点管理
-        </Typography.Title>
+    <div className="af-crud-page">
+      <AdminPageHeader
+        eyebrow="仓点网络 / 容量管理"
+        title="储存点管理"
+        description="统一维护仓点位置、容量与启用状态，让库存去向和承载能力一眼可见。"
+        metrics={[
+          { label: "仓点总数", value: data.length },
+          { label: "当前显示", value: filtered.length },
+        ]}
+        actions={
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           新增储存点
         </Button>
-      </Flex>
+        }
+      />
 
-      <div className="card">
+      <div className="card af-filter-card">
         <Flex
           wrap="wrap"
           gap={12}
@@ -214,7 +220,7 @@ export default function DepotsPage() {
         </Flex>
       </div>
 
-      <div className="card">
+      <div className="card af-table-card">
         <Table<BasicDepot>
           columns={columns}
           dataSource={filtered}
