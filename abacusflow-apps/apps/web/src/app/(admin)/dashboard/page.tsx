@@ -33,14 +33,54 @@ interface DashboardStats {
 }
 
 const STAT_CARDS = [
-  { key: "productCount", label: "产品总数", icon: <ShoppingOutlined />, color: COLORS.primary },
-  { key: "inventoryCount", label: "库存记录", icon: <InboxOutlined />, color: COLORS.success },
-  { key: "purchaseOrderCount", label: "采购单", icon: <ShoppingCartOutlined />, color: COLORS.warning },
-  { key: "saleOrderCount", label: "销售单", icon: <ShopOutlined />, color: "#722ed1" },
-  { key: "customerCount", label: "客户数", icon: <UserOutlined />, color: COLORS.info },
-  { key: "supplierCount", label: "供应商", icon: <BankOutlined />, color: "#eb2f96" },
-  { key: "depotCount", label: "储存点", icon: <HomeOutlined />, color: "#8c8c8c" },
-  { key: "lowStockCount", label: "低库存预警", icon: <WarningOutlined />, color: COLORS.danger },
+  {
+    key: "productCount",
+    label: "产品总数",
+    icon: <ShoppingOutlined />,
+    color: COLORS.primary,
+  },
+  {
+    key: "inventoryCount",
+    label: "库存记录",
+    icon: <InboxOutlined />,
+    color: COLORS.success,
+  },
+  {
+    key: "purchaseOrderCount",
+    label: "采购单",
+    icon: <ShoppingCartOutlined />,
+    color: COLORS.warning,
+  },
+  {
+    key: "saleOrderCount",
+    label: "销售单",
+    icon: <ShopOutlined />,
+    color: "#722ed1",
+  },
+  {
+    key: "customerCount",
+    label: "客户数",
+    icon: <UserOutlined />,
+    color: COLORS.info,
+  },
+  {
+    key: "supplierCount",
+    label: "供应商",
+    icon: <BankOutlined />,
+    color: "#eb2f96",
+  },
+  {
+    key: "depotCount",
+    label: "储存点",
+    icon: <HomeOutlined />,
+    color: "#8c8c8c",
+  },
+  {
+    key: "lowStockCount",
+    label: "低库存预警",
+    icon: <WarningOutlined />,
+    color: COLORS.danger,
+  },
 ] as const;
 
 export default function DashboardPage() {
@@ -64,7 +104,10 @@ export default function DashboardPage() {
       ] = await Promise.all([
         productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 1 }),
         inventoryApi.listBasicInventoriesPage({ pageIndex: 1, pageSize: 100 }),
-        transactionApi.listBasicPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
+        transactionApi.listBasicPurchaseOrdersPage({
+          pageIndex: 1,
+          pageSize: 1,
+        }),
         transactionApi.listBasicSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
         partnerApi.listBasicCustomersPage({ pageIndex: 1, pageSize: 1 }),
         partnerApi.listBasicSuppliersPage({ pageIndex: 1, pageSize: 1 }),
@@ -94,7 +137,9 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <Typography.Title level={4} style={{ margin: "0 0 16px" }}>仪表盘</Typography.Title>
+      <Typography.Title level={4} style={{ margin: "0 0 16px" }}>
+        仪表盘
+      </Typography.Title>
       {loading ? (
         <Flex justify="center" align="center" style={{ padding: "4rem 0" }}>
           <Spin size="large" />
@@ -106,12 +151,22 @@ export default function DashboardPage() {
               <Col key={card.key} xs={24} sm={12} md={8} lg={6}>
                 <Card hoverable>
                   <Flex align="center" gap={12}>
-                    <span style={{ fontSize: 32, color: card.color }}>{card.icon}</span>
+                    <span style={{ fontSize: 32, color: card.color }}>
+                      {card.icon}
+                    </span>
                     <div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: card.color }}>
+                      <div
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 700,
+                          color: card.color,
+                        }}
+                      >
                         {stats[card.key]}
                       </div>
-                      <div style={{ fontSize: 12, color: "#8c8c8c" }}>{card.label}</div>
+                      <div style={{ fontSize: 12, color: "#8c8c8c" }}>
+                        {card.label}
+                      </div>
                     </div>
                   </Flex>
                 </Card>
@@ -119,7 +174,12 @@ export default function DashboardPage() {
             ))}
           </Row>
           <Card>
-            <Typography.Text strong style={{ display: "block", marginBottom: 12 }}>快捷操作</Typography.Text>
+            <Typography.Text
+              strong
+              style={{ display: "block", marginBottom: 12 }}
+            >
+              快捷操作
+            </Typography.Text>
             <Flex wrap="wrap" gap={12}>
               <Button type="primary">新增采购单</Button>
               <Button type="primary">新增销售单</Button>

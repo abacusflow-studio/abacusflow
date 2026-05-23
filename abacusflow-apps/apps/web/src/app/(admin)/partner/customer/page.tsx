@@ -35,11 +35,24 @@ export default function CustomersPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
-  } = usePaginatedList<BasicCustomer, { name?: string; phone?: string; address?: string }>({
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
+  } = usePaginatedList<
+    BasicCustomer,
+    { name?: string; phone?: string; address?: string }
+  >({
     fetchFn: (params) =>
-      partnerApi.listBasicCustomersPage(params as Parameters<typeof partnerApi.listBasicCustomersPage>[0]),
+      partnerApi.listBasicCustomersPage(
+        params as Parameters<typeof partnerApi.listBasicCustomersPage>[0],
+      ),
     defaultFilters: { name: undefined, phone: undefined, address: undefined },
   });
 
@@ -83,7 +96,10 @@ export default function CustomersPage() {
         ...(values.address ? { address: values.address } : {}),
       };
       if (editItem) {
-        await partnerApi.updateCustomer({ id: editItem.id, updateCustomerInput: payload });
+        await partnerApi.updateCustomer({
+          id: editItem.id,
+          updateCustomerInput: payload,
+        });
         message.success("编辑成功");
       } else {
         await partnerApi.addCustomer({ createCustomerInput: payload });
@@ -137,9 +153,24 @@ export default function CustomersPage() {
       key: "action",
       render: (_, record) => (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
-          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
-          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openDetail(record.id)}
+          >
+            详情
+          </Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>
+            编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            danger
+            onClick={() => handleDelete(record.id)}
+          >
+            删除
+          </Button>
         </Space>
       ),
     },
@@ -148,17 +179,28 @@ export default function CustomersPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>客户管理</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增客户</Button>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          客户管理
+        </Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          新增客户
+        </Button>
       </Flex>
 
       <div className="card">
-        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
+        <Flex
+          wrap="wrap"
+          gap={12}
+          align="flex-end"
+          style={{ marginBottom: 16 }}
+        >
           <div className="form-item">
             <label>客户名称</label>
             <Input
               value={filters.name ?? ""}
-              onChange={(e) => updateFilter("name", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("name", e.target.value || undefined)
+              }
               placeholder="请输入客户名称"
             />
           </div>
@@ -166,7 +208,9 @@ export default function CustomersPage() {
             <label>电话</label>
             <Input
               value={filters.phone ?? ""}
-              onChange={(e) => updateFilter("phone", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("phone", e.target.value || undefined)
+              }
               placeholder="请输入电话"
             />
           </div>
@@ -174,11 +218,15 @@ export default function CustomersPage() {
             <label>地址</label>
             <Input
               value={filters.address ?? ""}
-              onChange={(e) => updateFilter("address", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("address", e.target.value || undefined)
+              }
               placeholder="请输入地址"
             />
           </div>
-          <Button type="primary" onClick={handleSearch}>搜索</Button>
+          <Button type="primary" onClick={handleSearch}>
+            搜索
+          </Button>
           <Button onClick={handleReset}>重置</Button>
         </Flex>
       </div>
@@ -189,7 +237,12 @@ export default function CustomersPage() {
           dataSource={data}
           rowKey="id"
           loading={loading}
-          pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          pagination={{
+            current: pageIndex,
+            pageSize: 10,
+            total,
+            onChange: setPageIndex,
+          }}
           size="middle"
         />
       </div>
@@ -204,7 +257,9 @@ export default function CustomersPage() {
         destroyOnHidden
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>表单开发中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            表单开发中...
+          </p>
         </Form>
       </Modal>
 
@@ -217,21 +272,39 @@ export default function CustomersPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            加载中...
+          </p>
         ) : detailItem ? (
           <Descriptions column={1} size="small" labelStyle={{ width: 120 }}>
-            <Descriptions.Item label="客户名称">{detailItem.name}</Descriptions.Item>
-            <Descriptions.Item label="联系电话">{detailItem.phone ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="地址">{detailItem.address ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="客户名称">
+              {detailItem.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {detailItem.phone ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="地址">
+              {detailItem.address ?? "-"}
+            </Descriptions.Item>
             <Descriptions.Item label="历史订单数">
               {(detailItem as unknown as BasicCustomer).totalOrderCount ?? "-"}
             </Descriptions.Item>
             <Descriptions.Item label="历史订单金额">
-              {(detailItem as unknown as BasicCustomer).totalOrderAmount?.toLocaleString("zh-CN") ?? "-"}
+              {(
+                detailItem as unknown as BasicCustomer
+              ).totalOrderAmount?.toLocaleString("zh-CN") ?? "-"}
             </Descriptions.Item>
-            <Descriptions.Item label="最近交易日期">{(detailItem as unknown as BasicCustomer).lastOrderDate?.toString() ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{detailItem.createdAt ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="更新时间">{detailItem.updatedAt ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="最近交易日期">
+              {(
+                detailItem as unknown as BasicCustomer
+              ).lastOrderDate?.toString() ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="创建时间">
+              {detailItem.createdAt ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="更新时间">
+              {detailItem.updatedAt ?? "-"}
+            </Descriptions.Item>
           </Descriptions>
         ) : null}
       </Modal>

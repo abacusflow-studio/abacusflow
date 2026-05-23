@@ -55,7 +55,10 @@ const defaultFilters: InventoryFilters = {
   depotName: undefined,
 };
 
-const productTypeOptions = PRODUCT_TYPES.map((t) => ({ label: t.label, value: t.value }));
+const productTypeOptions = PRODUCT_TYPES.map((t) => ({
+  label: t.label,
+  value: t.value,
+}));
 
 export default function InventoryPage() {
   const { message } = App.useApp();
@@ -66,11 +69,16 @@ export default function InventoryPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [inventories, setInventories] = useState<BasicInventory[]>([]);
-  const [inventoryUnits, setInventoryUnits] = useState<BasicInventoryUnit[]>([]);
+  const [inventoryUnits, setInventoryUnits] = useState<BasicInventoryUnit[]>(
+    [],
+  );
   const [categories, setCategories] = useState<SelectableProductCategory[]>([]);
 
-  const [actionInventory, setActionInventory] = useState<BasicInventory | null>(null);
-  const [actionInventoryUnit, setActionInventoryUnit] = useState<BasicInventoryUnit | null>(null);
+  const [actionInventory, setActionInventory] = useState<BasicInventory | null>(
+    null,
+  );
+  const [actionInventoryUnit, setActionInventoryUnit] =
+    useState<BasicInventoryUnit | null>(null);
   const [showDepotModal, setShowDepotModal] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [showUnitsModal, setShowUnitsModal] = useState(false);
@@ -211,7 +219,9 @@ export default function InventoryPage() {
     try {
       const blob = await inventoryApi.exportInventory({
         format,
-        ...(filters.productCategoryId !== undefined ? { productCategoryId: filters.productCategoryId } : {}),
+        ...(filters.productCategoryId !== undefined
+          ? { productCategoryId: filters.productCategoryId }
+          : {}),
       });
       const url = URL.createObjectURL(blob);
       if (print) {
@@ -242,13 +252,21 @@ export default function InventoryPage() {
 
   const inventoryColumns: ColumnsType<BasicInventory> = [
     { title: "产品名称", dataIndex: "productName", key: "productName" },
-    { title: "产品规格", dataIndex: "productSpecification", key: "productSpecification" },
+    {
+      title: "产品规格",
+      dataIndex: "productSpecification",
+      key: "productSpecification",
+    },
     {
       title: "产品类型",
       key: "productType",
       render: (_, record) => translateProductType(record.productType),
     },
-    { title: "可用总库存", dataIndex: "remainingQuantity", key: "remainingQuantity" },
+    {
+      title: "可用总库存",
+      dataIndex: "remainingQuantity",
+      key: "remainingQuantity",
+    },
     { title: "总库存", dataIndex: "quantity", key: "quantity" },
     { title: "初始库存", dataIndex: "initialQuantity", key: "initialQuantity" },
     {
@@ -259,7 +277,8 @@ export default function InventoryPage() {
     {
       title: "库存健康",
       key: "health",
-      render: (_, record) => stockHealthLabel(record.quantity, record.safetyStock, record.maxStock),
+      render: (_, record) =>
+        stockHealthLabel(record.quantity, record.safetyStock, record.maxStock),
     },
     {
       title: "操作",
@@ -276,7 +295,11 @@ export default function InventoryPage() {
           >
             库存单元
           </Button>
-          <Button type="link" size="small" onClick={() => openWarningModal(record)}>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openWarningModal(record)}
+          >
             调整预警线
           </Button>
         </Space>
@@ -296,7 +319,11 @@ export default function InventoryPage() {
       key: "status",
       render: (_, record) => translateInventoryUnitStatus(record.status),
     },
-    { title: "可用库存", dataIndex: "remainingQuantity", key: "remainingQuantity" },
+    {
+      title: "可用库存",
+      dataIndex: "remainingQuantity",
+      key: "remainingQuantity",
+    },
     { title: "库存数量", dataIndex: "quantity", key: "quantity" },
     { title: "初始库存", dataIndex: "initialQuantity", key: "initialQuantity" },
     {
@@ -309,7 +336,12 @@ export default function InventoryPage() {
       key: "receivedAt",
       render: (_, record) => formatDateTime(record.receivedAt),
     },
-    { title: "采购单号", dataIndex: "purchaseOrderNo", key: "purchaseOrderNo", ellipsis: true },
+    {
+      title: "采购单号",
+      dataIndex: "purchaseOrderNo",
+      key: "purchaseOrderNo",
+      ellipsis: true,
+    },
     {
       title: "销售单号",
       key: "saleOrderNos",
@@ -330,15 +362,28 @@ export default function InventoryPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>库存管理</Typography.Title>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          库存管理
+        </Typography.Title>
         <Space wrap>
-          <Button type="primary" icon={<DownloadOutlined />} onClick={() => handleExport("excel")}>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={() => handleExport("excel")}
+          >
             导出 Excel
           </Button>
-          <Button type="primary" icon={<FileTextOutlined />} onClick={() => handleExport("pdf")}>
+          <Button
+            type="primary"
+            icon={<FileTextOutlined />}
+            onClick={() => handleExport("pdf")}
+          >
             导出 PDF
           </Button>
-          <Button icon={<PrinterOutlined />} onClick={() => handleExport("pdf", true)}>
+          <Button
+            icon={<PrinterOutlined />}
+            onClick={() => handleExport("pdf", true)}
+          >
             打印库存
           </Button>
         </Space>
@@ -346,12 +391,16 @@ export default function InventoryPage() {
 
       <div className="grid grid-cols-[260px_1fr] gap-4 max-lg:grid-cols-1">
         <div className="card self-start">
-          <div className="text-xs text-gray-500 mb-2 text-center">打印/导出依据所选分类</div>
+          <div className="text-xs text-gray-500 mb-2 text-center">
+            打印/导出依据所选分类
+          </div>
           <div className="text-sm font-semibold mb-3">产品类别</div>
           <CategoryTree
             categories={categories}
             selectedId={filters.productCategoryId}
-            onSelect={(categoryId) => updateFilter("productCategoryId", categoryId)}
+            onSelect={(categoryId) =>
+              updateFilter("productCategoryId", categoryId)
+            }
           />
         </div>
         <div>
@@ -361,7 +410,9 @@ export default function InventoryPage() {
                 <label>产品名</label>
                 <Input
                   value={filters.productName ?? ""}
-                  onChange={(e) => updateFilter("productName", e.target.value || undefined)}
+                  onChange={(e) =>
+                    updateFilter("productName", e.target.value || undefined)
+                  }
                   placeholder="请输入产品名字"
                 />
               </div>
@@ -369,7 +420,12 @@ export default function InventoryPage() {
                 <label>序列号/批次号</label>
                 <Input
                   value={filters.inventoryUnitCode ?? ""}
-                  onChange={(e) => updateFilter("inventoryUnitCode", e.target.value || undefined)}
+                  onChange={(e) =>
+                    updateFilter(
+                      "inventoryUnitCode",
+                      e.target.value || undefined,
+                    )
+                  }
                   placeholder="请输入序列号/批次号"
                 />
               </div>
@@ -377,7 +433,12 @@ export default function InventoryPage() {
                 <label>产品类型</label>
                 <Select
                   value={filters.productType ?? undefined}
-                  onChange={(value) => updateFilter("productType", value as ProductType | undefined)}
+                  onChange={(value) =>
+                    updateFilter(
+                      "productType",
+                      value as ProductType | undefined,
+                    )
+                  }
                   options={productTypeOptions}
                   allowClear
                   placeholder="全部"
@@ -388,21 +449,21 @@ export default function InventoryPage() {
                 <label>储存点</label>
                 <Input
                   value={filters.depotName ?? ""}
-                  onChange={(e) => updateFilter("depotName", e.target.value || undefined)}
+                  onChange={(e) =>
+                    updateFilter("depotName", e.target.value || undefined)
+                  }
                   placeholder="请输入储存点名"
                 />
               </div>
-              <Button type="primary" onClick={loadData}>搜索</Button>
+              <Button type="primary" onClick={loadData}>
+                搜索
+              </Button>
               <Button onClick={resetFilters}>重置</Button>
             </div>
           </div>
           <div className="card">
             <div className="mb-3">
-              <Button
-                type="primary"
-                size="small"
-                onClick={switchViewMode}
-              >
+              <Button type="primary" size="small" onClick={switchViewMode}>
                 {viewMode === "inventories" ? "显示普通表格" : "显示内嵌表格"}
               </Button>
             </div>
@@ -455,7 +516,9 @@ export default function InventoryPage() {
           <label className="text-sm text-gray-500">选择储存点</label>
           <Select
             value={selectedDepotId ?? undefined}
-            onChange={(value) => setSelectedDepotId(value as number | undefined)}
+            onChange={(value) =>
+              setSelectedDepotId(value as number | undefined)
+            }
             options={depotOptions}
             allowClear
             placeholder="请选择"
@@ -567,7 +630,11 @@ function CategoryTree({
   );
 }
 
-function stockHealthLabel(value = 0, min = 0, max = Number.POSITIVE_INFINITY): React.ReactNode {
+function stockHealthLabel(
+  value = 0,
+  min = 0,
+  max = Number.POSITIVE_INFINITY,
+): React.ReactNode {
   let color = "text-green-600";
   let label = "库存健康";
 

@@ -1,5 +1,9 @@
 export type InventoryUnitType = "instance" | "batch";
-export type InventoryUnitStatus = "normal" | "consumed" | "canceled" | "reversed";
+export type InventoryUnitStatus =
+  | "normal"
+  | "consumed"
+  | "canceled"
+  | "reversed";
 
 const UNIT_TYPE_MAP: Record<InventoryUnitType, string> = {
   instance: "资产单元",

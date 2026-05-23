@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   ScrollView,
@@ -42,7 +42,6 @@ interface FormScreenProps {
 }
 
 export function FormScreen({
-  title,
   fields,
   initialValues,
   onSubmit,
@@ -245,7 +244,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderInput,
     backgroundColor: COLORS.bgCard,
   },
-  selectOptionActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryLight },
+  selectOptionActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryLight,
+  },
   selectOptionText: { fontSize: 13, color: COLORS.textSecondary },
   selectOptionTextActive: { color: COLORS.primary, fontWeight: "600" },
   submitBtn: {

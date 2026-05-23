@@ -5,6 +5,10 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
+  // Ignore generated OpenAPI code
+  {
+    ignores: ["packages/core/src/openapi/**"],
+  },
   // Base config for all files
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],

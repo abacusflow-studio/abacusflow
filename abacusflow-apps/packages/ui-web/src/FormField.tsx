@@ -10,7 +10,12 @@ interface FormFieldProps {
   children: React.ReactNode;
 }
 
-export function FormField({ label, required, error, children }: FormFieldProps) {
+export function FormField({
+  label,
+  required,
+  error,
+  children,
+}: FormFieldProps) {
   return (
     <Form.Item
       label={label}

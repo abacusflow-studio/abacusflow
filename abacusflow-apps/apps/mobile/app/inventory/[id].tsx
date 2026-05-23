@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -32,11 +32,7 @@ export default function InventoryDetailScreen() {
   const [safetyStock, setSafetyStock] = useState("");
   const [maxStock, setMaxStock] = useState("");
 
-  useEffect(() => {
-    loadData();
-  }, [id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [item, depotList] = await Promise.all([
         inventoryApi.getInventory(Number(id)),
@@ -52,7 +48,11 @@ export default function InventoryDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const getHealthStatus = (item: InventoryUnit) => {
     if (item.safetyStock && item.quantity < item.safetyStock)

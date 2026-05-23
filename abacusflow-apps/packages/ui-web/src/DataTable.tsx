@@ -55,7 +55,11 @@ export function DataTable<T extends object>({
     render: col.render
       ? (_: unknown, record: T, index: number) => {
           const cellValue = col.dataIndex ? record[col.dataIndex] : undefined;
-          return col.render!(cellValue as T[keyof T] | undefined, record, index);
+          return col.render!(
+            cellValue as T[keyof T] | undefined,
+            record,
+            index,
+          );
         }
       : undefined,
   }));

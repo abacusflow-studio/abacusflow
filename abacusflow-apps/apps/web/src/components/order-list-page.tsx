@@ -146,8 +146,16 @@ export function OrderListPage({
         };
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
   } = usePaginatedList<Order, AnyParams>({
     fetchFn: listFn,
     defaultFilters,
@@ -155,7 +163,8 @@ export function OrderListPage({
 
   const orderLabel = orderType === "purchase" ? "采购" : "销售";
   const itemLabel = orderType === "purchase" ? "产品" : "库存单元";
-  const partnerFilterKey = orderType === "purchase" ? "supplierName" : "customerName";
+  const partnerFilterKey =
+    orderType === "purchase" ? "supplierName" : "customerName";
 
   const openCreate = async () => {
     setForm(emptyForm());
@@ -184,7 +193,9 @@ export function OrderListPage({
       } else {
         const [customers, selectableInventoryUnits] = await Promise.all([
           partnerApi.listSelectableCustomers(),
-          inventoryApi.listSelectableInventoryUnits({ statuses: ["normal", "reversed"] }),
+          inventoryApi.listSelectableInventoryUnits({
+            statuses: ["normal", "reversed"],
+          }),
         ]);
         setPartnerOptions(
           customers.map((customer) => ({
@@ -294,7 +305,9 @@ export function OrderListPage({
               inventoryUnitId: Number(item.itemId),
               quantity: Number(item.quantity),
               unitPrice: Number(item.unitPrice),
-              discountFactor: item.discountFactor ? Number(item.discountFactor) / 100 : 1,
+              discountFactor: item.discountFactor
+                ? Number(item.discountFactor) / 100
+                : 1,
             })),
           },
         });
@@ -309,7 +322,10 @@ export function OrderListPage({
     }
   };
 
-  const handleAction = async (id: number, action: "complete" | "cancel" | "reverse") => {
+  const handleAction = async (
+    id: number,
+    action: "complete" | "cancel" | "reverse",
+  ) => {
     const labels = { complete: "完成", cancel: "取消", reverse: "撤回" };
     modal.confirm({
       title: "确认操作",
@@ -339,42 +355,91 @@ export function OrderListPage({
       title: partnerLabel,
       key: partnerKey,
       render: (_, record) =>
-        ((record as unknown as Record<string, unknown>)[partnerKey] as string) ?? "-",
+        ((record as unknown as Record<string, unknown>)[
+          partnerKey
+        ] as string) ?? "-",
     },
     {
       title: "状态",
       key: "status",
       render: (_, record) => {
-        const colors = STATUS_COLORS[record.status] || { bg: "#f0f0f0", color: "#000" };
-        return <Tag style={{ backgroundColor: colors.bg, color: colors.color, borderColor: `${colors.color}30` }}>{translateOrderStatus(record.status)}</Tag>;
+        const colors = STATUS_COLORS[record.status] || {
+          bg: "#f0f0f0",
+          color: "#000",
+        };
+        return (
+          <Tag
+            style={{
+              backgroundColor: colors.bg,
+              color: colors.color,
+              borderColor: `${colors.color}30`,
+            }}
+          >
+            {translateOrderStatus(record.status)}
+          </Tag>
+        );
       },
     },
     {
       title: "总金额",
       key: "totalAmount",
-      render: (_, record) => ((record as unknown as Record<string, unknown>)["totalAmount"] as number)?.toLocaleString("zh-CN") ?? "-",
+      render: (_, record) =>
+        (
+          (record as unknown as Record<string, unknown>)[
+            "totalAmount"
+          ] as number
+        )?.toLocaleString("zh-CN") ?? "-",
     },
     { title: "总数量", dataIndex: "totalQuantity", key: "totalQuantity" },
     { title: "明细数", dataIndex: "itemCount", key: "itemCount" },
     {
       title: "自动完成日期",
       key: "autoCompleteDate",
-      render: (_, record) => dateToFormattedString((record as unknown as Record<string, unknown>)["autoCompleteDate"] as Date | undefined),
+      render: (_, record) =>
+        dateToFormattedString(
+          (record as unknown as Record<string, unknown>)["autoCompleteDate"] as
+            | Date
+            | undefined,
+        ),
     },
     {
       title: "操作",
       key: "action",
       render: (_, record) => (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openDetail(record.id)}
+          >
+            详情
+          </Button>
           {record.status === "pending" && (
             <>
-              <Button type="link" size="small" onClick={() => handleAction(record.id, "complete")}>完成</Button>
-              <Button type="link" size="small" onClick={() => handleAction(record.id, "cancel")}>取消</Button>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => handleAction(record.id, "complete")}
+              >
+                完成
+              </Button>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => handleAction(record.id, "cancel")}
+              >
+                取消
+              </Button>
             </>
           )}
           {record.status === "completed" && (
-            <Button type="link" size="small" onClick={() => handleAction(record.id, "reverse")}>撤回</Button>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleAction(record.id, "reverse")}
+            >
+              撤回
+            </Button>
           )}
         </Space>
       ),
@@ -418,7 +483,9 @@ export function OrderListPage({
   const getOrderItems = (order: Order | null): OrderItem[] => {
     if (!order) return [];
     const o = order as unknown as Record<string, unknown>;
-    return (o["orderItems"] as OrderItem[]) ?? (o["items"] as OrderItem[]) ?? [];
+    return (
+      (o["orderItems"] as OrderItem[]) ?? (o["items"] as OrderItem[]) ?? []
+    );
   };
 
   const getTotalAmount = (order: Order): string => {
@@ -432,22 +499,30 @@ export function OrderListPage({
   const getPartnerValue = (order: Order): string | number | undefined => {
     const value = (order as unknown as Record<string, unknown>)[partnerKey];
     if (typeof value === "string" && value) return value;
-    if (orderType === "purchase" && "supplierId" in order) return order.supplierId;
+    if (orderType === "purchase" && "supplierId" in order)
+      return order.supplierId;
     if (orderType === "sale" && "customerId" in order) return order.customerId;
     return undefined;
   };
 
   const formatTimestamp = (value?: string | number): string =>
-    typeof value === "number" ? timestampToLocaleString(value) : value ?? "";
+    typeof value === "number" ? timestampToLocaleString(value) : (value ?? "");
 
   const isAssetProduct = (productId: string) =>
-    products.find((product) => String(product.id) === productId)?.type === "asset";
+    products.find((product) => String(product.id) === productId)?.type ===
+    "asset";
 
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>{title}</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{`新增${orderLabel}单`}</Button>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          {title}
+        </Typography.Title>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={openCreate}
+        >{`新增${orderLabel}单`}</Button>
       </Flex>
 
       <Card style={{ marginBottom: 16 }}>
@@ -456,7 +531,9 @@ export function OrderListPage({
             <label>订单编号</label>
             <Input
               value={filters.orderNo ?? ""}
-              onChange={(e) => updateFilter("orderNo", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("orderNo", e.target.value || undefined)
+              }
               placeholder={`请输入${orderLabel}单号`}
             />
           </div>
@@ -465,14 +542,18 @@ export function OrderListPage({
             <Input
               type="date"
               value={filters.orderDate ?? ""}
-              onChange={(e) => updateFilter("orderDate", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("orderDate", e.target.value || undefined)
+              }
             />
           </div>
           <div className="form-item">
             <label>{partnerLabel}</label>
             <Input
               value={(filters[partnerFilterKey] as string | undefined) ?? ""}
-              onChange={(e) => updateFilter(partnerFilterKey, e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter(partnerFilterKey, e.target.value || undefined)
+              }
               placeholder={`请输入${partnerLabel}`}
             />
           </div>
@@ -493,7 +574,9 @@ export function OrderListPage({
                 <label>产品名称</label>
                 <Input
                   value={filters.productName ?? ""}
-                  onChange={(e) => updateFilter("productName", e.target.value || undefined)}
+                  onChange={(e) =>
+                    updateFilter("productName", e.target.value || undefined)
+                  }
                   placeholder="请输入产品名称"
                 />
               </div>
@@ -501,7 +584,9 @@ export function OrderListPage({
                 <label>序列号</label>
                 <Input
                   value={filters.serialNumber ?? ""}
-                  onChange={(e) => updateFilter("serialNumber", e.target.value || undefined)}
+                  onChange={(e) =>
+                    updateFilter("serialNumber", e.target.value || undefined)
+                  }
                   placeholder="请输入序列号"
                 />
               </div>
@@ -511,12 +596,16 @@ export function OrderListPage({
               <label>库存单元</label>
               <Input
                 value={filters.inventoryUnitName ?? ""}
-                onChange={(e) => updateFilter("inventoryUnitName", e.target.value || undefined)}
+                onChange={(e) =>
+                  updateFilter("inventoryUnitName", e.target.value || undefined)
+                }
                 placeholder="请输入库存单元名"
               />
             </div>
           )}
-          <Button type="primary" onClick={handleSearch}>搜索</Button>
+          <Button type="primary" onClick={handleSearch}>
+            搜索
+          </Button>
           <Button onClick={handleReset}>重置</Button>
         </Flex>
       </Card>
@@ -549,10 +638,16 @@ export function OrderListPage({
         destroyOnHidden
       >
         {formLoading ? (
-          <Flex justify="center" style={{ padding: "2rem 0" }}><Spin /></Flex>
+          <Flex justify="center" style={{ padding: "2rem 0" }}>
+            <Spin />
+          </Flex>
         ) : (
           <div style={{ marginTop: 16 }}>
-            <Form.Item label={partnerLabel} required style={{ marginBottom: 12 }}>
+            <Form.Item
+              label={partnerLabel}
+              required
+              style={{ marginBottom: 12 }}
+            >
               <Select
                 value={form.partnerId || undefined}
                 onChange={(val) => setForm({ ...form, partnerId: String(val) })}
@@ -560,70 +655,152 @@ export function OrderListPage({
                 options={partnerOptions}
                 {...(errors.partnerId ? { status: "error" as const } : {})}
               />
-              {errors.partnerId && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors.partnerId}</div>}
+              {errors.partnerId && (
+                <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                  {errors.partnerId}
+                </div>
+              )}
             </Form.Item>
             <Form.Item label="订单日期" required style={{ marginBottom: 12 }}>
               <Input
                 type="date"
                 value={form.orderDate}
-                onChange={(e) => setForm({ ...form, orderDate: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, orderDate: e.target.value })
+                }
                 {...(errors.orderDate ? { status: "error" as const } : {})}
               />
-              {errors.orderDate && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors.orderDate}</div>}
+              {errors.orderDate && (
+                <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                  {errors.orderDate}
+                </div>
+              )}
             </Form.Item>
-            <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
+            <Flex
+              justify="space-between"
+              align="center"
+              style={{ marginBottom: 8 }}
+            >
               <Typography.Text strong>订单明细</Typography.Text>
-              <Button type="primary" size="small" icon={<PlusOutlined />} onClick={addOrderItem}>添加明细</Button>
+              <Button
+                type="primary"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={addOrderItem}
+              >
+                添加明细
+              </Button>
             </Flex>
-            {errors.items && <p style={{ color: "#ff4d4f", fontSize: 12 }}>{errors.items}</p>}
+            {errors.items && (
+              <p style={{ color: "#ff4d4f", fontSize: 12 }}>{errors.items}</p>
+            )}
             <Space direction="vertical" style={{ width: "100%" }} size={12}>
               {form.items.map((item, index) => (
-                <Card key={index} size="small" style={{ borderColor: "#f0f0f0" }}>
-                  <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>明细 {index + 1}</Typography.Text>
+                <Card
+                  key={index}
+                  size="small"
+                  style={{ borderColor: "#f0f0f0" }}
+                >
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    style={{ marginBottom: 8 }}
+                  >
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      明细 {index + 1}
+                    </Typography.Text>
                     {form.items.length > 1 && (
-                      <Button type="link" size="small" danger onClick={() => removeOrderItem(index)}>删除</Button>
+                      <Button
+                        type="link"
+                        size="small"
+                        danger
+                        onClick={() => removeOrderItem(index)}
+                      >
+                        删除
+                      </Button>
                     )}
                   </Flex>
-                  <Form.Item label={itemLabel} required style={{ marginBottom: 8 }}>
+                  <Form.Item
+                    label={itemLabel}
+                    required
+                    style={{ marginBottom: 8 }}
+                  >
                     <Select
                       value={item.itemId || undefined}
-                      onChange={(val) => updateItem(index, { itemId: String(val) })}
+                      onChange={(val) =>
+                        updateItem(index, { itemId: String(val) })
+                      }
                       placeholder={`请选择${itemLabel}`}
                       options={itemOptions}
-                      {...(errors[`item-${index}`] ? { status: "error" as const } : {})}
+                      {...(errors[`item-${index}`]
+                        ? { status: "error" as const }
+                        : {})}
                     />
-                    {errors[`item-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`item-${index}`]}</div>}
+                    {errors[`item-${index}`] && (
+                      <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                        {errors[`item-${index}`]}
+                      </div>
+                    )}
                   </Form.Item>
                   <Flex gap={12}>
-                    <Form.Item label="数量" required style={{ flex: 1, marginBottom: 8 }}>
+                    <Form.Item
+                      label="数量"
+                      required
+                      style={{ flex: 1, marginBottom: 8 }}
+                    >
                       <Input
                         type="number"
                         min={1}
                         value={item.quantity}
-                        onChange={(e) => updateItem(index, { quantity: e.target.value })}
-                        {...(errors[`quantity-${index}`] ? { status: "error" as const } : {})}
+                        onChange={(e) =>
+                          updateItem(index, { quantity: e.target.value })
+                        }
+                        {...(errors[`quantity-${index}`]
+                          ? { status: "error" as const }
+                          : {})}
                       />
-                      {errors[`quantity-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`quantity-${index}`]}</div>}
+                      {errors[`quantity-${index}`] && (
+                        <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                          {errors[`quantity-${index}`]}
+                        </div>
+                      )}
                     </Form.Item>
-                    <Form.Item label="单价" required style={{ flex: 1, marginBottom: 8 }}>
+                    <Form.Item
+                      label="单价"
+                      required
+                      style={{ flex: 1, marginBottom: 8 }}
+                    >
                       <Input
                         type="number"
                         min={0}
                         step="0.01"
                         value={item.unitPrice}
-                        onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
-                        {...(errors[`unitPrice-${index}`] ? { status: "error" as const } : {})}
+                        onChange={(e) =>
+                          updateItem(index, { unitPrice: e.target.value })
+                        }
+                        {...(errors[`unitPrice-${index}`]
+                          ? { status: "error" as const }
+                          : {})}
                       />
-                      {errors[`unitPrice-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`unitPrice-${index}`]}</div>}
+                      {errors[`unitPrice-${index}`] && (
+                        <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                          {errors[`unitPrice-${index}`]}
+                        </div>
+                      )}
                     </Form.Item>
                   </Flex>
                   {orderType === "purchase" ? (
                     <Form.Item label="序列号" style={{ marginBottom: 8 }}>
                       <Input
                         value={item.serialNumber}
-                        onChange={(e) => updateItem(index, { serialNumber: e.target.value })}
-                        placeholder={isAssetProduct(item.itemId) ? "资产类产品建议填写序列号" : "可选"}
+                        onChange={(e) =>
+                          updateItem(index, { serialNumber: e.target.value })
+                        }
+                        placeholder={
+                          isAssetProduct(item.itemId)
+                            ? "资产类产品建议填写序列号"
+                            : "可选"
+                        }
                       />
                     </Form.Item>
                   ) : (
@@ -634,11 +811,19 @@ export function OrderListPage({
                         max={100}
                         step="1"
                         value={item.discountFactor}
-                        onChange={(e) => updateItem(index, { discountFactor: e.target.value })}
+                        onChange={(e) =>
+                          updateItem(index, { discountFactor: e.target.value })
+                        }
                         placeholder="例如 90 表示九折"
-                        {...(errors[`discountFactor-${index}`] ? { status: "error" as const } : {})}
+                        {...(errors[`discountFactor-${index}`]
+                          ? { status: "error" as const }
+                          : {})}
                       />
-                      {errors[`discountFactor-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`discountFactor-${index}`]}</div>}
+                      {errors[`discountFactor-${index}`] && (
+                        <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                          {errors[`discountFactor-${index}`]}
+                        </div>
+                      )}
                     </Form.Item>
                   )}
                 </Card>
@@ -665,26 +850,65 @@ export function OrderListPage({
         destroyOnHidden
       >
         {detailLoading ? (
-          <Flex justify="center" style={{ padding: "2rem 0" }}><Spin /></Flex>
+          <Flex justify="center" style={{ padding: "2rem 0" }}>
+            <Spin />
+          </Flex>
         ) : detailItem ? (
           <Space direction="vertical" style={{ width: "100%" }} size={16}>
             <Descriptions column={1} size="small" labelStyle={{ width: 100 }}>
-              <Descriptions.Item label="订单编号">{detailItem.orderNo}</Descriptions.Item>
-              <Descriptions.Item label="订单日期">{dateToFormattedString(detailItem.orderDate)}</Descriptions.Item>
-              <Descriptions.Item label={partnerLabel}>{getPartnerValue(detailItem) ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="订单编号">
+                {detailItem.orderNo}
+              </Descriptions.Item>
+              <Descriptions.Item label="订单日期">
+                {dateToFormattedString(detailItem.orderDate)}
+              </Descriptions.Item>
+              <Descriptions.Item label={partnerLabel}>
+                {getPartnerValue(detailItem) ?? "-"}
+              </Descriptions.Item>
               <Descriptions.Item label="状态">
                 {(() => {
-                  const colors = STATUS_COLORS[detailItem.status] || { bg: "#f0f0f0", color: "#000" };
-                  return <Tag style={{ backgroundColor: colors.bg, color: colors.color }}>{translateOrderStatus(detailItem.status)}</Tag>;
+                  const colors = STATUS_COLORS[detailItem.status] || {
+                    bg: "#f0f0f0",
+                    color: "#000",
+                  };
+                  return (
+                    <Tag
+                      style={{
+                        backgroundColor: colors.bg,
+                        color: colors.color,
+                      }}
+                    >
+                      {translateOrderStatus(detailItem.status)}
+                    </Tag>
+                  );
                 })()}
               </Descriptions.Item>
-              <Descriptions.Item label="总金额">{getTotalAmount(detailItem)}</Descriptions.Item>
-              <Descriptions.Item label="备注">{(detailItem as unknown as Record<string, unknown>)["note"] as string ?? "-"}</Descriptions.Item>
-              <Descriptions.Item label="创建时间">{formatTimestamp(detailItem.createdAt)}</Descriptions.Item>
-              <Descriptions.Item label="更新时间">{formatTimestamp((detailItem as unknown as Record<string, unknown>)["updatedAt"] as string | number)}</Descriptions.Item>
+              <Descriptions.Item label="总金额">
+                {getTotalAmount(detailItem)}
+              </Descriptions.Item>
+              <Descriptions.Item label="备注">
+                {((detailItem as unknown as Record<string, unknown>)[
+                  "note"
+                ] as string) ?? "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="创建时间">
+                {formatTimestamp(detailItem.createdAt)}
+              </Descriptions.Item>
+              <Descriptions.Item label="更新时间">
+                {formatTimestamp(
+                  (detailItem as unknown as Record<string, unknown>)[
+                    "updatedAt"
+                  ] as string | number,
+                )}
+              </Descriptions.Item>
             </Descriptions>
             <div>
-              <Typography.Text strong style={{ display: "block", marginBottom: 8 }}>订单明细</Typography.Text>
+              <Typography.Text
+                strong
+                style={{ display: "block", marginBottom: 8 }}
+              >
+                订单明细
+              </Typography.Text>
               <Table<OrderItem>
                 columns={itemColumns}
                 dataSource={getOrderItems(detailItem)}

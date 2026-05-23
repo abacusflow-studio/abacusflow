@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
@@ -10,11 +10,7 @@ export default function DepotDetailScreen() {
   const [data, setData] = useState<Depot | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, [id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const res = await depotApi.getDepot(Number(id));
       setData(res);
@@ -23,7 +19,11 @@ export default function DepotDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
     <DetailScreen

@@ -54,14 +54,25 @@ export default function ProductsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
-  } = usePaginatedList<BasicProduct, {
-    name?: string;
-    type?: ProductType;
-    enabled?: boolean;
-    categoryId?: number;
-  }>({
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
+  } = usePaginatedList<
+    BasicProduct,
+    {
+      name?: string;
+      type?: ProductType;
+      enabled?: boolean;
+      categoryId?: number;
+    }
+  >({
     fetchFn: (params) =>
       productApi.listBasicProductsPage(
         params as Parameters<typeof productApi.listBasicProductsPage>[0],
@@ -85,7 +96,11 @@ export default function ProductsPage() {
   }, [message]);
 
   const categoryOptions = useMemo(
-    () => categories.map((category) => ({ label: category.name, value: category.id })),
+    () =>
+      categories.map((category) => ({
+        label: category.name,
+        value: category.id,
+      })),
     [categories],
   );
 
@@ -228,9 +243,24 @@ export default function ProductsPage() {
       key: "action",
       render: (_, record) => (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
-          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
-          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openDetail(record.id)}
+          >
+            详情
+          </Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>
+            编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            danger
+            onClick={() => handleDelete(record.id)}
+          >
+            删除
+          </Button>
         </Space>
       ),
     },
@@ -239,8 +269,12 @@ export default function ProductsPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>产品管理</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增产品</Button>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          产品管理
+        </Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          新增产品
+        </Button>
       </Flex>
 
       <div className="grid grid-cols-[260px_1fr] gap-4 max-lg:grid-cols-1">
@@ -259,7 +293,9 @@ export default function ProductsPage() {
                 <label>产品名称</label>
                 <Input
                   value={filters.name ?? ""}
-                  onChange={(e) => updateFilter("name", e.target.value || undefined)}
+                  onChange={(e) =>
+                    updateFilter("name", e.target.value || undefined)
+                  }
                   placeholder="请输入产品名称"
                 />
               </div>
@@ -267,7 +303,9 @@ export default function ProductsPage() {
                 <label>类型</label>
                 <Select
                   value={filters.type ?? undefined}
-                  onChange={(value) => updateFilter("type", value as ProductType | undefined)}
+                  onChange={(value) =>
+                    updateFilter("type", value as ProductType | undefined)
+                  }
                   options={productTypeOptions}
                   allowClear
                   placeholder="全部"
@@ -277,15 +315,26 @@ export default function ProductsPage() {
               <div className="form-item">
                 <label>启用状态</label>
                 <Select
-                  value={filters.enabled === undefined ? undefined : String(filters.enabled)}
-                  onChange={(value) => updateFilter("enabled", value ? value === "true" : undefined)}
+                  value={
+                    filters.enabled === undefined
+                      ? undefined
+                      : String(filters.enabled)
+                  }
+                  onChange={(value) =>
+                    updateFilter(
+                      "enabled",
+                      value ? value === "true" : undefined,
+                    )
+                  }
                   options={enabledOptions}
                   allowClear
                   placeholder="全部"
                   style={{ width: "100%" }}
                 />
               </div>
-              <Button type="primary" onClick={handleSearch}>搜索</Button>
+              <Button type="primary" onClick={handleSearch}>
+                搜索
+              </Button>
               <Button onClick={resetAll}>重置</Button>
             </div>
           </div>
@@ -319,7 +368,9 @@ export default function ProductsPage() {
         destroyOnHidden
       >
         {formLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            加载中...
+          </p>
         ) : (
           <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
             <Form.Item
@@ -337,7 +388,10 @@ export default function ProductsPage() {
               label="产品类型"
               rules={[{ required: true, message: "请选择产品类型" }]}
             >
-              <Select options={productTypeOptions} placeholder="请选择产品类型" />
+              <Select
+                options={productTypeOptions}
+                placeholder="请选择产品类型"
+              />
             </Form.Item>
             <Form.Item
               name="categoryId"
@@ -364,7 +418,11 @@ export default function ProductsPage() {
               <Input.TextArea placeholder="请输入备注" rows={3} />
             </Form.Item>
             {editItem && (
-              <Form.Item name="enabled" label="启用状态" valuePropName="checked">
+              <Form.Item
+                name="enabled"
+                label="启用状态"
+                valuePropName="checked"
+              >
                 <Checkbox>启用</Checkbox>
               </Form.Item>
             )}
@@ -381,23 +439,43 @@ export default function ProductsPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            加载中...
+          </p>
         ) : detailItem ? (
           <Descriptions column={1} size="small" labelStyle={{ width: 100 }}>
-            <Descriptions.Item label="产品名称">{detailItem.name}</Descriptions.Item>
-            <Descriptions.Item label="产品规格">{detailItem.specification ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="产品类型">{translateProductType(detailItem.type)}</Descriptions.Item>
-            <Descriptions.Item label="产品类别">{detailItem.categoryId ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="条形码">{detailItem.barcode ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="单位">{translateProductUnit(detailItem.unit)}</Descriptions.Item>
+            <Descriptions.Item label="产品名称">
+              {detailItem.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="产品规格">
+              {detailItem.specification ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="产品类型">
+              {translateProductType(detailItem.type)}
+            </Descriptions.Item>
+            <Descriptions.Item label="产品类别">
+              {detailItem.categoryId ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="条形码">
+              {detailItem.barcode ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="单位">
+              {translateProductUnit(detailItem.unit)}
+            </Descriptions.Item>
             <Descriptions.Item label="启用状态">
               <Tag color={detailItem.enabled ? "success" : "error"}>
                 {detailItem.enabled ? "启用" : "禁用"}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="备注">{detailItem.note ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{detailItem.createdAt ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="更新时间">{detailItem.updatedAt ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="备注">
+              {detailItem.note ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="创建时间">
+              {detailItem.createdAt ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="更新时间">
+              {detailItem.updatedAt ?? "-"}
+            </Descriptions.Item>
           </Descriptions>
         ) : null}
       </Modal>

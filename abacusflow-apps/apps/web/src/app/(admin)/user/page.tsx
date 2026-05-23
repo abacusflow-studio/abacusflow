@@ -52,7 +52,9 @@ export default function UsersPage() {
   const [allUsers, setAllUsers] = useState<BasicUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [pageIndex, setPageIndex] = useState(1);
-  const [filters, setFilters] = useState<{ name?: string }>({ name: undefined });
+  const [filters, setFilters] = useState<{ name?: string }>({
+    name: undefined,
+  });
   const pageSize = 10;
 
   const fetchUsers = useCallback(async () => {
@@ -156,7 +158,10 @@ export default function UsersPage() {
         sex: values.sex as Sex | undefined,
       };
       if (editItem) {
-        await userApi.updateUser({ id: editItem.id, updateUserInput: payload as UpdateUserInput });
+        await userApi.updateUser({
+          id: editItem.id,
+          updateUserInput: payload as UpdateUserInput,
+        });
         message.success("编辑成功");
       } else {
         await userApi.addUser({ createUserInput: payload });
@@ -215,11 +220,26 @@ export default function UsersPage() {
       key: "action",
       render: (_, record) => (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openDetail(record.id)}
+          >
+            详情
+          </Button>
           {record.name !== "admin" && (
             <>
-              <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
-              <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+              <Button type="link" size="small" onClick={() => openEdit(record)}>
+                编辑
+              </Button>
+              <Button
+                type="link"
+                size="small"
+                danger
+                onClick={() => handleDelete(record.id)}
+              >
+                删除
+              </Button>
             </>
           )}
         </Space>
@@ -230,22 +250,35 @@ export default function UsersPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>用户管理</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增用户</Button>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          用户管理
+        </Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          新增用户
+        </Button>
       </Flex>
 
       <div className="card">
-        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
+        <Flex
+          wrap="wrap"
+          gap={12}
+          align="flex-end"
+          style={{ marginBottom: 16 }}
+        >
           <div className="form-item">
             <label>用户名</label>
             <Input
               value={filters.name ?? ""}
-              onChange={(e) => updateFilter("name", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("name", e.target.value || undefined)
+              }
               placeholder="请输入用户名"
               style={{ width: 200 }}
             />
           </div>
-          <Button type="primary" onClick={handleSearch}>搜索</Button>
+          <Button type="primary" onClick={handleSearch}>
+            搜索
+          </Button>
           <Button onClick={handleReset}>重置</Button>
         </Flex>
       </div>
@@ -296,11 +329,7 @@ export default function UsersPage() {
             <Input type="number" placeholder="请输入年龄" />
           </Form.Item>
           <Form.Item name="sex" label="性别">
-            <Select
-              options={sexOptions}
-              placeholder="请选择"
-              allowClear
-            />
+            <Select options={sexOptions} placeholder="请选择" allowClear />
           </Form.Item>
         </Form>
       </Modal>
@@ -314,13 +343,27 @@ export default function UsersPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            加载中...
+          </p>
         ) : detailItem ? (
-          <Descriptions column={1} size="small" styles={{ label: { width: 100 } }}>
-            <Descriptions.Item label="用户名">{detailItem.name}</Descriptions.Item>
-            <Descriptions.Item label="姓名">{detailItem.nick ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="年龄">{detailItem.age ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="性别">{translateSex(detailItem.sex)}</Descriptions.Item>
+          <Descriptions
+            column={1}
+            size="small"
+            styles={{ label: { width: 100 } }}
+          >
+            <Descriptions.Item label="用户名">
+              {detailItem.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="姓名">
+              {detailItem.nick ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="年龄">
+              {detailItem.age ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="性别">
+              {translateSex(detailItem.sex)}
+            </Descriptions.Item>
             <Descriptions.Item label="启用状态">
               <Tag color={detailItem.enabled ? "success" : "error"}>
                 {detailItem.enabled ? "启用" : "禁用"}
@@ -331,8 +374,12 @@ export default function UsersPage() {
                 {detailItem.locked ? "锁定" : "正常"}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="创建时间">{detailItem.createdAt ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="更新时间">{detailItem.updatedAt ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">
+              {detailItem.createdAt ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="更新时间">
+              {detailItem.updatedAt ?? "-"}
+            </Descriptions.Item>
           </Descriptions>
         ) : null}
       </Modal>

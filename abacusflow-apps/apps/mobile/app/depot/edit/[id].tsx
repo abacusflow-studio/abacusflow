@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
@@ -9,11 +9,7 @@ export default function EditDepotScreen() {
   const [data, setData] = useState<Depot | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadDepot();
-  }, [id]);
-
-  const loadDepot = async () => {
+  const loadDepot = useCallback(async () => {
     try {
       const res = await depotApi.getDepot(Number(id));
       setData(res);
@@ -22,7 +18,11 @@ export default function EditDepotScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadDepot();
+  }, [loadDepot]);
 
   if (loading) {
     return (

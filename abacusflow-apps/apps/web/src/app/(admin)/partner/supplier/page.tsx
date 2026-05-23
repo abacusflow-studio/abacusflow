@@ -15,7 +15,11 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { partnerApi, type Supplier, type BasicSupplier } from "@abacusflow/core";
+import {
+  partnerApi,
+  type Supplier,
+  type BasicSupplier,
+} from "@abacusflow/core";
 import { usePaginatedList } from "../../../../hooks/use-paginated-list";
 
 export default function SuppliersPage() {
@@ -31,12 +35,30 @@ export default function SuppliersPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
-  } = usePaginatedList<BasicSupplier, { name?: string; contactPerson?: string; phone?: string; address?: string }>({
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
+  } = usePaginatedList<
+    BasicSupplier,
+    { name?: string; contactPerson?: string; phone?: string; address?: string }
+  >({
     fetchFn: (params) =>
-      partnerApi.listBasicSuppliersPage(params as Parameters<typeof partnerApi.listBasicSuppliersPage>[0]),
-    defaultFilters: { name: undefined, contactPerson: undefined, phone: undefined, address: undefined },
+      partnerApi.listBasicSuppliersPage(
+        params as Parameters<typeof partnerApi.listBasicSuppliersPage>[0],
+      ),
+    defaultFilters: {
+      name: undefined,
+      contactPerson: undefined,
+      phone: undefined,
+      address: undefined,
+    },
   });
 
   const openCreate = () => {
@@ -82,7 +104,10 @@ export default function SuppliersPage() {
         address: values.address || undefined,
       };
       if (editItem) {
-        await partnerApi.updateSupplier({ id: editItem.id, updateSupplierInput: payload });
+        await partnerApi.updateSupplier({
+          id: editItem.id,
+          updateSupplierInput: payload,
+        });
         message.success("编辑成功");
       } else {
         await partnerApi.addSupplier({ createSupplierInput: payload });
@@ -137,9 +162,24 @@ export default function SuppliersPage() {
       key: "action",
       render: (_, record) => (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
-          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
-          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openDetail(record.id)}
+          >
+            详情
+          </Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>
+            编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            danger
+            onClick={() => handleDelete(record.id)}
+          >
+            删除
+          </Button>
         </Space>
       ),
     },
@@ -148,17 +188,28 @@ export default function SuppliersPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>供应商管理</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增供应商</Button>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          供应商管理
+        </Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          新增供应商
+        </Button>
       </Flex>
 
       <div className="card">
-        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
+        <Flex
+          wrap="wrap"
+          gap={12}
+          align="flex-end"
+          style={{ marginBottom: 16 }}
+        >
           <div className="form-item">
             <label>供应商名称</label>
             <Input
               value={filters.name ?? ""}
-              onChange={(e) => updateFilter("name", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("name", e.target.value || undefined)
+              }
               placeholder="请输入供应商名称"
               style={{ width: 200 }}
             />
@@ -167,7 +218,9 @@ export default function SuppliersPage() {
             <label>联系人</label>
             <Input
               value={filters.contactPerson ?? ""}
-              onChange={(e) => updateFilter("contactPerson", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("contactPerson", e.target.value || undefined)
+              }
               placeholder="请输入联系人"
               style={{ width: 200 }}
             />
@@ -176,7 +229,9 @@ export default function SuppliersPage() {
             <label>电话</label>
             <Input
               value={filters.phone ?? ""}
-              onChange={(e) => updateFilter("phone", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("phone", e.target.value || undefined)
+              }
               placeholder="请输入电话"
               style={{ width: 200 }}
             />
@@ -185,12 +240,16 @@ export default function SuppliersPage() {
             <label>地址</label>
             <Input
               value={filters.address ?? ""}
-              onChange={(e) => updateFilter("address", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("address", e.target.value || undefined)
+              }
               placeholder="请输入地址"
               style={{ width: 200 }}
             />
           </div>
-          <Button type="primary" onClick={handleSearch}>搜索</Button>
+          <Button type="primary" onClick={handleSearch}>
+            搜索
+          </Button>
           <Button onClick={handleReset}>重置</Button>
         </Flex>
       </div>
@@ -236,7 +295,9 @@ export default function SuppliersPage() {
           <Form.Item
             name="phone"
             label="联系电话"
-            rules={[{ pattern: /^1[3-9]\d{9}$/, message: "请输入正确的手机号" }]}
+            rules={[
+              { pattern: /^1[3-9]\d{9}$/, message: "请输入正确的手机号" },
+            ]}
           >
             <Input placeholder="请输入联系电话" />
           </Form.Item>
@@ -262,18 +323,44 @@ export default function SuppliersPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            加载中...
+          </p>
         ) : detailItem ? (
-          <Descriptions column={1} size="small" styles={{ label: { width: 120 } }}>
-            <Descriptions.Item label="供应商名称">{detailItem.name}</Descriptions.Item>
-            <Descriptions.Item label="联系人">{detailItem.contactPerson ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="联系电话">{detailItem.phone ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="邮箱">{detailItem.email ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="地址">{detailItem.address ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="历史订单数">{(detailItem as unknown as BasicSupplier).totalOrderCount ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="历史订单金额">{(detailItem as unknown as BasicSupplier).totalOrderAmount?.toLocaleString("zh-CN") ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{detailItem.createdAt ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="更新时间">{detailItem.updatedAt ?? "-"}</Descriptions.Item>
+          <Descriptions
+            column={1}
+            size="small"
+            styles={{ label: { width: 120 } }}
+          >
+            <Descriptions.Item label="供应商名称">
+              {detailItem.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系人">
+              {detailItem.contactPerson ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {detailItem.phone ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="邮箱">
+              {detailItem.email ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="地址">
+              {detailItem.address ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="历史订单数">
+              {(detailItem as unknown as BasicSupplier).totalOrderCount ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="历史订单金额">
+              {(
+                detailItem as unknown as BasicSupplier
+              ).totalOrderAmount?.toLocaleString("zh-CN") ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="创建时间">
+              {detailItem.createdAt ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="更新时间">
+              {detailItem.updatedAt ?? "-"}
+            </Descriptions.Item>
           </Descriptions>
         ) : null}
       </Modal>

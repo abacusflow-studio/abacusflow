@@ -16,7 +16,12 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { depotApi, type BasicDepot, type Depot, type CreateDepotInput } from "@abacusflow/core";
+import {
+  depotApi,
+  type BasicDepot,
+  type Depot,
+  type CreateDepotInput,
+} from "@abacusflow/core";
 
 export default function DepotsPage() {
   const { message } = App.useApp();
@@ -90,7 +95,14 @@ export default function DepotsPage() {
         capacity: values.capacity ? Number(values.capacity) : undefined,
       };
       if (editItem) {
-        await depotApi.updateDepot({ id: editItem.id, updateDepotInput: { name: payload.name, location: payload.location, capacity: payload.capacity } });
+        await depotApi.updateDepot({
+          id: editItem.id,
+          updateDepotInput: {
+            name: payload.name,
+            location: payload.location,
+            capacity: payload.capacity,
+          },
+        });
         message.success("编辑成功");
       } else {
         await depotApi.addDepot({ createDepotInput: payload });
@@ -141,9 +153,24 @@ export default function DepotsPage() {
       key: "action",
       render: (_, record) => (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
-          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
-          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openDetail(record.id)}
+          >
+            详情
+          </Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>
+            编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            danger
+            onClick={() => handleDelete(record.id)}
+          >
+            删除
+          </Button>
         </Space>
       ),
     },
@@ -156,12 +183,21 @@ export default function DepotsPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>储存点管理</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增储存点</Button>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          储存点管理
+        </Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          新增储存点
+        </Button>
       </Flex>
 
       <div className="card">
-        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
+        <Flex
+          wrap="wrap"
+          gap={12}
+          align="flex-end"
+          style={{ marginBottom: 16 }}
+        >
           <div className="form-item">
             <label>关键字名称</label>
             <Input
@@ -171,7 +207,9 @@ export default function DepotsPage() {
               style={{ width: 200 }}
             />
           </div>
-          <Button type="primary" onClick={fetchData}>搜索</Button>
+          <Button type="primary" onClick={fetchData}>
+            搜索
+          </Button>
           <Button onClick={() => setSearchName("")}>重置</Button>
         </Flex>
       </div>
@@ -222,12 +260,20 @@ export default function DepotsPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            加载中...
+          </p>
         ) : detailItem ? (
           <Descriptions column={1} size="small" labelStyle={{ width: 100 }}>
-            <Descriptions.Item label="储存点名称">{detailItem.name}</Descriptions.Item>
-            <Descriptions.Item label="地址">{detailItem.location ?? "-"}</Descriptions.Item>
-            <Descriptions.Item label="容量">{detailItem.capacity ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="储存点名称">
+              {detailItem.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="地址">
+              {detailItem.location ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="容量">
+              {detailItem.capacity ?? "-"}
+            </Descriptions.Item>
             <Descriptions.Item label="启用状态">
               <Tag color={detailItem.enabled ? "success" : "error"}>
                 {detailItem.enabled ? "启用" : "禁用"}

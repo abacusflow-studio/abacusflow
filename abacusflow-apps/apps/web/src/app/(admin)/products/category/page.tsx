@@ -33,7 +33,8 @@ export default function ProductCategoriesPage() {
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [editItem, setEditItem] = useState<ProductCategory | null>(null);
-  const [parentContext, setParentContext] = useState<SelectableProductCategory | null>(null);
+  const [parentContext, setParentContext] =
+    useState<SelectableProductCategory | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -61,12 +62,13 @@ export default function ProductCategoriesPage() {
     if (!value) return rows;
     return rows.filter(
       (row) =>
-        row.name.includes(value) ||
-        (row.parentName?.includes(value) ?? false),
+        row.name.includes(value) || (row.parentName?.includes(value) ?? false),
     );
   }, [keyword, rows]);
 
-  const rootCategory = categories.find((category) => category.name === "根节点") ?? categories.find((category) => !category.parentId);
+  const rootCategory =
+    categories.find((category) => category.name === "根节点") ??
+    categories.find((category) => !category.parentId);
 
   const categoryOptions = categories
     .filter((category) => category.id !== editItem?.id)
@@ -111,8 +113,12 @@ export default function ProductCategoriesPage() {
       setSubmitting(true);
       const payload = {
         name: values.name as string,
-        ...(values.parentId != null ? { parentId: values.parentId as number } : {}),
-        ...(values.description ? { description: values.description as string } : {}),
+        ...(values.parentId != null
+          ? { parentId: values.parentId as number }
+          : {}),
+        ...(values.description
+          ? { description: values.description as string }
+          : {}),
       };
       if (editItem) {
         await productApi.updateProductCategory({
@@ -176,9 +182,26 @@ export default function ProductCategoriesPage() {
         const isRoot = record.name === "根节点";
         return (
           <Space size="small">
-            <Button type="link" size="small" onClick={() => openCreate(record)}>新增</Button>
-            <Button type="link" size="small" disabled={isRoot} onClick={() => openEdit(record)}>编辑</Button>
-            <Button type="link" size="small" danger disabled={isRoot} onClick={() => handleDelete(record)}>删除</Button>
+            <Button type="link" size="small" onClick={() => openCreate(record)}>
+              新增
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              disabled={isRoot}
+              onClick={() => openEdit(record)}
+            >
+              编辑
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              danger
+              disabled={isRoot}
+              onClick={() => handleDelete(record)}
+            >
+              删除
+            </Button>
           </Space>
         );
       },
@@ -188,14 +211,26 @@ export default function ProductCategoriesPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>产品类别管理</Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => openCreate()} disabled={!rootCategory}>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          产品类别管理
+        </Typography.Title>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => openCreate()}
+          disabled={!rootCategory}
+        >
           新增产品类别
         </Button>
       </Flex>
 
       <div className="card">
-        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
+        <Flex
+          wrap="wrap"
+          gap={12}
+          align="flex-end"
+          style={{ marginBottom: 16 }}
+        >
           <div className="form-item">
             <label>类别名</label>
             <Input
@@ -205,7 +240,9 @@ export default function ProductCategoriesPage() {
               style={{ width: 200 }}
             />
           </div>
-          <Button type="primary" onClick={() => undefined}>搜索</Button>
+          <Button type="primary" onClick={() => undefined}>
+            搜索
+          </Button>
           <Button onClick={() => setKeyword("")}>重置</Button>
         </Flex>
       </div>
@@ -231,7 +268,9 @@ export default function ProductCategoriesPage() {
         destroyOnHidden
       >
         {formLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
+            加载中...
+          </p>
         ) : (
           <>
             {parentContext && !editItem && (
@@ -250,7 +289,9 @@ export default function ProductCategoriesPage() {
               <Form.Item
                 name="parentId"
                 label="父类别"
-                rules={editItem ? [] : [{ required: true, message: "请选择父类别" }]}
+                rules={
+                  editItem ? [] : [{ required: true, message: "请选择父类别" }]
+                }
               >
                 <Select
                   options={categoryOptions}
@@ -269,8 +310,13 @@ export default function ProductCategoriesPage() {
   );
 }
 
-function flattenCategories(categories: SelectableProductCategory[]): CategoryRow[] {
-  const childrenByParent = new Map<number | undefined, SelectableProductCategory[]>();
+function flattenCategories(
+  categories: SelectableProductCategory[],
+): CategoryRow[] {
+  const childrenByParent = new Map<
+    number | undefined,
+    SelectableProductCategory[]
+  >();
   for (const category of categories) {
     const parentId = category.parentId ?? undefined;
     const list = childrenByParent.get(parentId) ?? [];

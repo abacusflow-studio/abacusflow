@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { partnerApi, type Supplier } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/utils";
 import { DetailScreen } from "@abacusflow/ui-native";
 
 export default function SupplierDetailScreen() {
@@ -10,11 +9,7 @@ export default function SupplierDetailScreen() {
   const [data, setData] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, [id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const res = await partnerApi.getSupplier({ id: Number(id) });
       setData(res);
@@ -23,7 +18,11 @@ export default function SupplierDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
     <DetailScreen

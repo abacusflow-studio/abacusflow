@@ -14,13 +14,22 @@ interface FormSelectProps {
   name?: string;
 }
 
-export function FormSelect({ options, placeholder, error, value, onChange, ...props }: FormSelectProps) {
+export function FormSelect({
+  options,
+  placeholder,
+  error,
+  value,
+  onChange,
+  ...props
+}: FormSelectProps) {
   return (
     <Select
       {...props}
       {...(error ? { status: "error" as const } : {})}
       value={value !== undefined && value !== "" ? value : undefined}
-      onChange={(val) => { if (val !== undefined) onChange?.({ target: { value: String(val) } }); }}
+      onChange={(val) => {
+        if (val !== undefined) onChange?.({ target: { value: String(val) } });
+      }}
       placeholder={placeholder}
       options={options}
       style={{ width: "100%" }}

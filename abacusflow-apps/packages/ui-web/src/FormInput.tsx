@@ -18,10 +18,5 @@ interface FormInputProps {
 }
 
 export function FormInput({ error, ...props }: FormInputProps) {
-  return (
-    <Input
-      {...props}
-      {...(error ? { status: "error" as const } : {})}
-    />
-  );
+  return <Input {...props} {...(error ? { status: "error" as const } : {})} />;
 }
