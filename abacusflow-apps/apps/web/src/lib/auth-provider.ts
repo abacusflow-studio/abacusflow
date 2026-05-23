@@ -19,6 +19,7 @@ export async function initWebAuth(): Promise<void> {
   auth0Client = new Auth0Client({
     domain: appConfig.auth0.domain,
     clientId: appConfig.auth0.clientId,
+    cacheLocation: "localstorage",
     authorizationParams,
   });
 

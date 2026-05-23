@@ -66,11 +66,9 @@ async function request<T>(
 
   try {
     const auth = getAuthClient();
-    if (await auth.isAuthenticated()) {
-      const token = await auth.getAccessToken();
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
+    const token = await auth.getAccessToken();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
     }
   } catch {
     // not authenticated
