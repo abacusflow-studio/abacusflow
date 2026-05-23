@@ -70,6 +70,84 @@
   }
 }
 
+@keyframes af-float-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(60px, -40px) scale(1.08);
+  }
+  50% {
+    transform: translate(-30px, 50px) scale(0.95);
+  }
+  75% {
+    transform: translate(40px, 20px) scale(1.04);
+  }
+}
+
+@keyframes af-float-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-50px, 60px) scale(1.1);
+  }
+  66% {
+    transform: translate(40px, -30px) scale(0.92);
+  }
+}
+
+@keyframes af-float-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  20% {
+    transform: translate(30px, 50px) scale(1.05);
+  }
+  40% {
+    transform: translate(-60px, -20px) scale(0.96);
+  }
+  60% {
+    transform: translate(50px, -40px) scale(1.08);
+  }
+  80% {
+    transform: translate(-20px, 30px) scale(1.02);
+  }
+}
+
+@keyframes af-border-spin {
+  from {
+    --af-border-angle: 0deg;
+  }
+  to {
+    --af-border-angle: 360deg;
+  }
+}
+
+@keyframes af-glow-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes af-shimmer {
+  from {
+    background-position: -200% center;
+  }
+  to {
+    background-position: 200% center;
+  }
+}
+
+@property --af-border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -93,6 +171,23 @@ body {
     var(--af-ink);
 }
 
+/* Floating gradient orbs — adds depth to dark backgrounds */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 520px 520px at 15% 20%, rgba(34, 197, 94, 0.14), transparent 70%),
+    radial-gradient(ellipse 440px 440px at 82% 75%, rgba(56, 189, 248, 0.12), transparent 70%),
+    radial-gradient(ellipse 380px 380px at 50% 50%, rgba(167, 139, 250, 0.08), transparent 70%);
+  animation: af-float-1 22s ease-in-out infinite, af-float-2 28s ease-in-out infinite, af-float-3 34s ease-in-out infinite;
+  filter: blur(60px);
+  opacity: 0.9;
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -113,9 +208,85 @@ body::before {
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.82), transparent 92%);
 }
 
+/* Noise texture overlay — adds subtle grain/texture */
+.af-root-body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+
 ::selection {
   color: #031007;
   background: var(--af-green);
+}
+
+/* Gradient text — for hero titles */
+.af-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #b8ffcf 35%, var(--af-cyan) 65%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: af-shimmer 8s linear infinite;
+}
+
+/* Animated gradient border — for hero cards */
+.af-gradient-border {
+  position: relative;
+  border: none !important;
+}
+
+.af-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--af-border-angle, 0deg),
+    var(--af-green),
+    var(--af-cyan),
+    var(--af-violet),
+    var(--af-green)
+  );
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  animation: af-border-spin 6s linear infinite;
+  opacity: 0.65;
+}
+
+/* Mouse-tracking glow — cards that light up under cursor */
+.af-mouse-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.af-mouse-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    360px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(34, 197, 94, 0.12),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.af-mouse-glow:hover::after {
+  opacity: 1;
 }
 
 a {

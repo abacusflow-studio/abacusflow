@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Spin } from "antd";
 import {
   AlertOutlined,
@@ -22,6 +22,8 @@ import {
   productApi,
   transactionApi,
 } from "@abacusflow/core";
+import { useCountUp } from "../../../hooks/use-count-up";
+import { useMouseGlow } from "../../../hooks/use-mouse-glow";
 
 interface DashboardStats {
   productCount: number;
@@ -116,12 +118,29 @@ const STAT_CARDS = [
 
 const formatNumber = (value: number) => numberFormatter.format(value);
 
+function StatValue({ value }: { value: number }) {
+  const animated = useCountUp(value, { duration: 1000 });
+  return <>{formatNumber(animated)}</>;
+}
+
+function GlowCard({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useMouseGlow(ref);
+  return (
+    <article ref={ref} className={className} style={style}>
+      {children}
+    </article>
+  );
+}
+
 const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [failedMetrics, setFailedMetrics] = useState<string[]>([]);
+  const heroRef = useRef<HTMLDivElement>(null);
+  useMouseGlow(heroRef);
 
   const loadStats = useCallback(async () => {
     setLoading(true);
@@ -262,10 +281,10 @@ export default function DashboardPage() {
 
   return (
     <div className="af-dashboard">
-      <section className="af-dashboard-hero">
+      <section ref={heroRef} className="af-dashboard-hero af-gradient-border af-mouse-glow">
         <div className="af-hero-copy">
           <div className="af-kicker">库存脉冲 / 实时概览</div>
-          <h1 className="af-dashboard-title">业务流转一屏点亮</h1>
+          <h1 className="af-dashboard-title af-gradient-text">业务流转一屏点亮</h1>
           <p className="af-dashboard-copy">
             产品、库存、采购、销售和伙伴网络在同一张脉冲图里联动。
             异常库存会被推到最前面，日常操作保持高密度但可扫读。
@@ -273,20 +292,20 @@ export default function DashboardPage() {
           <div className="af-hero-metrics">
             <div className="af-hero-chip">
               <span>交易信号</span>
-              <strong>{formatNumber(derived.transactionCount)}</strong>
+              <strong><StatValue value={derived.transactionCount} /></strong>
             </div>
             <div className="af-hero-chip">
               <span>伙伴节点</span>
-              <strong>{formatNumber(derived.partnerCount)}</strong>
+              <strong><StatValue value={derived.partnerCount} /></strong>
             </div>
             <div className="af-hero-chip">
               <span>库存健康</span>
-              <strong>{derived.inventoryHealth}%</strong>
+              <strong><StatValue value={derived.inventoryHealth} />%</strong>
             </div>
           </div>
         </div>
 
-        <div className="af-flow-console" aria-hidden="true">
+        <div className="af-flow-console af-gradient-border" aria-hidden="true">
           <div className="af-console-head">
             <span>流转控制台</span>
             <span className="af-console-lights">
@@ -302,7 +321,7 @@ export default function DashboardPage() {
             >
               <span>采购入库</span>
               <div className="af-route-line" />
-              <span>{formatNumber(liveStats.purchaseOrderCount)}</span>
+              <span><StatValue value={liveStats.purchaseOrderCount} /></span>
             </div>
             <div
               className="af-console-route"
@@ -310,7 +329,7 @@ export default function DashboardPage() {
             >
               <span>库存同步</span>
               <div className="af-route-line" />
-              <span>{formatNumber(liveStats.inventoryCount)}</span>
+              <span><StatValue value={liveStats.inventoryCount} /></span>
             </div>
             <div
               className="af-console-route"
@@ -318,7 +337,7 @@ export default function DashboardPage() {
             >
               <span>销售出库</span>
               <div className="af-route-line" />
-              <span>{formatNumber(liveStats.saleOrderCount)}</span>
+              <span><StatValue value={liveStats.saleOrderCount} /></span>
             </div>
             <div
               className="af-console-route"
@@ -326,7 +345,7 @@ export default function DashboardPage() {
             >
               <span>风险预警</span>
               <div className="af-route-line" />
-              <span>{formatNumber(liveStats.lowStockCount)}</span>
+              <span><StatValue value={liveStats.lowStockCount} /></span>
             </div>
           </div>
         </div>
@@ -347,8 +366,8 @@ export default function DashboardPage() {
 
           <section className="af-stat-grid" aria-label="业务统计">
             {STAT_CARDS.map((card, index) => (
-              <article
-                className="af-stat-card"
+              <GlowCard
+                className="af-stat-card af-mouse-glow"
                 key={card.key}
                 style={
                   {
@@ -362,12 +381,14 @@ export default function DashboardPage() {
                   <span className="af-stat-code">{card.code}</span>
                 </div>
                 <p className="af-stat-label">{card.label}</p>
-                <div className="af-stat-value">{formatNumber(stats[card.key])}</div>
+                <div className="af-stat-value">
+                  <StatValue value={stats[card.key]} />
+                </div>
                 <div className="af-stat-footer">
                   <span>{card.hint}</span>
                   <span className="af-stat-spark" />
                 </div>
-              </article>
+              </GlowCard>
             ))}
           </section>
 
@@ -426,14 +447,14 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <aside className="af-risk-card">
+            <aside className="af-risk-card af-mouse-glow">
               <div className="af-section-head">
                 <div>
                   <h2>低库存雷达</h2>
                   <p>安全库存以下的产品会形成优先处理信号。</p>
                 </div>
               </div>
-              <div className="af-risk-number">{formatNumber(stats.lowStockCount)}</div>
+              <div className="af-risk-number"><StatValue value={stats.lowStockCount} /></div>
               <div className="af-risk-label">
                 {stats.lowStockCount > 0 ? "需要补货关注" : "库存状态平稳"}
               </div>

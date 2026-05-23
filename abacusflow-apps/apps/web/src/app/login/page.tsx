@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "antd";
 import {
   BarChartOutlined,
@@ -11,6 +11,7 @@ import {
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import { getAuthClient } from "@abacusflow/core";
+import { useMouseGlow } from "../../hooks/use-mouse-glow";
 
 const BOARD_LANES = [
   { label: "采购入库", value: "84%", color: "#22c55e" },
@@ -28,6 +29,8 @@ const INSIGHTS = [
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useMouseGlow(cardRef);
 
   const handleLogin = async () => {
     try {
@@ -46,7 +49,7 @@ export default function LoginPage() {
     <main className="af-login-page">
       <section className="af-login-showcase" aria-label="小算盘概览">
         <div className="af-kicker">小算盘业务指挥台</div>
-        <h1 className="af-login-title">
+        <h1 className="af-login-title af-gradient-text">
           让库存流转像脉冲
           <br />
           一样清晰
@@ -65,7 +68,7 @@ export default function LoginPage() {
           ))}
         </div>
 
-        <div className="af-flow-board" aria-hidden="true">
+        <div className="af-flow-board af-gradient-border" aria-hidden="true">
           <div className="af-board-header">
             <span>流转矩阵</span>
             <span>同步中</span>
@@ -89,7 +92,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="af-login-card" aria-label="登录">
+      <section ref={cardRef} className="af-login-card af-mouse-glow af-gradient-border" aria-label="登录">
         <div className="af-login-brand">
           <div className="af-brand-mark">
             <CalculatorOutlined />
