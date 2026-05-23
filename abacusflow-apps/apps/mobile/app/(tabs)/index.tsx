@@ -13,8 +13,7 @@ import {
   productApi,
   inventoryApi,
   transactionApi,
-  customerApi,
-  supplierApi,
+  partnerApi,
   depotApi,
 } from "@abacusflow/core";
 import { CURRENT_VERSION } from "@abacusflow/config";
@@ -54,8 +53,8 @@ export default function HomeScreen() {
         inventoryApi.listInventoriesPage({ pageIndex: 1, pageSize: 100 }),
         transactionApi.listPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
         transactionApi.listSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
-        customerApi.listCustomersPage({ pageIndex: 1, pageSize: 1 }),
-        supplierApi.listSuppliersPage({ pageIndex: 1, pageSize: 1 }),
+        partnerApi.listBasicCustomersPage({ pageIndex: 1, pageSize: 1 }),
+        partnerApi.listBasicSuppliersPage({ pageIndex: 1, pageSize: 1 }),
         depotApi.listBasicDepots(),
       ]);
 

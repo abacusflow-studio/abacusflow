@@ -1,0 +1,26 @@
+{
+  "name": "@abacusflow/ui-native",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-native": "*",
+    "react-native-safe-area-context": "*",
+    "expo-router": "*",
+    "expo-symbols": "*",
+    "@expo/vector-icons": "*"
+  },
+  "dependencies": {
+    "@abacusflow/ui-tokens": "*",
+    "@abacusflow/utils": "*"
+  },
+  "devDependencies": {
+    "@abacusflow/config": "*",
+    "react": "^19.1.0"
+  }
+}

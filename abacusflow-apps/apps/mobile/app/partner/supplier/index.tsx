@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { supplierApi, type Supplier } from "@abacusflow/core";
+import { partnerApi, type Supplier } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { ListScreen } from "@/components/list-screen";
+import { ListScreen } from "@abacusflow/ui-native";
 
 export default function SupplierListScreen() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function SupplierListScreen() {
     async (page = pageIndex) => {
       setLoading(true);
       try {
-        const res = await supplierApi.listSuppliersPage({
+        const res = await partnerApi.listBasicSuppliersPage({
           pageIndex: page,
           pageSize: 20,
           name: searchName || undefined,

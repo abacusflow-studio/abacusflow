@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Text, TextInput, StyleSheet } from "react-native";
-import { customerApi, productApi, transactionApi } from "@abacusflow/core";
+import { partnerApi, productApi, transactionApi } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { OrderFormScreen } from "@/components/order-form-screen";
+import { OrderFormScreen } from "@abacusflow/ui-native";
 
 export default function AddSaleOrderScreen() {
   const [discountFactor, setDiscountFactor] = useState("");
@@ -13,7 +13,7 @@ export default function AddSaleOrderScreen() {
       partnerLabel="客户"
       accentColor="#722ed1"
       loadPartners={async () => {
-        const res = await customerApi.listCustomersPage({
+        const res = await partnerApi.listBasicCustomersPage({
           pageIndex: 1,
           pageSize: 100,
         });

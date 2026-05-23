@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { customerApi, type Customer } from "@abacusflow/core";
-import { FormScreen } from "@/components/form-screen";
+import { partnerApi, type Customer } from "@abacusflow/core";
+import { FormScreen } from "@abacusflow/ui-native";
 
 export default function EditCustomerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,7 +15,7 @@ export default function EditCustomerScreen() {
 
   const loadData = async () => {
     try {
-      const res = await customerApi.getCustomer(Number(id));
+      const res = await partnerApi.getCustomer({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -70,11 +70,13 @@ export default function EditCustomerScreen() {
         address: data.address,
       }}
       onSubmit={async (values) => {
-        await customerApi.updateCustomer({
+        await partnerApi.updateCustomer({
           id: Number(id),
-          name: values.name as string,
-          phone: values.phone as string | undefined,
-          address: values.address as string | undefined,
+          updateCustomerInput: {
+            name: values.name as string,
+            phone: values.phone as string | undefined,
+            address: values.address as string | undefined,
+          },
         });
       }}
       submitLabel="保存修改"

@@ -19,7 +19,7 @@ import {
   translateProductType,
   COLORS,
 } from "@abacusflow/utils";
-import { DetailScreen } from "@/components/detail-screen";
+import { DetailScreen } from "@abacusflow/ui-native";
 
 export default function InventoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

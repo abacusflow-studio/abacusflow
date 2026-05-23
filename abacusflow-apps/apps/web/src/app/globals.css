@@ -1,16 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --sidebar-width: 200px;
-  --sidebar-collapsed-width: 80px;
-  --header-height: 64px;
   --color-primary: #1677ff;
-  --color-bg-sidebar: #ebedef;
-  --color-bg-header: #fdfdfc;
-  --color-bg-content: #ffffff;
-  --color-text: #333333;
-  --color-text-secondary: #666666;
   --color-border: #f0f0f0;
+  --color-text-secondary: #666666;
 }
 
 * {
@@ -20,8 +13,6 @@
 body {
   margin: 0;
   padding: 0;
-  background: var(--color-bg-content);
-  color: var(--color-text);
 }
 
 a {
@@ -31,24 +22,6 @@ a {
 
 a:hover {
   text-decoration: underline;
-}
-
-input,
-select,
-textarea {
-  padding: 6px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
 }
 
 .card {

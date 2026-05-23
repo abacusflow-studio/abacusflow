@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@abacusflow/ui";
+import { Button } from "antd";
 import { getAuthClient } from "@abacusflow/core";
 
 export default function LoginPage() {
@@ -62,11 +62,12 @@ export default function LoginPage() {
           <Button
             type="primary"
             size="large"
-            label={loading ? "跳转中..." : "使用 Auth0 登录"}
             loading={loading}
             onClick={handleLogin}
             block
-          />
+          >
+            {loading ? "跳转中..." : "使用 Auth0 登录"}
+          </Button>
           {error && (
             <div
               style={{

@@ -2,36 +2,53 @@
 
 import React, { useState } from "react";
 import {
-  PageHeader, Button, DataTable, StatusTag, Modal,
-  FormField, FormInput, FormSelect, FormTextarea,
-  type DataTableColumn,
-} from "@abacusflow/ui";
+  Button,
+  Table,
+  Modal,
+  Input,
+  Select,
+  Form,
+  Typography,
+  Flex,
+  Tag,
+  App,
+  Space,
+  Descriptions,
+  Card,
+  Spin,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 import { usePaginatedList } from "../hooks/use-paginated-list";
-import { useToast } from "../hooks/use-toast";
 import {
   dateToFormattedString,
   timestampToLocaleString,
   translateInventoryUnitType,
   translateOrderStatus,
+  STATUS_COLORS,
   type OrderStatus,
 } from "@abacusflow/utils";
 import type {
-  ListOrdersPageRequest,
   OrderItem,
   PageResponse,
   PurchaseOrder,
+  BasicPurchaseOrder,
   SaleOrder,
+  BasicSaleOrder,
   SelectableProduct,
 } from "@abacusflow/core";
 import {
-  customerApi,
   inventoryApi,
+  partnerApi,
   productApi,
-  supplierApi,
   transactionApi,
 } from "@abacusflow/core";
 
-type Order = PurchaseOrder | SaleOrder;
+type Order = PurchaseOrder | BasicPurchaseOrder | SaleOrder | BasicSaleOrder;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyPageResponse = PageResponse<any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyParams = Record<string, any>;
 type SelectOption = { label: string; value: string | number };
 
 interface OrderListPageProps {
@@ -39,8 +56,10 @@ interface OrderListPageProps {
   orderType: "purchase" | "sale";
   partnerLabel: string;
   partnerKey: "supplierName" | "customerName";
-  listFn: (params: ListOrdersPageRequest) => Promise<PageResponse<Order>>;
-  getDetailFn: (id: number) => Promise<Order>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listFn: (params: any) => Promise<AnyPageResponse>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getDetailFn: (id: number) => Promise<any>;
   completeFn: (id: number) => Promise<void>;
   cancelFn: (id: number) => Promise<void>;
   reverseFn: (id: number) => Promise<void>;
@@ -94,7 +113,7 @@ export function OrderListPage({
   cancelFn,
   reverseFn,
 }: OrderListPageProps) {
-  const { addToast } = useToast();
+  const { message, modal } = App.useApp();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<OrderForm>(emptyForm);
   const [formLoading, setFormLoading] = useState(false);
@@ -108,7 +127,7 @@ export function OrderListPage({
   const [detailItem, setDetailItem] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const defaultFilters: Partial<ListOrdersPageRequest> =
+  const defaultFilters: Partial<AnyParams> =
     orderType === "purchase"
       ? {
           orderNo: undefined,
@@ -129,7 +148,7 @@ export function OrderListPage({
   const {
     data, loading, pageIndex, total, filters,
     updateFilter, setPageIndex, refresh, handleSearch, handleReset,
-  } = usePaginatedList<Order, ListOrdersPageRequest>({
+  } = usePaginatedList<Order, AnyParams>({
     fetchFn: listFn,
     defaultFilters,
   });
@@ -146,7 +165,7 @@ export function OrderListPage({
     try {
       if (orderType === "purchase") {
         const [suppliers, selectableProducts] = await Promise.all([
-          supplierApi.listSelectableSuppliers(),
+          partnerApi.listSelectableSuppliers(),
           productApi.listSelectableProducts(),
         ]);
         setProducts(selectableProducts);
@@ -164,8 +183,8 @@ export function OrderListPage({
         );
       } else {
         const [customers, selectableInventoryUnits] = await Promise.all([
-          customerApi.listSelectableCustomers(),
-          inventoryApi.listSelectableInventoryUnits(["normal", "reversed"]),
+          partnerApi.listSelectableCustomers(),
+          inventoryApi.listSelectableInventoryUnits({ statuses: ["normal", "reversed"] }),
         ]);
         setPartnerOptions(
           customers.map((customer) => ({
@@ -181,7 +200,7 @@ export function OrderListPage({
         );
       }
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载表单数据失败");
+      message.error(err instanceof Error ? err.message : "加载表单数据失败");
     } finally {
       setFormLoading(false);
     }
@@ -194,7 +213,7 @@ export function OrderListPage({
       const item = await getDetailFn(id);
       setDetailItem(item);
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载失败");
+      message.error(err instanceof Error ? err.message : "加载失败");
       setShowDetail(false);
     } finally {
       setDetailLoading(false);
@@ -252,35 +271,39 @@ export function OrderListPage({
     setSubmitting(true);
     try {
       if (orderType === "purchase") {
-        await transactionApi.createPurchaseOrder({
-          supplierId: Number(form.partnerId),
-          orderDate: form.orderDate,
-          note: form.note || undefined,
-          orderItems: form.items.map((item) => ({
-            productId: Number(item.itemId),
-            quantity: Number(item.quantity),
-            unitPrice: Number(item.unitPrice),
-            serialNumber: item.serialNumber || undefined,
-          })),
+        await transactionApi.addPurchaseOrder({
+          createPurchaseOrderInput: {
+            supplierId: Number(form.partnerId),
+            orderDate: new Date(form.orderDate),
+            note: form.note || undefined,
+            orderItems: form.items.map((item) => ({
+              productId: Number(item.itemId),
+              quantity: Number(item.quantity),
+              unitPrice: Number(item.unitPrice),
+              serialNumber: item.serialNumber || undefined,
+            })),
+          },
         });
       } else {
-        await transactionApi.createSaleOrder({
-          customerId: Number(form.partnerId),
-          orderDate: form.orderDate,
-          note: form.note || undefined,
-          orderItems: form.items.map((item) => ({
-            inventoryUnitId: Number(item.itemId),
-            quantity: Number(item.quantity),
-            unitPrice: Number(item.unitPrice),
-            discountFactor: item.discountFactor ? Number(item.discountFactor) / 100 : 1,
-          })),
+        await transactionApi.addSaleOrder({
+          createSaleOrderInput: {
+            customerId: Number(form.partnerId),
+            orderDate: new Date(form.orderDate),
+            note: form.note || undefined,
+            orderItems: form.items.map((item) => ({
+              inventoryUnitId: Number(item.itemId),
+              quantity: Number(item.quantity),
+              unitPrice: Number(item.unitPrice),
+              discountFactor: item.discountFactor ? Number(item.discountFactor) / 100 : 1,
+            })),
+          },
         });
       }
-      addToast("success", `新增${orderLabel}单成功`);
+      message.success(`新增${orderLabel}单成功`);
       setShowForm(false);
       refresh();
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "新增失败");
+      message.error(err instanceof Error ? err.message : "新增失败");
     } finally {
       setSubmitting(false);
     }
@@ -288,108 +311,120 @@ export function OrderListPage({
 
   const handleAction = async (id: number, action: "complete" | "cancel" | "reverse") => {
     const labels = { complete: "完成", cancel: "取消", reverse: "撤回" };
-    if (!confirm(`确定${labels[action]}该${orderLabel}单？`)) return;
-    try {
-      if (action === "complete") await completeFn(id);
-      if (action === "cancel") await cancelFn(id);
-      if (action === "reverse") await reverseFn(id);
-      addToast("success", `${labels[action]}成功`);
-      refresh();
-    } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "操作失败");
-    }
+    modal.confirm({
+      title: "确认操作",
+      content: `确定${labels[action]}该${orderLabel}单？`,
+      onOk: async () => {
+        try {
+          if (action === "complete") await completeFn(id);
+          if (action === "cancel") await cancelFn(id);
+          if (action === "reverse") await reverseFn(id);
+          message.success(`${labels[action]}成功`);
+          refresh();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : "操作失败");
+        }
+      },
+    });
   };
 
-  const columns: DataTableColumn<Order>[] = [
-    { key: "orderNo", title: "订单编号", dataIndex: "orderNo" },
+  const columns: ColumnsType<Order> = [
+    { title: "订单编号", dataIndex: "orderNo", key: "orderNo" },
     {
-      key: "orderDate",
       title: "订单日期",
+      key: "orderDate",
       render: (_, record) => dateToFormattedString(record.orderDate),
     },
     {
-      key: partnerKey,
       title: partnerLabel,
+      key: partnerKey,
       render: (_, record) =>
         ((record as unknown as Record<string, unknown>)[partnerKey] as string) ?? "-",
     },
     {
-      key: "status",
       title: "状态",
-      render: (_, record) => <StatusTag status={record.status} />,
+      key: "status",
+      render: (_, record) => {
+        const colors = STATUS_COLORS[record.status] || { bg: "#f0f0f0", color: "#000" };
+        return <Tag style={{ backgroundColor: colors.bg, color: colors.color, borderColor: `${colors.color}30` }}>{translateOrderStatus(record.status)}</Tag>;
+      },
     },
     {
-      key: "totalAmount",
       title: "总金额",
-      render: (_, record) => record.totalAmount?.toLocaleString("zh-CN") ?? "-",
+      key: "totalAmount",
+      render: (_, record) => ((record as unknown as Record<string, unknown>)["totalAmount"] as number)?.toLocaleString("zh-CN") ?? "-",
     },
-    { key: "totalQuantity", title: "总数量", dataIndex: "totalQuantity" },
-    { key: "itemCount", title: "明细数", dataIndex: "itemCount" },
+    { title: "总数量", dataIndex: "totalQuantity", key: "totalQuantity" },
+    { title: "明细数", dataIndex: "itemCount", key: "itemCount" },
     {
-      key: "autoCompleteDate",
       title: "自动完成日期",
-      render: (_, record) => dateToFormattedString(record.autoCompleteDate),
+      key: "autoCompleteDate",
+      render: (_, record) => dateToFormattedString((record as unknown as Record<string, unknown>)["autoCompleteDate"] as Date | undefined),
     },
     {
-      key: "action",
       title: "操作",
+      key: "action",
       render: (_, record) => (
-        <div className="flex gap-2">
-          <Button type="link" label="详情" onClick={() => openDetail(record.id)} />
+        <Space size="small">
+          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
           {record.status === "pending" && (
             <>
-              <Button type="link" label="完成" onClick={() => handleAction(record.id, "complete")} />
-              <Button type="link" label="取消" onClick={() => handleAction(record.id, "cancel")} />
+              <Button type="link" size="small" onClick={() => handleAction(record.id, "complete")}>完成</Button>
+              <Button type="link" size="small" onClick={() => handleAction(record.id, "cancel")}>取消</Button>
             </>
           )}
           {record.status === "completed" && (
-            <Button type="link" label="撤回" onClick={() => handleAction(record.id, "reverse")} />
+            <Button type="link" size="small" onClick={() => handleAction(record.id, "reverse")}>撤回</Button>
           )}
-        </div>
+        </Space>
       ),
     },
   ];
 
-  const itemColumns: DataTableColumn<OrderItem>[] = [
+  const itemColumns: ColumnsType<OrderItem> = [
     {
-      key: "productName",
       title: orderType === "purchase" ? "产品" : "库存单元",
+      key: "productName",
       render: (_, record) =>
         record.productName ??
         record.title ??
         (record.productId ? `产品 #${record.productId}` : undefined) ??
         (record.inventoryUnitId ? `库存单元 #${record.inventoryUnitId}` : "-"),
     },
-    { key: "quantity", title: "数量", dataIndex: "quantity" },
+    { title: "数量", dataIndex: "quantity", key: "quantity" },
     {
-      key: "unitPrice",
       title: "单价",
+      key: "unitPrice",
       render: (_, record) => record.unitPrice?.toLocaleString("zh-CN") ?? "-",
     },
     ...(orderType === "sale"
       ? [
           {
-            key: "discountedPrice",
             title: "折扣价",
-            render: (_: OrderItem[keyof OrderItem] | undefined, record: OrderItem) =>
+            key: "discountedPrice",
+            render: (_: unknown, record: OrderItem) =>
               record.discountedPrice?.toLocaleString("zh-CN") ?? "-",
-          },
+          } as const,
         ]
       : []),
     {
-      key: "subtotal",
       title: "小计",
+      key: "subtotal",
       render: (_, record) => record.subtotal?.toLocaleString("zh-CN") ?? "-",
     },
-    { key: "serialNumber", title: "序列号", dataIndex: "serialNumber" },
+    { title: "序列号", dataIndex: "serialNumber", key: "serialNumber" },
   ];
 
-  const getOrderItems = (order: Order | null): OrderItem[] =>
-    order?.orderItems ?? order?.items ?? [];
+  const getOrderItems = (order: Order | null): OrderItem[] => {
+    if (!order) return [];
+    const o = order as unknown as Record<string, unknown>;
+    return (o["orderItems"] as OrderItem[]) ?? (o["items"] as OrderItem[]) ?? [];
+  };
 
   const getTotalAmount = (order: Order): string => {
+    const o = order as unknown as Record<string, unknown>;
     const total =
-      order.totalAmount ??
+      (o["totalAmount"] as number | undefined) ??
       getOrderItems(order).reduce((sum, item) => sum + (item.subtotal ?? 0), 0);
     return total ? total.toLocaleString("zh-CN") : "-";
   };
@@ -410,15 +445,16 @@ export function OrderListPage({
 
   return (
     <div>
-      <PageHeader
-        title={title}
-        extra={<Button type="primary" label={`新增${orderLabel}单`} onClick={openCreate} />}
-      />
-      <div className="card">
-        <div className="form-inline mb-4">
+      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Typography.Title level={4} style={{ margin: 0 }}>{title}</Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{`新增${orderLabel}单`}</Button>
+      </Flex>
+
+      <Card style={{ marginBottom: 16 }}>
+        <Flex wrap="wrap" gap={12} align="flex-end">
           <div className="form-item">
             <label>订单编号</label>
-            <input
+            <Input
               value={filters.orderNo ?? ""}
               onChange={(e) => updateFilter("orderNo", e.target.value || undefined)}
               placeholder={`请输入${orderLabel}单号`}
@@ -426,7 +462,7 @@ export function OrderListPage({
           </div>
           <div className="form-item">
             <label>订单日期</label>
-            <input
+            <Input
               type="date"
               value={filters.orderDate ?? ""}
               onChange={(e) => updateFilter("orderDate", e.target.value || undefined)}
@@ -434,7 +470,7 @@ export function OrderListPage({
           </div>
           <div className="form-item">
             <label>{partnerLabel}</label>
-            <input
+            <Input
               value={(filters[partnerFilterKey] as string | undefined) ?? ""}
               onChange={(e) => updateFilter(partnerFilterKey, e.target.value || undefined)}
               placeholder={`请输入${partnerLabel}`}
@@ -442,21 +478,20 @@ export function OrderListPage({
           </div>
           <div className="form-item">
             <label>状态</label>
-            <select
-              value={filters.status ?? ""}
-              onChange={(e) => updateFilter("status", (e.target.value || undefined) as OrderStatus | undefined)}
-            >
-              <option value="">全部</option>
-              {ORDER_STATUS_OPTIONS.map((status) => (
-                <option key={status.value} value={status.value}>{status.label}</option>
-              ))}
-            </select>
+            <Select
+              value={filters.status ?? undefined}
+              onChange={(val) => updateFilter("status", val)}
+              placeholder="全部"
+              allowClear
+              style={{ width: 120 }}
+              options={ORDER_STATUS_OPTIONS}
+            />
           </div>
           {orderType === "purchase" ? (
             <>
               <div className="form-item">
                 <label>产品名称</label>
-                <input
+                <Input
                   value={filters.productName ?? ""}
                   onChange={(e) => updateFilter("productName", e.target.value || undefined)}
                   placeholder="请输入产品名称"
@@ -464,7 +499,7 @@ export function OrderListPage({
               </div>
               <div className="form-item">
                 <label>序列号</label>
-                <input
+                <Input
                   value={filters.serialNumber ?? ""}
                   onChange={(e) => updateFilter("serialNumber", e.target.value || undefined)}
                   placeholder="请输入序列号"
@@ -474,111 +509,126 @@ export function OrderListPage({
           ) : (
             <div className="form-item">
               <label>库存单元</label>
-              <input
+              <Input
                 value={filters.inventoryUnitName ?? ""}
                 onChange={(e) => updateFilter("inventoryUnitName", e.target.value || undefined)}
                 placeholder="请输入库存单元名"
               />
             </div>
           )}
-          <Button type="primary" label="搜索" onClick={handleSearch} />
-          <Button label="重置" onClick={handleReset} />
-        </div>
-      </div>
-      <div className="card">
-        <DataTable
+          <Button type="primary" onClick={handleSearch}>搜索</Button>
+          <Button onClick={handleReset}>重置</Button>
+        </Flex>
+      </Card>
+
+      <Card>
+        <Table<Order>
           columns={columns}
-          data={data}
+          dataSource={data}
           rowKey="id"
           loading={loading}
-          pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          size="middle"
+          pagination={{
+            current: pageIndex,
+            pageSize: 10,
+            total,
+            onChange: setPageIndex,
+            showTotal: (t) => `共 ${t} 条`,
+            showSizeChanger: false,
+          }}
         />
-      </div>
+      </Card>
 
       <Modal
         open={showForm}
         title={`新增${orderLabel}单`}
-        onClose={() => setShowForm(false)}
+        onCancel={() => setShowForm(false)}
         onOk={handleSubmit}
-        okLoading={submitting}
+        confirmLoading={submitting}
         width={760}
+        destroyOnHidden
       >
         {formLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
+          <Flex justify="center" style={{ padding: "2rem 0" }}><Spin /></Flex>
         ) : (
-          <>
-            <FormField label={partnerLabel} required error={errors.partnerId}>
-              <FormSelect
-                value={form.partnerId}
-                onChange={(e) => setForm({ ...form, partnerId: e.target.value })}
+          <div style={{ marginTop: 16 }}>
+            <Form.Item label={partnerLabel} required style={{ marginBottom: 12 }}>
+              <Select
+                value={form.partnerId || undefined}
+                onChange={(val) => setForm({ ...form, partnerId: String(val) })}
                 placeholder={`请选择${partnerLabel}`}
                 options={partnerOptions}
-                error={!!errors.partnerId}
+                {...(errors.partnerId ? { status: "error" as const } : {})}
               />
-            </FormField>
-            <FormField label="订单日期" required error={errors.orderDate}>
-              <FormInput
+              {errors.partnerId && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors.partnerId}</div>}
+            </Form.Item>
+            <Form.Item label="订单日期" required style={{ marginBottom: 12 }}>
+              <Input
                 type="date"
                 value={form.orderDate}
                 onChange={(e) => setForm({ ...form, orderDate: e.target.value })}
-                error={!!errors.orderDate}
+                {...(errors.orderDate ? { status: "error" as const } : {})}
               />
-            </FormField>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold">订单明细</span>
-              <Button type="primary" size="small" label="添加明细" onClick={addOrderItem} />
-            </div>
-            {errors.items && <p className="text-red-500 text-sm">{errors.items}</p>}
-            <div className="flex flex-col gap-3">
+              {errors.orderDate && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors.orderDate}</div>}
+            </Form.Item>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
+              <Typography.Text strong>订单明细</Typography.Text>
+              <Button type="primary" size="small" icon={<PlusOutlined />} onClick={addOrderItem}>添加明细</Button>
+            </Flex>
+            {errors.items && <p style={{ color: "#ff4d4f", fontSize: 12 }}>{errors.items}</p>}
+            <Space direction="vertical" style={{ width: "100%" }} size={12}>
               {form.items.map((item, index) => (
-                <div key={index} className="border border-gray-100 rounded-md p-3">
-                  <div className="flex justify-between gap-3 mb-2">
-                    <span className="text-sm text-gray-500">明细 {index + 1}</span>
+                <Card key={index} size="small" style={{ borderColor: "#f0f0f0" }}>
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>明细 {index + 1}</Typography.Text>
                     {form.items.length > 1 && (
-                      <Button type="link" label="删除" onClick={() => removeOrderItem(index)} />
+                      <Button type="link" size="small" danger onClick={() => removeOrderItem(index)}>删除</Button>
                     )}
-                  </div>
-                  <FormField label={itemLabel} required error={errors[`item-${index}`]}>
-                    <FormSelect
-                      value={item.itemId}
-                      onChange={(e) => updateItem(index, { itemId: e.target.value })}
+                  </Flex>
+                  <Form.Item label={itemLabel} required style={{ marginBottom: 8 }}>
+                    <Select
+                      value={item.itemId || undefined}
+                      onChange={(val) => updateItem(index, { itemId: String(val) })}
                       placeholder={`请选择${itemLabel}`}
                       options={itemOptions}
-                      error={!!errors[`item-${index}`]}
+                      {...(errors[`item-${index}`] ? { status: "error" as const } : {})}
                     />
-                  </FormField>
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField label="数量" required error={errors[`quantity-${index}`]}>
-                      <FormInput
+                    {errors[`item-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`item-${index}`]}</div>}
+                  </Form.Item>
+                  <Flex gap={12}>
+                    <Form.Item label="数量" required style={{ flex: 1, marginBottom: 8 }}>
+                      <Input
                         type="number"
                         min={1}
                         value={item.quantity}
                         onChange={(e) => updateItem(index, { quantity: e.target.value })}
-                        error={!!errors[`quantity-${index}`]}
+                        {...(errors[`quantity-${index}`] ? { status: "error" as const } : {})}
                       />
-                    </FormField>
-                    <FormField label="单价" required error={errors[`unitPrice-${index}`]}>
-                      <FormInput
+                      {errors[`quantity-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`quantity-${index}`]}</div>}
+                    </Form.Item>
+                    <Form.Item label="单价" required style={{ flex: 1, marginBottom: 8 }}>
+                      <Input
                         type="number"
                         min={0}
                         step="0.01"
                         value={item.unitPrice}
                         onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
-                        error={!!errors[`unitPrice-${index}`]}
+                        {...(errors[`unitPrice-${index}`] ? { status: "error" as const } : {})}
                       />
-                    </FormField>
-                  </div>
+                      {errors[`unitPrice-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`unitPrice-${index}`]}</div>}
+                    </Form.Item>
+                  </Flex>
                   {orderType === "purchase" ? (
-                    <FormField label="序列号">
-                      <FormInput
+                    <Form.Item label="序列号" style={{ marginBottom: 8 }}>
+                      <Input
                         value={item.serialNumber}
                         onChange={(e) => updateItem(index, { serialNumber: e.target.value })}
                         placeholder={isAssetProduct(item.itemId) ? "资产类产品建议填写序列号" : "可选"}
                       />
-                    </FormField>
+                    </Form.Item>
                   ) : (
-                    <FormField label="折扣率" error={errors[`discountFactor-${index}`]}>
-                      <FormInput
+                    <Form.Item label="折扣率" style={{ marginBottom: 8 }}>
+                      <Input
                         type="number"
                         min={0}
                         max={100}
@@ -586,67 +636,69 @@ export function OrderListPage({
                         value={item.discountFactor}
                         onChange={(e) => updateItem(index, { discountFactor: e.target.value })}
                         placeholder="例如 90 表示九折"
-                        error={!!errors[`discountFactor-${index}`]}
+                        {...(errors[`discountFactor-${index}`] ? { status: "error" as const } : {})}
                       />
-                    </FormField>
+                      {errors[`discountFactor-${index}`] && <div style={{ color: "#ff4d4f", fontSize: 12 }}>{errors[`discountFactor-${index}`]}</div>}
+                    </Form.Item>
                   )}
-                </div>
+                </Card>
               ))}
-            </div>
-            <FormField label="备注">
-              <FormTextarea
+            </Space>
+            <Form.Item label="备注" style={{ marginTop: 12, marginBottom: 0 }}>
+              <Input.TextArea
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
                 placeholder="请输入备注"
+                autoSize={{ minRows: 3 }}
               />
-            </FormField>
-          </>
+            </Form.Item>
+          </div>
         )}
       </Modal>
 
       <Modal
         open={showDetail}
         title={`${orderLabel}单详情`}
-        onClose={() => setShowDetail(false)}
+        onCancel={() => setShowDetail(false)}
+        footer={null}
         width={760}
+        destroyOnHidden
       >
         {detailLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
+          <Flex justify="center" style={{ padding: "2rem 0" }}><Spin /></Flex>
         ) : detailItem ? (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <DetailRow label="订单编号" value={detailItem.orderNo} />
-              <DetailRow label="订单日期" value={dateToFormattedString(detailItem.orderDate)} />
-              <DetailRow label={partnerLabel} value={getPartnerValue(detailItem)} />
-              <DetailRow label="状态" value={translateOrderStatus(detailItem.status)} />
-              <DetailRow label="总金额" value={getTotalAmount(detailItem)} />
-              <DetailRow label="备注" value={detailItem.note} />
-              <DetailRow label="创建时间" value={formatTimestamp(detailItem.createdAt)} />
-              <DetailRow label="更新时间" value={formatTimestamp(detailItem.updatedAt)} />
-            </div>
+          <Space direction="vertical" style={{ width: "100%" }} size={16}>
+            <Descriptions column={1} size="small" labelStyle={{ width: 100 }}>
+              <Descriptions.Item label="订单编号">{detailItem.orderNo}</Descriptions.Item>
+              <Descriptions.Item label="订单日期">{dateToFormattedString(detailItem.orderDate)}</Descriptions.Item>
+              <Descriptions.Item label={partnerLabel}>{getPartnerValue(detailItem) ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="状态">
+                {(() => {
+                  const colors = STATUS_COLORS[detailItem.status] || { bg: "#f0f0f0", color: "#000" };
+                  return <Tag style={{ backgroundColor: colors.bg, color: colors.color }}>{translateOrderStatus(detailItem.status)}</Tag>;
+                })()}
+              </Descriptions.Item>
+              <Descriptions.Item label="总金额">{getTotalAmount(detailItem)}</Descriptions.Item>
+              <Descriptions.Item label="备注">{(detailItem as unknown as Record<string, unknown>)["note"] as string ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">{formatTimestamp(detailItem.createdAt)}</Descriptions.Item>
+              <Descriptions.Item label="更新时间">{formatTimestamp((detailItem as unknown as Record<string, unknown>)["updatedAt"] as string | number)}</Descriptions.Item>
+            </Descriptions>
             <div>
-              <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>订单明细</h4>
-              <DataTable
+              <Typography.Text strong style={{ display: "block", marginBottom: 8 }}>订单明细</Typography.Text>
+              <Table<OrderItem>
                 columns={itemColumns}
-                data={getOrderItems(detailItem)}
+                dataSource={getOrderItems(detailItem)}
+                pagination={false}
+                size="small"
                 rowKey={(item) =>
                   item.id?.toString() ??
                   `${item.productId ?? item.inventoryUnitId ?? "item"}-${item.quantity}-${item.unitPrice}`
                 }
               />
             </div>
-          </div>
+          </Space>
         ) : null}
       </Modal>
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <span style={{ color: "#999", minWidth: 96, flexShrink: 0 }}>{label}：</span>
-      <span>{value ?? "-"}</span>
     </div>
   );
 }

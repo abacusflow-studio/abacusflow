@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { supplierApi, type Supplier } from "@abacusflow/core";
+import { partnerApi, type Supplier } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { DetailScreen } from "@/components/detail-screen";
+import { DetailScreen } from "@abacusflow/ui-native";
 
 export default function SupplierDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,7 +16,7 @@ export default function SupplierDetailScreen() {
 
   const loadData = async () => {
     try {
-      const res = await supplierApi.getSupplier(Number(id));
+      const res = await partnerApi.getSupplier({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -50,7 +50,7 @@ export default function SupplierDetailScreen() {
       ]}
       onEdit={() => router.push(`/partner/supplier/edit/${id}` as any)}
       onDelete={async () => {
-        await supplierApi.deleteSupplier(Number(id));
+        await partnerApi.deleteSupplier({ id: Number(id) });
         router.back();
       }}
     />

@@ -11,11 +11,11 @@ export default function SaleOrdersPage() {
       orderType="sale"
       partnerLabel="客户"
       partnerKey="customerName"
-      listFn={transactionApi.listSaleOrdersPage}
-      getDetailFn={transactionApi.getSaleOrder}
-      completeFn={transactionApi.completeSaleOrder}
-      cancelFn={transactionApi.cancelSaleOrder}
-      reverseFn={transactionApi.reverseSaleOrder}
+      listFn={(params) => transactionApi.listBasicSaleOrdersPage(params)}
+      getDetailFn={(id) => transactionApi.getSaleOrder({ id })}
+      completeFn={(id) => transactionApi.completeSaleOrder({ id })}
+      cancelFn={(id) => transactionApi.cancelSaleOrder({ id })}
+      reverseFn={(id) => transactionApi.reverseSaleOrder({ id })}
     />
   );
 }

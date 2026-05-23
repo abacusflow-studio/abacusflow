@@ -1,105 +1,63 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Layout, Menu } from "antd";
+import type { MenuProps } from "antd";
+import {
+  DashboardOutlined,
+  UserOutlined,
+  InboxOutlined,
+  TransactionOutlined,
+  ShoppingCartOutlined,
+  ShopOutlined,
+  ShoppingOutlined,
+  AppstoreOutlined,
+  TeamOutlined,
+  BankOutlined,
+  HomeOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from "@ant-design/icons";
 
-interface NavItem {
-  key: string;
-  label: string;
-  icon: string;
-  children?: NavItem[];
-}
+const { Sider, Header, Content, Footer } = Layout;
 
-const NAV_ITEMS: NavItem[] = [
-  { key: "/dashboard", label: "仪表盘", icon: "📊" },
-  { key: "/user", label: "用户管理", icon: "👤" },
-  { key: "/inventory", label: "库存管理", icon: "📦" },
+type MenuItemType = Required<MenuProps>["items"][number];
+
+const NAV_ITEMS: MenuItemType[] = [
+  { key: "/dashboard", label: <Link href="/dashboard">仪表盘</Link>, icon: <DashboardOutlined /> },
+  { key: "/user", label: <Link href="/user">用户管理</Link>, icon: <UserOutlined /> },
+  { key: "/inventory", label: <Link href="/inventory">库存管理</Link>, icon: <InboxOutlined /> },
   {
     key: "/transaction",
     label: "交易管理",
-    icon: "💱",
+    icon: <TransactionOutlined />,
     children: [
-      { key: "/transaction/purchase-order", label: "采购单管理", icon: "🛒" },
-      { key: "/transaction/sale-order", label: "销售单管理", icon: "🛍️" },
+      { key: "/transaction/purchase-order", label: <Link href="/transaction/purchase-order">采购单管理</Link>, icon: <ShoppingCartOutlined /> },
+      { key: "/transaction/sale-order", label: <Link href="/transaction/sale-order">销售单管理</Link>, icon: <ShopOutlined /> },
     ],
   },
   {
-    key: "/products",
+    key: "/products-group",
     label: "产品中心",
-    icon: "📋",
+    icon: <ShoppingOutlined />,
     children: [
-      { key: "/products", label: "产品管理", icon: "📥" },
-      { key: "/products/category", label: "产品类别管理", icon: "🏷️" },
+      { key: "/products", label: <Link href="/products">产品管理</Link>, icon: <AppstoreOutlined /> },
+      { key: "/products/category", label: <Link href="/products/category">产品类别管理</Link>, icon: <AppstoreOutlined /> },
     ],
   },
   {
     key: "/partner",
     label: "合作伙伴",
-    icon: "🤝",
+    icon: <TeamOutlined />,
     children: [
-      { key: "/partner/customer", label: "客户管理", icon: "👤" },
-      { key: "/partner/supplier", label: "供应商管理", icon: "🏪" },
+      { key: "/partner/customer", label: <Link href="/partner/customer">客户管理</Link>, icon: <UserOutlined /> },
+      { key: "/partner/supplier", label: <Link href="/partner/supplier">供应商管理</Link>, icon: <BankOutlined /> },
     ],
   },
-  { key: "/depots", label: "储存点管理", icon: "🏠" },
+  { key: "/depots", label: <Link href="/depots">储存点管理</Link>, icon: <HomeOutlined /> },
 ];
-
-function MenuItem({
-  item,
-  pathname,
-  collapsed,
-}: {
-  item: NavItem;
-  pathname: string;
-  collapsed: boolean;
-}) {
-  const isActive = pathname === item.key || pathname.startsWith(item.key + "/");
-  const [open, setOpen] = useState(isActive);
-
-  if (item.children) {
-    return (
-      <div>
-        <div
-          onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 px-4 py-2.5 cursor-pointer text-sm text-gray-800 rounded-md mx-2 hover:bg-blue-50 transition-colors"
-        >
-          <span>{item.icon}</span>
-          {!collapsed && <span className="flex-1">{item.label}</span>}
-          {!collapsed && (
-            <span className="text-[10px]">{open ? "▼" : "▶"}</span>
-          )}
-        </div>
-        {open && !collapsed && (
-          <div className="pl-4">
-            {item.children.map((child) => (
-              <MenuItem
-                key={child.key}
-                item={child}
-                pathname={pathname}
-                collapsed={collapsed}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <Link
-      href={item.key}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm no-underline rounded-md mx-2 transition-all ${
-        isActive
-          ? "text-blue-500 bg-blue-50 font-semibold"
-          : "text-gray-800 hover:bg-gray-100"
-      }`}
-    >
-      <span>{item.icon}</span>
-      {!collapsed && <span>{item.label}</span>}
-    </Link>
-  );
-}
 
 export default function AdminLayout({
   children,
@@ -108,62 +66,86 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const sidebarWidth = collapsed ? "w-20" : "w-50";
+
+  const selectedKeys = useMemo(() => {
+    // Find the most specific matching key
+    const allKeys = [
+      "/dashboard", "/user", "/inventory",
+      "/transaction/purchase-order", "/transaction/sale-order",
+      "/products", "/products/category",
+      "/partner/customer", "/partner/supplier",
+      "/depots",
+    ];
+    const match = allKeys
+      .filter((k) => pathname === k || pathname.startsWith(k + "/"))
+      .sort((a, b) => b.length - a.length)[0];
+    return match ? [match] : [];
+  }, [pathname]);
+
+  const openKeys = useMemo(() => {
+    const keys: string[] = [];
+    if (selectedKeys[0]?.startsWith("/transaction")) keys.push("/transaction");
+    if (selectedKeys[0]?.startsWith("/products")) keys.push("/products-group");
+    if (selectedKeys[0]?.startsWith("/partner")) keys.push("/partner");
+    return keys;
+  }, [selectedKeys]);
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 bottom-0 ${sidebarWidth} bg-[#ebedef] overflow-y-auto transition-all z-[101] flex flex-col`}
+    <Layout style={{ minHeight: "100vh" }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        width={200}
+        collapsedWidth={80}
+        style={{ background: "#ebedef" }}
+        trigger={null}
       >
-        <div className="h-12 mx-4 my-3 flex items-center gap-2 px-3">
-          <span className="text-2xl">🧮</span>
+        <div style={{ height: 48, margin: "12px 16px", display: "flex", alignItems: "center", gap: 8, padding: "0 12px" }}>
+          <span style={{ fontSize: 24 }}>🧮</span>
           {!collapsed && (
-            <span className="text-lg font-semibold text-gray-800 whitespace-nowrap">
+            <span style={{ fontSize: 18, fontWeight: 600, color: "#1f1f1f", whiteSpace: "nowrap" }}>
               小算盘
             </span>
           )}
         </div>
-        <nav className="flex-1 pt-2">
-          {NAV_ITEMS.map((item) => (
-            <MenuItem
-              key={item.key}
-              item={item}
-              pathname={pathname}
-              collapsed={collapsed}
-            />
-          ))}
-        </nav>
-      </aside>
+        <Menu
+          mode="inline"
+          selectedKeys={selectedKeys}
+          defaultOpenKeys={openKeys}
+          items={NAV_ITEMS}
+          style={{ background: "transparent", borderRight: 0 }}
+        />
+      </Sider>
 
-      {/* Main content */}
-      <div className={`flex-1 ${collapsed ? "ml-20" : "ml-50"} transition-all`}>
-        {/* Header */}
-        <header
-          className="fixed top-0 right-0 h-16 bg-[#fdfdfc] flex justify-between items-center px-6 z-[100] border-b border-gray-100"
-          style={{ left: collapsed ? 80 : 200 }}
-        >
+      <Layout>
+        <Header style={{
+          background: "#fdfdfc",
+          padding: "0 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "1px solid #f0f0f0",
+          height: 64,
+          lineHeight: "64px",
+        }}>
           <div
-            className="cursor-pointer text-lg"
+            style={{ cursor: "pointer", fontSize: 18 }}
             onClick={() => setCollapsed(!collapsed)}
           >
-            {collapsed ? "☰" : "✕"}
+            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <span>超级管理员</span>
-          </div>
-        </header>
+          <span style={{ fontSize: 14 }}>超级管理员</span>
+        </Header>
 
-        {/* Content */}
-        <main className="pt-20 px-6 pb-6 min-h-[calc(100vh-64px)]">
+        <Content style={{ padding: "24px 24px 24px", minHeight: "calc(100vh - 64px)" }}>
           {children}
-        </main>
+        </Content>
 
-        {/* Footer */}
-        <footer className="text-center py-4 text-gray-400 text-sm">
+        <Footer style={{ textAlign: "center", color: "#8c8c8c", fontSize: 14 }}>
           abacusflow ©2025
-        </footer>
-      </div>
-    </div>
+        </Footer>
+      </Layout>
+    </Layout>
   );
 }

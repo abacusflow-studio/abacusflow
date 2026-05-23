@@ -1,6 +1,6 @@
 import { productApi } from "@abacusflow/core";
 import { PRODUCT_UNITS, PRODUCT_TYPES } from "@abacusflow/utils";
-import { FormScreen } from "@/components/form-screen";
+import { FormScreen } from "@abacusflow/ui-native";
 
 export default function AddProductScreen() {
   return (

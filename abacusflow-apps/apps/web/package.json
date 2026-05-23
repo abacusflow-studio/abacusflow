@@ -12,9 +12,11 @@
   "dependencies": {
     "@abacusflow/config": "*",
     "@abacusflow/core": "*",
-    "@abacusflow/ui": "*",
+    "@abacusflow/ui-web": "*",
     "@abacusflow/utils": "*",
+    "@ant-design/icons": "^6.2.3",
     "@auth0/auth0-spa-js": "^2.4.1",
+    "antd": "^6.4.3",
     "next": "15.5.5",
     "react": "19.1.0",
     "react-dom": "19.1.0"

@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS, SHADOW } from "@abacusflow/utils";
+import { COLORS, SHADOW } from "@abacusflow/ui-tokens";
 
 export interface InfoField {
   label: string;

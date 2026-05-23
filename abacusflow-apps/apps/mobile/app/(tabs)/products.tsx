@@ -7,7 +7,7 @@ import {
   translateProductUnit,
   COLORS,
 } from "@abacusflow/utils";
-import { ListScreen } from "@/components/list-screen";
+import { ListScreen } from "@abacusflow/ui-native";
 
 export default function ProductsScreen() {
   const router = useRouter();

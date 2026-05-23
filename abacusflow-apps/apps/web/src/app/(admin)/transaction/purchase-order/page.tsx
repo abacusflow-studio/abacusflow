@@ -11,11 +11,11 @@ export default function PurchaseOrdersPage() {
       orderType="purchase"
       partnerLabel="供应商"
       partnerKey="supplierName"
-      listFn={transactionApi.listPurchaseOrdersPage}
-      getDetailFn={transactionApi.getPurchaseOrder}
-      completeFn={transactionApi.completePurchaseOrder}
-      cancelFn={transactionApi.cancelPurchaseOrder}
-      reverseFn={transactionApi.reversePurchaseOrder}
+      listFn={(params) => transactionApi.listBasicPurchaseOrdersPage(params)}
+      getDetailFn={(id) => transactionApi.getPurchaseOrder({ id })}
+      completeFn={(id) => transactionApi.completePurchaseOrder({ id })}
+      cancelFn={(id) => transactionApi.cancelPurchaseOrder({ id })}
+      reverseFn={(id) => transactionApi.reversePurchaseOrder({ id })}
     />
   );
 }

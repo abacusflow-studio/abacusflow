@@ -6,7 +6,7 @@ import {
   translateProductUnit,
   COLORS,
 } from "@abacusflow/utils";
-import { DetailScreen } from "@/components/detail-screen";
+import { DetailScreen } from "@abacusflow/ui-native";
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

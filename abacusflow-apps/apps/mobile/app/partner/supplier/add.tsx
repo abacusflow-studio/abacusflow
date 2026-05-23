@@ -1,5 +1,5 @@
-import { supplierApi } from "@abacusflow/core";
-import { FormScreen } from "@/components/form-screen";
+import { partnerApi } from "@abacusflow/core";
+import { FormScreen } from "@abacusflow/ui-native";
 
 export default function AddSupplierScreen() {
   return (
@@ -39,12 +39,14 @@ export default function AddSupplierScreen() {
         },
       ]}
       onSubmit={async (values) => {
-        await supplierApi.createSupplier({
-          name: values.name as string,
-          contactPerson: values.contactPerson as string | undefined,
-          phone: values.phone as string | undefined,
-          email: values.email as string | undefined,
-          address: values.address as string | undefined,
+        await partnerApi.addSupplier({
+          createSupplierInput: {
+            name: values.name as string,
+            contactPerson: values.contactPerson as string | undefined,
+            phone: values.phone as string | undefined,
+            email: values.email as string | undefined,
+            address: values.address as string | undefined,
+          },
         });
       }}
       submitLabel="创建供应商"

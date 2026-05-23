@@ -2,31 +2,28 @@
 
 import React, { useState } from "react";
 import {
-  PageHeader, Button, DataTable, Modal,
-  FormField, FormInput,
-  type DataTableColumn,
-} from "@abacusflow/ui";
-import { supplierApi, type Supplier, type CreateSupplierRequest } from "@abacusflow/core";
-import { isNonEmpty, isValidPhone, isValidEmail } from "@abacusflow/utils";
+  Button,
+  Table,
+  Modal,
+  Input,
+  Form,
+  Typography,
+  Flex,
+  App,
+  Space,
+  Descriptions,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import { partnerApi, type Supplier, type BasicSupplier } from "@abacusflow/core";
 import { usePaginatedList } from "../../../../hooks/use-paginated-list";
-import { useToast } from "../../../../hooks/use-toast";
-
-interface SupplierForm {
-  name: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  address: string;
-}
-
-const emptyForm: SupplierForm = { name: "", contactPerson: "", phone: "", email: "", address: "" };
 
 export default function SuppliersPage() {
-  const { addToast } = useToast();
-  const [editItem, setEditItem] = useState<Supplier | null>(null);
+  const { message } = App.useApp();
+  const [form] = Form.useForm();
+
+  const [editItem, setEditItem] = useState<BasicSupplier | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<SupplierForm>(emptyForm);
-  const [errors, setErrors] = useState<Partial<Record<keyof SupplierForm, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const [showDetail, setShowDetail] = useState(false);
@@ -36,29 +33,26 @@ export default function SuppliersPage() {
   const {
     data, loading, pageIndex, total, filters,
     updateFilter, setPageIndex, refresh, handleSearch, handleReset,
-  } = usePaginatedList<Supplier, { name?: string; contactPerson?: string; phone?: string; address?: string }>({
+  } = usePaginatedList<BasicSupplier, { name?: string; contactPerson?: string; phone?: string; address?: string }>({
     fetchFn: (params) =>
-      supplierApi.listSuppliersPage(params as Parameters<typeof supplierApi.listSuppliersPage>[0]),
+      partnerApi.listBasicSuppliersPage(params as Parameters<typeof partnerApi.listBasicSuppliersPage>[0]),
     defaultFilters: { name: undefined, contactPerson: undefined, phone: undefined, address: undefined },
   });
 
   const openCreate = () => {
     setEditItem(null);
-    setForm(emptyForm);
-    setErrors({});
+    form.resetFields();
     setShowForm(true);
   };
 
-  const openEdit = (record: Supplier) => {
+  const openEdit = (record: BasicSupplier) => {
     setEditItem(record);
-    setForm({
+    form.setFieldsValue({
       name: record.name,
       contactPerson: record.contactPerson ?? "",
       phone: record.phone ?? "",
-      email: record.email ?? "",
       address: record.address ?? "",
     });
-    setErrors({});
     setShowForm(true);
   };
 
@@ -66,236 +60,223 @@ export default function SuppliersPage() {
     setShowDetail(true);
     setDetailLoading(true);
     try {
-      const item = await supplierApi.getSupplier(id);
+      const item = await partnerApi.getSupplier({ id });
       setDetailItem(item);
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载失败");
+      message.error(err instanceof Error ? err.message : "加载失败");
       setShowDetail(false);
     } finally {
       setDetailLoading(false);
     }
   };
 
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof SupplierForm, string>> = {};
-    if (!isNonEmpty(form.name)) newErrors.name = "请输入供应商名称";
-    if (form.phone && !isValidPhone(form.phone)) newErrors.phone = "请输入正确的手机号";
-    if (form.email && !isValidEmail(form.email)) newErrors.email = "请输入正确的邮箱";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validate()) return;
-    setSubmitting(true);
     try {
-      const payload: CreateSupplierRequest = {
-        name: form.name,
-        contactPerson: form.contactPerson || undefined,
-        phone: form.phone || undefined,
-        email: form.email || undefined,
-        address: form.address || undefined,
+      const values = await form.validateFields();
+      setSubmitting(true);
+      const payload = {
+        name: values.name,
+        contactPerson: values.contactPerson || undefined,
+        phone: values.phone || undefined,
+        email: values.email || undefined,
+        address: values.address || undefined,
       };
       if (editItem) {
-        await supplierApi.updateSupplier({ ...payload, id: editItem.id });
-        addToast("success", "编辑成功");
+        await partnerApi.updateSupplier({ id: editItem.id, updateSupplierInput: payload });
+        message.success("编辑成功");
       } else {
-        await supplierApi.createSupplier(payload);
-        addToast("success", "新增成功");
+        await partnerApi.addSupplier({ createSupplierInput: payload });
+        message.success("新增成功");
       }
       setShowForm(false);
       refresh();
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "操作失败");
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定删除该供应商？")) return;
-    try {
-      await supplierApi.deleteSupplier(id);
-      addToast("success", "删除成功");
-      refresh();
-    } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "删除失败");
-    }
+  const handleDelete = (id: number) => {
+    Modal.confirm({
+      title: "确认删除",
+      content: "确定删除该供应商？",
+      onOk: async () => {
+        try {
+          await partnerApi.deleteSupplier({ id });
+          message.success("删除成功");
+          refresh();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : "删除失败");
+        }
+      },
+    });
   };
 
-  const columns: DataTableColumn<Supplier>[] = [
-    { key: "name", title: "供应商名称", dataIndex: "name" },
-    { key: "contactPerson", title: "联系人", dataIndex: "contactPerson" },
-    { key: "phone", title: "联系电话", dataIndex: "phone" },
-    { key: "email", title: "邮箱", dataIndex: "email" },
-    { key: "address", title: "地址", dataIndex: "address" },
+  const columns: ColumnsType<BasicSupplier> = [
+    { title: "供应商名称", dataIndex: "name", key: "name" },
+    { title: "联系人", dataIndex: "contactPerson", key: "contactPerson" },
+    { title: "联系电话", dataIndex: "phone", key: "phone" },
+    { title: "地址", dataIndex: "address", key: "address" },
     {
-      key: "totalOrderCount",
       title: "历史订单数",
-      render: (_, record) => record.totalOrderCount ?? record.totalOrders ?? "-",
+      key: "totalOrderCount",
+      render: (_, record) => record.totalOrderCount ?? "-",
     },
     {
-      key: "totalOrderAmount",
       title: "历史订单金额",
+      key: "totalOrderAmount",
       render: (_, record) =>
-        (record.totalOrderAmount ?? record.totalAmount)?.toLocaleString("zh-CN") ?? "-",
+        record.totalOrderAmount?.toLocaleString("zh-CN") ?? "-",
     },
-    { key: "lastOrderDate", title: "最近交易日期", dataIndex: "lastOrderDate" },
+    { title: "最近交易日期", dataIndex: "lastOrderDate", key: "lastOrderDate" },
     {
-      key: "action",
       title: "操作",
+      key: "action",
       render: (_, record) => (
-        <div className="flex gap-2">
-          <Button type="link" label="详情" onClick={() => openDetail(record.id)} />
-          <Button type="link" label="编辑" onClick={() => openEdit(record)} />
-          <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
-        </div>
+        <Space size="small">
+          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
+          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+        </Space>
       ),
     },
   ];
 
   return (
     <div>
-      <PageHeader
-        title="供应商管理"
-        extra={<Button type="primary" label="新增供应商" onClick={openCreate} />}
-      />
+      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Typography.Title level={4} style={{ margin: 0 }}>供应商管理</Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增供应商</Button>
+      </Flex>
+
       <div className="card">
-        <div className="form-inline mb-4">
+        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
           <div className="form-item">
             <label>供应商名称</label>
-            <input
+            <Input
               value={filters.name ?? ""}
               onChange={(e) => updateFilter("name", e.target.value || undefined)}
               placeholder="请输入供应商名称"
+              style={{ width: 200 }}
             />
           </div>
           <div className="form-item">
             <label>联系人</label>
-            <input
+            <Input
               value={filters.contactPerson ?? ""}
               onChange={(e) => updateFilter("contactPerson", e.target.value || undefined)}
               placeholder="请输入联系人"
+              style={{ width: 200 }}
             />
           </div>
           <div className="form-item">
             <label>电话</label>
-            <input
+            <Input
               value={filters.phone ?? ""}
               onChange={(e) => updateFilter("phone", e.target.value || undefined)}
               placeholder="请输入电话"
+              style={{ width: 200 }}
             />
           </div>
           <div className="form-item">
             <label>地址</label>
-            <input
+            <Input
               value={filters.address ?? ""}
               onChange={(e) => updateFilter("address", e.target.value || undefined)}
               placeholder="请输入地址"
+              style={{ width: 200 }}
             />
           </div>
-          <Button type="primary" label="搜索" onClick={handleSearch} />
-          <Button label="重置" onClick={handleReset} />
-        </div>
+          <Button type="primary" onClick={handleSearch}>搜索</Button>
+          <Button onClick={handleReset}>重置</Button>
+        </Flex>
       </div>
+
       <div className="card">
-        <DataTable
+        <Table<BasicSupplier>
           columns={columns}
-          data={data}
+          dataSource={data}
           rowKey="id"
           loading={loading}
-          pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          pagination={{
+            current: pageIndex,
+            pageSize: 10,
+            total,
+            onChange: setPageIndex,
+            showTotal: (t) => `共 ${t} 条`,
+            showSizeChanger: false,
+          }}
+          size="middle"
         />
       </div>
 
       <Modal
         open={showForm}
         title={editItem ? "编辑供应商" : "新增供应商"}
-        onClose={() => setShowForm(false)}
+        onCancel={() => setShowForm(false)}
         onOk={handleSubmit}
-        okLoading={submitting}
+        confirmLoading={submitting}
         width={560}
+        destroyOnHidden
       >
-        <FormField label="供应商名称" required error={errors.name}>
-          <FormInput
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="请输入供应商名称"
-            error={!!errors.name}
-          />
-        </FormField>
-        <FormField label="联系人">
-          <FormInput
-            value={form.contactPerson}
-            onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
-            placeholder="请输入联系人"
-          />
-        </FormField>
-        <FormField label="联系电话" error={errors.phone}>
-          <FormInput
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            placeholder="请输入联系电话"
-            error={!!errors.phone}
-          />
-        </FormField>
-        <FormField label="邮箱" error={errors.email}>
-          <FormInput
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            placeholder="请输入邮箱"
-            error={!!errors.email}
-          />
-        </FormField>
-        <FormField label="地址">
-          <FormInput
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-            placeholder="请输入地址"
-          />
-        </FormField>
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="name"
+            label="供应商名称"
+            rules={[{ required: true, message: "请输入供应商名称" }]}
+          >
+            <Input placeholder="请输入供应商名称" />
+          </Form.Item>
+          <Form.Item name="contactPerson" label="联系人">
+            <Input placeholder="请输入联系人" />
+          </Form.Item>
+          <Form.Item
+            name="phone"
+            label="联系电话"
+            rules={[{ pattern: /^1[3-9]\d{9}$/, message: "请输入正确的手机号" }]}
+          >
+            <Input placeholder="请输入联系电话" />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="邮箱"
+            rules={[{ type: "email", message: "请输入正确的邮箱" }]}
+          >
+            <Input placeholder="请输入邮箱" />
+          </Form.Item>
+          <Form.Item name="address" label="地址">
+            <Input placeholder="请输入地址" />
+          </Form.Item>
+        </Form>
       </Modal>
 
       <Modal
         open={showDetail}
         title="供应商详情"
-        onClose={() => setShowDetail(false)}
+        onCancel={() => setShowDetail(false)}
+        footer={null}
         width={560}
+        destroyOnHidden
       >
         {detailLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
         ) : detailItem ? (
-          <div className="flex flex-col gap-3">
-            <DetailRow label="供应商名称" value={detailItem.name} />
-            <DetailRow label="联系人" value={detailItem.contactPerson} />
-            <DetailRow label="联系电话" value={detailItem.phone} />
-            <DetailRow label="邮箱" value={detailItem.email} />
-            <DetailRow label="地址" value={detailItem.address} />
-            <DetailRow label="历史订单数" value={detailItem.totalOrderCount ?? detailItem.totalOrders} />
-            <DetailRow label="历史订单金额" value={(detailItem.totalOrderAmount ?? detailItem.totalAmount)?.toLocaleString("zh-CN")} />
-            <DetailRow label="创建时间" value={detailItem.createdAt} />
-            <DetailRow label="更新时间" value={detailItem.updatedAt} />
-          </div>
+          <Descriptions column={1} size="small" styles={{ label: { width: 120 } }}>
+            <Descriptions.Item label="供应商名称">{detailItem.name}</Descriptions.Item>
+            <Descriptions.Item label="联系人">{detailItem.contactPerson ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="联系电话">{detailItem.phone ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="邮箱">{detailItem.email ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="地址">{detailItem.address ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="历史订单数">{(detailItem as unknown as BasicSupplier).totalOrderCount ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="历史订单金额">{(detailItem as unknown as BasicSupplier).totalOrderAmount?.toLocaleString("zh-CN") ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{detailItem.createdAt ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="更新时间">{detailItem.updatedAt ?? "-"}</Descriptions.Item>
+          </Descriptions>
         ) : null}
       </Modal>
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <span style={{ color: "#999", minWidth: 100, flexShrink: 0 }}>{label}：</span>
-      <span>{value ?? "-"}</span>
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <span style={{ color: "#999", minWidth: 100, flexShrink: 0 }}>{label}：</span>
-      <span>{value ?? "-"}</span>
     </div>
   );
 }

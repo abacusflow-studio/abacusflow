@@ -1,13 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { PageHeader, Button } from "@abacusflow/ui";
+import { Button, Typography, Flex, Spin, Card, Row, Col } from "antd";
+import {
+  ShoppingOutlined,
+  InboxOutlined,
+  ShoppingCartOutlined,
+  ShopOutlined,
+  UserOutlined,
+  BankOutlined,
+  HomeOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
 import {
   productApi,
   inventoryApi,
   transactionApi,
-  customerApi,
-  supplierApi,
+  partnerApi,
   depotApi,
 } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
@@ -24,29 +33,14 @@ interface DashboardStats {
 }
 
 const STAT_CARDS = [
-  { key: "productCount", label: "产品总数", icon: "📋", color: COLORS.primary },
-  {
-    key: "inventoryCount",
-    label: "库存记录",
-    icon: "📦",
-    color: COLORS.success,
-  },
-  {
-    key: "purchaseOrderCount",
-    label: "采购单",
-    icon: "🛒",
-    color: COLORS.warning,
-  },
-  { key: "saleOrderCount", label: "销售单", icon: "🛍️", color: "#722ed1" },
-  { key: "customerCount", label: "客户数", icon: "👤", color: COLORS.info },
-  { key: "supplierCount", label: "供应商", icon: "🏪", color: "#eb2f96" },
-  { key: "depotCount", label: "储存点", icon: "🏠", color: "#8c8c8c" },
-  {
-    key: "lowStockCount",
-    label: "低库存预警",
-    icon: "⚠️",
-    color: COLORS.danger,
-  },
+  { key: "productCount", label: "产品总数", icon: <ShoppingOutlined />, color: COLORS.primary },
+  { key: "inventoryCount", label: "库存记录", icon: <InboxOutlined />, color: COLORS.success },
+  { key: "purchaseOrderCount", label: "采购单", icon: <ShoppingCartOutlined />, color: COLORS.warning },
+  { key: "saleOrderCount", label: "销售单", icon: <ShopOutlined />, color: "#722ed1" },
+  { key: "customerCount", label: "客户数", icon: <UserOutlined />, color: COLORS.info },
+  { key: "supplierCount", label: "供应商", icon: <BankOutlined />, color: "#eb2f96" },
+  { key: "depotCount", label: "储存点", icon: <HomeOutlined />, color: "#8c8c8c" },
+  { key: "lowStockCount", label: "低库存预警", icon: <WarningOutlined />, color: COLORS.danger },
 ] as const;
 
 export default function DashboardPage() {
@@ -70,10 +64,10 @@ export default function DashboardPage() {
       ] = await Promise.all([
         productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 1 }),
         inventoryApi.listBasicInventoriesPage({ pageIndex: 1, pageSize: 100 }),
-        transactionApi.listPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
-        transactionApi.listSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
-        customerApi.listCustomersPage({ pageIndex: 1, pageSize: 1 }),
-        supplierApi.listSuppliersPage({ pageIndex: 1, pageSize: 1 }),
+        transactionApi.listBasicPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
+        transactionApi.listBasicSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
+        partnerApi.listBasicCustomersPage({ pageIndex: 1, pageSize: 1 }),
+        partnerApi.listBasicSuppliersPage({ pageIndex: 1, pageSize: 1 }),
         depotApi.listBasicDepots(),
       ]);
 
@@ -100,35 +94,38 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="仪表盘" />
+      <Typography.Title level={4} style={{ margin: "0 0 16px" }}>仪表盘</Typography.Title>
       {loading ? (
-        <div className="text-center py-16 text-gray-400">加载中...</div>
+        <Flex justify="center" align="center" style={{ padding: "4rem 0" }}>
+          <Spin size="large" />
+        </Flex>
       ) : stats ? (
         <>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
+          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
             {STAT_CARDS.map((card) => (
-              <div key={card.key} className="card flex items-center gap-3">
-                <span className="text-3xl">{card.icon}</span>
-                <div>
-                  <div
-                    className="text-2xl font-bold"
-                    style={{ color: card.color }}
-                  >
-                    {stats[card.key]}
-                  </div>
-                  <div className="text-xs text-gray-400">{card.label}</div>
-                </div>
-              </div>
+              <Col key={card.key} xs={24} sm={12} md={8} lg={6}>
+                <Card hoverable>
+                  <Flex align="center" gap={12}>
+                    <span style={{ fontSize: 32, color: card.color }}>{card.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 24, fontWeight: 700, color: card.color }}>
+                        {stats[card.key]}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#8c8c8c" }}>{card.label}</div>
+                    </div>
+                  </Flex>
+                </Card>
+              </Col>
             ))}
-          </div>
-          <div className="card">
-            <h3 className="text-sm font-medium mb-4">快捷操作</h3>
-            <div className="flex flex-wrap gap-3">
-              <Button type="primary" label="新增采购单" onClick={() => {}} />
-              <Button type="primary" label="新增销售单" onClick={() => {}} />
-              <Button label="查看低库存" onClick={() => {}} />
-            </div>
-          </div>
+          </Row>
+          <Card>
+            <Typography.Text strong style={{ display: "block", marginBottom: 12 }}>快捷操作</Typography.Text>
+            <Flex wrap="wrap" gap={12}>
+              <Button type="primary">新增采购单</Button>
+              <Button type="primary">新增销售单</Button>
+              <Button>查看低库存</Button>
+            </Flex>
+          </Card>
         </>
       ) : null}
     </div>

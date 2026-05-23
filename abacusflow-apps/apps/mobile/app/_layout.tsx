@@ -7,7 +7,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@abacusflow/ui-native";
 import { initMobileAuth } from "@/lib/auth-provider";
 
 // Initialize auth on app start

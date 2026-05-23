@@ -1,15 +1,18 @@
 {
-  "name": "@abacusflow/ui",
+  "name": "@abacusflow/ui-web",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "main": "src/index.ts",
   "scripts": {
     "lint": "eslint ."
   },
   "peerDependencies": {
+    "antd": ">=5.0.0",
     "react": "^19.1.0"
   },
   "dependencies": {
+    "@abacusflow/ui-tokens": "*",
     "@abacusflow/utils": "*"
   },
   "devDependencies": {

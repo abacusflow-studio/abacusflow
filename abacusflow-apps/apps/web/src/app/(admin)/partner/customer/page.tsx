@@ -2,29 +2,32 @@
 
 import React, { useState } from "react";
 import {
-  PageHeader, Button, DataTable, Modal,
-  FormField, FormInput,
-  type DataTableColumn,
-} from "@abacusflow/ui";
-import { customerApi, type Customer, type CreateCustomerRequest } from "@abacusflow/core";
-import { isNonEmpty, isValidPhone } from "@abacusflow/utils";
+  Button,
+  Table,
+  Modal,
+  Input,
+  Form,
+  Typography,
+  Flex,
+  App,
+  Space,
+  Descriptions,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import {
+  partnerApi,
+  type Customer,
+  type BasicCustomer,
+} from "@abacusflow/core";
 import { usePaginatedList } from "../../../../hooks/use-paginated-list";
-import { useToast } from "../../../../hooks/use-toast";
-
-interface CustomerForm {
-  name: string;
-  phone: string;
-  address: string;
-}
-
-const emptyForm: CustomerForm = { name: "", phone: "", address: "" };
 
 export default function CustomersPage() {
-  const { addToast } = useToast();
-  const [editItem, setEditItem] = useState<Customer | null>(null);
+  const { message } = App.useApp();
+  const [form] = Form.useForm();
+
+  const [editItem, setEditItem] = useState<BasicCustomer | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<CustomerForm>(emptyForm);
-  const [errors, setErrors] = useState<Partial<Record<keyof CustomerForm, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const [showDetail, setShowDetail] = useState(false);
@@ -34,27 +37,25 @@ export default function CustomersPage() {
   const {
     data, loading, pageIndex, total, filters,
     updateFilter, setPageIndex, refresh, handleSearch, handleReset,
-  } = usePaginatedList<Customer, { name?: string; phone?: string; address?: string }>({
+  } = usePaginatedList<BasicCustomer, { name?: string; phone?: string; address?: string }>({
     fetchFn: (params) =>
-      customerApi.listCustomersPage(params as Parameters<typeof customerApi.listCustomersPage>[0]),
+      partnerApi.listBasicCustomersPage(params as Parameters<typeof partnerApi.listBasicCustomersPage>[0]),
     defaultFilters: { name: undefined, phone: undefined, address: undefined },
   });
 
   const openCreate = () => {
     setEditItem(null);
-    setForm(emptyForm);
-    setErrors({});
+    form.resetFields();
     setShowForm(true);
   };
 
-  const openEdit = (record: Customer) => {
+  const openEdit = (record: BasicCustomer) => {
     setEditItem(record);
-    setForm({
+    form.setFieldsValue({
       name: record.name,
       phone: record.phone ?? "",
       address: record.address ?? "",
     });
-    setErrors({});
     setShowForm(true);
   };
 
@@ -62,100 +63,100 @@ export default function CustomersPage() {
     setShowDetail(true);
     setDetailLoading(true);
     try {
-      const item = await customerApi.getCustomer(id);
+      const item = await partnerApi.getCustomer({ id });
       setDetailItem(item);
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载失败");
+      message.error(err instanceof Error ? err.message : "加载失败");
       setShowDetail(false);
     } finally {
       setDetailLoading(false);
     }
   };
 
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof CustomerForm, string>> = {};
-    if (!isNonEmpty(form.name)) newErrors.name = "请输入客户名称";
-    if (form.phone && !isValidPhone(form.phone)) newErrors.phone = "请输入正确的手机号";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validate()) return;
-    setSubmitting(true);
     try {
-      const payload: CreateCustomerRequest = {
-        name: form.name,
-        phone: form.phone || undefined,
-        address: form.address || undefined,
+      const values = await form.validateFields();
+      setSubmitting(true);
+      const payload = {
+        name: values.name,
+        ...(values.phone ? { phone: values.phone } : {}),
+        ...(values.address ? { address: values.address } : {}),
       };
       if (editItem) {
-        await customerApi.updateCustomer({ ...payload, id: editItem.id });
-        addToast("success", "编辑成功");
+        await partnerApi.updateCustomer({ id: editItem.id, updateCustomerInput: payload });
+        message.success("编辑成功");
       } else {
-        await customerApi.createCustomer(payload);
-        addToast("success", "新增成功");
+        await partnerApi.addCustomer({ createCustomerInput: payload });
+        message.success("新增成功");
       }
       setShowForm(false);
       refresh();
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "操作失败");
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("确定删除该客户？")) return;
-    try {
-      await customerApi.deleteCustomer(id);
-      addToast("success", "删除成功");
-      refresh();
-    } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "删除失败");
-    }
+    Modal.confirm({
+      title: "确认删除",
+      content: "确定删除该客户？",
+      onOk: async () => {
+        try {
+          await partnerApi.deleteCustomer({ id });
+          message.success("删除成功");
+          refresh();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : "删除失败");
+        }
+      },
+    });
   };
 
-  const columns: DataTableColumn<Customer>[] = [
-    { key: "name", title: "客户名称", dataIndex: "name" },
-    { key: "phone", title: "联系电话", dataIndex: "phone" },
-    { key: "address", title: "地址", dataIndex: "address" },
+  const columns: ColumnsType<BasicCustomer> = [
+    { title: "客户名称", dataIndex: "name", key: "name" },
+    { title: "联系电话", dataIndex: "phone", key: "phone" },
+    { title: "地址", dataIndex: "address", key: "address" },
     {
-      key: "totalOrderCount",
       title: "历史订单数",
-      render: (_, record) => record.totalOrderCount ?? record.totalOrders ?? "-",
+      key: "totalOrderCount",
+      render: (_, record) => record.totalOrderCount ?? "-",
     },
     {
-      key: "totalOrderAmount",
       title: "历史订单金额",
+      key: "totalOrderAmount",
       render: (_, record) =>
-        (record.totalOrderAmount ?? record.totalAmount)?.toLocaleString("zh-CN") ?? "-",
+        record.totalOrderAmount?.toLocaleString("zh-CN") ?? "-",
     },
-    { key: "lastOrderDate", title: "最近交易日期", dataIndex: "lastOrderDate" },
+    { title: "最近交易日期", dataIndex: "lastOrderDate", key: "lastOrderDate" },
     {
-      key: "action",
       title: "操作",
+      key: "action",
       render: (_, record) => (
-        <div className="flex gap-2">
-          <Button type="link" label="详情" onClick={() => openDetail(record.id)} />
-          <Button type="link" label="编辑" onClick={() => openEdit(record)} />
-          <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
-        </div>
+        <Space size="small">
+          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
+          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+        </Space>
       ),
     },
   ];
 
   return (
     <div>
-      <PageHeader
-        title="客户管理"
-        extra={<Button type="primary" label="新增客户" onClick={openCreate} />}
-      />
+      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Typography.Title level={4} style={{ margin: 0 }}>客户管理</Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增客户</Button>
+      </Flex>
+
       <div className="card">
-        <div className="form-inline mb-4">
+        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
           <div className="form-item">
             <label>客户名称</label>
-            <input
+            <Input
               value={filters.name ?? ""}
               onChange={(e) => updateFilter("name", e.target.value || undefined)}
               placeholder="请输入客户名称"
@@ -163,7 +164,7 @@ export default function CustomersPage() {
           </div>
           <div className="form-item">
             <label>电话</label>
-            <input
+            <Input
               value={filters.phone ?? ""}
               onChange={(e) => updateFilter("phone", e.target.value || undefined)}
               placeholder="请输入电话"
@@ -171,45 +172,69 @@ export default function CustomersPage() {
           </div>
           <div className="form-item">
             <label>地址</label>
-            <input
+            <Input
               value={filters.address ?? ""}
               onChange={(e) => updateFilter("address", e.target.value || undefined)}
               placeholder="请输入地址"
             />
           </div>
-          <Button type="primary" label="搜索" onClick={handleSearch} />
-          <Button label="重置" onClick={handleReset} />
-        </div>
+          <Button type="primary" onClick={handleSearch}>搜索</Button>
+          <Button onClick={handleReset}>重置</Button>
+        </Flex>
       </div>
+
       <div className="card">
-        <DataTable
+        <Table<BasicCustomer>
           columns={columns}
-          data={data}
+          dataSource={data}
           rowKey="id"
           loading={loading}
           pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          size="middle"
         />
       </div>
 
       <Modal
         open={showForm}
         title={editItem ? "编辑客户" : "新增客户"}
-        onClose={() => setShowForm(false)}
+        onCancel={() => setShowForm(false)}
         onOk={handleSubmit}
-        okLoading={submitting}
+        confirmLoading={submitting}
         width={520}
+        destroyOnHidden
       >
-        <p className="text-gray-400 text-center py-8">表单开发中...</p>
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>表单开发中...</p>
+        </Form>
       </Modal>
-    </div>
-  );
-}
 
-function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <span style={{ color: "#999", minWidth: 100, flexShrink: 0 }}>{label}：</span>
-      <span>{value ?? "-"}</span>
+      <Modal
+        open={showDetail}
+        title="客户详情"
+        onCancel={() => setShowDetail(false)}
+        footer={null}
+        width={520}
+        destroyOnHidden
+      >
+        {detailLoading ? (
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
+        ) : detailItem ? (
+          <Descriptions column={1} size="small" labelStyle={{ width: 120 }}>
+            <Descriptions.Item label="客户名称">{detailItem.name}</Descriptions.Item>
+            <Descriptions.Item label="联系电话">{detailItem.phone ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="地址">{detailItem.address ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="历史订单数">
+              {(detailItem as unknown as BasicCustomer).totalOrderCount ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="历史订单金额">
+              {(detailItem as unknown as BasicCustomer).totalOrderAmount?.toLocaleString("zh-CN") ?? "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="最近交易日期">{(detailItem as unknown as BasicCustomer).lastOrderDate?.toString() ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{detailItem.createdAt ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="更新时间">{detailItem.updatedAt ?? "-"}</Descriptions.Item>
+          </Descriptions>
+        ) : null}
+      </Modal>
     </div>
   );
 }

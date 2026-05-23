@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { COLORS } from "@abacusflow/ui-tokens";
 
 interface FieldOption {
   label: string;
@@ -122,7 +123,7 @@ export function FormScreen({
                   <Switch
                     value={!!values[field.key]}
                     onValueChange={(v) => setValue(field.key, v)}
-                    trackColor={{ true: "#1677ff" }}
+                    trackColor={{ true: COLORS.primary }}
                   />
                 </View>
               ) : field.type === "select" ? (
@@ -203,52 +204,52 @@ export function FormScreen({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: COLORS.bg },
   content: { padding: 16 },
   fieldGroup: { marginBottom: 20 },
   fieldLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
+    color: COLORS.text,
     marginBottom: 8,
   },
-  required: { color: "#ff4d4f" },
+  required: { color: COLORS.danger },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.bgCard,
     borderWidth: 1,
-    borderColor: "#d9d9d9",
+    borderColor: COLORS.borderInput,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#333",
+    color: COLORS.text,
   },
   textarea: { minHeight: 100, textAlignVertical: "top" },
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.bgCard,
     padding: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#d9d9d9",
+    borderColor: COLORS.borderInput,
   },
-  switchLabel: { fontSize: 14, color: "#333" },
+  switchLabel: { fontSize: 14, color: COLORS.text },
   selectGroup: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   selectOption: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#d9d9d9",
-    backgroundColor: "#fff",
+    borderColor: COLORS.borderInput,
+    backgroundColor: COLORS.bgCard,
   },
-  selectOptionActive: { borderColor: "#1677ff", backgroundColor: "#e6f4ff" },
-  selectOptionText: { fontSize: 13, color: "#666" },
-  selectOptionTextActive: { color: "#1677ff", fontWeight: "600" },
+  selectOptionActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryLight },
+  selectOptionText: { fontSize: 13, color: COLORS.textSecondary },
+  selectOptionTextActive: { color: COLORS.primary, fontWeight: "600" },
   submitBtn: {
-    backgroundColor: "#1677ff",
+    backgroundColor: COLORS.primary,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",

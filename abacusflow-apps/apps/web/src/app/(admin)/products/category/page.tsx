@@ -3,63 +3,52 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
-  DataTable,
-  FormField,
-  FormInput,
-  FormSelect,
-  FormTextarea,
+  Table,
   Modal,
-  PageHeader,
-  type DataTableColumn,
-} from "@abacusflow/ui";
+  Input,
+  Select,
+  Form,
+  Typography,
+  Flex,
+  App,
+  Space,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 import {
-  productCategoryApi,
+  productApi,
   type ProductCategory,
   type SelectableProductCategory,
 } from "@abacusflow/core";
-import { isNonEmpty } from "@abacusflow/utils";
-import { useToast } from "../../../../hooks/use-toast";
-
-interface CategoryForm {
-  name: string;
-  parentId: string;
-  description: string;
-}
 
 interface CategoryRow extends SelectableProductCategory {
   depth: number;
 }
 
-const emptyForm: CategoryForm = {
-  name: "",
-  parentId: "",
-  description: "",
-};
-
 export default function ProductCategoriesPage() {
-  const { addToast } = useToast();
+  const { message } = App.useApp();
+  const [form] = Form.useForm();
+
   const [categories, setCategories] = useState<SelectableProductCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [editItem, setEditItem] = useState<ProductCategory | null>(null);
   const [parentContext, setParentContext] = useState<SelectableProductCategory | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<CategoryForm>(emptyForm);
   const [formLoading, setFormLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof CategoryForm, string>>>({});
 
   const loadCategories = useCallback(async () => {
     setLoading(true);
     try {
-      const list = await productCategoryApi.listSelectableCategories();
+      const list = await productApi.listSelectableProductCategories();
       setCategories(list);
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载产品类别失败");
+      message.error(err instanceof Error ? err.message : "加载产品类别失败");
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [message]);
 
   useEffect(() => {
     loadCategories();
@@ -87,71 +76,65 @@ export default function ProductCategoriesPage() {
     const parentCategory = parent ?? rootCategory;
     setEditItem(null);
     setParentContext(parentCategory ?? null);
-    setForm({
+    form.resetFields();
+    form.setFieldsValue({
       name: "",
-      parentId: parentCategory?.id.toString() ?? "",
+      parentId: parentCategory?.id,
       description: "",
     });
-    setErrors({});
     setShowForm(true);
   };
 
   const openEdit = async (record: SelectableProductCategory) => {
     setShowForm(true);
     setFormLoading(true);
-    setErrors({});
     try {
-      const category = await productCategoryApi.getCategory(record.id);
+      const category = await productApi.getProductCategory({ id: record.id });
       setEditItem(category);
       setParentContext(null);
-      setForm({
+      form.setFieldsValue({
         name: category.name,
-        parentId: category.parentId?.toString() ?? "",
+        parentId: category.parentId,
         description: category.description ?? "",
       });
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载产品类别失败");
+      message.error(err instanceof Error ? err.message : "加载产品类别失败");
       setShowForm(false);
     } finally {
       setFormLoading(false);
     }
   };
 
-  const validate = () => {
-    const nextErrors: Partial<Record<keyof CategoryForm, string>> = {};
-    if (!isNonEmpty(form.name)) nextErrors.name = "请输入类别名";
-    if (!form.parentId && !editItem) nextErrors.parentId = "请选择父类别";
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validate()) return;
-    setSubmitting(true);
     try {
+      const values = await form.validateFields();
+      setSubmitting(true);
       const payload = {
-        name: form.name,
-        parentId: form.parentId ? Number(form.parentId) : undefined,
-        description: form.description || undefined,
+        name: values.name as string,
+        ...(values.parentId != null ? { parentId: values.parentId as number } : {}),
+        ...(values.description ? { description: values.description as string } : {}),
       };
       if (editItem) {
-        await productCategoryApi.updateCategory({
-          ...payload,
+        await productApi.updateProductCategory({
           id: editItem.id,
+          updateProductCategoryInput: payload,
         });
-        addToast("success", "编辑成功");
+        message.success("编辑成功");
       } else {
-        await productCategoryApi.createCategory({
-          name: payload.name,
-          parentId: Number(form.parentId),
-          description: payload.description,
+        await productApi.addProductCategory({
+          createProductCategoryInput: {
+            ...payload,
+            parentId: values.parentId as number,
+          },
         });
-        addToast("success", "新增成功");
+        message.success("新增成功");
       }
       setShowForm(false);
       loadCategories();
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "操作失败");
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -159,20 +142,25 @@ export default function ProductCategoriesPage() {
 
   const handleDelete = async (record: SelectableProductCategory) => {
     if (record.name === "根节点") return;
-    if (!confirm("确定删除该产品类别？")) return;
-    try {
-      await productCategoryApi.deleteCategory(record.id);
-      addToast("success", "删除成功");
-      loadCategories();
-    } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "删除失败");
-    }
+    Modal.confirm({
+      title: "确认删除",
+      content: "确定删除该产品类别？",
+      onOk: async () => {
+        try {
+          await productApi.deleteProductCategory({ id: record.id });
+          message.success("删除成功");
+          loadCategories();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : "删除失败");
+        }
+      },
+    });
   };
 
-  const columns: DataTableColumn<CategoryRow>[] = [
+  const columns: ColumnsType<CategoryRow> = [
     {
-      key: "name",
       title: "类别名",
+      key: "name",
       render: (_, record) => (
         <span style={{ paddingLeft: record.depth * 18 }}>
           {record.depth > 0 ? "└ " : ""}
@@ -180,95 +168,100 @@ export default function ProductCategoriesPage() {
         </span>
       ),
     },
-    { key: "parentName", title: "父类别", dataIndex: "parentName" },
+    { title: "父类别", dataIndex: "parentName", key: "parentName" },
     {
-      key: "action",
       title: "操作",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <Button type="link" label="新增" onClick={() => openCreate(record)} />
-          <Button
-            type="link"
-            label="编辑"
-            disabled={record.name === "根节点"}
-            onClick={() => openEdit(record)}
-          />
-          <Button
-            type="link"
-            label="删除"
-            disabled={record.name === "根节点"}
-            onClick={() => handleDelete(record)}
-          />
-        </div>
-      ),
+      key: "action",
+      render: (_, record) => {
+        const isRoot = record.name === "根节点";
+        return (
+          <Space size="small">
+            <Button type="link" size="small" onClick={() => openCreate(record)}>新增</Button>
+            <Button type="link" size="small" disabled={isRoot} onClick={() => openEdit(record)}>编辑</Button>
+            <Button type="link" size="small" danger disabled={isRoot} onClick={() => handleDelete(record)}>删除</Button>
+          </Space>
+        );
+      },
     },
   ];
 
   return (
     <div>
-      <PageHeader
-        title="产品类别管理"
-        extra={<Button type="primary" label="新增产品类别" onClick={() => openCreate()} disabled={!rootCategory} />}
-      />
+      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Typography.Title level={4} style={{ margin: 0 }}>产品类别管理</Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openCreate()} disabled={!rootCategory}>
+          新增产品类别
+        </Button>
+      </Flex>
+
       <div className="card">
-        <div className="form-inline mb-4">
+        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
           <div className="form-item">
             <label>类别名</label>
-            <input
+            <Input
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="请输入类别名"
+              style={{ width: 200 }}
             />
           </div>
-          <Button type="primary" label="搜索" onClick={() => undefined} />
-          <Button label="重置" onClick={() => setKeyword("")} />
-        </div>
+          <Button type="primary" onClick={() => undefined}>搜索</Button>
+          <Button onClick={() => setKeyword("")}>重置</Button>
+        </Flex>
       </div>
+
       <div className="card">
-        <DataTable columns={columns} data={filteredRows} rowKey="id" loading={loading} />
+        <Table<CategoryRow>
+          columns={columns}
+          dataSource={filteredRows}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+          size="middle"
+        />
       </div>
 
       <Modal
         open={showForm}
         title={editItem ? "编辑产品类别" : "新增产品类别"}
-        onClose={() => setShowForm(false)}
+        onCancel={() => setShowForm(false)}
         onOk={handleSubmit}
-        okLoading={submitting}
+        confirmLoading={submitting}
         width={560}
+        destroyOnHidden
       >
         {formLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
         ) : (
           <>
             {parentContext && !editItem && (
-              <div className="mb-3 text-sm text-gray-500">
+              <div style={{ marginBottom: 12, fontSize: 14, color: "#888" }}>
                 父类别：{parentContext.name}
               </div>
             )}
-            <FormField label="类别名" required error={errors.name}>
-              <FormInput
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="请输入类别名"
-                error={!!errors.name}
-              />
-            </FormField>
-            <FormField label="父类别" required={!editItem} error={errors.parentId}>
-              <FormSelect
-                value={form.parentId}
-                onChange={(e) => setForm({ ...form, parentId: e.target.value })}
-                placeholder="请选择父类别"
-                options={categoryOptions}
-                error={!!errors.parentId}
-              />
-            </FormField>
-            <FormField label="描述">
-              <FormTextarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="请输入描述"
-              />
-            </FormField>
+            <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+              <Form.Item
+                name="name"
+                label="类别名"
+                rules={[{ required: true, message: "请输入类别名" }]}
+              >
+                <Input placeholder="请输入类别名" />
+              </Form.Item>
+              <Form.Item
+                name="parentId"
+                label="父类别"
+                rules={editItem ? [] : [{ required: true, message: "请选择父类别" }]}
+              >
+                <Select
+                  options={categoryOptions}
+                  placeholder="请选择父类别"
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item name="description" label="描述">
+                <Input.TextArea placeholder="请输入描述" rows={3} />
+              </Form.Item>
+            </Form>
           </>
         )}
       </Modal>

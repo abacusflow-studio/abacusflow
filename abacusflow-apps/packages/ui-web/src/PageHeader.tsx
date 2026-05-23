@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Flex, Typography } from "antd";
 
 interface PageHeaderProps {
   title: string;
@@ -9,16 +10,11 @@ interface PageHeaderProps {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, extra }) => {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 16,
-      }}
-    >
-      <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{title}</h1>
+    <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+      <Typography.Title level={4} style={{ margin: 0 }}>
+        {title}
+      </Typography.Title>
       {extra && <div>{extra}</div>}
-    </div>
+    </Flex>
   );
 };

@@ -1,5 +1,5 @@
-import { customerApi } from "@abacusflow/core";
-import { FormScreen } from "@/components/form-screen";
+import { partnerApi } from "@abacusflow/core";
+import { FormScreen } from "@abacusflow/ui-native";
 
 export default function AddCustomerScreen() {
   return (
@@ -27,10 +27,12 @@ export default function AddCustomerScreen() {
         },
       ]}
       onSubmit={async (values) => {
-        await customerApi.createCustomer({
-          name: values.name as string,
-          phone: values.phone as string | undefined,
-          address: values.address as string | undefined,
+        await partnerApi.addCustomer({
+          createCustomerInput: {
+            name: values.name as string,
+            phone: values.phone as string | undefined,
+            address: values.address as string | undefined,
+          },
         });
       }}
       submitLabel="创建客户"

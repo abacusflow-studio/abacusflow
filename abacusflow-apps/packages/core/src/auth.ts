@@ -1,4 +1,11 @@
-import type { UserProfile } from "./types";
+export interface UserProfile {
+  sub?: string;
+  name?: string;
+  email?: string;
+  picture?: string;
+  nickname?: string;
+  [key: string]: unknown;
+}
 
 export interface AuthClient {
   initialize(): Promise<void>;
@@ -25,7 +32,9 @@ export function getAuthClient(): AuthClient {
 
 export function isTokenExpired(token: string): boolean {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const part = token.split(".")[1];
+    if (!part) return true;
+    const payload = JSON.parse(atob(part));
     const currentTime = Date.now() / 1000;
     return payload.exp ? payload.exp < currentTime : true;
   } catch {
@@ -35,7 +44,9 @@ export function isTokenExpired(token: string): boolean {
 
 export function decodeToken(token: string): UserProfile | null {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const payload = JSON.parse(atob(part));
     return payload as UserProfile;
   } catch {
     return null;

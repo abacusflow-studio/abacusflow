@@ -1,5 +1,5 @@
-import { supplierApi, productApi, transactionApi } from "@abacusflow/core";
-import { OrderFormScreen } from "@/components/order-form-screen";
+import { partnerApi, productApi, transactionApi } from "@abacusflow/core";
+import { OrderFormScreen } from "@abacusflow/ui-native";
 
 export default function AddPurchaseOrderScreen() {
   return (
@@ -7,7 +7,7 @@ export default function AddPurchaseOrderScreen() {
       orderType="purchase"
       partnerLabel="供应商"
       loadPartners={async () => {
-        const res = await supplierApi.listSuppliersPage({
+        const res = await partnerApi.listBasicSuppliersPage({
           pageIndex: 1,
           pageSize: 100,
         });

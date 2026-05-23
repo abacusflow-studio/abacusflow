@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { customerApi, type Customer } from "@abacusflow/core";
+import { partnerApi, type Customer } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { DetailScreen } from "@/components/detail-screen";
+import { DetailScreen } from "@abacusflow/ui-native";
 
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,7 +16,7 @@ export default function CustomerDetailScreen() {
 
   const loadData = async () => {
     try {
-      const res = await customerApi.getCustomer(Number(id));
+      const res = await partnerApi.getCustomer({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -48,7 +48,7 @@ export default function CustomerDetailScreen() {
       ]}
       onEdit={() => router.push(`/partner/customer/edit/${id}` as any)}
       onDelete={async () => {
-        await customerApi.deleteCustomer(Number(id));
+        await partnerApi.deleteCustomer({ id: Number(id) });
         router.back();
       }}
     />

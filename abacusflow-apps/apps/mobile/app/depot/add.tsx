@@ -1,5 +1,5 @@
 import { depotApi } from "@abacusflow/core";
-import { FormScreen } from "@/components/form-screen";
+import { FormScreen } from "@abacusflow/ui-native";
 
 export default function AddDepotScreen() {
   return (

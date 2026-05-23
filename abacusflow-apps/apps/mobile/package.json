@@ -13,7 +13,7 @@
   "dependencies": {
     "@abacusflow/config": "*",
     "@abacusflow/core": "*",
-    "@abacusflow/ui": "*",
+    "@abacusflow/ui-native": "*",
     "@abacusflow/utils": "*",
     "@expo/vector-icons": "^15.0.2",
     "@react-navigation/bottom-tabs": "^7.4.0",

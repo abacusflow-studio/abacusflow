@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { customerApi, type Customer } from "@abacusflow/core";
+import { partnerApi, type Customer } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { ListScreen } from "@/components/list-screen";
+import { ListScreen } from "@abacusflow/ui-native";
 
 export default function CustomerListScreen() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function CustomerListScreen() {
     async (page = pageIndex) => {
       setLoading(true);
       try {
-        const res = await customerApi.listCustomersPage({
+        const res = await partnerApi.listBasicCustomersPage({
           pageIndex: page,
           pageSize: 20,
           name: searchName || undefined,

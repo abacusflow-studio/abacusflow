@@ -3,7 +3,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { productApi, type Product } from "@abacusflow/core";
 import { PRODUCT_UNITS, PRODUCT_TYPES } from "@abacusflow/utils";
-import { FormScreen } from "@/components/form-screen";
+import { FormScreen } from "@abacusflow/ui-native";
 
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

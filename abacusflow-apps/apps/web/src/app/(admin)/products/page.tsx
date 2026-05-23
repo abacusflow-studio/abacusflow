@@ -2,46 +2,37 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  PageHeader, Button, DataTable, Modal,
-  FormField, FormInput, FormSelect, FormTextarea,
-  type DataTableColumn,
-} from "@abacusflow/ui";
+  Button,
+  Table,
+  Modal,
+  Input,
+  Select,
+  Form,
+  Typography,
+  Flex,
+  Tag,
+  App,
+  Space,
+  Descriptions,
+  Checkbox,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 import {
   productApi,
-  productCategoryApi,
   type BasicProduct,
   type Product,
   type SelectableProductCategory,
 } from "@abacusflow/core";
 import {
-  translateProductType, translateProductUnit, isNonEmpty,
-  PRODUCT_TYPES, PRODUCT_UNITS,
-  type ProductType, type ProductUnit,
+  translateProductType,
+  translateProductUnit,
+  PRODUCT_TYPES,
+  PRODUCT_UNITS,
+  type ProductType,
+  type ProductUnit,
 } from "@abacusflow/utils";
 import { usePaginatedList } from "../../../hooks/use-paginated-list";
-import { useToast } from "../../../hooks/use-toast";
-
-interface ProductForm {
-  name: string;
-  specification: string;
-  type: ProductType;
-  categoryId: string;
-  barcode: string;
-  unit: ProductUnit;
-  note: string;
-  enabled: boolean;
-}
-
-const emptyForm: ProductForm = {
-  name: "",
-  specification: "",
-  type: "material",
-  categoryId: "",
-  barcode: "",
-  unit: "piece",
-  note: "",
-  enabled: true,
-};
 
 const enabledOptions = [
   { label: "启用", value: "true" },
@@ -49,12 +40,12 @@ const enabledOptions = [
 ];
 
 export default function ProductsPage() {
-  const { addToast } = useToast();
+  const { message } = App.useApp();
+  const [form] = Form.useForm();
+
   const [editItem, setEditItem] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<ProductForm>(emptyForm);
   const [formLoading, setFormLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductForm, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<SelectableProductCategory[]>([]);
 
@@ -84,46 +75,54 @@ export default function ProductsPage() {
   });
 
   useEffect(() => {
-    productCategoryApi
-      .listSelectableCategories()
+    productApi
+      .listSelectableProductCategories()
       .then(setCategories)
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error(err);
-        addToast("error", "加载产品类别失败");
+        message.error("加载产品类别失败");
       });
-  }, [addToast]);
+  }, [message]);
 
   const categoryOptions = useMemo(
     () => categories.map((category) => ({ label: category.name, value: category.id })),
     [categories],
   );
 
+  const productTypeOptions = useMemo(
+    () => PRODUCT_TYPES.map((t) => ({ label: t.label, value: t.value })),
+    [],
+  );
+
+  const productUnitOptions = useMemo(
+    () => PRODUCT_UNITS.map((u) => ({ label: u.label, value: u.value })),
+    [],
+  );
+
   const openCreate = () => {
     setEditItem(null);
-    setForm(emptyForm);
-    setErrors({});
+    form.resetFields();
     setShowForm(true);
   };
 
   const openEdit = async (record: BasicProduct) => {
     setFormLoading(true);
     setShowForm(true);
-    setErrors({});
     try {
-      const product = await productApi.getProduct(record.id);
+      const product = await productApi.getProduct({ id: record.id });
       setEditItem(product);
-      setForm({
+      form.setFieldsValue({
         name: product.name,
         specification: product.specification ?? "",
         type: product.type,
-        categoryId: product.categoryId?.toString() ?? "",
+        categoryId: product.categoryId,
         barcode: product.barcode ?? "",
         unit: product.unit,
         note: product.note ?? "",
         enabled: product.enabled,
       });
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载产品失败");
+      message.error(err instanceof Error ? err.message : "加载产品失败");
       setShowForm(false);
     } finally {
       setFormLoading(false);
@@ -134,68 +133,65 @@ export default function ProductsPage() {
     setShowDetail(true);
     setDetailLoading(true);
     try {
-      const item = await productApi.getProduct(id);
+      const item = await productApi.getProduct({ id });
       setDetailItem(item);
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载失败");
+      message.error(err instanceof Error ? err.message : "加载失败");
       setShowDetail(false);
     } finally {
       setDetailLoading(false);
     }
   };
 
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof ProductForm, string>> = {};
-    if (!isNonEmpty(form.name)) newErrors.name = "请输入产品名称";
-    if (!form.categoryId) newErrors.categoryId = "请选择产品类别";
-    if (!isNonEmpty(form.barcode)) newErrors.barcode = "请输入条形码";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validate()) return;
-    setSubmitting(true);
     try {
+      const values = await form.validateFields();
+      setSubmitting(true);
       const payload = {
-        name: form.name,
-        specification: form.specification || undefined,
-        type: form.type,
-        categoryId: Number(form.categoryId),
-        barcode: form.barcode,
-        unit: form.unit,
-        note: form.note || undefined,
+        name: values.name as string,
+        specification: (values.specification as string) || undefined,
+        type: values.type as ProductType,
+        categoryId: values.categoryId as number,
+        barcode: values.barcode as string,
+        unit: values.unit as ProductUnit,
+        note: (values.note as string) || undefined,
       };
 
       if (editItem) {
         await productApi.updateProduct({
-          ...payload,
           id: editItem.id,
-          enabled: form.enabled,
+          updateProductInput: { ...payload },
         });
-        addToast("success", "编辑成功");
+        message.success("编辑成功");
       } else {
-        await productApi.createProduct(payload);
-        addToast("success", "新增成功");
+        await productApi.addProduct({ createProductInput: payload });
+        message.success("新增成功");
       }
       setShowForm(false);
       refresh();
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "操作失败");
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("确定删除该产品？")) return;
-    try {
-      await productApi.deleteProduct(id);
-      addToast("success", "删除成功");
-      refresh();
-    } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "删除失败");
-    }
+    Modal.confirm({
+      title: "确认删除",
+      content: "确定删除该产品？",
+      onOk: async () => {
+        try {
+          await productApi.deleteProduct({ id });
+          message.success("删除成功");
+          refresh();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : "删除失败");
+        }
+      },
+    });
   };
 
   const resetAll = () => {
@@ -203,49 +199,50 @@ export default function ProductsPage() {
     updateFilter("categoryId", undefined);
   };
 
-  const columns: DataTableColumn<BasicProduct>[] = [
-    { key: "name", title: "产品名称", dataIndex: "name" },
-    { key: "specification", title: "产品规格", dataIndex: "specification" },
-    { key: "categoryName", title: "产品类别", dataIndex: "categoryName" },
+  const columns: ColumnsType<BasicProduct> = [
+    { title: "产品名称", dataIndex: "name", key: "name" },
+    { title: "产品规格", dataIndex: "specification", key: "specification" },
+    { title: "产品类别", dataIndex: "categoryName", key: "categoryName" },
     {
-      key: "type",
       title: "产品类型",
+      key: "type",
       render: (_, record) => translateProductType(record.type),
     },
-    { key: "barcode", title: "条形码", dataIndex: "barcode" },
+    { title: "条形码", dataIndex: "barcode", key: "barcode" },
     {
-      key: "unit",
       title: "单位",
+      key: "unit",
       render: (_, record) => translateProductUnit(record.unit),
     },
     {
-      key: "enabled",
       title: "启用状态",
+      key: "enabled",
       render: (_, record) => (
-        <span className={record.enabled ? "text-green-500" : "text-red-500"}>
+        <Tag color={record.enabled ? "success" : "error"}>
           {record.enabled ? "启用" : "禁用"}
-        </span>
+        </Tag>
       ),
     },
     {
-      key: "action",
       title: "操作",
+      key: "action",
       render: (_, record) => (
-        <div className="flex gap-2">
-          <Button type="link" label="详情" onClick={() => openDetail(record.id)} />
-          <Button type="link" label="编辑" onClick={() => openEdit(record)} />
-          <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
-        </div>
+        <Space size="small">
+          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
+          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+        </Space>
       ),
     },
   ];
 
   return (
     <div>
-      <PageHeader
-        title="产品管理"
-        extra={<Button type="primary" label="新增产品" onClick={openCreate} />}
-      />
+      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Typography.Title level={4} style={{ margin: 0 }}>产品管理</Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增产品</Button>
+      </Flex>
+
       <div className="grid grid-cols-[260px_1fr] gap-4 max-lg:grid-cols-1">
         <div className="card self-start">
           <div className="text-sm font-semibold mb-3">产品类别</div>
@@ -260,7 +257,7 @@ export default function ProductsPage() {
             <div className="form-inline mb-4">
               <div className="form-item">
                 <label>产品名称</label>
-                <input
+                <Input
                   value={filters.name ?? ""}
                   onChange={(e) => updateFilter("name", e.target.value || undefined)}
                   placeholder="请输入产品名称"
@@ -268,39 +265,45 @@ export default function ProductsPage() {
               </div>
               <div className="form-item">
                 <label>类型</label>
-                <select
-                  value={filters.type ?? ""}
-                  onChange={(e) => updateFilter("type", (e.target.value || undefined) as ProductType | undefined)}
-                >
-                  <option value="">全部</option>
-                  {PRODUCT_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
+                <Select
+                  value={filters.type ?? undefined}
+                  onChange={(value) => updateFilter("type", value as ProductType | undefined)}
+                  options={productTypeOptions}
+                  allowClear
+                  placeholder="全部"
+                  style={{ width: "100%" }}
+                />
               </div>
               <div className="form-item">
                 <label>启用状态</label>
-                <select
-                  value={filters.enabled === undefined ? "" : String(filters.enabled)}
-                  onChange={(e) => updateFilter("enabled", e.target.value ? e.target.value === "true" : undefined)}
-                >
-                  <option value="">全部</option>
-                  {enabledOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
+                <Select
+                  value={filters.enabled === undefined ? undefined : String(filters.enabled)}
+                  onChange={(value) => updateFilter("enabled", value ? value === "true" : undefined)}
+                  options={enabledOptions}
+                  allowClear
+                  placeholder="全部"
+                  style={{ width: "100%" }}
+                />
               </div>
-              <Button type="primary" label="搜索" onClick={handleSearch} />
-              <Button label="重置" onClick={resetAll} />
+              <Button type="primary" onClick={handleSearch}>搜索</Button>
+              <Button onClick={resetAll}>重置</Button>
             </div>
           </div>
           <div className="card">
-            <DataTable
+            <Table<BasicProduct>
               columns={columns}
-              data={data}
+              dataSource={data}
               rowKey="id"
               loading={loading}
-              pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+              size="middle"
+              pagination={{
+                current: pageIndex,
+                pageSize: 10,
+                total,
+                onChange: setPageIndex,
+                showTotal: (t) => `共 ${t} 条`,
+                showSizeChanger: false,
+              }}
             />
           </div>
         </div>
@@ -309,105 +312,93 @@ export default function ProductsPage() {
       <Modal
         open={showForm}
         title={editItem ? "编辑产品" : "新增产品"}
-        onClose={() => setShowForm(false)}
+        onCancel={() => setShowForm(false)}
         onOk={handleSubmit}
-        okLoading={submitting}
+        confirmLoading={submitting}
         width={640}
+        destroyOnHidden
       >
         {formLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
         ) : (
-          <>
-            <FormField label="产品名称" required error={errors.name}>
-              <FormInput
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="请输入产品名称"
-                error={!!errors.name}
-              />
-            </FormField>
-            <FormField label="产品规格">
-              <FormInput
-                value={form.specification}
-                onChange={(e) => setForm({ ...form, specification: e.target.value })}
-                placeholder="请输入产品规格"
-              />
-            </FormField>
-            <FormField label="产品类型" required>
-              <FormSelect
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value as ProductType })}
-                options={PRODUCT_TYPES}
-              />
-            </FormField>
-            <FormField label="产品类别" required error={errors.categoryId}>
-              <FormSelect
-                value={form.categoryId}
-                onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                options={categoryOptions}
-                placeholder="请选择产品类别"
-                error={!!errors.categoryId}
-              />
-            </FormField>
-            <FormField label="条形码" required error={errors.barcode}>
-              <FormInput
-                value={form.barcode}
-                onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-                placeholder="请输入条形码"
-                error={!!errors.barcode}
-              />
-            </FormField>
-            <FormField label="单位" required>
-              <FormSelect
-                value={form.unit}
-                onChange={(e) => setForm({ ...form, unit: e.target.value as ProductUnit })}
-                options={PRODUCT_UNITS}
-              />
-            </FormField>
-            <FormField label="备注">
-              <FormTextarea
-                value={form.note}
-                onChange={(e) => setForm({ ...form, note: e.target.value })}
-                placeholder="请输入备注"
-              />
-            </FormField>
+          <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+            <Form.Item
+              name="name"
+              label="产品名称"
+              rules={[{ required: true, message: "请输入产品名称" }]}
+            >
+              <Input placeholder="请输入产品名称" />
+            </Form.Item>
+            <Form.Item name="specification" label="产品规格">
+              <Input placeholder="请输入产品规格" />
+            </Form.Item>
+            <Form.Item
+              name="type"
+              label="产品类型"
+              rules={[{ required: true, message: "请选择产品类型" }]}
+            >
+              <Select options={productTypeOptions} placeholder="请选择产品类型" />
+            </Form.Item>
+            <Form.Item
+              name="categoryId"
+              label="产品类别"
+              rules={[{ required: true, message: "请选择产品类别" }]}
+            >
+              <Select options={categoryOptions} placeholder="请选择产品类别" />
+            </Form.Item>
+            <Form.Item
+              name="barcode"
+              label="条形码"
+              rules={[{ required: true, message: "请输入条形码" }]}
+            >
+              <Input placeholder="请输入条形码" />
+            </Form.Item>
+            <Form.Item
+              name="unit"
+              label="单位"
+              rules={[{ required: true, message: "请选择单位" }]}
+            >
+              <Select options={productUnitOptions} placeholder="请选择单位" />
+            </Form.Item>
+            <Form.Item name="note" label="备注">
+              <Input.TextArea placeholder="请输入备注" rows={3} />
+            </Form.Item>
             {editItem && (
-              <FormField label="启用状态">
-                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={form.enabled}
-                    onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
-                  />
-                  <span>{form.enabled ? "启用" : "禁用"}</span>
-                </label>
-              </FormField>
+              <Form.Item name="enabled" label="启用状态" valuePropName="checked">
+                <Checkbox>启用</Checkbox>
+              </Form.Item>
             )}
-          </>
+          </Form>
         )}
       </Modal>
 
       <Modal
         open={showDetail}
         title="产品详情"
-        onClose={() => setShowDetail(false)}
+        onCancel={() => setShowDetail(false)}
+        footer={null}
         width={600}
+        destroyOnHidden
       >
         {detailLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
         ) : detailItem ? (
-          <div className="flex flex-col gap-3">
-            <DetailRow label="产品名称" value={detailItem.name} />
-            <DetailRow label="产品规格" value={detailItem.specification} />
-            <DetailRow label="产品类型" value={translateProductType(detailItem.type)} />
-            <DetailRow label="产品类别" value={detailItem.categoryName ?? detailItem.categoryId} />
-            <DetailRow label="条形码" value={detailItem.barcode} />
-            <DetailRow label="单位" value={translateProductUnit(detailItem.unit)} />
-            <DetailRow label="启用状态" value={detailItem.enabled ? "启用" : "禁用"} />
-            <DetailRow label="备注" value={detailItem.note} />
-            <DetailRow label="创建时间" value={detailItem.createdAt} />
-            <DetailRow label="更新时间" value={detailItem.updatedAt} />
-          </div>
+          <Descriptions column={1} size="small" labelStyle={{ width: 100 }}>
+            <Descriptions.Item label="产品名称">{detailItem.name}</Descriptions.Item>
+            <Descriptions.Item label="产品规格">{detailItem.specification ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="产品类型">{translateProductType(detailItem.type)}</Descriptions.Item>
+            <Descriptions.Item label="产品类别">{detailItem.categoryId ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="条形码">{detailItem.barcode ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="单位">{translateProductUnit(detailItem.unit)}</Descriptions.Item>
+            <Descriptions.Item label="启用状态">
+              <Tag color={detailItem.enabled ? "success" : "error"}>
+                {detailItem.enabled ? "启用" : "禁用"}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="备注">{detailItem.note ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{detailItem.createdAt ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="更新时间">{detailItem.updatedAt ?? "-"}</Descriptions.Item>
+          </Descriptions>
         ) : null}
       </Modal>
     </div>
@@ -461,15 +452,6 @@ function CategoryTree({
         全部类别
       </button>
       {renderNodes(undefined)}
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <span style={{ color: "#999", minWidth: 80, flexShrink: 0 }}>{label}：</span>
-      <span>{value ?? "-"}</span>
     </div>
   );
 }

@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
 
   transpilePackages: [
     "@abacusflow/core",
-    "@abacusflow/ui",
+    "@abacusflow/ui-web",
     "@abacusflow/utils",
     "@abacusflow/config",
   ],
@@ -27,18 +27,60 @@ const nextConfig: NextConfig = {
       }
     : {}),
 
-  webpack: (config) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  webpack: (config: any) => {
+    config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...config.resolve.alias,
       "react-native$": "react-native-web",
     };
     config.resolve.extensions = [
-      ".web.js",
-      ".web.jsx",
-      ".web.ts",
       ".web.tsx",
-      ...config.resolve.extensions,
+      ".web.ts",
+      ".web.jsx",
+      ".web.js",
+      ".tsx",
+      ".ts",
+      ".jsx",
+      ".js",
     ];
+    // Handle .js imports resolving to .ts files (TypeScript nodenext module resolution)
+    config.resolve.plugins = config.resolve.plugins ?? [];
+    config.resolve.plugins.push({
+      apply(resolver: any) {
+        const target = resolver.ensureHook("resolve");
+        resolver
+          .getHook("described-resolve")
+          .tapAsync("JsToTsPlugin", (request: any, resolveContext: any, callback: any) => {
+            const req = request.request as string | undefined;
+            if (req && req.endsWith(".js")) {
+              const tsReq = req.slice(0, -3) + ".ts";
+              const tsxReq = req.slice(0, -3) + ".tsx";
+              const newRequest = { ...request, request: tsReq };
+              resolver.doResolve(
+                target,
+                newRequest,
+                `try .js -> .ts: ${tsReq}`,
+                resolveContext,
+                (err: Error | null, result: unknown) => {
+                  if (err) return callback(err);
+                  if (result) return callback(null, result);
+                  const newRequestTsx = { ...request, request: tsxReq };
+                  resolver.doResolve(
+                    target,
+                    newRequestTsx,
+                    `try .js -> .tsx: ${tsxReq}`,
+                    resolveContext,
+                    callback,
+                  );
+                },
+              );
+            } else {
+              callback();
+            }
+          });
+      },
+    } as any);
     return config;
   },
 };

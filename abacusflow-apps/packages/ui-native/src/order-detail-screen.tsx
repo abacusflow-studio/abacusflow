@@ -10,12 +10,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { PurchaseOrder, SaleOrder, OrderItem } from "@abacusflow/core";
-import {
-  translateOrderStatus,
-  dateToFormattedString,
-  STATUS_COLORS,
-  COLORS,
-} from "@abacusflow/utils";
+import { translateOrderStatus, dateToFormattedString } from "@abacusflow/utils";
+import { STATUS_COLORS, COLORS } from "@abacusflow/ui-tokens";
 
 type Order = PurchaseOrder | SaleOrder;
 

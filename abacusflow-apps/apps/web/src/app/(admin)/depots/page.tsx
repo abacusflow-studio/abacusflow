@@ -1,33 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  PageHeader, Button, DataTable, Modal,
-  FormField, FormInput,
-  type DataTableColumn,
-} from "@abacusflow/ui";
-import { depotApi, type BasicDepot, type Depot, type CreateDepotRequest } from "@abacusflow/core";
-import { isNonEmpty } from "@abacusflow/utils";
-import { useToast } from "../../../hooks/use-toast";
-
-interface DepotForm {
-  name: string;
-  location: string;
-  capacity: string;
-}
-
-const emptyForm: DepotForm = { name: "", location: "", capacity: "" };
+  Button,
+  Table,
+  Modal,
+  Input,
+  Form,
+  Typography,
+  Flex,
+  Tag,
+  App,
+  Space,
+  Descriptions,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import { depotApi, type BasicDepot, type Depot, type CreateDepotInput } from "@abacusflow/core";
 
 export default function DepotsPage() {
-  const { addToast } = useToast();
+  const { message } = App.useApp();
+  const [form] = Form.useForm();
+
   const [data, setData] = useState<BasicDepot[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchName, setSearchName] = useState("");
 
   const [editItem, setEditItem] = useState<BasicDepot | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<DepotForm>(emptyForm);
-  const [errors, setErrors] = useState<Partial<Record<keyof DepotForm, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const [showDetail, setShowDetail] = useState(false);
@@ -46,25 +46,23 @@ export default function DepotsPage() {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchData();
   }, []);
 
   const openCreate = () => {
     setEditItem(null);
-    setForm(emptyForm);
-    setErrors({});
+    form.resetFields();
     setShowForm(true);
   };
 
   const openEdit = (record: BasicDepot) => {
     setEditItem(record);
-    setForm({
+    form.setFieldsValue({
       name: record.name,
       location: record.location ?? "",
       capacity: record.capacity?.toString() ?? "",
     });
-    setErrors({});
     setShowForm(true);
   };
 
@@ -72,81 +70,81 @@ export default function DepotsPage() {
     setShowDetail(true);
     setDetailLoading(true);
     try {
-      const item = await depotApi.getDepot(id);
+      const item = await depotApi.getDepot({ id });
       setDetailItem(item);
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "加载失败");
+      message.error(err instanceof Error ? err.message : "加载失败");
       setShowDetail(false);
     } finally {
       setDetailLoading(false);
     }
   };
 
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof DepotForm, string>> = {};
-    if (!isNonEmpty(form.name)) newErrors.name = "请输入储存点名称";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validate()) return;
-    setSubmitting(true);
     try {
-      const payload: CreateDepotRequest = {
-        name: form.name,
-        location: form.location || undefined,
-        capacity: form.capacity ? Number(form.capacity) : undefined,
+      const values = await form.validateFields();
+      setSubmitting(true);
+      const payload: CreateDepotInput = {
+        name: values.name,
+        location: values.location || undefined,
+        capacity: values.capacity ? Number(values.capacity) : undefined,
       };
       if (editItem) {
-        await depotApi.updateDepot({ ...payload, id: editItem.id, enabled: editItem.enabled });
-        addToast("success", "编辑成功");
+        await depotApi.updateDepot({ id: editItem.id, updateDepotInput: { name: payload.name, location: payload.location, capacity: payload.capacity } });
+        message.success("编辑成功");
       } else {
-        await depotApi.createDepot(payload);
-        addToast("success", "新增成功");
+        await depotApi.addDepot({ createDepotInput: payload });
+        message.success("新增成功");
       }
       setShowForm(false);
       fetchData();
     } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "操作失败");
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("确定删除该储存点？")) return;
-    try {
-      await depotApi.deleteDepot(id);
-      addToast("success", "删除成功");
-      fetchData();
-    } catch (err) {
-      addToast("error", err instanceof Error ? err.message : "删除失败");
-    }
+    Modal.confirm({
+      title: "确认删除",
+      content: "确定删除该储存点？",
+      onOk: async () => {
+        try {
+          await depotApi.deleteDepot({ id });
+          message.success("删除成功");
+          fetchData();
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : "删除失败");
+        }
+      },
+    });
   };
 
-  const columns: DataTableColumn<BasicDepot>[] = [
-    { key: "name", title: "储存点名称", dataIndex: "name" },
-    { key: "location", title: "储存点地址", dataIndex: "location" },
-    { key: "capacity", title: "储存点容量", dataIndex: "capacity" },
+  const columns: ColumnsType<BasicDepot> = [
+    { title: "储存点名称", dataIndex: "name", key: "name" },
+    { title: "储存点地址", dataIndex: "location", key: "location" },
+    { title: "储存点容量", dataIndex: "capacity", key: "capacity" },
     {
-      key: "enabled",
       title: "启用状态",
+      key: "enabled",
       render: (_, record) => (
-        <span style={{ color: record.enabled ? "#52c41a" : "#ff4d4f" }}>
+        <Tag color={record.enabled ? "success" : "error"}>
           {record.enabled ? "启用" : "禁用"}
-        </span>
+        </Tag>
       ),
     },
     {
-      key: "action",
       title: "操作",
+      key: "action",
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button type="link" label="详情" onClick={() => openDetail(record.id)} />
-          <Button type="link" label="编辑" onClick={() => openEdit(record)} />
-          <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
-        </div>
+        <Space size="small">
+          <Button type="link" size="small" onClick={() => openDetail(record.id)}>详情</Button>
+          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
+          <Button type="link" size="small" danger onClick={() => handleDelete(record.id)}>删除</Button>
+        </Space>
       ),
     },
   ];
@@ -157,92 +155,87 @@ export default function DepotsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="储存点管理"
-        extra={<Button type="primary" label="新增储存点" onClick={openCreate} />}
-      />
+      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Typography.Title level={4} style={{ margin: 0 }}>储存点管理</Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增储存点</Button>
+      </Flex>
+
       <div className="card">
-        <div className="form-inline" style={{ marginBottom: 16 }}>
+        <Flex wrap="wrap" gap={12} align="flex-end" style={{ marginBottom: 16 }}>
           <div className="form-item">
             <label>关键字名称</label>
-            <input
+            <Input
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
               placeholder="请输入关键字"
+              style={{ width: 200 }}
             />
           </div>
-          <Button type="primary" label="搜索" onClick={fetchData} />
-          <Button label="重置" onClick={() => setSearchName("")} />
-        </div>
+          <Button type="primary" onClick={fetchData}>搜索</Button>
+          <Button onClick={() => setSearchName("")}>重置</Button>
+        </Flex>
       </div>
+
       <div className="card">
-        <DataTable
+        <Table<BasicDepot>
           columns={columns}
-          data={filtered}
+          dataSource={filtered}
           rowKey="id"
           loading={loading}
+          pagination={false}
+          size="middle"
         />
       </div>
 
       <Modal
         open={showForm}
         title={editItem ? "编辑储存点" : "新增储存点"}
-        onClose={() => setShowForm(false)}
+        onCancel={() => setShowForm(false)}
         onOk={handleSubmit}
-        okLoading={submitting}
+        confirmLoading={submitting}
         width={520}
+        destroyOnHidden
       >
-        <FormField label="储存点名称" required error={errors.name}>
-          <FormInput
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="请输入储存点名称"
-            error={!!errors.name}
-          />
-        </FormField>
-        <FormField label="地址">
-          <FormInput
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            placeholder="请输入地址"
-          />
-        </FormField>
-        <FormField label="容量">
-          <FormInput
-            type="number"
-            value={form.capacity}
-            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-            placeholder="请输入容量"
-          />
-        </FormField>
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="name"
+            label="储存点名称"
+            rules={[{ required: true, message: "请输入储存点名称" }]}
+          >
+            <Input placeholder="请输入储存点名称" />
+          </Form.Item>
+          <Form.Item name="location" label="地址">
+            <Input placeholder="请输入地址" />
+          </Form.Item>
+          <Form.Item name="capacity" label="容量">
+            <Input type="number" placeholder="请输入容量" />
+          </Form.Item>
+        </Form>
       </Modal>
 
       <Modal
         open={showDetail}
         title="储存点详情"
-        onClose={() => setShowDetail(false)}
+        onCancel={() => setShowDetail(false)}
+        footer={null}
         width={520}
+        destroyOnHidden
       >
         {detailLoading ? (
-          <p className="text-gray-400 text-center py-8">加载中...</p>
+          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>加载中...</p>
         ) : detailItem ? (
-          <div className="flex flex-col gap-3">
-            <DetailRow label="储存点名称" value={detailItem.name} />
-            <DetailRow label="地址" value={detailItem.location} />
-            <DetailRow label="容量" value={detailItem.capacity} />
-            <DetailRow label="启用状态" value={detailItem.enabled ? "启用" : "禁用"} />
-          </div>
+          <Descriptions column={1} size="small" labelStyle={{ width: 100 }}>
+            <Descriptions.Item label="储存点名称">{detailItem.name}</Descriptions.Item>
+            <Descriptions.Item label="地址">{detailItem.location ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="容量">{detailItem.capacity ?? "-"}</Descriptions.Item>
+            <Descriptions.Item label="启用状态">
+              <Tag color={detailItem.enabled ? "success" : "error"}>
+                {detailItem.enabled ? "启用" : "禁用"}
+              </Tag>
+            </Descriptions.Item>
+          </Descriptions>
         ) : null}
       </Modal>
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <span style={{ color: "#999", minWidth: 100, flexShrink: 0 }}>{label}：</span>
-      <span>{value ?? "-"}</span>
     </div>
   );
 }

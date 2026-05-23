@@ -1,10 +1,10 @@
 /**
- * Theme constants for the mobile app.
- * Aligned with the shared @abacusflow/utils COLORS palette.
+ * Theme constants for native components.
+ * Aligned with the shared @abacusflow/ui-tokens COLORS palette.
  */
 
 import { Platform } from "react-native";
-import { COLORS } from "@abacusflow/utils";
+import { COLORS } from "@abacusflow/ui-tokens";
 
 export const Colors = {
   light: {

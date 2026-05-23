@@ -9,7 +9,7 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS, SHADOW } from "@abacusflow/utils";
+import { COLORS } from "@abacusflow/ui-tokens";
 
 interface ListScreenProps<T> {
   data: T[];

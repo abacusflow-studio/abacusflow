@@ -1,10 +1,9 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Hook to resolve theme-aware colors.
  */
 
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Colors } from "../constants/theme";
+import { useColorScheme } from "./use-color-scheme";
 
 export function useThemeColor(
   props: { light?: string; dark?: string },

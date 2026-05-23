@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { App, ConfigProvider } from "antd";
+import zhCN from "antd/locale/zh_CN";
 import { initWebAuth } from "../lib/auth-provider";
-import { ToastProvider } from "./toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -12,7 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       .then(() => setReady(true))
       .catch((err) => {
         console.error("[providers] initWebAuth failed:", err);
-        setReady(true); // still render children so login page can work
+        setReady(true);
       });
   }, []);
 
@@ -24,5 +25,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <ToastProvider>{children}</ToastProvider>;
+  return (
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        token: {
+          colorPrimary: "#1677ff",
+          borderRadius: 6,
+        },
+      }}
+    >
+      <App>{children}</App>
+    </ConfigProvider>
+  );
 }

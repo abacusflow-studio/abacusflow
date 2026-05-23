@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { userApi, type User } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { ListScreen } from "@/components/list-screen";
+import { ListScreen } from "@abacusflow/ui-native";
 
 export default function UserListScreen() {
   const [data, setData] = useState<User[]>([]);

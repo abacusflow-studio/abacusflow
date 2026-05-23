@@ -7,6 +7,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@abacusflow/ui-tokens": "*",
     "dayjs": "^1.11.13"
   },
   "devDependencies": {
