@@ -26,22 +26,43 @@ export default function DepotsScreen() {
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  const filtered = searchName ? data.filter((d) => d.name.includes(searchName)) : data;
+  const filtered = searchName
+    ? data.filter((d) => d.name.includes(searchName))
+    : data;
 
   const renderItem = (item: BasicDepot) => (
-    <TouchableOpacity style={styles.card} onPress={() => router.push(`/depot/${item.id}` as any)}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => router.push(`/depot/${item.id}` as any)}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.name}</Text>
-        <View style={[styles.badge, { backgroundColor: item.enabled ? "#f6ffed" : "#fff1f0" }]}>
-          <Text style={[styles.badgeText, { color: item.enabled ? COLORS.success : COLORS.danger }]}>
+        <View
+          style={[
+            styles.badge,
+            { backgroundColor: item.enabled ? "#f6ffed" : "#fff1f0" },
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeText,
+              { color: item.enabled ? COLORS.success : COLORS.danger },
+            ]}
+          >
             {item.enabled ? "启用" : "禁用"}
           </Text>
         </View>
       </View>
-      {item.location && <Text style={styles.cardDetail}>地址: {item.location}</Text>}
-      {item.capacity != null && <Text style={styles.cardDetail}>容量: {item.capacity}</Text>}
+      {item.location && (
+        <Text style={styles.cardDetail}>地址: {item.location}</Text>
+      )}
+      {item.capacity != null && (
+        <Text style={styles.cardDetail}>容量: {item.capacity}</Text>
+      )}
     </TouchableOpacity>
   );
 
@@ -66,7 +87,12 @@ export default function DepotsScreen() {
 
 const styles = StyleSheet.create({
   card: { paddingVertical: 4 },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
   badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   badgeText: { fontSize: 12, fontWeight: "500" },

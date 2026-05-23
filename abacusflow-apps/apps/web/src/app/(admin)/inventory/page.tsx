@@ -1,8 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, Modal, type DataTableColumn } from "@abacusflow/ui";
-import { inventoryApi, depotApi, type InventoryUnit, type BasicDepot } from "@abacusflow/core";
+import {
+  PageHeader,
+  Button,
+  DataTable,
+  Modal,
+  type DataTableColumn,
+} from "@abacusflow/ui";
+import {
+  inventoryApi,
+  depotApi,
+  type InventoryUnit,
+  type BasicDepot,
+} from "@abacusflow/core";
 import { translateProductUnit, translateProductType } from "@abacusflow/utils";
 import { usePaginatedList } from "../../../hooks/use-paginated-list";
 import { useToast } from "../../../hooks/use-toast";
@@ -19,10 +30,21 @@ export default function InventoryPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
   } = usePaginatedList<InventoryUnit, { productName?: string }>({
-    fetchFn: (params) => inventoryApi.listInventoriesPage(params as Parameters<typeof inventoryApi.listInventoriesPage>[0]),
+    fetchFn: (params) =>
+      inventoryApi.listInventoriesPage(
+        params as Parameters<typeof inventoryApi.listInventoriesPage>[0],
+      ),
     defaultFilters: { productName: undefined },
   });
 
@@ -49,7 +71,10 @@ export default function InventoryPage() {
     if (!actionItem || !selectedDepotId) return;
     setSubmitting(true);
     try {
-      await inventoryApi.assignDepot({ inventoryId: actionItem.id, depotId: selectedDepotId });
+      await inventoryApi.assignDepot({
+        inventoryId: actionItem.id,
+        depotId: selectedDepotId,
+      });
       addToast("success", "分配成功");
       setShowDepotModal(false);
       refresh();
@@ -112,8 +137,16 @@ export default function InventoryPage() {
       title: "操作",
       render: (_, record) => (
         <div className="flex gap-2">
-          <Button type="link" label="分配储存点" onClick={() => openDepotModal(record)} />
-          <Button type="link" label="调整预警线" onClick={() => openWarningModal(record)} />
+          <Button
+            type="link"
+            label="分配储存点"
+            onClick={() => openDepotModal(record)}
+          />
+          <Button
+            type="link"
+            label="调整预警线"
+            onClick={() => openWarningModal(record)}
+          />
         </div>
       ),
     },
@@ -128,7 +161,9 @@ export default function InventoryPage() {
             <label>产品名称</label>
             <input
               value={filters.productName ?? ""}
-              onChange={(e) => updateFilter("productName", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("productName", e.target.value || undefined)
+              }
               placeholder="请输入产品名称"
             />
           </div>
@@ -142,7 +177,12 @@ export default function InventoryPage() {
           data={data}
           rowKey="id"
           loading={loading}
-          pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          pagination={{
+            current: pageIndex,
+            pageSize: 10,
+            total,
+            onChange: setPageIndex,
+          }}
         />
       </div>
 
@@ -157,12 +197,16 @@ export default function InventoryPage() {
           <label className="text-sm text-gray-500">选择储存点</label>
           <select
             value={selectedDepotId ?? ""}
-            onChange={(e) => setSelectedDepotId(Number(e.target.value) || undefined)}
+            onChange={(e) =>
+              setSelectedDepotId(Number(e.target.value) || undefined)
+            }
             className="px-3 py-1.5 rounded-md border border-gray-300"
           >
             <option value="">请选择</option>
             {depots.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
             ))}
           </select>
         </div>

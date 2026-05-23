@@ -83,7 +83,9 @@ export function Modal({
             x
           </button>
         </div>
-        <div style={{ padding: "16px 24px", overflowY: "auto", flex: 1 }}>{children}</div>
+        <div style={{ padding: "16px 24px", overflowY: "auto", flex: 1 }}>
+          {children}
+        </div>
         {onOk && (
           <div
             style={{

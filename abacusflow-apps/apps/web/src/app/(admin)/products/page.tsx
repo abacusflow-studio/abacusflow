@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, Modal, type DataTableColumn } from "@abacusflow/ui";
+import {
+  PageHeader,
+  Button,
+  DataTable,
+  Modal,
+  type DataTableColumn,
+} from "@abacusflow/ui";
 import { productApi, type BasicProduct } from "@abacusflow/core";
 import { translateProductType, translateProductUnit } from "@abacusflow/utils";
 import { usePaginatedList } from "../../../hooks/use-paginated-list";
@@ -13,10 +19,21 @@ export default function ProductsPage() {
   const [showForm, setShowForm] = useState(false);
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
   } = usePaginatedList<BasicProduct, { name?: string }>({
-    fetchFn: (params) => productApi.listBasicProductsPage(params as Parameters<typeof productApi.listBasicProductsPage>[0]),
+    fetchFn: (params) =>
+      productApi.listBasicProductsPage(
+        params as Parameters<typeof productApi.listBasicProductsPage>[0],
+      ),
     defaultFilters: { name: undefined },
   });
 
@@ -60,8 +77,19 @@ export default function ProductsPage() {
       title: "操作",
       render: (_, record) => (
         <div className="flex gap-2">
-          <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
-          <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
+          <Button
+            type="link"
+            label="编辑"
+            onClick={() => {
+              setEditItem(record);
+              setShowForm(true);
+            }}
+          />
+          <Button
+            type="link"
+            label="删除"
+            onClick={() => handleDelete(record.id)}
+          />
         </div>
       ),
     },
@@ -71,7 +99,16 @@ export default function ProductsPage() {
     <div>
       <PageHeader
         title="产品管理"
-        extra={<Button type="primary" label="新增产品" onClick={() => { setEditItem(null); setShowForm(true); }} />}
+        extra={
+          <Button
+            type="primary"
+            label="新增产品"
+            onClick={() => {
+              setEditItem(null);
+              setShowForm(true);
+            }}
+          />
+        }
       />
       <div className="card">
         <div className="form-inline mb-4">
@@ -79,7 +116,9 @@ export default function ProductsPage() {
             <label>产品名称</label>
             <input
               value={filters.name ?? ""}
-              onChange={(e) => updateFilter("name", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("name", e.target.value || undefined)
+              }
               placeholder="请输入产品名称"
             />
           </div>
@@ -93,10 +132,19 @@ export default function ProductsPage() {
           data={data}
           rowKey="id"
           loading={loading}
-          pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          pagination={{
+            current: pageIndex,
+            pageSize: 10,
+            total,
+            onChange: setPageIndex,
+          }}
         />
       </div>
-      <Modal open={showForm} title={editItem ? "编辑产品" : "新增产品"} onClose={() => setShowForm(false)}>
+      <Modal
+        open={showForm}
+        title={editItem ? "编辑产品" : "新增产品"}
+        onClose={() => setShowForm(false)}
+      >
         <p className="text-gray-400 text-center py-8">表单开发中...</p>
       </Modal>
     </div>

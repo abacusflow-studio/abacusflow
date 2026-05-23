@@ -19,11 +19,14 @@ export default function SaleOrderDetailScreen() {
     }
   }, [id]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  const extraFields = data?.discountFactor != null
-    ? [{ label: "折扣", value: String(data.discountFactor) }]
-    : undefined;
+  const extraFields =
+    data?.discountFactor != null
+      ? [{ label: "折扣", value: String(data.discountFactor) }]
+      : undefined;
 
   return (
     <OrderDetailScreen
@@ -33,9 +36,18 @@ export default function SaleOrderDetailScreen() {
       partnerLabel="客户"
       partnerName={data?.customerName ?? "-"}
       extraFields={extraFields}
-      onComplete={async () => { await transactionApi.completeSaleOrder(Number(id)); loadData(); }}
-      onCancel={async () => { await transactionApi.cancelSaleOrder(Number(id)); loadData(); }}
-      onReverse={async () => { await transactionApi.reverseSaleOrder(Number(id)); loadData(); }}
+      onComplete={async () => {
+        await transactionApi.completeSaleOrder(Number(id));
+        loadData();
+      }}
+      onCancel={async () => {
+        await transactionApi.cancelSaleOrder(Number(id));
+        loadData();
+      }}
+      onReverse={async () => {
+        await transactionApi.reverseSaleOrder(Number(id));
+        loadData();
+      }}
     />
   );
 }

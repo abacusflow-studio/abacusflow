@@ -1,5 +1,10 @@
 import { Auth0Client } from "@auth0/auth0-spa-js";
-import { setAuthClient, setRedirect, type AuthClient, type UserProfile } from "@abacusflow/core";
+import {
+  setAuthClient,
+  setRedirect,
+  type AuthClient,
+  type UserProfile,
+} from "@abacusflow/core";
 import { appConfig } from "../config/app-config";
 
 let auth0Client: Auth0Client | null = null;
@@ -7,7 +12,8 @@ let auth0Client: Auth0Client | null = null;
 export async function initWebAuth(): Promise<void> {
   const authorizationParams = {
     audience: appConfig.auth0.audience,
-    redirect_uri: appConfig.auth0.redirectUri ?? window.location.origin + "/callback",
+    redirect_uri:
+      appConfig.auth0.redirectUri ?? window.location.origin + "/callback",
   };
 
   auth0Client = new Auth0Client({
@@ -31,7 +37,9 @@ export async function initWebAuth(): Promise<void> {
     },
 
     async logout() {
-      auth0Client!.logout({ logoutParams: { returnTo: window.location.origin + "/login" } });
+      auth0Client!.logout({
+        logoutParams: { returnTo: window.location.origin + "/login" },
+      });
     },
 
     async isAuthenticated() {

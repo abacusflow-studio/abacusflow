@@ -25,13 +25,28 @@ interface DashboardStats {
 
 const STAT_CARDS = [
   { key: "productCount", label: "产品总数", icon: "📋", color: COLORS.primary },
-  { key: "inventoryCount", label: "库存记录", icon: "📦", color: COLORS.success },
-  { key: "purchaseOrderCount", label: "采购单", icon: "🛒", color: COLORS.warning },
+  {
+    key: "inventoryCount",
+    label: "库存记录",
+    icon: "📦",
+    color: COLORS.success,
+  },
+  {
+    key: "purchaseOrderCount",
+    label: "采购单",
+    icon: "🛒",
+    color: COLORS.warning,
+  },
   { key: "saleOrderCount", label: "销售单", icon: "🛍️", color: "#722ed1" },
   { key: "customerCount", label: "客户数", icon: "👤", color: COLORS.info },
   { key: "supplierCount", label: "供应商", icon: "🏪", color: "#eb2f96" },
   { key: "depotCount", label: "储存点", icon: "🏠", color: "#8c8c8c" },
-  { key: "lowStockCount", label: "低库存预警", icon: "⚠️", color: COLORS.danger },
+  {
+    key: "lowStockCount",
+    label: "低库存预警",
+    icon: "⚠️",
+    color: COLORS.danger,
+  },
 ] as const;
 
 export default function DashboardPage() {
@@ -44,19 +59,26 @@ export default function DashboardPage() {
 
   const loadStats = async () => {
     try {
-      const [products, inventories, purchaseOrders, saleOrders, customers, suppliers, depots] =
-        await Promise.all([
-          productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 1 }),
-          inventoryApi.listInventoriesPage({ pageIndex: 1, pageSize: 100 }),
-          transactionApi.listPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
-          transactionApi.listSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
-          customerApi.listCustomersPage({ pageIndex: 1, pageSize: 1 }),
-          supplierApi.listSuppliersPage({ pageIndex: 1, pageSize: 1 }),
-          depotApi.listBasicDepots(),
-        ]);
+      const [
+        products,
+        inventories,
+        purchaseOrders,
+        saleOrders,
+        customers,
+        suppliers,
+        depots,
+      ] = await Promise.all([
+        productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 1 }),
+        inventoryApi.listInventoriesPage({ pageIndex: 1, pageSize: 100 }),
+        transactionApi.listPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
+        transactionApi.listSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
+        customerApi.listCustomersPage({ pageIndex: 1, pageSize: 1 }),
+        supplierApi.listSuppliersPage({ pageIndex: 1, pageSize: 1 }),
+        depotApi.listBasicDepots(),
+      ]);
 
       const lowStock = inventories.content.filter(
-        (i) => i.safetyStock && i.quantity < i.safetyStock
+        (i) => i.safetyStock && i.quantity < i.safetyStock,
       ).length;
 
       setStats({
@@ -88,7 +110,10 @@ export default function DashboardPage() {
               <div key={card.key} className="card flex items-center gap-3">
                 <span className="text-3xl">{card.icon}</span>
                 <div>
-                  <div className="text-2xl font-bold" style={{ color: card.color }}>
+                  <div
+                    className="text-2xl font-bold"
+                    style={{ color: card.color }}
+                  >
                     {stats[card.key]}
                   </div>
                   <div className="text-xs text-gray-400">{card.label}</div>

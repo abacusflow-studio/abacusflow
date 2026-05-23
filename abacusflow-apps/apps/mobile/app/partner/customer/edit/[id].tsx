@@ -44,9 +44,25 @@ export default function EditCustomerScreen() {
     <FormScreen
       title="编辑客户"
       fields={[
-        { key: "name", label: "客户名称", type: "text", placeholder: "请输入客户名称", required: true },
-        { key: "phone", label: "电话", type: "text", placeholder: "请输入电话号码" },
-        { key: "address", label: "地址", type: "text", placeholder: "请输入地址" },
+        {
+          key: "name",
+          label: "客户名称",
+          type: "text",
+          placeholder: "请输入客户名称",
+          required: true,
+        },
+        {
+          key: "phone",
+          label: "电话",
+          type: "text",
+          placeholder: "请输入电话号码",
+        },
+        {
+          key: "address",
+          label: "地址",
+          type: "text",
+          placeholder: "请输入地址",
+        },
       ]}
       initialValues={{
         name: data.name,

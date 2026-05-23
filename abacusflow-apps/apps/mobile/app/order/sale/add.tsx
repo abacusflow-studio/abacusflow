@@ -13,11 +13,17 @@ export default function AddSaleOrderScreen() {
       partnerLabel="客户"
       accentColor="#722ed1"
       loadPartners={async () => {
-        const res = await customerApi.listCustomersPage({ pageIndex: 1, pageSize: 100 });
+        const res = await customerApi.listCustomersPage({
+          pageIndex: 1,
+          pageSize: 100,
+        });
         return res.content;
       }}
       loadProducts={async () => {
-        const res = await productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 100 });
+        const res = await productApi.listBasicProductsPage({
+          pageIndex: 1,
+          pageSize: 100,
+        });
         return res.content;
       }}
       extraFields={
@@ -45,7 +51,13 @@ export default function AddSaleOrderScreen() {
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 14, fontWeight: "600", color: COLORS.text, marginBottom: 8, marginTop: 16 },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginBottom: 8,
+    marginTop: 16,
+  },
   input: {
     backgroundColor: COLORS.bgCard,
     borderWidth: 1,

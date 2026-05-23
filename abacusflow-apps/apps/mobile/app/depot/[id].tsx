@@ -38,7 +38,10 @@ export default function DepotDetailScreen() {
       })}
       fields={(d) => [
         { label: "地址", value: d.location },
-        { label: "容量", value: d.capacity != null ? String(d.capacity) : undefined },
+        {
+          label: "容量",
+          value: d.capacity != null ? String(d.capacity) : undefined,
+        },
       ]}
       onEdit={() => router.push(`/depot/edit/${id}` as any)}
       onDelete={async () => {

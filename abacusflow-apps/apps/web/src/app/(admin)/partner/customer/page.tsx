@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, Modal, type DataTableColumn } from "@abacusflow/ui";
+import {
+  PageHeader,
+  Button,
+  DataTable,
+  Modal,
+  type DataTableColumn,
+} from "@abacusflow/ui";
 import { customerApi, type Customer } from "@abacusflow/core";
 import { usePaginatedList } from "../../../../hooks/use-paginated-list";
 import { useToast } from "../../../../hooks/use-toast";
@@ -12,10 +18,24 @@ export default function CustomersPage() {
   const [showForm, setShowForm] = useState(false);
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
-  } = usePaginatedList<Customer, { name?: string; phone?: string; address?: string }>({
-    fetchFn: (params) => customerApi.listCustomersPage(params as Parameters<typeof customerApi.listCustomersPage>[0]),
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
+  } = usePaginatedList<
+    Customer,
+    { name?: string; phone?: string; address?: string }
+  >({
+    fetchFn: (params) =>
+      customerApi.listCustomersPage(
+        params as Parameters<typeof customerApi.listCustomersPage>[0],
+      ),
     defaultFilters: { name: undefined, phone: undefined, address: undefined },
   });
 
@@ -45,8 +65,19 @@ export default function CustomersPage() {
       title: "操作",
       render: (_, record) => (
         <div className="flex gap-2">
-          <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
-          <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
+          <Button
+            type="link"
+            label="编辑"
+            onClick={() => {
+              setEditItem(record);
+              setShowForm(true);
+            }}
+          />
+          <Button
+            type="link"
+            label="删除"
+            onClick={() => handleDelete(record.id)}
+          />
         </div>
       ),
     },
@@ -56,7 +87,16 @@ export default function CustomersPage() {
     <div>
       <PageHeader
         title="客户管理"
-        extra={<Button type="primary" label="新增客户" onClick={() => { setEditItem(null); setShowForm(true); }} />}
+        extra={
+          <Button
+            type="primary"
+            label="新增客户"
+            onClick={() => {
+              setEditItem(null);
+              setShowForm(true);
+            }}
+          />
+        }
       />
       <div className="card">
         <div className="form-inline mb-4">
@@ -64,7 +104,9 @@ export default function CustomersPage() {
             <label>客户名称</label>
             <input
               value={filters.name ?? ""}
-              onChange={(e) => updateFilter("name", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("name", e.target.value || undefined)
+              }
               placeholder="请输入客户名称"
             />
           </div>
@@ -78,10 +120,19 @@ export default function CustomersPage() {
           data={data}
           rowKey="id"
           loading={loading}
-          pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          pagination={{
+            current: pageIndex,
+            pageSize: 10,
+            total,
+            onChange: setPageIndex,
+          }}
         />
       </div>
-      <Modal open={showForm} title={editItem ? "编辑客户" : "新增客户"} onClose={() => setShowForm(false)}>
+      <Modal
+        open={showForm}
+        title={editItem ? "编辑客户" : "新增客户"}
+        onClose={() => setShowForm(false)}
+      >
         <p className="text-gray-400 text-center py-8">表单开发中...</p>
       </Modal>
     </div>

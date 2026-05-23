@@ -34,8 +34,17 @@ export default function CustomerDetailScreen() {
       fields={(d) => [
         { label: "电话", value: d.phone },
         { label: "地址", value: d.address },
-        { label: "历史订单数", value: d.totalOrders != null ? String(d.totalOrders) : undefined },
-        { label: "历史总金额", value: d.totalAmount != null ? `¥${d.totalAmount.toLocaleString("zh-CN")}` : undefined },
+        {
+          label: "历史订单数",
+          value: d.totalOrders != null ? String(d.totalOrders) : undefined,
+        },
+        {
+          label: "历史总金额",
+          value:
+            d.totalAmount != null
+              ? `¥${d.totalAmount.toLocaleString("zh-CN")}`
+              : undefined,
+        },
       ]}
       onEdit={() => router.push(`/partner/customer/edit/${id}` as any)}
       onDelete={async () => {

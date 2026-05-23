@@ -44,13 +44,17 @@ const TYPE_MAP: Record<ProductType, string> = {
   asset: "资产",
 };
 
-export const PRODUCT_UNITS: { label: string; value: ProductUnit }[] = Object.entries(UNIT_MAP).map(
-  ([value, label]) => ({ label, value: value as ProductUnit })
-);
+export const PRODUCT_UNITS: { label: string; value: ProductUnit }[] =
+  Object.entries(UNIT_MAP).map(([value, label]) => ({
+    label,
+    value: value as ProductUnit,
+  }));
 
-export const PRODUCT_TYPES: { label: string; value: ProductType }[] = Object.entries(TYPE_MAP).map(
-  ([value, label]) => ({ label, value: value as ProductType })
-);
+export const PRODUCT_TYPES: { label: string; value: ProductType }[] =
+  Object.entries(TYPE_MAP).map(([value, label]) => ({
+    label,
+    value: value as ProductType,
+  }));
 
 export function translateProductUnit(input?: ProductUnit): string {
   if (!input) return "";

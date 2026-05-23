@@ -18,7 +18,8 @@ export default function CallbackPage() {
         const auth = getAuthClient();
         await auth.handleRedirectCallback();
 
-        const returnTo = sessionStorage.getItem("auth_return_to") || "/dashboard";
+        const returnTo =
+          sessionStorage.getItem("auth_return_to") || "/dashboard";
         sessionStorage.removeItem("auth_return_to");
         router.replace(returnTo);
       } catch (err) {

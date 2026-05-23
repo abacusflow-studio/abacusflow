@@ -35,11 +35,16 @@ import type {
   AssignDepotRequest,
 } from "./types";
 
-type FetchOptions = RequestInit & { params?: Record<string, string | number | boolean | undefined> };
+type FetchOptions = RequestInit & {
+  params?: Record<string, string | number | boolean | undefined>;
+};
 
 let isRedirectingToLogin = false;
 
-async function request<T>(path: string, options: FetchOptions = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: FetchOptions = {},
+): Promise<T> {
   const config = getConfig();
   const { params, ...init } = options;
 
@@ -74,9 +79,14 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
   const response = await fetch(url, { ...init, headers });
 
   if (!response.ok) {
-    console.error(`[api-client] ${response.status} ${options.method || "GET"} ${path}`);
+    console.error(
+      `[api-client] ${response.status} ${options.method || "GET"} ${path}`,
+    );
     if (response.status === 401) {
-      const body = await response.clone().json().catch(() => null);
+      const body = await response
+        .clone()
+        .json()
+        .catch(() => null);
       console.error("[api-client] 401 body:", body);
       if (!isRedirectingToLogin) {
         isRedirectingToLogin = true;
@@ -88,7 +98,9 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
         }
       }
     }
-    const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: `HTTP ${response.status}` }));
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 
@@ -96,7 +108,10 @@ async function request<T>(path: string, options: FetchOptions = {}): Promise<T> 
   return response.json();
 }
 
-function get<T>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
+function get<T>(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): Promise<T> {
   return request<T>(path, { method: "GET", params });
 }
 
@@ -124,10 +139,18 @@ function del<T>(path: string): Promise<T> {
 
 export const productApi = {
   listBasicProductsPage: (params: ListBasicProductsPageRequest) =>
-    get<PageResponse<BasicProduct>>("/products", params as unknown as Record<string, string | number | boolean | undefined>),
+    get<PageResponse<BasicProduct>>(
+      "/products",
+      params as unknown as Record<
+        string,
+        string | number | boolean | undefined
+      >,
+    ),
   getProduct: (id: number) => get<Product>(`/products/${id}`),
-  createProduct: (data: CreateProductRequest) => post<Product>("/products", data),
-  updateProduct: (data: UpdateProductRequest) => put<Product>(`/products/${data.id}`, data),
+  createProduct: (data: CreateProductRequest) =>
+    post<Product>("/products", data),
+  updateProduct: (data: UpdateProductRequest) =>
+    put<Product>(`/products/${data.id}`, data),
   deleteProduct: (id: number) => del<void>(`/products/${id}`),
 };
 
@@ -135,8 +158,10 @@ export const productApi = {
 
 export const productCategoryApi = {
   listCategories: () => get<ProductCategory[]>("/product-categories"),
-  getCategory: (id: number) => get<ProductCategory>(`/product-categories/${id}`),
-  createCategory: (data: CreateProductCategoryRequest) => post<ProductCategory>("/product-categories", data),
+  getCategory: (id: number) =>
+    get<ProductCategory>(`/product-categories/${id}`),
+  createCategory: (data: CreateProductCategoryRequest) =>
+    post<ProductCategory>("/product-categories", data),
   updateCategory: (data: UpdateProductCategoryRequest) =>
     put<ProductCategory>(`/product-categories/${data.id}`, data),
   deleteCategory: (id: number) => del<void>(`/product-categories/${id}`),
@@ -148,7 +173,8 @@ export const depotApi = {
   listBasicDepots: () => get<BasicDepot[]>("/depots"),
   getDepot: (id: number) => get<Depot>(`/depots/${id}`),
   createDepot: (data: CreateDepotRequest) => post<Depot>("/depots", data),
-  updateDepot: (data: UpdateDepotRequest) => put<Depot>(`/depots/${data.id}`, data),
+  updateDepot: (data: UpdateDepotRequest) =>
+    put<Depot>(`/depots/${data.id}`, data),
   deleteDepot: (id: number) => del<void>(`/depots/${id}`),
 };
 
@@ -156,9 +182,16 @@ export const depotApi = {
 
 export const inventoryApi = {
   listInventoriesPage: (params: ListInventoriesPageRequest) =>
-    get<PageResponse<InventoryUnit>>("/inventories", params as unknown as Record<string, string | number | boolean | undefined>),
+    get<PageResponse<InventoryUnit>>(
+      "/inventories",
+      params as unknown as Record<
+        string,
+        string | number | boolean | undefined
+      >,
+    ),
   getInventory: (id: number) => get<InventoryUnit>(`/inventories/${id}`),
-  assignDepot: (data: AssignDepotRequest) => put<void>(`/inventory-units/${data.inventoryId}/assign-depot`, data),
+  assignDepot: (data: AssignDepotRequest) =>
+    put<void>(`/inventory-units/${data.inventoryId}/assign-depot`, data),
   updateWarningLine: (data: UpdateWarningLineRequest) =>
     put<void>(`/inventories/${data.inventoryId}/adjust-warning-line`, data),
 };
@@ -166,11 +199,25 @@ export const inventoryApi = {
 // ---- Customer API ----
 
 export const customerApi = {
-  listCustomersPage: (params: { pageIndex: number; pageSize: number; name?: string; phone?: string; address?: string }) =>
-    get<PageResponse<Customer>>("/customers", params as unknown as Record<string, string | number | boolean | undefined>),
+  listCustomersPage: (params: {
+    pageIndex: number;
+    pageSize: number;
+    name?: string;
+    phone?: string;
+    address?: string;
+  }) =>
+    get<PageResponse<Customer>>(
+      "/customers",
+      params as unknown as Record<
+        string,
+        string | number | boolean | undefined
+      >,
+    ),
   getCustomer: (id: number) => get<Customer>(`/customers/${id}`),
-  createCustomer: (data: CreateCustomerRequest) => post<Customer>("/customers", data),
-  updateCustomer: (data: UpdateCustomerRequest) => put<Customer>(`/customers/${data.id}`, data),
+  createCustomer: (data: CreateCustomerRequest) =>
+    post<Customer>("/customers", data),
+  updateCustomer: (data: UpdateCustomerRequest) =>
+    put<Customer>(`/customers/${data.id}`, data),
   deleteCustomer: (id: number) => del<void>(`/customers/${id}`),
 };
 
@@ -185,10 +232,18 @@ export const supplierApi = {
     phone?: string;
     address?: string;
   }) =>
-    get<PageResponse<Supplier>>("/suppliers", params as unknown as Record<string, string | number | boolean | undefined>),
+    get<PageResponse<Supplier>>(
+      "/suppliers",
+      params as unknown as Record<
+        string,
+        string | number | boolean | undefined
+      >,
+    ),
   getSupplier: (id: number) => get<Supplier>(`/suppliers/${id}`),
-  createSupplier: (data: CreateSupplierRequest) => post<Supplier>("/suppliers", data),
-  updateSupplier: (data: UpdateSupplierRequest) => put<Supplier>(`/suppliers/${data.id}`, data),
+  createSupplier: (data: CreateSupplierRequest) =>
+    post<Supplier>("/suppliers", data),
+  updateSupplier: (data: UpdateSupplierRequest) =>
+    put<Supplier>(`/suppliers/${data.id}`, data),
   deleteSupplier: (id: number) => del<void>(`/suppliers/${id}`),
 };
 
@@ -196,18 +251,35 @@ export const supplierApi = {
 
 export const transactionApi = {
   listPurchaseOrdersPage: (params: ListOrdersPageRequest) =>
-    get<PageResponse<PurchaseOrder>>("/purchase-orders", params as unknown as Record<string, string | number | boolean | undefined>),
-  getPurchaseOrder: (id: number) => get<PurchaseOrder>(`/purchase-orders/${id}`),
+    get<PageResponse<PurchaseOrder>>(
+      "/purchase-orders",
+      params as unknown as Record<
+        string,
+        string | number | boolean | undefined
+      >,
+    ),
+  getPurchaseOrder: (id: number) =>
+    get<PurchaseOrder>(`/purchase-orders/${id}`),
   createPurchaseOrder: (data: CreatePurchaseOrderRequest) =>
     post<PurchaseOrder>("/purchase-orders", data),
-  completePurchaseOrder: (id: number) => put<void>(`/purchase-orders/${id}/complete`),
-  cancelPurchaseOrder: (id: number) => put<void>(`/purchase-orders/${id}/cancel`),
-  reversePurchaseOrder: (id: number) => put<void>(`/purchase-orders/${id}/reverse`),
+  completePurchaseOrder: (id: number) =>
+    put<void>(`/purchase-orders/${id}/complete`),
+  cancelPurchaseOrder: (id: number) =>
+    put<void>(`/purchase-orders/${id}/cancel`),
+  reversePurchaseOrder: (id: number) =>
+    put<void>(`/purchase-orders/${id}/reverse`),
 
   listSaleOrdersPage: (params: ListOrdersPageRequest) =>
-    get<PageResponse<SaleOrder>>("/sale-orders", params as unknown as Record<string, string | number | boolean | undefined>),
+    get<PageResponse<SaleOrder>>(
+      "/sale-orders",
+      params as unknown as Record<
+        string,
+        string | number | boolean | undefined
+      >,
+    ),
   getSaleOrder: (id: number) => get<SaleOrder>(`/sale-orders/${id}`),
-  createSaleOrder: (data: CreateSaleOrderRequest) => post<SaleOrder>("/sale-orders", data),
+  createSaleOrder: (data: CreateSaleOrderRequest) =>
+    post<SaleOrder>("/sale-orders", data),
   completeSaleOrder: (id: number) => put<void>(`/sale-orders/${id}/complete`),
   cancelSaleOrder: (id: number) => put<void>(`/sale-orders/${id}/cancel`),
   reverseSaleOrder: (id: number) => put<void>(`/sale-orders/${id}/reverse`),
@@ -216,8 +288,18 @@ export const transactionApi = {
 // ---- User API ----
 
 export const userApi = {
-  listUsersPage: (params: { pageIndex: number; pageSize: number; name?: string }) =>
-    get<PageResponse<User>>("/users", params as unknown as Record<string, string | number | boolean | undefined>),
+  listUsersPage: (params: {
+    pageIndex: number;
+    pageSize: number;
+    name?: string;
+  }) =>
+    get<PageResponse<User>>(
+      "/users",
+      params as unknown as Record<
+        string,
+        string | number | boolean | undefined
+      >,
+    ),
   getUser: (id: number) => get<User>(`/users/${id}`),
   createUser: (data: CreateUserRequest) => post<User>("/users", data),
   updateUser: (data: UpdateUserRequest) => put<User>(`/users/${data.id}`, data),

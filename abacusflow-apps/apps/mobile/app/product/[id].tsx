@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { productApi, type Product } from "@abacusflow/core";
-import { translateProductType, translateProductUnit, COLORS } from "@abacusflow/utils";
+import {
+  translateProductType,
+  translateProductUnit,
+  COLORS,
+} from "@abacusflow/utils";
 import { DetailScreen } from "@/components/detail-screen";
 
 export default function ProductDetailScreen() {

@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, Modal, type DataTableColumn } from "@abacusflow/ui";
+import {
+  PageHeader,
+  Button,
+  DataTable,
+  Modal,
+  type DataTableColumn,
+} from "@abacusflow/ui";
 import { userApi, type User } from "@abacusflow/core";
 import { usePaginatedList } from "../../../hooks/use-paginated-list";
 import { useToast } from "../../../hooks/use-toast";
@@ -12,10 +18,21 @@ export default function UsersPage() {
   const [showForm, setShowForm] = useState(false);
 
   const {
-    data, loading, pageIndex, total, filters,
-    updateFilter, setPageIndex, refresh, handleSearch, handleReset,
+    data,
+    loading,
+    pageIndex,
+    total,
+    filters,
+    updateFilter,
+    setPageIndex,
+    refresh,
+    handleSearch,
+    handleReset,
   } = usePaginatedList<User, { name?: string }>({
-    fetchFn: (params) => userApi.listUsersPage(params as Parameters<typeof userApi.listUsersPage>[0]),
+    fetchFn: (params) =>
+      userApi.listUsersPage(
+        params as Parameters<typeof userApi.listUsersPage>[0],
+      ),
     defaultFilters: { name: undefined },
   });
 
@@ -42,8 +59,19 @@ export default function UsersPage() {
         <div className="flex gap-2">
           {record.name !== "admin" && (
             <>
-              <Button type="link" label="编辑" onClick={() => { setEditItem(record); setShowForm(true); }} />
-              <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
+              <Button
+                type="link"
+                label="编辑"
+                onClick={() => {
+                  setEditItem(record);
+                  setShowForm(true);
+                }}
+              />
+              <Button
+                type="link"
+                label="删除"
+                onClick={() => handleDelete(record.id)}
+              />
             </>
           )}
         </div>
@@ -55,7 +83,16 @@ export default function UsersPage() {
     <div>
       <PageHeader
         title="用户管理"
-        extra={<Button type="primary" label="新增用户" onClick={() => { setEditItem(null); setShowForm(true); }} />}
+        extra={
+          <Button
+            type="primary"
+            label="新增用户"
+            onClick={() => {
+              setEditItem(null);
+              setShowForm(true);
+            }}
+          />
+        }
       />
       <div className="card">
         <div className="form-inline mb-4">
@@ -63,7 +100,9 @@ export default function UsersPage() {
             <label>用户名</label>
             <input
               value={filters.name ?? ""}
-              onChange={(e) => updateFilter("name", e.target.value || undefined)}
+              onChange={(e) =>
+                updateFilter("name", e.target.value || undefined)
+              }
               placeholder="请输入用户名"
             />
           </div>
@@ -77,10 +116,19 @@ export default function UsersPage() {
           data={data}
           rowKey="id"
           loading={loading}
-          pagination={{ current: pageIndex, pageSize: 10, total, onChange: setPageIndex }}
+          pagination={{
+            current: pageIndex,
+            pageSize: 10,
+            total,
+            onChange: setPageIndex,
+          }}
         />
       </div>
-      <Modal open={showForm} title={editItem ? "编辑用户" : "新增用户"} onClose={() => setShowForm(false)}>
+      <Modal
+        open={showForm}
+        title={editItem ? "编辑用户" : "新增用户"}
+        onClose={() => setShowForm(false)}
+      >
         <p className="text-gray-400 text-center py-8">表单开发中...</p>
       </Modal>
     </div>

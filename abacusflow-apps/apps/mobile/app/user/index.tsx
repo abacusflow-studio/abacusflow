@@ -11,24 +11,29 @@ export default function UserListScreen() {
   const [pageIndex, setPageIndex] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const loadData = useCallback(async (page = pageIndex) => {
-    setLoading(true);
-    try {
-      const res = await userApi.listUsersPage({
-        pageIndex: page,
-        pageSize: 20,
-        name: searchName || undefined,
-      });
-      setData(res.content);
-      setTotal(res.totalElements);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [pageIndex, searchName]);
+  const loadData = useCallback(
+    async (page = pageIndex) => {
+      setLoading(true);
+      try {
+        const res = await userApi.listUsersPage({
+          pageIndex: page,
+          pageSize: 20,
+          name: searchName || undefined,
+        });
+        setData(res.content);
+        setTotal(res.totalElements);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pageIndex, searchName],
+  );
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSearch = () => {
     setPageIndex(1);
@@ -68,10 +73,15 @@ export default function UserListScreen() {
         )}
       </View>
       {item.nick && <Text style={styles.cardDetail}>昵称: {item.nick}</Text>}
-      {item.age != null && <Text style={styles.cardDetail}>年龄: {item.age}</Text>}
+      {item.age != null && (
+        <Text style={styles.cardDetail}>年龄: {item.age}</Text>
+      )}
       {item.sex && <Text style={styles.cardDetail}>性别: {item.sex}</Text>}
       {item.name !== "admin" && (
-        <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id, item.name)}>
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          onPress={() => handleDelete(item.id, item.name)}
+        >
           <Text style={styles.deleteBtnText}>删除</Text>
         </TouchableOpacity>
       )}
@@ -86,7 +96,10 @@ export default function UserListScreen() {
       searchValue={searchName}
       onSearchChange={setSearchName}
       onSearch={handleSearch}
-      onRefresh={() => { setPageIndex(1); loadData(1); }}
+      onRefresh={() => {
+        setPageIndex(1);
+        loadData(1);
+      }}
       onLoadMore={() => setPageIndex((p) => p + 1)}
       hasMore={total > pageIndex * 20}
       renderItem={renderItem}
@@ -97,9 +110,19 @@ export default function UserListScreen() {
 
 const styles = StyleSheet.create({
   card: { paddingVertical: 4 },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
-  adminBadge: { backgroundColor: COLORS.primaryLight, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  adminBadge: {
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
   adminBadgeText: { fontSize: 12, color: COLORS.primary, fontWeight: "500" },
   cardDetail: { fontSize: 13, color: "#666", marginTop: 2 },
   deleteBtn: {

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import {
-  StyleSheet, ScrollView, View, Text, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert,
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -45,9 +51,15 @@ export function OrderFormScreen({
   const router = useRouter();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [products, setProducts] = useState<BasicProduct[]>([]);
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | undefined>();
-  const [orderDate, setOrderDate] = useState(dateToFormattedString(new Date().toISOString()));
-  const [items, setItems] = useState<ItemRow[]>([{ productId: undefined, quantity: "", unitPrice: "" }]);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<
+    number | undefined
+  >();
+  const [orderDate, setOrderDate] = useState(
+    dateToFormattedString(new Date().toISOString()),
+  );
+  const [items, setItems] = useState<ItemRow[]>([
+    { productId: undefined, quantity: "", unitPrice: "" },
+  ]);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +69,10 @@ export function OrderFormScreen({
 
   const loadData = async () => {
     try {
-      const [partnerRes, productRes] = await Promise.all([loadPartners(), loadProducts()]);
+      const [partnerRes, productRes] = await Promise.all([
+        loadPartners(),
+        loadProducts(),
+      ]);
       setPartners(partnerRes);
       setProducts(productRes);
     } catch (err) {
@@ -67,12 +82,21 @@ export function OrderFormScreen({
     }
   };
 
-  const updateItem = (index: number, field: keyof ItemRow, value: string | number | undefined) => {
-    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+  const updateItem = (
+    index: number,
+    field: keyof ItemRow,
+    value: string | number | undefined,
+  ) => {
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
   };
 
   const addItem = () => {
-    setItems((prev) => [...prev, { productId: undefined, quantity: "", unitPrice: "" }]);
+    setItems((prev) => [
+      ...prev,
+      { productId: undefined, quantity: "", unitPrice: "" },
+    ]);
   };
 
   const removeItem = (index: number) => {
@@ -85,7 +109,9 @@ export function OrderFormScreen({
       Alert.alert("提示", `请选择${partnerLabel}`);
       return;
     }
-    const validItems = items.filter((item) => item.productId && item.quantity && item.unitPrice);
+    const validItems = items.filter(
+      (item) => item.productId && item.quantity && item.unitPrice,
+    );
     if (validItems.length === 0) {
       Alert.alert("提示", "请至少添加一个订单项");
       return;
@@ -122,14 +148,32 @@ export function OrderFormScreen({
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.label}>{partnerLabel} *</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.optionScroll}
+        >
           {partners.map((p) => (
             <TouchableOpacity
               key={p.id}
-              style={[styles.optionChip, selectedPartnerId === p.id && { borderColor: accentColor, backgroundColor: accentColor + "15" }]}
+              style={[
+                styles.optionChip,
+                selectedPartnerId === p.id && {
+                  borderColor: accentColor,
+                  backgroundColor: accentColor + "15",
+                },
+              ]}
               onPress={() => setSelectedPartnerId(p.id)}
             >
-              <Text style={[styles.optionChipText, selectedPartnerId === p.id && { color: accentColor, fontWeight: "600" }]}>
+              <Text
+                style={[
+                  styles.optionChipText,
+                  selectedPartnerId === p.id && {
+                    color: accentColor,
+                    fontWeight: "600",
+                  },
+                ]}
+              >
                 {p.name}
               </Text>
             </TouchableOpacity>
@@ -137,7 +181,12 @@ export function OrderFormScreen({
         </ScrollView>
 
         <Text style={styles.label}>订单日期</Text>
-        <TextInput style={styles.input} value={orderDate} onChangeText={setOrderDate} placeholder="YYYY-MM-DD" />
+        <TextInput
+          style={styles.input}
+          value={orderDate}
+          onChangeText={setOrderDate}
+          placeholder="YYYY-MM-DD"
+        />
 
         {extraFields}
 
@@ -158,10 +207,24 @@ export function OrderFormScreen({
               {products.map((p) => (
                 <TouchableOpacity
                   key={p.id}
-                  style={[styles.optionChip, item.productId === p.id && { borderColor: accentColor, backgroundColor: accentColor + "15" }]}
+                  style={[
+                    styles.optionChip,
+                    item.productId === p.id && {
+                      borderColor: accentColor,
+                      backgroundColor: accentColor + "15",
+                    },
+                  ]}
                   onPress={() => updateItem(idx, "productId", p.id)}
                 >
-                  <Text style={[styles.optionChipText, item.productId === p.id && { color: accentColor, fontWeight: "600" }]}>
+                  <Text
+                    style={[
+                      styles.optionChipText,
+                      item.productId === p.id && {
+                        color: accentColor,
+                        fontWeight: "600",
+                      },
+                    ]}
+                  >
                     {p.name}
                   </Text>
                 </TouchableOpacity>
@@ -171,26 +234,53 @@ export function OrderFormScreen({
             <View style={styles.itemRow}>
               <View style={styles.itemField}>
                 <Text style={styles.fieldLabel}>数量</Text>
-                <TextInput style={styles.input} value={item.quantity} onChangeText={(v) => updateItem(idx, "quantity", v)} keyboardType="numeric" placeholder="0" />
+                <TextInput
+                  style={styles.input}
+                  value={item.quantity}
+                  onChangeText={(v) => updateItem(idx, "quantity", v)}
+                  keyboardType="numeric"
+                  placeholder="0"
+                />
               </View>
               <View style={styles.itemField}>
                 <Text style={styles.fieldLabel}>单价</Text>
-                <TextInput style={styles.input} value={item.unitPrice} onChangeText={(v) => updateItem(idx, "unitPrice", v)} keyboardType="numeric" placeholder="0.00" />
+                <TextInput
+                  style={styles.input}
+                  value={item.unitPrice}
+                  onChangeText={(v) => updateItem(idx, "unitPrice", v)}
+                  keyboardType="numeric"
+                  placeholder="0.00"
+                />
               </View>
             </View>
           </View>
         ))}
 
-        <TouchableOpacity style={[styles.addItemBtn, { borderColor: accentColor }]} onPress={addItem}>
-          <Text style={[styles.addItemBtnText, { color: accentColor }]}>+ 添加商品</Text>
+        <TouchableOpacity
+          style={[styles.addItemBtn, { borderColor: accentColor }]}
+          onPress={addItem}
+        >
+          <Text style={[styles.addItemBtnText, { color: accentColor }]}>
+            + 添加商品
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.submitBtn, { backgroundColor: accentColor }, submitting && styles.submitBtnDisabled]}
+          style={[
+            styles.submitBtn,
+            { backgroundColor: accentColor },
+            submitting && styles.submitBtnDisabled,
+          ]}
           onPress={handleSubmit}
           disabled={submitting}
         >
-          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitBtnText}>创建{orderType === "purchase" ? "采购" : "销售"}单</Text>}
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitBtnText}>
+              创建{orderType === "purchase" ? "采购" : "销售"}单
+            </Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -201,8 +291,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   content: { padding: 16 },
-  label: { fontSize: 14, fontWeight: "600", color: COLORS.text, marginBottom: 8, marginTop: 16 },
-  fieldLabel: { fontSize: 12, color: COLORS.textTertiary, marginBottom: 4, marginTop: 8 },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    color: COLORS.textTertiary,
+    marginBottom: 4,
+    marginTop: 8,
+  },
   input: {
     backgroundColor: COLORS.bgCard,
     borderWidth: 1,
@@ -232,7 +333,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  itemHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  itemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   itemTitle: { fontSize: 14, fontWeight: "600", color: COLORS.text },
   removeItem: { fontSize: 13, color: COLORS.danger },
   itemRow: { flexDirection: "row", gap: 12 },

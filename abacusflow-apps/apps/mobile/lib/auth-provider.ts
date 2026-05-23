@@ -1,4 +1,8 @@
-import { setAuthClient, type AuthClient, type UserProfile } from "@abacusflow/core";
+import {
+  setAuthClient,
+  type AuthClient,
+  type UserProfile,
+} from "@abacusflow/core";
 
 let currentToken: string | null = null;
 let currentUser: UserProfile | null = null;

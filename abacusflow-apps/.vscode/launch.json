@@ -4,38 +4,38 @@
   // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-        {
+    {
       "type": "node-terminal",
       "request": "launch",
-      "name": "Web-Dev",                // web 前端开发环境
+      "name": "Web-Dev", // web 前端开发环境
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/apps/web"
     },
     {
       "type": "node-terminal",
       "request": "launch",
-      "name": "Mobile-iOS-Dev",         // 移动端 iOS 开发环境
+      "name": "Mobile-iOS-Dev", // 移动端 iOS 开发环境
       "command": "npm run ios",
       "cwd": "${workspaceFolder}/apps/mobile"
     },
     {
       "type": "node-terminal",
       "request": "launch",
-      "name": "Mobile-Android-Dev",     // 移动端 Android 开发环境
+      "name": "Mobile-Android-Dev", // 移动端 Android 开发环境
       "command": "npm run android",
       "cwd": "${workspaceFolder}/apps/mobile"
     },
     {
       "type": "node-terminal",
       "request": "launch",
-      "name": "Mobile-Web-Dev",         // 移动端 web (React Native Web) 开发环境
+      "name": "Mobile-Web-Dev", // 移动端 web (React Native Web) 开发环境
       "command": "npm run web",
       "cwd": "${workspaceFolder}/apps/mobile"
     },
     {
       "type": "node-terminal",
       "request": "launch",
-      "name": "Desktop-Web-Dev",         // 移动端 web (React Native Web) 开发环境
+      "name": "Desktop-Web-Dev", // 移动端 web (React Native Web) 开发环境
       "command": "npm run start",
       "cwd": "${workspaceFolder}/apps/desktop"
     }

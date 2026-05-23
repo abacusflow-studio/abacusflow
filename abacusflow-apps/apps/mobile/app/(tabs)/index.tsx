@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
@@ -34,7 +41,15 @@ export default function HomeScreen() {
 
   const loadStats = async () => {
     try {
-      const [products, inventories, purchaseOrders, saleOrders, customers, suppliers, depots] = await Promise.all([
+      const [
+        products,
+        inventories,
+        purchaseOrders,
+        saleOrders,
+        customers,
+        suppliers,
+        depots,
+      ] = await Promise.all([
         productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 1 }),
         inventoryApi.listInventoriesPage({ pageIndex: 1, pageSize: 100 }),
         transactionApi.listPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
@@ -45,7 +60,7 @@ export default function HomeScreen() {
       ]);
 
       const lowStock = inventories.content.filter(
-        (i) => i.safetyStock && i.quantity < i.safetyStock
+        (i) => i.safetyStock && i.quantity < i.safetyStock,
       ).length;
 
       setStats({
@@ -66,10 +81,30 @@ export default function HomeScreen() {
   };
 
   const QUICK_ACTIONS = [
-    { title: "产品管理", icon: "📋", href: "/(tabs)/products", color: "#1677ff" },
-    { title: "库存查看", icon: "📦", href: "/(tabs)/inventory", color: "#52c41a" },
-    { title: "新建采购", icon: "🛒", href: "/order/purchase/add" as any, color: "#fa8c16" },
-    { title: "新建销售", icon: "🛍️", href: "/order/sale/add" as any, color: "#722ed1" },
+    {
+      title: "产品管理",
+      icon: "📋",
+      href: "/(tabs)/products",
+      color: "#1677ff",
+    },
+    {
+      title: "库存查看",
+      icon: "📦",
+      href: "/(tabs)/inventory",
+      color: "#52c41a",
+    },
+    {
+      title: "新建采购",
+      icon: "🛒",
+      href: "/order/purchase/add" as any,
+      color: "#fa8c16",
+    },
+    {
+      title: "新建销售",
+      icon: "🛍️",
+      href: "/order/sale/add" as any,
+      color: "#722ed1",
+    },
   ];
 
   return (
@@ -92,13 +127,48 @@ export default function HomeScreen() {
           <>
             {/* Stats Grid */}
             <View style={styles.statsGrid}>
-              <StatCard title="产品总数" value={stats.productCount} icon="📋" color="#1677ff" />
-              <StatCard title="库存记录" value={stats.inventoryCount} icon="📦" color="#52c41a" />
-              <StatCard title="采购单" value={stats.purchaseOrderCount} icon="🛒" color="#fa8c16" />
-              <StatCard title="销售单" value={stats.saleOrderCount} icon="🛍️" color="#722ed1" />
-              <StatCard title="客户数" value={stats.customerCount} icon="👤" color="#13c2c2" />
-              <StatCard title="供应商" value={stats.supplierCount} icon="🏪" color="#eb2f96" />
-              <StatCard title="储存点" value={stats.depotCount} icon="🏠" color="#8c8c8c" />
+              <StatCard
+                title="产品总数"
+                value={stats.productCount}
+                icon="📋"
+                color="#1677ff"
+              />
+              <StatCard
+                title="库存记录"
+                value={stats.inventoryCount}
+                icon="📦"
+                color="#52c41a"
+              />
+              <StatCard
+                title="采购单"
+                value={stats.purchaseOrderCount}
+                icon="🛒"
+                color="#fa8c16"
+              />
+              <StatCard
+                title="销售单"
+                value={stats.saleOrderCount}
+                icon="🛍️"
+                color="#722ed1"
+              />
+              <StatCard
+                title="客户数"
+                value={stats.customerCount}
+                icon="👤"
+                color="#13c2c2"
+              />
+              <StatCard
+                title="供应商"
+                value={stats.supplierCount}
+                icon="🏪"
+                color="#eb2f96"
+              />
+              <StatCard
+                title="储存点"
+                value={stats.depotCount}
+                icon="🏠"
+                color="#8c8c8c"
+              />
               <StatCard
                 title="低库存预警"
                 value={stats.lowStockCount}
@@ -132,7 +202,17 @@ export default function HomeScreen() {
   );
 }
 
-function StatCard({ title, value, icon, color }: { title: string; value: number; icon: string; color: string }) {
+function StatCard({
+  title,
+  value,
+  icon,
+  color,
+}: {
+  title: string;
+  value: number;
+  icon: string;
+  color: string;
+}) {
   return (
     <View style={styles.statCard}>
       <Text style={styles.statIcon}>{icon}</Text>
@@ -176,7 +256,12 @@ const styles = StyleSheet.create({
   statIcon: { fontSize: 24, marginBottom: 8 },
   statValue: { fontSize: 24, fontWeight: "700" },
   statTitle: { fontSize: 12, color: "#999", marginTop: 4 },
-  sectionTitle: { fontSize: 16, fontWeight: "600", color: "#333", marginBottom: 12 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+  },
   actionsGrid: { gap: 12, marginBottom: 24 },
   actionCard: {
     backgroundColor: "#fff",

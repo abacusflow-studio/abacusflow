@@ -34,7 +34,15 @@ export interface Product {
 
 export type BasicProduct = Pick<
   Product,
-  "id" | "name" | "specification" | "type" | "categoryName" | "barcode" | "unit" | "enabled" | "note"
+  | "id"
+  | "name"
+  | "specification"
+  | "type"
+  | "categoryName"
+  | "barcode"
+  | "unit"
+  | "enabled"
+  | "note"
 >;
 
 export interface ListBasicProductsPageRequest extends PageRequest {
@@ -75,7 +83,8 @@ export interface CreateProductCategoryRequest {
   description?: string;
 }
 
-export interface UpdateProductCategoryRequest extends CreateProductCategoryRequest {
+export interface UpdateProductCategoryRequest
+  extends CreateProductCategoryRequest {
   id: number;
 }
 

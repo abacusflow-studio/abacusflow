@@ -61,9 +61,12 @@ export function usePaginatedList<T, F extends object>({
     fetchData();
   }, [fetchData]);
 
-  const updateFilter = useCallback((key: keyof F, value: F[keyof F] | undefined) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updateFilter = useCallback(
+    (key: keyof F, value: F[keyof F] | undefined) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const handleSearch = useCallback(() => {
     setPageIndex(1);

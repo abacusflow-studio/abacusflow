@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader, Button, DataTable, type DataTableColumn } from "@abacusflow/ui";
+import {
+  PageHeader,
+  Button,
+  DataTable,
+  type DataTableColumn,
+} from "@abacusflow/ui";
 import { depotApi, type BasicDepot } from "@abacusflow/core";
 
 export default function DepotsPage() {
@@ -54,7 +59,11 @@ export default function DepotsPage() {
       render: (_, record) => (
         <div style={{ display: "flex", gap: 8 }}>
           <Button type="link" label="编辑" onClick={() => {}} />
-          <Button type="link" label="删除" onClick={() => handleDelete(record.id)} />
+          <Button
+            type="link"
+            label="删除"
+            onClick={() => handleDelete(record.id)}
+          />
         </div>
       ),
     },

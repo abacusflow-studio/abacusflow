@@ -41,7 +41,7 @@ export function useToastState() {
         setTimeout(() => removeToast(id), duration);
       }
     },
-    [removeToast]
+    [removeToast],
   );
 
   return { toasts, addToast, removeToast };

@@ -96,7 +96,9 @@ export function DetailScreen<T>({
         <View style={styles.header}>
           <Text style={styles.title}>{title(data)}</Text>
           {badgeInfo && (
-            <View style={[styles.badge, { backgroundColor: badgeInfo.bgColor }]}>
+            <View
+              style={[styles.badge, { backgroundColor: badgeInfo.bgColor }]}
+            >
               <Text style={[styles.badgeText, { color: badgeInfo.color }]}>
                 {badgeInfo.text}
               </Text>
@@ -109,12 +111,15 @@ export function DetailScreen<T>({
             field.value != null && field.value !== "" ? (
               <View
                 key={idx}
-                style={[styles.infoRow, idx < infoFields.length - 1 && styles.infoBorder]}
+                style={[
+                  styles.infoRow,
+                  idx < infoFields.length - 1 && styles.infoBorder,
+                ]}
               >
                 <Text style={styles.infoLabel}>{field.label}</Text>
                 <Text style={styles.infoValue}>{String(field.value)}</Text>
               </View>
-            ) : null
+            ) : null,
           )}
         </View>
 
@@ -123,12 +128,18 @@ export function DetailScreen<T>({
         {(onEdit || onDelete) && (
           <View style={styles.actions}>
             {onEdit && (
-              <TouchableOpacity style={[styles.actionBtn, styles.editBtn]} onPress={onEdit}>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.editBtn]}
+                onPress={onEdit}
+              >
                 <Text style={styles.editBtnText}>{editLabel}</Text>
               </TouchableOpacity>
             )}
             {onDelete && (
-              <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} onPress={handleDelete}>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.deleteBtn]}
+                onPress={handleDelete}
+              >
                 <Text style={styles.deleteBtnText}>{deleteLabel}</Text>
               </TouchableOpacity>
             )}
@@ -142,7 +153,12 @@ export function DetailScreen<T>({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: { fontSize: 15, color: COLORS.textTertiary, textAlign: "center", marginBottom: 16 },
+  errorText: {
+    fontSize: 15,
+    color: COLORS.textTertiary,
+    textAlign: "center",
+    marginBottom: 16,
+  },
   retryBtn: {
     paddingHorizontal: 24,
     paddingVertical: 10,
@@ -151,7 +167,12 @@ const styles = StyleSheet.create({
   },
   retryBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   content: { padding: 16 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 12 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    gap: 12,
+  },
   title: { fontSize: 22, fontWeight: "700", color: COLORS.text, flex: 1 },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
   badgeText: { fontSize: 13, fontWeight: "600" },
@@ -166,13 +187,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
   },
-  infoBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border },
+  infoBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.border,
+  },
   infoLabel: { fontSize: 14, color: COLORS.textTertiary },
   infoValue: { fontSize: 14, color: COLORS.text, fontWeight: "500" },
   actions: { flexDirection: "row", gap: 12, marginTop: 24 },
-  actionBtn: { flex: 1, paddingVertical: 14, borderRadius: 8, alignItems: "center" },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+  },
   editBtn: { backgroundColor: COLORS.primary },
   editBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  deleteBtn: { backgroundColor: COLORS.dangerLight, borderWidth: 1, borderColor: "#ffccc7" },
+  deleteBtn: {
+    backgroundColor: COLORS.dangerLight,
+    borderWidth: 1,
+    borderColor: "#ffccc7",
+  },
   deleteBtnText: { color: COLORS.danger, fontSize: 15, fontWeight: "600" },
 });

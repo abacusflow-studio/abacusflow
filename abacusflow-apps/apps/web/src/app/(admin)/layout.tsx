@@ -28,9 +28,7 @@ const NAV_ITEMS: NavItem[] = [
     key: "/product",
     label: "产品中心",
     icon: "📋",
-    children: [
-      { key: "/products", label: "产品管理", icon: "📥" },
-    ],
+    children: [{ key: "/products", label: "产品管理", icon: "📥" }],
   },
   {
     key: "/partner",
@@ -44,7 +42,15 @@ const NAV_ITEMS: NavItem[] = [
   { key: "/depots", label: "储存点管理", icon: "🏠" },
 ];
 
-function MenuItem({ item, pathname, collapsed }: { item: NavItem; pathname: string; collapsed: boolean }) {
+function MenuItem({
+  item,
+  pathname,
+  collapsed,
+}: {
+  item: NavItem;
+  pathname: string;
+  collapsed: boolean;
+}) {
   const isActive = pathname === item.key || pathname.startsWith(item.key + "/");
   const [open, setOpen] = useState(isActive);
 
@@ -57,12 +63,19 @@ function MenuItem({ item, pathname, collapsed }: { item: NavItem; pathname: stri
         >
           <span>{item.icon}</span>
           {!collapsed && <span className="flex-1">{item.label}</span>}
-          {!collapsed && <span className="text-[10px]">{open ? "▼" : "▶"}</span>}
+          {!collapsed && (
+            <span className="text-[10px]">{open ? "▼" : "▶"}</span>
+          )}
         </div>
         {open && !collapsed && (
           <div className="pl-4">
             {item.children.map((child) => (
-              <MenuItem key={child.key} item={child} pathname={pathname} collapsed={collapsed} />
+              <MenuItem
+                key={child.key}
+                item={child}
+                pathname={pathname}
+                collapsed={collapsed}
+              />
             ))}
           </div>
         )}
@@ -85,7 +98,11 @@ function MenuItem({ item, pathname, collapsed }: { item: NavItem; pathname: stri
   );
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? "w-20" : "w-50";
@@ -93,16 +110,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 bottom-0 ${sidebarWidth} bg-[#ebedef] overflow-y-auto transition-all z-[101] flex flex-col`}>
+      <aside
+        className={`fixed top-0 left-0 bottom-0 ${sidebarWidth} bg-[#ebedef] overflow-y-auto transition-all z-[101] flex flex-col`}
+      >
         <div className="h-12 mx-4 my-3 flex items-center gap-2 px-3">
           <span className="text-2xl">🧮</span>
           {!collapsed && (
-            <span className="text-lg font-semibold text-gray-800 whitespace-nowrap">小算盘</span>
+            <span className="text-lg font-semibold text-gray-800 whitespace-nowrap">
+              小算盘
+            </span>
           )}
         </div>
         <nav className="flex-1 pt-2">
           {NAV_ITEMS.map((item) => (
-            <MenuItem key={item.key} item={item} pathname={pathname} collapsed={collapsed} />
+            <MenuItem
+              key={item.key}
+              item={item}
+              pathname={pathname}
+              collapsed={collapsed}
+            />
           ))}
         </nav>
       </aside>
@@ -110,8 +136,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main content */}
       <div className={`flex-1 ${collapsed ? "ml-20" : "ml-50"} transition-all`}>
         {/* Header */}
-        <header className="fixed top-0 right-0 h-16 bg-[#fdfdfc] flex justify-between items-center px-6 z-[100] border-b border-gray-100" style={{ left: collapsed ? 80 : 200 }}>
-          <div className="cursor-pointer text-lg" onClick={() => setCollapsed(!collapsed)}>
+        <header
+          className="fixed top-0 right-0 h-16 bg-[#fdfdfc] flex justify-between items-center px-6 z-[100] border-b border-gray-100"
+          style={{ left: collapsed ? 80 : 200 }}
+        >
+          <div
+            className="cursor-pointer text-lg"
+            onClick={() => setCollapsed(!collapsed)}
+          >
             {collapsed ? "☰" : "✕"}
           </div>
           <div className="flex items-center gap-4 text-sm">

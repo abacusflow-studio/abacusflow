@@ -44,9 +44,25 @@ export default function EditDepotScreen() {
     <FormScreen
       title="编辑储存点"
       fields={[
-        { key: "name", label: "储存点名称", type: "text", placeholder: "请输入名称", required: true },
-        { key: "location", label: "地址", type: "text", placeholder: "请输入地址" },
-        { key: "capacity", label: "容量", type: "number", placeholder: "请输入容量" },
+        {
+          key: "name",
+          label: "储存点名称",
+          type: "text",
+          placeholder: "请输入名称",
+          required: true,
+        },
+        {
+          key: "location",
+          label: "地址",
+          type: "text",
+          placeholder: "请输入地址",
+        },
+        {
+          key: "capacity",
+          label: "容量",
+          type: "number",
+          placeholder: "请输入容量",
+        },
         { key: "enabled", label: "启用状态", type: "switch" },
       ]}
       initialValues={{

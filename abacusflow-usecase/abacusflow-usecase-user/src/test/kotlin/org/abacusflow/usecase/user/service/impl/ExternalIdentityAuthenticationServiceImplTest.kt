@@ -9,8 +9,8 @@ import org.abacusflow.user.User
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

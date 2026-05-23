@@ -1,9 +1,26 @@
 import { useEffect, useState, useCallback } from "react";
-import { FlatList, StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, TextInput } from "react-native";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { transactionApi, type PurchaseOrder, type SaleOrder } from "@abacusflow/core";
-import { translateOrderStatus, dateToFormattedString, STATUS_COLORS, COLORS } from "@abacusflow/utils";
+import {
+  transactionApi,
+  type PurchaseOrder,
+  type SaleOrder,
+} from "@abacusflow/core";
+import {
+  translateOrderStatus,
+  dateToFormattedString,
+  STATUS_COLORS,
+  COLORS,
+} from "@abacusflow/utils";
 
 type OrderItem = (PurchaseOrder | SaleOrder) & { _type: "purchase" | "sale" };
 
@@ -16,15 +33,25 @@ export default function OrdersScreen() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { pageIndex: 1, pageSize: 25, orderNo: searchOrderNo || undefined };
+      const params = {
+        pageIndex: 1,
+        pageSize: 25,
+        orderNo: searchOrderNo || undefined,
+      };
       const [purchaseRes, saleRes] = await Promise.all([
         transactionApi.listPurchaseOrdersPage(params),
         transactionApi.listSaleOrdersPage(params),
       ]);
       const items: OrderItem[] = [
-        ...purchaseRes.content.map((o) => ({ ...o, _type: "purchase" as const })),
+        ...purchaseRes.content.map((o) => ({
+          ...o,
+          _type: "purchase" as const,
+        })),
         ...saleRes.content.map((o) => ({ ...o, _type: "sale" as const })),
-      ].sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+      ].sort(
+        (a, b) =>
+          new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime(),
+      );
       setData(items);
     } catch (err) {
       console.error(err);
@@ -33,7 +60,9 @@ export default function OrdersScreen() {
     }
   }, [searchOrderNo]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const renderItem = ({ item }: { item: OrderItem }) => {
     const statusColor = STATUS_COLORS[item.status]?.color || "#999";
@@ -41,7 +70,13 @@ export default function OrdersScreen() {
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => router.push((item._type === "purchase" ? `/order/purchase/${item.id}` : `/order/sale/${item.id}`) as any)}
+        onPress={() =>
+          router.push(
+            (item._type === "purchase"
+              ? `/order/purchase/${item.id}`
+              : `/order/sale/${item.id}`) as any,
+          )
+        }
       >
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>{item.orderNo}</Text>
@@ -52,7 +87,8 @@ export default function OrdersScreen() {
           </View>
         </View>
         <Text style={styles.cardDetail}>
-          {item._type === "purchase" ? "采购" : "销售"} · {dateToFormattedString(item.orderDate)}
+          {item._type === "purchase" ? "采购" : "销售"} ·{" "}
+          {dateToFormattedString(item.orderDate)}
         </Text>
         <Text style={styles.cardDetail}>
           {item._type === "purchase"
@@ -60,7 +96,9 @@ export default function OrdersScreen() {
             : `客户: ${(item as SaleOrder).customerName ?? "-"}`}
         </Text>
         {item.totalAmount != null && (
-          <Text style={styles.cardAmount}>¥{item.totalAmount.toLocaleString("zh-CN")}</Text>
+          <Text style={styles.cardAmount}>
+            ¥{item.totalAmount.toLocaleString("zh-CN")}
+          </Text>
         )}
       </TouchableOpacity>
     );
@@ -77,10 +115,16 @@ export default function OrdersScreen() {
           onSubmitEditing={loadData}
           returnKeyType="search"
         />
-        <TouchableOpacity style={styles.actionBtn} onPress={() => router.push("/order/purchase/add" as any)}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => router.push("/order/purchase/add" as any)}
+        >
           <Text style={styles.actionBtnText}>+ 采购单</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.saleBtn]} onPress={() => router.push("/order/sale/add" as any)}>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.saleBtn]}
+          onPress={() => router.push("/order/sale/add" as any)}
+        >
           <Text style={styles.actionBtnText}>+ 销售单</Text>
         </TouchableOpacity>
       </View>
@@ -111,7 +155,12 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  searchBar: { flexDirection: "row", padding: 16, gap: 8, backgroundColor: "#fff" },
+  searchBar: {
+    flexDirection: "row",
+    padding: 16,
+    gap: 8,
+    backgroundColor: "#fff",
+  },
   searchInput: {
     flex: 1,
     backgroundColor: COLORS.bg,
@@ -140,12 +189,22 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   cardTitle: { fontSize: 15, fontWeight: "600", color: COLORS.text },
   badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   badgeText: { fontSize: 12, fontWeight: "500" },
   cardDetail: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  cardAmount: { fontSize: 16, fontWeight: "700", color: COLORS.primary, marginTop: 8 },
+  cardAmount: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.primary,
+    marginTop: 8,
+  },
   empty: { paddingVertical: 60, alignItems: "center" },
   emptyText: { fontSize: 14, color: COLORS.textTertiary },
 });

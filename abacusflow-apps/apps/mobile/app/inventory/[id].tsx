@@ -1,8 +1,24 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { inventoryApi, depotApi, type InventoryUnit, type BasicDepot } from "@abacusflow/core";
-import { translateProductUnit, translateProductType, COLORS } from "@abacusflow/utils";
+import {
+  inventoryApi,
+  depotApi,
+  type InventoryUnit,
+  type BasicDepot,
+} from "@abacusflow/core";
+import {
+  translateProductUnit,
+  translateProductType,
+  COLORS,
+} from "@abacusflow/utils";
 import { DetailScreen } from "@/components/detail-screen";
 
 export default function InventoryDetailScreen() {
@@ -16,7 +32,9 @@ export default function InventoryDetailScreen() {
   const [safetyStock, setSafetyStock] = useState("");
   const [maxStock, setMaxStock] = useState("");
 
-  useEffect(() => { loadData(); }, [id]);
+  useEffect(() => {
+    loadData();
+  }, [id]);
 
   const loadData = async () => {
     try {
@@ -37,15 +55,20 @@ export default function InventoryDetailScreen() {
   };
 
   const getHealthStatus = (item: InventoryUnit) => {
-    if (item.safetyStock && item.quantity < item.safetyStock) return { text: "低库存", color: COLORS.danger };
-    if (item.maxStock && item.quantity > item.maxStock) return { text: "超量", color: COLORS.warning };
+    if (item.safetyStock && item.quantity < item.safetyStock)
+      return { text: "低库存", color: COLORS.danger };
+    if (item.maxStock && item.quantity > item.maxStock)
+      return { text: "超量", color: COLORS.warning };
     return { text: "正常", color: COLORS.success };
   };
 
   const handleAssignDepot = async () => {
     if (!selectedDepotId) return;
     try {
-      await inventoryApi.assignDepot({ inventoryId: Number(id), depotId: selectedDepotId });
+      await inventoryApi.assignDepot({
+        inventoryId: Number(id),
+        depotId: selectedDepotId,
+      });
       setEditingDepot(false);
       loadData();
     } catch {
@@ -75,10 +98,17 @@ export default function InventoryDetailScreen() {
       title={(d) => d.productName}
       badge={(d) => {
         const health = getHealthStatus(d);
-        return { text: health.text, color: health.color, bgColor: health.color + "20" };
+        return {
+          text: health.text,
+          color: health.color,
+          bgColor: health.color + "20",
+        };
       }}
       fields={(d) => [
-        { label: "数量", value: `${d.quantity} ${translateProductUnit(d.productUnit)}` },
+        {
+          label: "数量",
+          value: `${d.quantity} ${translateProductUnit(d.productUnit)}`,
+        },
         { label: "产品类型", value: translateProductType(d.productType) },
         { label: "类别", value: d.categoryName },
         { label: "储存点", value: d.depotName ?? "未分配" },
@@ -88,7 +118,9 @@ export default function InventoryDetailScreen() {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>预警线设置</Text>
         <TouchableOpacity onPress={() => setEditingWarning(!editingWarning)}>
-          <Text style={styles.sectionAction}>{editingWarning ? "取消" : "编辑"}</Text>
+          <Text style={styles.sectionAction}>
+            {editingWarning ? "取消" : "编辑"}
+          </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.card}>
@@ -96,13 +128,28 @@ export default function InventoryDetailScreen() {
           <View style={styles.formGroup}>
             <View style={styles.formRow}>
               <Text style={styles.formLabel}>安全库存</Text>
-              <TextInput style={styles.formInput} value={safetyStock} onChangeText={setSafetyStock} keyboardType="numeric" placeholder="最低库存量" />
+              <TextInput
+                style={styles.formInput}
+                value={safetyStock}
+                onChangeText={setSafetyStock}
+                keyboardType="numeric"
+                placeholder="最低库存量"
+              />
             </View>
             <View style={styles.formRow}>
               <Text style={styles.formLabel}>最大库存</Text>
-              <TextInput style={styles.formInput} value={maxStock} onChangeText={setMaxStock} keyboardType="numeric" placeholder="最大库存量" />
+              <TextInput
+                style={styles.formInput}
+                value={maxStock}
+                onChangeText={setMaxStock}
+                keyboardType="numeric"
+                placeholder="最大库存量"
+              />
             </View>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleUpdateWarning}>
+            <TouchableOpacity
+              style={styles.saveBtn}
+              onPress={handleUpdateWarning}
+            >
               <Text style={styles.saveBtnText}>保存</Text>
             </TouchableOpacity>
           </View>
@@ -124,7 +171,9 @@ export default function InventoryDetailScreen() {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>分配储存点</Text>
         <TouchableOpacity onPress={() => setEditingDepot(!editingDepot)}>
-          <Text style={styles.sectionAction}>{editingDepot ? "取消" : "编辑"}</Text>
+          <Text style={styles.sectionAction}>
+            {editingDepot ? "取消" : "编辑"}
+          </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.card}>
@@ -133,15 +182,27 @@ export default function InventoryDetailScreen() {
             {depots.map((depot) => (
               <TouchableOpacity
                 key={depot.id}
-                style={[styles.depotOption, selectedDepotId === depot.id && styles.depotOptionSelected]}
+                style={[
+                  styles.depotOption,
+                  selectedDepotId === depot.id && styles.depotOptionSelected,
+                ]}
                 onPress={() => setSelectedDepotId(depot.id)}
               >
-                <Text style={[styles.depotOptionText, selectedDepotId === depot.id && styles.depotOptionTextSelected]}>
+                <Text
+                  style={[
+                    styles.depotOptionText,
+                    selectedDepotId === depot.id &&
+                      styles.depotOptionTextSelected,
+                  ]}
+                >
                   {depot.name}
                 </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.saveBtn} onPress={handleAssignDepot}>
+            <TouchableOpacity
+              style={styles.saveBtn}
+              onPress={handleAssignDepot}
+            >
               <Text style={styles.saveBtnText}>保存</Text>
             </TouchableOpacity>
           </View>
@@ -207,7 +268,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  depotOptionSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryLight },
+  depotOptionSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryLight,
+  },
   depotOptionText: { fontSize: 14, color: "#333" },
   depotOptionTextSelected: { color: COLORS.primary, fontWeight: "600" },
 });

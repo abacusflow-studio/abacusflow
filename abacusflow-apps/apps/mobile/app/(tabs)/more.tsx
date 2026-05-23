@@ -1,4 +1,10 @@
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
@@ -18,9 +24,7 @@ const MENU_SECTIONS = [
   },
   {
     title: "系统管理",
-    items: [
-      { label: "用户管理", icon: "👥", route: "/user/index" as any },
-    ],
+    items: [{ label: "用户管理", icon: "👥", route: "/user/index" as any }],
   },
 ];
 
@@ -37,7 +41,10 @@ export default function MoreScreen() {
               {section.items.map((item, idx) => (
                 <TouchableOpacity
                   key={item.label}
-                  style={[styles.menuItem, idx < section.items.length - 1 && styles.menuItemBorder]}
+                  style={[
+                    styles.menuItem,
+                    idx < section.items.length - 1 && styles.menuItemBorder,
+                  ]}
                   onPress={() => router.push(item.route)}
                 >
                   <Text style={styles.menuIcon}>{item.icon}</Text>
@@ -57,7 +64,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   content: { padding: 16 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 13, color: "#999", marginBottom: 8, paddingLeft: 4 },
+  sectionTitle: {
+    fontSize: 13,
+    color: "#999",
+    marginBottom: 8,
+    paddingLeft: 4,
+  },
   sectionCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -73,7 +85,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
   },
-  menuItemBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#f0f0f0" },
+  menuItemBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#f0f0f0",
+  },
   menuIcon: { fontSize: 20, marginRight: 12 },
   menuLabel: { flex: 1, fontSize: 15, color: "#333" },
   menuArrow: { fontSize: 20, color: "#ccc" },

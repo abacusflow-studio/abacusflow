@@ -43,10 +43,19 @@ export default function LoginPage() {
         }}
       >
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ color: "#1677ff", fontSize: 32, fontWeight: "bold", marginBottom: 8 }}>
+          <h1
+            style={{
+              color: "#1677ff",
+              fontSize: 32,
+              fontWeight: "bold",
+              marginBottom: 8,
+            }}
+          >
             小算盘
           </h1>
-          <h3 style={{ color: "#666", fontSize: 16, margin: 0 }}>AbacusFlow Admin</h3>
+          <h3 style={{ color: "#666", fontSize: 16, margin: 0 }}>
+            AbacusFlow Admin
+          </h3>
         </div>
 
         <div style={{ marginBottom: 24 }}>

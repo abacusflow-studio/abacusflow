@@ -24,13 +24,17 @@ export interface DataTableColumn<T> {
   dataIndex?: keyof T & string;
   width?: number;
   ellipsis?: boolean;
-  render?: (value: T[keyof T] | undefined, record: T, index: number) => React.ReactNode;
+  render?: (
+    value: T[keyof T] | undefined,
+    record: T,
+    index: number,
+  ) => React.ReactNode;
 }
 
 interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   data: T[];
-  rowKey?: keyof T & string | ((record: T) => string | number);
+  rowKey?: (keyof T & string) | ((record: T) => string | number);
   loading?: boolean;
   pagination?: {
     current: number;
@@ -41,7 +45,11 @@ interface DataTableProps<T> {
   labels?: DataTableLabels;
 }
 
-function getRowKey<T>(record: T, index: number, rowKey?: keyof T & string | ((record: T) => string | number)): string | number {
+function getRowKey<T>(
+  record: T,
+  index: number,
+  rowKey?: (keyof T & string) | ((record: T) => string | number),
+): string | number {
   if (!rowKey) return index;
   if (typeof rowKey === "function") return rowKey(record);
   return (record[rowKey] as string | number) ?? index;
@@ -89,13 +97,19 @@ export function DataTable<T>({
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={columns.length} style={{ textAlign: "center", padding: 32, color: "#999" }}>
+              <td
+                colSpan={columns.length}
+                style={{ textAlign: "center", padding: 32, color: "#999" }}
+              >
                 {labels.loading}
               </td>
             </tr>
           ) : data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} style={{ textAlign: "center", padding: 32, color: "#999" }}>
+              <td
+                colSpan={columns.length}
+                style={{ textAlign: "center", padding: 32, color: "#999" }}
+              >
                 {labels.empty}
               </td>
             </tr>
@@ -106,7 +120,9 @@ export function DataTable<T>({
                 style={{ borderBottom: "1px solid #f0f0f0" }}
               >
                 {columns.map((col) => {
-                  const cellValue = col.dataIndex ? record[col.dataIndex] : undefined;
+                  const cellValue = col.dataIndex
+                    ? record[col.dataIndex]
+                    : undefined;
                   return (
                     <td
                       key={col.key}
@@ -142,20 +158,30 @@ export function DataTable<T>({
             fontSize: 13,
           }}
         >
-          <span style={{ color: "#999" }}>{labels.total.replace("{total}", String(pagination.total))}</span>
+          <span style={{ color: "#999" }}>
+            {labels.total.replace("{total}", String(pagination.total))}
+          </span>
           <button
             disabled={pagination.current <= 1}
-            onClick={() => pagination.onChange(pagination.current - 1, pagination.pageSize)}
+            onClick={() =>
+              pagination.onChange(pagination.current - 1, pagination.pageSize)
+            }
             style={{ padding: "4px 10px", cursor: "pointer" }}
           >
             {labels.prev}
           </button>
           <span>
-            {pagination.current} / {Math.ceil(pagination.total / pagination.pageSize) || 1}
+            {pagination.current} /{" "}
+            {Math.ceil(pagination.total / pagination.pageSize) || 1}
           </span>
           <button
-            disabled={pagination.current >= Math.ceil(pagination.total / pagination.pageSize)}
-            onClick={() => pagination.onChange(pagination.current + 1, pagination.pageSize)}
+            disabled={
+              pagination.current >=
+              Math.ceil(pagination.total / pagination.pageSize)
+            }
+            onClick={() =>
+              pagination.onChange(pagination.current + 1, pagination.pageSize)
+            }
             style={{ padding: "4px 10px", cursor: "pointer" }}
           >
             {labels.next}

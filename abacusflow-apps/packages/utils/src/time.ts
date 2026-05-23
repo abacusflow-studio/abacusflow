@@ -10,7 +10,7 @@ export function timestampToLocaleString(timestamp?: number): string {
 
 export function dateToFormattedString(
   date?: Date | string | null,
-  format = "YYYY-MM-DD"
+  format = "YYYY-MM-DD",
 ): string {
   if (!date) return "";
   return dayjs(date).format(format);

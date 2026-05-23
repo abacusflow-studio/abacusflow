@@ -34,16 +34,29 @@ interface FormScreenProps {
   title: string;
   fields: FormField[];
   initialValues?: Record<string, string | number | boolean | undefined>;
-  onSubmit: (values: Record<string, string | number | boolean | undefined>) => Promise<void>;
+  onSubmit: (
+    values: Record<string, string | number | boolean | undefined>,
+  ) => Promise<void>;
   submitLabel?: string;
 }
 
-export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel = "保存" }: FormScreenProps) {
+export function FormScreen({
+  title,
+  fields,
+  initialValues,
+  onSubmit,
+  submitLabel = "保存",
+}: FormScreenProps) {
   const router = useRouter();
-  const [values, setValues] = useState<Record<string, string | number | boolean | undefined>>(() => {
+  const [values, setValues] = useState<
+    Record<string, string | number | boolean | undefined>
+  >(() => {
     const initial: Record<string, string | number | boolean | undefined> = {};
     for (const field of fields) {
-      initial[field.key] = initialValues?.[field.key] ?? field.value ?? (field.type === "switch" ? false : "");
+      initial[field.key] =
+        initialValues?.[field.key] ??
+        field.value ??
+        (field.type === "switch" ? false : "");
     }
     return initial;
   });
@@ -60,9 +73,12 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const setValue = useCallback((key: string, value: string | number | boolean | undefined) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const setValue = useCallback(
+    (key: string, value: string | number | boolean | undefined) => {
+      setValues((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const handleSubmit = async () => {
     // Validate required fields
@@ -86,7 +102,10 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
         <ScrollView contentContainerStyle={styles.content}>
           {fields.map((field) => (
             <View key={field.key} style={styles.fieldGroup}>
@@ -97,7 +116,9 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
 
               {field.type === "switch" ? (
                 <View style={styles.switchRow}>
-                  <Text style={styles.switchLabel}>{values[field.key] ? "启用" : "禁用"}</Text>
+                  <Text style={styles.switchLabel}>
+                    {values[field.key] ? "启用" : "禁用"}
+                  </Text>
                   <Switch
                     value={!!values[field.key]}
                     onValueChange={(v) => setValue(field.key, v)}
@@ -109,11 +130,19 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
                   {field.options?.map((opt) => (
                     <TouchableOpacity
                       key={opt.value}
-                      style={[styles.selectOption, values[field.key] === opt.value && styles.selectOptionActive]}
+                      style={[
+                        styles.selectOption,
+                        values[field.key] === opt.value &&
+                          styles.selectOptionActive,
+                      ]}
                       onPress={() => setValue(field.key, opt.value)}
                     >
                       <Text
-                        style={[styles.selectOptionText, values[field.key] === opt.value && styles.selectOptionTextActive]}
+                        style={[
+                          styles.selectOptionText,
+                          values[field.key] === opt.value &&
+                            styles.selectOptionTextActive,
+                        ]}
                       >
                         {opt.label}
                       </Text>
@@ -122,13 +151,27 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
                 </View>
               ) : (
                 <TextInput
-                  style={[styles.input, field.type === "textarea" && styles.textarea]}
-                  value={field.type === "number" ? (textValues[field.key] ?? "") : String(values[field.key] ?? "")}
+                  style={[
+                    styles.input,
+                    field.type === "textarea" && styles.textarea,
+                  ]}
+                  value={
+                    field.type === "number"
+                      ? (textValues[field.key] ?? "")
+                      : String(values[field.key] ?? "")
+                  }
                   onChangeText={(text) => {
                     if (field.type === "number") {
                       setTextValues((prev) => ({ ...prev, [field.key]: text }));
                       const num = Number(text);
-                      setValue(field.key, text === "" ? undefined : isNaN(num) ? values[field.key] : num);
+                      setValue(
+                        field.key,
+                        text === ""
+                          ? undefined
+                          : isNaN(num)
+                            ? values[field.key]
+                            : num,
+                      );
                     } else {
                       setValue(field.key, text);
                     }
@@ -142,8 +185,16 @@ export function FormScreen({ title, fields, initialValues, onSubmit, submitLabel
             </View>
           ))}
 
-          <TouchableOpacity style={[styles.submitBtn, submitting && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitBtnText}>{submitLabel}</Text>}
+          <TouchableOpacity
+            style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
+            onPress={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitBtnText}>{submitLabel}</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -155,7 +206,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   content: { padding: 16 },
   fieldGroup: { marginBottom: 20 },
-  fieldLabel: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
   required: { color: "#ff4d4f" },
   input: {
     backgroundColor: "#fff",

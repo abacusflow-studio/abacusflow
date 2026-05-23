@@ -1,16 +1,30 @@
 "use client";
 
 import React from "react";
-import { ToastContext, useToastState, type Toast, type ToastType } from "../hooks/use-toast";
+import {
+  ToastContext,
+  useToastState,
+  type Toast,
+  type ToastType,
+} from "../hooks/use-toast";
 
-const TOAST_COLORS: Record<ToastType, { bg: string; border: string; text: string }> = {
+const TOAST_COLORS: Record<
+  ToastType,
+  { bg: string; border: string; text: string }
+> = {
   success: { bg: "#f6ffed", border: "#52c41a", text: "#389e0d" },
   error: { bg: "#fff1f0", border: "#ff4d4f", text: "#cf1322" },
   warning: { bg: "#fff7e6", border: "#fa8c16", text: "#d46b08" },
   info: { bg: "#e6f4ff", border: "#1677ff", text: "#0958d9" },
 };
 
-function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: number) => void }) {
+function ToastItem({
+  toast,
+  onRemove,
+}: {
+  toast: Toast;
+  onRemove: (id: number) => void;
+}) {
   const colors = TOAST_COLORS[toast.type];
   return (
     <div

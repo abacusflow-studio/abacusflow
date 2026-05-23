@@ -19,7 +19,9 @@ export default function PurchaseOrderDetailScreen() {
     }
   }, [id]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
     <OrderDetailScreen
@@ -28,9 +30,18 @@ export default function PurchaseOrderDetailScreen() {
       emptyMessage="采购单不存在"
       partnerLabel="供应商"
       partnerName={data?.supplierName ?? "-"}
-      onComplete={async () => { await transactionApi.completePurchaseOrder(Number(id)); loadData(); }}
-      onCancel={async () => { await transactionApi.cancelPurchaseOrder(Number(id)); loadData(); }}
-      onReverse={async () => { await transactionApi.reversePurchaseOrder(Number(id)); loadData(); }}
+      onComplete={async () => {
+        await transactionApi.completePurchaseOrder(Number(id));
+        loadData();
+      }}
+      onCancel={async () => {
+        await transactionApi.cancelPurchaseOrder(Number(id));
+        loadData();
+      }}
+      onReverse={async () => {
+        await transactionApi.reversePurchaseOrder(Number(id));
+        loadData();
+      }}
     />
   );
 }

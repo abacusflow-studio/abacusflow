@@ -1,4 +1,10 @@
-const { app, BrowserWindow, ipcMain, Menu, nativeImage } = require("electron/main");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  nativeImage,
+} = require("electron/main");
 const path = require("node:path");
 const fs = require("node:fs");
 

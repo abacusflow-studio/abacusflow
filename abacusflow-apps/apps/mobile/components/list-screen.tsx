@@ -112,7 +112,12 @@ export function ListScreen<T>({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: { fontSize: 15, color: COLORS.textTertiary, textAlign: "center", marginBottom: 16 },
+  errorText: {
+    fontSize: 15,
+    color: COLORS.textTertiary,
+    textAlign: "center",
+    marginBottom: 16,
+  },
   retryBtn: {
     paddingHorizontal: 24,
     paddingVertical: 10,
@@ -120,7 +125,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   retryBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  searchBar: { flexDirection: "row", padding: 16, gap: 12, backgroundColor: "#fff" },
+  searchBar: {
+    flexDirection: "row",
+    padding: 16,
+    gap: 12,
+    backgroundColor: "#fff",
+  },
   searchInput: {
     flex: 1,
     backgroundColor: COLORS.bg,
