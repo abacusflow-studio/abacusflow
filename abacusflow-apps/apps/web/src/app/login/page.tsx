@@ -7,29 +7,21 @@ import {
   CalculatorOutlined,
   DatabaseOutlined,
   LockOutlined,
+  MoonOutlined,
   SafetyCertificateOutlined,
+  SunOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import { getAuthClient } from "@abacusflow/core";
 import { useMouseGlow } from "../../hooks/use-mouse-glow";
-
-const BOARD_LANES = [
-  { label: "采购入库", value: "84%", color: "#22c55e" },
-  { label: "库存同步", value: "67%", color: "#38bdf8" },
-  { label: "销售出库", value: "92%", color: "#f59e0b" },
-  { label: "风险预警", value: "11%", color: "#fb7185" },
-];
-
-const INSIGHTS = [
-  { label: "流转监测", value: "全天" },
-  { label: "库存信号", value: "实时" },
-  { label: "异常响应", value: "小于1分" },
-];
+import { useTheme } from "../../components/providers";
+import { ParticleNetwork } from "../../components/particle-network";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const { themeMode, toggleTheme } = useTheme();
   useMouseGlow(cardRef);
 
   const handleLogin = async () => {
@@ -46,53 +38,29 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="af-login-page">
-      <section className="af-login-showcase" aria-label="小算盘概览">
-        <div className="af-kicker">小算盘业务指挥台</div>
+    <main className="af-login-immersive">
+      <ParticleNetwork />
+
+      <button
+        type="button"
+        className="af-theme-toggle af-login-theme-toggle"
+        aria-label={themeMode === "dark" ? "切换到浅色模式" : "切换到深色模式"}
+        onClick={toggleTheme}
+      >
+        {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
+      </button>
+
+      <div className="af-login-hero-text">
         <h1 className="af-login-title af-gradient-text">
-          让库存流转像脉冲
-          <br />
-          一样清晰
+          让库存流转像脉冲一样清晰
         </h1>
         <p className="af-login-copy">
           小算盘把产品、库存、采购、销售和伙伴网络压缩进一张实时业务面板，
           让团队在高频出入库里保持判断速度。
         </p>
+      </div>
 
-        <div className="af-login-insights">
-          {INSIGHTS.map((item) => (
-            <div className="af-insight-tile" key={item.label}>
-              <span>{item.label}</span>
-              <strong>{item.value}</strong>
-            </div>
-          ))}
-        </div>
-
-        <div className="af-flow-board af-gradient-border" aria-hidden="true">
-          <div className="af-board-header">
-            <span>流转矩阵</span>
-            <span>同步中</span>
-          </div>
-          <div className="af-board-lanes">
-            {BOARD_LANES.map((lane) => (
-              <div
-                className="af-board-lane"
-                key={lane.label}
-                style={{ "--lane-color": lane.color } as React.CSSProperties}
-              >
-                <span>{lane.label}</span>
-                <strong>{lane.value}</strong>
-              </div>
-            ))}
-          </div>
-          <div className="af-board-footer">
-            <span>统一认证网关</span>
-            <span>小算盘云</span>
-          </div>
-        </div>
-      </section>
-
-      <section ref={cardRef} className="af-login-card af-mouse-glow af-gradient-border" aria-label="登录">
+      <section ref={cardRef} className="af-login-floating-card af-mouse-glow af-gradient-border" aria-label="登录">
         <div className="af-login-brand">
           <div className="af-brand-mark">
             <CalculatorOutlined />
@@ -102,11 +70,6 @@ export default function LoginPage() {
             <span>库存智能中枢</span>
           </div>
         </div>
-
-        <h2 className="af-login-panel-title">进入业务指挥台</h2>
-        <p className="af-login-panel-copy">
-          通过统一身份认证安全登录，继续管理库存、订单和伙伴数据。
-        </p>
 
         <Button
           type="primary"

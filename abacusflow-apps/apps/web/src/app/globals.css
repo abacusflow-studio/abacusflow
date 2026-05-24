@@ -1,6 +1,48 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
+  --af-ink: #f8fafc;
+  --af-ink-soft: #f1f5f9;
+  --af-panel: rgba(255, 255, 255, 0.86);
+  --af-panel-strong: rgba(255, 255, 255, 0.94);
+  --af-border: rgba(15, 23, 42, 0.1);
+  --af-border-bright: rgba(34, 197, 94, 0.3);
+  --af-text: #0f172a;
+  --af-muted: #475569;
+  --af-cyan: #0891b2;
+  --af-green: #16a34a;
+  --af-amber: #d97706;
+  --af-rose: #e11d48;
+  --af-violet: #7c3aed;
+  --af-radius: 14px;
+  --af-shadow: rgba(0, 0, 0, 0.06);
+  --af-shadow-strong: rgba(0, 0, 0, 0.1);
+  --af-panel-bg: rgba(255, 255, 255, 0.86);
+  --af-header-bg: rgba(255, 255, 255, 0.78);
+  --af-sidebar-bg: rgba(255, 255, 255, 0.92);
+  --af-hero-gradient-1: rgba(34, 197, 94, 0.08);
+  --af-hero-gradient-2: rgba(56, 189, 248, 0.06);
+  --af-grid-line: rgba(0, 0, 0, 0.04);
+  --af-scan-opacity: 0.3;
+
+  /* Aurora zone colors */
+  --af-zone-dashboard: #22c55e;
+  --af-zone-inventory: #10b981;
+  --af-zone-transaction: #6366f1;
+  --af-zone-product: #06b6d4;
+  --af-zone-partner: #f59e0b;
+  --af-zone-alert: #f43f5e;
+
+  /* Dynamic page accent — overridden per route in layout.tsx */
+  --page-accent: var(--af-green);
+  --color-primary: var(--af-green);
+  --color-border: var(--af-border);
+  --color-text-secondary: var(--af-muted);
+  --color-bg-page: var(--af-ink);
+}
+
+[data-theme="dark"] {
   color-scheme: dark;
   --af-ink: #050609;
   --af-ink-soft: #0b0f14;
@@ -15,11 +57,15 @@
   --af-amber: #f59e0b;
   --af-rose: #fb7185;
   --af-violet: #a78bfa;
-  --af-radius: 14px;
-  --color-primary: var(--af-green);
-  --color-border: var(--af-border);
-  --color-text-secondary: var(--af-muted);
-  --color-bg-page: var(--af-ink);
+  --af-shadow: rgba(0, 0, 0, 0.24);
+  --af-shadow-strong: rgba(0, 0, 0, 0.36);
+  --af-panel-bg: rgba(13, 18, 24, 0.86);
+  --af-header-bg: var(--af-panel-bg);
+  --af-sidebar-bg: rgba(8, 12, 17, 0.92);
+  --af-hero-gradient-1: rgba(34, 197, 94, 0.18);
+  --af-hero-gradient-2: rgba(251, 113, 133, 0.12);
+  --af-grid-line: rgba(255, 255, 255, 0.03);
+  --af-scan-opacity: 0.6;
 }
 
 @keyframes spin {
@@ -166,9 +212,10 @@ body {
   min-height: 100vh;
   color: var(--af-text);
   background:
-    linear-gradient(135deg, rgba(34, 197, 94, 0.1), transparent 34%),
-    linear-gradient(315deg, rgba(56, 189, 248, 0.12), transparent 36%),
+    linear-gradient(135deg, var(--af-hero-gradient-1), transparent 34%),
+    linear-gradient(315deg, var(--af-hero-gradient-2), transparent 36%),
     var(--af-ink);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Floating gradient orbs — adds depth to dark backgrounds */
@@ -195,12 +242,12 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(var(--af-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--af-grid-line) 1px, transparent 1px),
     repeating-linear-gradient(
       135deg,
-      rgba(34, 197, 94, 0.055) 0,
-      rgba(34, 197, 94, 0.055) 1px,
+      color-mix(in srgb, var(--af-green) 6%, transparent) 0,
+      color-mix(in srgb, var(--af-green) 6%, transparent) 1px,
       transparent 1px,
       transparent 22px
     );
@@ -223,7 +270,7 @@ body::before {
 }
 
 ::selection {
-  color: #031007;
+  color: var(--af-text);
   background: var(--af-green);
 }
 
@@ -296,7 +343,7 @@ a {
 }
 
 a:hover {
-  color: #7dd3fc;
+  color: var(--af-cyan);
   text-decoration: underline;
 }
 
@@ -311,8 +358,8 @@ a:hover {
 }
 
 .card:hover {
-  border-color: rgba(34, 197, 94, 0.32);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  border-color: color-mix(in srgb, var(--page-accent, var(--af-green)) 32%, transparent);
+  box-shadow: 0 16px 48px var(--af-shadow-strong);
 }
 
 /* Filter bar layout */
@@ -350,7 +397,7 @@ a:hover {
   overflow: hidden;
   border-color: var(--af-border) !important;
   background: var(--af-panel) !important;
-  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 18px 54px var(--af-shadow);
   backdrop-filter: blur(18px);
   transition:
     border-color 0.2s ease,
@@ -361,11 +408,16 @@ a:hover {
 .ant-card-hoverable:hover {
   border-color: rgba(34, 197, 94, 0.34) !important;
   transform: translateY(-2px);
-  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 24px 68px var(--af-shadow-strong) !important;
 }
 
 .ant-table-row {
   transition: background-color 0.15s ease !important;
+}
+
+.ant-table-tbody > tr:hover > td,
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  background: color-mix(in srgb, var(--page-accent, var(--af-green)) 8%, transparent) !important;
 }
 
 .ant-table-wrapper,
@@ -377,14 +429,14 @@ a:hover {
 }
 
 .ant-table-thead > tr > th {
-  border-bottom-color: rgba(148, 163, 184, 0.16) !important;
+  border-bottom-color: var(--af-border) !important;
   font-size: 12px;
   letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .ant-table-tbody > tr > td {
-  border-bottom-color: rgba(148, 163, 184, 0.1) !important;
+  border-bottom-color: var(--af-border) !important;
 }
 
 .ant-layout,
@@ -397,8 +449,8 @@ a:hover {
 .ant-input-number,
 .ant-select-selector,
 .ant-picker {
-  background: rgba(5, 6, 9, 0.42) !important;
-  border-color: rgba(148, 163, 184, 0.22) !important;
+  background: var(--af-panel) !important;
+  border-color: var(--af-border) !important;
 }
 
 .ant-input:hover,
@@ -410,12 +462,12 @@ a:hover {
 
 .ant-modal-content,
 .ant-modal-header {
-  background: rgba(12, 17, 23, 0.98) !important;
+  background: var(--af-panel-strong) !important;
 }
 
 .ant-modal-content {
   border: 1px solid var(--af-border);
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48) !important;
+  box-shadow: 0 28px 90px var(--af-shadow-strong) !important;
 }
 
 /* Better focus states */
@@ -443,7 +495,7 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.36);
+  background: var(--af-border);
   border-radius: 3px;
 }
 
@@ -458,9 +510,9 @@ a:hover {
   place-items: center;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(34, 197, 94, 0.16), transparent 38%),
-    linear-gradient(315deg, rgba(56, 189, 248, 0.14), transparent 36%),
-    #050609;
+    linear-gradient(135deg, var(--af-hero-gradient-1), transparent 38%),
+    linear-gradient(315deg, var(--af-hero-gradient-2), transparent 36%),
+    var(--af-ink);
 }
 
 .af-loading-screen::before {
@@ -468,8 +520,8 @@ a:hover {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(var(--af-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--af-grid-line) 1px, transparent 1px);
   background-size: 42px 42px;
 }
 
@@ -481,8 +533,8 @@ a:hover {
   text-align: center;
   border: 1px solid var(--af-border);
   border-radius: 20px;
-  background: rgba(12, 17, 23, 0.74);
-  box-shadow: 0 28px 84px rgba(0, 0, 0, 0.36);
+  background: var(--af-panel-bg);
+  box-shadow: 0 28px 84px var(--af-shadow-strong);
   backdrop-filter: blur(18px);
 }
 
@@ -490,7 +542,7 @@ a:hover {
   width: 46px;
   height: 46px;
   margin: 0 auto 16px;
-  border: 3px solid rgba(148, 163, 184, 0.18);
+  border: 3px solid var(--af-border);
   border-top-color: var(--af-green);
   border-right-color: var(--af-cyan);
   border-radius: 999px;
@@ -515,7 +567,7 @@ a:hover {
   background:
     linear-gradient(115deg, rgba(34, 197, 94, 0.12), transparent 35%),
     linear-gradient(245deg, rgba(251, 113, 133, 0.1), transparent 38%),
-    #050609;
+    var(--af-ink);
 }
 
 .af-login-page::before {
@@ -523,8 +575,8 @@ a:hover {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(var(--af-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--af-grid-line) 1px, transparent 1px);
   background-size: 56px 56px;
   transform: perspective(800px) rotateX(58deg) translateY(14%);
   transform-origin: bottom;
@@ -565,11 +617,11 @@ a:hover {
   align-items: center;
   gap: 10px;
   margin-bottom: 22px;
-  color: var(--af-green);
+  color: var(--af-muted);
   font-family: var(--font-fira-code), monospace;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
@@ -585,17 +637,17 @@ a:hover {
 .af-login-title {
   max-width: 820px;
   margin: 0;
-  color: #ffffff;
+  color: var(--af-text);
   font-size: clamp(42px, 6vw, 76px);
-  font-weight: 800;
-  line-height: 1.02;
-  letter-spacing: 0;
+  font-weight: 200;
+  line-height: 1.05;
+  letter-spacing: 0.03em;
 }
 
 .af-login-copy {
   max-width: 640px;
   margin: 24px 0 0;
-  color: #b9c4d0;
+  color: var(--af-muted);
   font-size: clamp(16px, 1.7vw, 19px);
   line-height: 1.72;
 }
@@ -613,7 +665,7 @@ a:hover {
   padding: 16px;
   border: 1px solid var(--af-border);
   border-radius: 18px;
-  background: rgba(13, 18, 24, 0.62);
+  background: var(--af-panel);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(16px);
 }
@@ -627,7 +679,7 @@ a:hover {
 .af-insight-tile strong {
   display: block;
   margin-top: 12px;
-  color: #ffffff;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
   font-size: clamp(22px, 3vw, 34px);
   line-height: 1;
@@ -641,9 +693,9 @@ a:hover {
   border: 1px solid rgba(34, 197, 94, 0.24);
   border-radius: 24px;
   background:
-    linear-gradient(145deg, rgba(12, 17, 23, 0.92), rgba(5, 6, 9, 0.68)),
+    linear-gradient(145deg, var(--af-panel-strong), var(--af-panel)),
     linear-gradient(90deg, rgba(34, 197, 94, 0.1), rgba(56, 189, 248, 0.08));
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+  box-shadow: 0 28px 90px var(--af-shadow-strong);
   overflow: hidden;
 }
 
@@ -688,7 +740,7 @@ a:hover {
   gap: 14px;
   align-items: center;
   min-height: 42px;
-  color: #dce7ef;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
   font-size: 12px;
 }
@@ -712,7 +764,7 @@ a:hover {
 
 .af-board-lane strong {
   justify-self: end;
-  color: #ffffff;
+  color: var(--af-text);
 }
 
 .af-login-card {
@@ -722,9 +774,9 @@ a:hover {
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 26px;
   background:
-    linear-gradient(160deg, rgba(16, 23, 31, 0.96), rgba(5, 6, 9, 0.88)),
+    linear-gradient(160deg, var(--af-panel-strong), var(--af-panel)),
     linear-gradient(90deg, rgba(34, 197, 94, 0.1), rgba(56, 189, 248, 0.08));
-  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.48);
+  box-shadow: 0 34px 100px var(--af-shadow-strong);
   backdrop-filter: blur(22px);
 }
 
@@ -743,7 +795,7 @@ a:hover {
   justify-content: center;
   border: 1px solid rgba(34, 197, 94, 0.42);
   border-radius: 16px;
-  color: #031007;
+  color: var(--af-text);
   background: linear-gradient(135deg, var(--af-green), #8bffb2);
   box-shadow: 0 0 28px rgba(34, 197, 94, 0.34);
   font-size: 24px;
@@ -751,7 +803,7 @@ a:hover {
 
 .af-brand-copy strong {
   display: block;
-  color: #ffffff;
+  color: var(--af-text);
   font-size: 26px;
   line-height: 1;
 }
@@ -766,14 +818,14 @@ a:hover {
 
 .af-login-panel-title {
   margin: 0 0 10px;
-  color: #ffffff;
+  color: var(--af-text);
   font-size: 28px;
   line-height: 1.2;
 }
 
 .af-login-panel-copy {
   margin: 0 0 28px;
-  color: #a9b7c8;
+  color: var(--af-muted);
   line-height: 1.65;
 }
 
@@ -781,7 +833,7 @@ a:hover {
   height: 50px !important;
   border: 0 !important;
   border-radius: 14px !important;
-  color: #041008 !important;
+  color: var(--af-text) !important;
   font-weight: 700 !important;
   background: linear-gradient(135deg, #9dffbe, var(--af-green)) !important;
   box-shadow: 0 16px 36px rgba(34, 197, 94, 0.24) !important;
@@ -797,7 +849,7 @@ a:hover {
   padding: 12px 14px;
   border: 1px solid rgba(251, 113, 133, 0.36);
   border-radius: 12px;
-  color: #fecdd3;
+  color: var(--af-rose);
   background: rgba(127, 29, 29, 0.28);
 }
 
@@ -811,7 +863,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #c8d4df;
+  color: var(--af-muted);
   font-size: 14px;
 }
 
@@ -821,19 +873,62 @@ a:hover {
 
 .af-login-footer {
   padding-top: 20px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
-  color: #758398;
+  border-top: 1px solid var(--af-border);
+  color: var(--af-muted);
   font-family: var(--font-fira-code), monospace;
   font-size: 12px;
+}
+
+/* Immersive Login Page */
+.af-login-immersive {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  min-height: 100vh;
+  padding: clamp(28px, 5vw, 64px);
+  overflow: hidden;
+  background: var(--af-ink);
+}
+
+.af-login-theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+}
+
+.af-login-hero-text {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 680px;
+  animation: af-rise 0.8s ease both;
+}
+
+.af-login-floating-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 440px);
+  padding: clamp(32px, 5vw, 48px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  background: var(--af-panel-bg);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 40px 120px var(--af-shadow-strong);
+  text-align: center;
+  animation: af-rise 0.8s ease 0.15s both;
 }
 
 .af-admin-shell {
   position: relative;
   min-height: 100vh;
   background:
-    linear-gradient(115deg, rgba(34, 197, 94, 0.09), transparent 32%),
+    linear-gradient(115deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 9%, transparent), transparent 32%),
     linear-gradient(260deg, rgba(56, 189, 248, 0.08), transparent 42%),
-    #050609;
+    var(--af-ink);
 }
 
 .af-admin-shell::before {
@@ -842,8 +937,8 @@ a:hover {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px);
+    linear-gradient(var(--af-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--af-grid-line) 1px, transparent 1px);
   background-size: 36px 36px;
   mask-image: linear-gradient(to bottom, #000 0%, transparent 88%);
 }
@@ -853,9 +948,9 @@ a:hover {
   top: 0;
   z-index: 20;
   height: 100vh;
-  border-right: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(8, 12, 17, 0.92) !important;
-  box-shadow: 14px 0 60px rgba(0, 0, 0, 0.32);
+  border-right: 1px solid var(--af-border);
+  background: var(--af-sidebar-bg) !important;
+  box-shadow: 14px 0 60px var(--af-shadow);
   backdrop-filter: blur(18px);
 }
 
@@ -865,7 +960,7 @@ a:hover {
   align-items: center;
   gap: 12px;
   padding: 0 18px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.13);
+  border-bottom: 1px solid var(--af-border);
 }
 
 .af-brand-text {
@@ -874,7 +969,7 @@ a:hover {
 
 .af-brand-text strong {
   display: block;
-  color: #ffffff;
+  color: var(--af-text);
   font-size: 18px;
   line-height: 1.1;
 }
@@ -895,18 +990,18 @@ a:hover {
 .af-sidebar .ant-menu-item,
 .af-sidebar .ant-menu-submenu-title {
   min-height: 42px;
-  color: #bac7d7 !important;
+  color: var(--af-muted) !important;
 }
 
 .af-sidebar .ant-menu-item-selected {
-  border: 1px solid rgba(34, 197, 94, 0.28);
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18), rgba(56, 189, 248, 0.08)) !important;
-  box-shadow: inset 3px 0 0 var(--af-green);
+  border: 1px solid color-mix(in srgb, var(--page-accent, var(--af-green)) 28%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 18%, transparent), rgba(56, 189, 248, 0.08)) !important;
+  box-shadow: inset 3px 0 0 var(--page-accent, var(--af-green));
 }
 
 .af-sidebar .ant-menu-item-selected a,
 .af-sidebar .ant-menu-item-selected .anticon {
-  color: #b8ffcf !important;
+  color: color-mix(in srgb, var(--page-accent, var(--af-green)) 80%, white) !important;
 }
 
 .af-admin-header {
@@ -919,8 +1014,8 @@ a:hover {
   justify-content: space-between;
   gap: 18px;
   padding: 0 clamp(18px, 3vw, 32px);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(5, 6, 9, 0.78) !important;
+  border-bottom: 1px solid var(--af-border);
+  background: var(--af-header-bg) !important;
   backdrop-filter: blur(18px);
   line-height: normal !important;
 }
@@ -939,15 +1034,36 @@ a:hover {
   height: 44px;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid var(--af-border);
   border-radius: 14px;
-  color: #d6e2ed;
-  background: rgba(13, 18, 24, 0.78);
+  color: var(--af-text);
+  background: var(--af-panel);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .af-sidebar-toggle:hover {
+  border-color: rgba(34, 197, 94, 0.44);
+  color: var(--af-green);
+  transform: translateY(-1px);
+}
+
+.af-theme-toggle {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--af-border);
+  border-radius: 12px;
+  color: var(--af-muted);
+  background: var(--af-panel);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+}
+
+.af-theme-toggle:hover {
   border-color: rgba(34, 197, 94, 0.44);
   color: var(--af-green);
   transform: translateY(-1px);
@@ -960,7 +1076,7 @@ a:hover {
 .af-route-title strong {
   display: block;
   overflow: hidden;
-  color: #ffffff;
+  color: var(--af-text);
   font-size: 18px;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -981,10 +1097,10 @@ a:hover {
   align-items: center;
   gap: 9px;
   padding: 0 13px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 999px;
-  color: #c8d4df;
-  background: rgba(13, 18, 24, 0.7);
+  color: var(--af-muted);
+  background: var(--af-panel);
 }
 
 .af-status-chip::before {
@@ -1003,7 +1119,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  color: #06130b;
+  color: var(--af-text);
   background: linear-gradient(135deg, #9dffbe, var(--af-green));
   font-weight: 800;
 }
@@ -1012,11 +1128,13 @@ a:hover {
   position: relative;
   min-height: calc(100vh - 76px);
   padding: clamp(18px, 3vw, 30px);
+  font-size: 15px;
+  line-height: 1.75;
 }
 
 .af-admin-footer {
   padding: 14px 24px 22px !important;
-  color: #748296 !important;
+  color: var(--af-muted) !important;
   font-family: var(--font-fira-code), monospace;
   font-size: 12px;
   text-align: center;
@@ -1030,18 +1148,17 @@ a:hover {
 
 .af-dashboard-hero {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 430px);
-  gap: clamp(20px, 4vw, 42px);
-  min-height: 330px;
+  display: flex;
+  align-items: center;
+  min-height: 240px;
   padding: clamp(24px, 4vw, 40px);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 28px;
   background:
     linear-gradient(135deg, rgba(34, 197, 94, 0.18), transparent 38%),
     linear-gradient(290deg, rgba(251, 113, 133, 0.12), transparent 42%),
-    rgba(10, 15, 20, 0.88);
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.36);
+    var(--af-panel-bg);
+  box-shadow: 0 32px 100px var(--af-shadow-strong);
   overflow: hidden;
 }
 
@@ -1050,8 +1167,8 @@ a:hover {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(var(--af-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--af-grid-line) 1px, transparent 1px);
   background-size: 42px 42px;
   opacity: 0.6;
 }
@@ -1075,17 +1192,17 @@ a:hover {
 .af-dashboard-title {
   max-width: 780px;
   margin: 0;
-  color: #ffffff;
-  font-size: clamp(34px, 5vw, 68px);
-  font-weight: 800;
+  color: var(--af-text);
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 200;
   line-height: 0.98;
-  letter-spacing: 0;
+  letter-spacing: 0.04em;
 }
 
 .af-dashboard-copy {
   max-width: 680px;
   margin: 20px 0 0;
-  color: #b9c4d0;
+  color: var(--af-muted);
   font-size: 16px;
   line-height: 1.75;
 }
@@ -1100,9 +1217,9 @@ a:hover {
 .af-hero-chip {
   min-width: 150px;
   padding: 13px 15px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 16px;
-  background: rgba(5, 6, 9, 0.36);
+  background: var(--af-panel);
 }
 
 .af-hero-chip span {
@@ -1114,9 +1231,10 @@ a:hover {
 .af-hero-chip strong {
   display: block;
   margin-top: 6px;
-  color: #ffffff;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
-  font-size: 24px;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 300;
 }
 
 .af-flow-console {
@@ -1124,7 +1242,7 @@ a:hover {
   padding: 18px;
   border: 1px solid rgba(34, 197, 94, 0.24);
   border-radius: 22px;
-  background: rgba(5, 6, 9, 0.5);
+  background: var(--af-panel);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -1132,7 +1250,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #dce7ef;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
   font-size: 12px;
 }
@@ -1169,7 +1287,7 @@ a:hover {
   grid-template-columns: 82px 1fr 58px;
   gap: 12px;
   align-items: center;
-  color: #d7e2ec;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
   font-size: 12px;
 }
@@ -1180,7 +1298,7 @@ a:hover {
 
 .af-console-route span:last-child {
   justify-self: end;
-  color: #ffffff;
+  color: var(--af-text);
 }
 
 .af-route-line {
@@ -1204,16 +1322,68 @@ a:hover {
   gap: 16px;
 }
 
+/* Bento Grid Layout */
+.af-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(160px, auto);
+  gap: 16px;
+}
+
+.af-bento-hero {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.af-bento-wide {
+  grid-column: span 2;
+}
+
+.af-stat-card--compact {
+  min-height: 120px;
+  padding: 16px;
+}
+
+.af-stat-card--compact .af-stat-label {
+  margin-top: 10px;
+}
+
+.af-stat-card--compact .af-stat-value {
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+/* Health ring SVG inside bento hero card */
+.af-health-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.af-health-ring svg {
+  width: 120px;
+  height: 120px;
+}
+
+.af-health-label {
+  position: absolute;
+  color: var(--af-text);
+  font-family: var(--font-fira-code), monospace;
+  font-size: 20px;
+  font-weight: 300;
+}
+
 .af-stat-card {
   position: relative;
   min-height: 178px;
   padding: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 22px;
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--card-accent, var(--af-green)) 14%, transparent), transparent 54%),
-    rgba(12, 17, 23, 0.86);
-  box-shadow: 0 20px 64px rgba(0, 0, 0, 0.24);
+    var(--af-panel-bg);
+  box-shadow: 0 20px 64px var(--af-shadow);
   overflow: hidden;
   animation: af-rise 0.56s ease both;
 }
@@ -1249,7 +1419,7 @@ a:hover {
   border: 1px solid color-mix(in srgb, var(--card-accent, var(--af-green)) 40%, transparent);
   border-radius: 15px;
   color: var(--card-accent, var(--af-green));
-  background: rgba(5, 6, 9, 0.34);
+  background: var(--af-panel);
   font-size: 21px;
 }
 
@@ -1263,7 +1433,7 @@ a:hover {
   position: relative;
   z-index: 1;
   margin: 18px 0 0;
-  color: #c9d5df;
+  color: var(--af-muted);
   font-size: 14px;
 }
 
@@ -1271,10 +1441,10 @@ a:hover {
   position: relative;
   z-index: 1;
   margin-top: 8px;
-  color: #ffffff;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
-  font-size: clamp(30px, 4vw, 44px);
-  font-weight: 700;
+  font-size: clamp(32px, 4.5vw, 52px);
+  font-weight: 300;
   line-height: 1;
 }
 
@@ -1309,10 +1479,10 @@ a:hover {
 .af-command-card,
 .af-risk-card {
   padding: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 22px;
-  background: rgba(12, 17, 23, 0.82);
-  box-shadow: 0 20px 64px rgba(0, 0, 0, 0.23);
+  background: var(--af-panel-bg);
+  box-shadow: 0 20px 64px var(--af-shadow);
 }
 
 .af-section-head {
@@ -1325,7 +1495,7 @@ a:hover {
 
 .af-section-head h2 {
   margin: 0;
-  color: #ffffff;
+  color: var(--af-text);
   font-size: 20px;
 }
 
@@ -1358,14 +1528,14 @@ a:hover {
   grid-template-columns: 110px 1fr 56px;
   gap: 14px;
   align-items: center;
-  color: #d7e2ec;
+  color: var(--af-text);
   font-size: 13px;
 }
 
 .af-workflow-meter {
   height: 10px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.12);
+  background: var(--af-border);
   overflow: hidden;
 }
 
@@ -1385,21 +1555,21 @@ a:hover {
 }
 
 .af-risk-number {
-  color: #ffffff;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
   font-size: clamp(54px, 8vw, 84px);
-  font-weight: 800;
+  font-weight: 200;
   line-height: 0.95;
 }
 
 .af-risk-label {
   margin: 10px 0 18px;
-  color: #fda4af;
+  color: var(--af-rose);
   font-weight: 700;
 }
 
 .af-risk-copy {
-  color: #cbd5e1;
+  color: var(--af-muted);
   line-height: 1.7;
 }
 
@@ -1408,7 +1578,7 @@ a:hover {
   height: 12px;
   margin-top: 22px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.14);
+  background: var(--af-border);
   overflow: hidden;
 }
 
@@ -1426,21 +1596,21 @@ a:hover {
   min-height: 300px;
   place-items: center;
   gap: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 22px;
   color: var(--af-muted);
-  background: rgba(12, 17, 23, 0.72);
+  background: var(--af-panel-bg);
 }
 
 .af-dashboard-warning {
   padding: 14px 16px;
   border: 1px solid rgba(245, 158, 11, 0.32);
   border-radius: 16px;
-  color: #fde68a;
+  color: var(--af-amber);
   background:
     linear-gradient(90deg, rgba(245, 158, 11, 0.14), transparent),
-    rgba(12, 17, 23, 0.78);
-  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.2);
+    var(--af-panel-bg);
+  box-shadow: 0 14px 42px var(--af-shadow);
 }
 
 .af-crud-page {
@@ -1457,13 +1627,13 @@ a:hover {
   gap: 16px;
   min-height: 96px;
   padding: 14px 16px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 18px;
   background:
-    linear-gradient(90deg, rgba(34, 197, 94, 0.14), transparent 36%),
+    linear-gradient(90deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 14%, transparent), transparent 36%),
     linear-gradient(270deg, rgba(56, 189, 248, 0.08), transparent 38%),
-    rgba(10, 15, 20, 0.82);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24);
+    var(--af-panel-bg);
+  box-shadow: 0 16px 48px var(--af-shadow);
   overflow: hidden;
 }
 
@@ -1472,8 +1642,8 @@ a:hover {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(var(--af-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--af-grid-line) 1px, transparent 1px);
   background-size: 32px 32px;
   opacity: 0.26;
 }
@@ -1483,8 +1653,8 @@ a:hover {
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--af-green), var(--af-cyan));
-  box-shadow: 0 0 22px rgba(34, 197, 94, 0.55);
+  background: linear-gradient(180deg, var(--page-accent, var(--af-green)), var(--af-cyan));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--page-accent, var(--af-green)) 55%, transparent);
 }
 
 .af-page-hero-copy,
@@ -1504,7 +1674,7 @@ a:hover {
 
 .af-page-hero .af-kicker {
   margin-bottom: 5px;
-  color: #7dffad;
+  color: color-mix(in srgb, var(--page-accent, var(--af-green)) 70%, white);
   font-size: 11px;
 }
 
@@ -1520,18 +1690,18 @@ a:hover {
 
 .af-page-hero h1 {
   margin: 0;
-  color: #ffffff;
-  font-size: clamp(21px, 2.1vw, 28px);
-  font-weight: 800;
+  color: var(--af-text);
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 300;
   line-height: 1.15;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
 }
 
 .af-page-hero p {
   max-width: 720px;
   margin: 5px 0 0;
   overflow: hidden;
-  color: #b9c4d0;
+  color: var(--af-muted);
   font-size: 13px;
   line-height: 1.45;
   text-overflow: ellipsis;
@@ -1566,9 +1736,9 @@ a:hover {
 .af-page-metric {
   min-width: 88px;
   padding: 8px 10px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--af-border);
   border-radius: 12px;
-  background: rgba(5, 6, 9, 0.36);
+  background: var(--af-panel);
 }
 
 .af-page-metric span {
@@ -1580,7 +1750,7 @@ a:hover {
 .af-page-metric strong {
   display: block;
   margin-top: 4px;
-  color: #ffffff;
+  color: var(--af-text);
   font-family: var(--font-fira-code), monospace;
   font-size: 16px;
 }
@@ -1599,7 +1769,7 @@ a:hover {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), transparent 42%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 8%, transparent), transparent 42%);
   opacity: 0.75;
 }
 
@@ -1607,8 +1777,11 @@ a:hover {
   position: relative;
   z-index: 1;
   margin-bottom: 14px;
-  color: #ffffff;
-  font-weight: 700;
+  color: var(--af-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .af-section-hint {
@@ -1634,13 +1807,16 @@ a:hover {
 
 @media (max-width: 1180px) {
   .af-stat-grid,
+  .af-bento-grid,
   .af-dashboard-hero,
   .af-dashboard-lower {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .af-flow-console,
-  .af-risk-card {
+  .af-risk-card,
+  .af-bento-hero,
+  .af-bento-wide {
     grid-column: 1 / -1;
   }
 }
@@ -1656,9 +1832,15 @@ a:hover {
 
   .af-login-insights,
   .af-stat-grid,
+  .af-bento-grid,
   .af-dashboard-hero,
   .af-dashboard-lower {
     grid-template-columns: 1fr;
+  }
+
+  .af-bento-hero,
+  .af-bento-wide {
+    grid-column: 1;
   }
 
   .af-page-hero {

@@ -279,8 +279,13 @@ export default function DashboardPage() {
     },
   ];
 
+  const compactCards = STAT_CARDS.filter(
+    (c) => c.key !== "inventoryCount" && c.key !== "lowStockCount",
+  );
+
   return (
     <div className="af-dashboard">
+      {/* Hero: title + headline metrics */}
       <section ref={heroRef} className="af-dashboard-hero af-gradient-border af-mouse-glow">
         <div className="af-hero-copy">
           <div className="af-kicker">库存脉冲 / 实时概览</div>
@@ -304,51 +309,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
-        <div className="af-flow-console af-gradient-border" aria-hidden="true">
-          <div className="af-console-head">
-            <span>流转控制台</span>
-            <span className="af-console-lights">
-              <span />
-              <span />
-              <span />
-            </span>
-          </div>
-          <div className="af-console-body">
-            <div
-              className="af-console-route"
-              style={{ "--route-color": "#22c55e" } as React.CSSProperties}
-            >
-              <span>采购入库</span>
-              <div className="af-route-line" />
-              <span><StatValue value={liveStats.purchaseOrderCount} /></span>
-            </div>
-            <div
-              className="af-console-route"
-              style={{ "--route-color": "#38bdf8" } as React.CSSProperties}
-            >
-              <span>库存同步</span>
-              <div className="af-route-line" />
-              <span><StatValue value={liveStats.inventoryCount} /></span>
-            </div>
-            <div
-              className="af-console-route"
-              style={{ "--route-color": "#f59e0b" } as React.CSSProperties}
-            >
-              <span>销售出库</span>
-              <div className="af-route-line" />
-              <span><StatValue value={liveStats.saleOrderCount} /></span>
-            </div>
-            <div
-              className="af-console-route"
-              style={{ "--route-color": "#fb7185" } as React.CSSProperties}
-            >
-              <span>风险预警</span>
-              <div className="af-route-line" />
-              <span><StatValue value={liveStats.lowStockCount} /></span>
-            </div>
-          </div>
-        </div>
       </section>
 
       {loading ? (
@@ -364,17 +324,96 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <section className="af-stat-grid" aria-label="业务统计">
-            {STAT_CARDS.map((card, index) => (
+          {/* Bento Grid */}
+          <section className="af-bento-grid" aria-label="业务统计">
+            {/* Hero card: Inventory Health — spans 2 cols x 2 rows */}
+            <GlowCard
+              className="af-stat-card af-bento-hero af-mouse-glow"
+              style={{ "--card-accent": "#22c55e" } as React.CSSProperties}
+            >
+              <div className="af-stat-top">
+                <span className="af-stat-icon"><InboxOutlined /></span>
+                <span className="af-stat-code">库存</span>
+              </div>
+              <p className="af-stat-label">库存记录</p>
+              <div className="af-stat-value">
+                <StatValue value={stats.inventoryCount} />
+              </div>
+              <div className="af-health-ring" style={{ "--health-value": `${derived.inventoryHealth}%` } as React.CSSProperties}>
+                <svg viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth="8" />
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--af-green)" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${derived.inventoryHealth * 3.267} 326.7`} transform="rotate(-90 60 60)" />
+                </svg>
+                <span className="af-health-label">{derived.inventoryHealth}%</span>
+              </div>
+              <div className="af-stat-footer">
+                <span>库存单元追踪</span>
+                <span className="af-stat-spark" />
+              </div>
+            </GlowCard>
+
+            {/* Low Stock Alert — wide card */}
+            <GlowCard
+              className="af-stat-card af-bento-wide af-mouse-glow"
+              style={{ "--card-accent": "#f43f5e" } as React.CSSProperties}
+            >
+              <div className="af-stat-top">
+                <span className="af-stat-icon"><WarningOutlined /></span>
+                <span className="af-stat-code">预警</span>
+              </div>
+              <p className="af-stat-label">低库存预警</p>
+              <div className="af-stat-value">
+                <StatValue value={stats.lowStockCount} />
+              </div>
+              <div className="af-risk-meter" style={{ "--risk-value": `${Math.max(4, derived.riskPercent)}%` } as React.CSSProperties}>
+                <span />
+              </div>
+              <div className="af-stat-footer">
+                <span>{stats.lowStockCount > 0 ? "需要补货关注" : "库存状态平稳"}</span>
+                <span className="af-stat-spark" />
+              </div>
+            </GlowCard>
+
+            {/* Flow Console — wide card */}
+            <div className="af-flow-console af-gradient-border af-bento-wide" aria-hidden="true">
+              <div className="af-console-head">
+                <span>流转控制台</span>
+                <span className="af-console-lights">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              </div>
+              <div className="af-console-body">
+                <div className="af-console-route" style={{ "--route-color": "#22c55e" } as React.CSSProperties}>
+                  <span>采购入库</span>
+                  <div className="af-route-line" />
+                  <span><StatValue value={liveStats.purchaseOrderCount} /></span>
+                </div>
+                <div className="af-console-route" style={{ "--route-color": "#38bdf8" } as React.CSSProperties}>
+                  <span>库存同步</span>
+                  <div className="af-route-line" />
+                  <span><StatValue value={liveStats.inventoryCount} /></span>
+                </div>
+                <div className="af-console-route" style={{ "--route-color": "#f59e0b" } as React.CSSProperties}>
+                  <span>销售出库</span>
+                  <div className="af-route-line" />
+                  <span><StatValue value={liveStats.saleOrderCount} /></span>
+                </div>
+                <div className="af-console-route" style={{ "--route-color": "#fb7185" } as React.CSSProperties}>
+                  <span>风险预警</span>
+                  <div className="af-route-line" />
+                  <span><StatValue value={liveStats.lowStockCount} /></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Compact stat cards */}
+            {compactCards.map((card, index) => (
               <GlowCard
-                className="af-stat-card af-mouse-glow"
+                className="af-stat-card af-stat-card--compact af-mouse-glow"
                 key={card.key}
-                style={
-                  {
-                    "--card-accent": card.accent,
-                    animationDelay: `${index * 55}ms`,
-                  } as React.CSSProperties
-                }
+                style={{ "--card-accent": card.accent, animationDelay: `${index * 55}ms` } as React.CSSProperties}
               >
                 <div className="af-stat-top">
                   <span className="af-stat-icon">{card.icon}</span>
@@ -390,90 +429,38 @@ export default function DashboardPage() {
                 </div>
               </GlowCard>
             ))}
-          </section>
 
-          <section className="af-dashboard-lower">
-            <div className="af-command-card">
+            {/* Command Card — wide card with workflow */}
+            <div className="af-command-card af-bento-wide">
               <div className="af-section-head">
                 <div>
                   <h2>快捷作战台</h2>
                   <p>高频入口靠前，采购、销售、库存风险可以直接切入处理。</p>
                 </div>
               </div>
-
               <div className="af-command-actions">
-                <Button
-                  type="primary"
-                  href="/transaction/purchase-order"
-                  icon={<PlusOutlined />}
-                  className="af-command-button"
-                >
+                <Button type="primary" href="/transaction/purchase-order" icon={<PlusOutlined />} className="af-command-button">
                   采购入库
                 </Button>
-                <Button
-                  href="/transaction/sale-order"
-                  icon={<SwapOutlined />}
-                  className="af-command-button"
-                >
+                <Button href="/transaction/sale-order" icon={<SwapOutlined />} className="af-command-button">
                   销售出库
                 </Button>
-                <Button
-                  href="/inventory"
-                  icon={<AlertOutlined />}
-                  danger={stats.lowStockCount > 0}
-                  className="af-command-button"
-                >
+                <Button href="/inventory" icon={<AlertOutlined />} danger={stats.lowStockCount > 0} className="af-command-button">
                   查看低库存
                 </Button>
               </div>
-
               <div className="af-workflow-list">
                 {workflowRows.map((row) => (
                   <div className="af-workflow-row" key={row.label}>
                     <span>{row.label}</span>
                     <div className="af-workflow-meter">
-                      <span
-                        style={
-                          {
-                            "--workflow-value": `${row.value}%`,
-                            "--workflow-color": row.color,
-                          } as React.CSSProperties
-                        }
-                      />
+                      <span style={{ "--workflow-value": `${row.value}%`, "--workflow-color": row.color } as React.CSSProperties} />
                     </div>
                     <strong>{row.value}%</strong>
                   </div>
                 ))}
               </div>
             </div>
-
-            <aside className="af-risk-card af-mouse-glow">
-              <div className="af-section-head">
-                <div>
-                  <h2>低库存雷达</h2>
-                  <p>安全库存以下的产品会形成优先处理信号。</p>
-                </div>
-              </div>
-              <div className="af-risk-number"><StatValue value={stats.lowStockCount} /></div>
-              <div className="af-risk-label">
-                {stats.lowStockCount > 0 ? "需要补货关注" : "库存状态平稳"}
-              </div>
-              <p className="af-risk-copy">
-                {stats.lowStockCount > 0
-                  ? "建议先检查低库存产品的采购链路和仓点容量，避免销售侧被动等待。"
-                  : "当前没有低于安全库存的记录，库存健康度维持在高位。"}
-              </p>
-              <div
-                className="af-risk-meter"
-                style={
-                  {
-                    "--risk-value": `${Math.max(4, derived.riskPercent)}%`,
-                  } as React.CSSProperties
-                }
-              >
-                <span />
-              </div>
-            </aside>
           </section>
         </>
       )}

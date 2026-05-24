@@ -14,13 +14,16 @@ import {
   InboxOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  MoonOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
+  SunOutlined,
   TeamOutlined,
   TransactionOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { useTheme } from "../../components/providers";
 
 const { Sider, Header, Content, Footer } = Layout;
 
@@ -122,6 +125,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { themeMode, toggleTheme } = useTheme();
 
   const selectedKeys = useMemo(() => {
     const match = ALL_ROUTE_KEYS.filter(
@@ -146,8 +150,17 @@ export default function AdminLayout({
     [pathname],
   );
 
+  const zoneColor = useMemo(() => {
+    if (pathname.startsWith("/inventory") || pathname.startsWith("/depots"))
+      return "#10b981";
+    if (pathname.startsWith("/transaction")) return "#6366f1";
+    if (pathname.startsWith("/products")) return "#06b6d4";
+    if (pathname.startsWith("/partner")) return "#f59e0b";
+    return "#22c55e";
+  }, [pathname]);
+
   return (
-    <Layout className="af-admin-shell">
+    <Layout className="af-admin-shell" style={{ "--page-accent": zoneColor } as React.CSSProperties}>
       <Sider
         collapsible
         collapsed={collapsed}
@@ -172,7 +185,7 @@ export default function AdminLayout({
         </div>
         <Menu
           mode="inline"
-          theme="dark"
+          theme={themeMode === "dark" ? "dark" : "light"}
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
           items={NAV_ITEMS}
@@ -197,6 +210,14 @@ export default function AdminLayout({
           </div>
 
           <div className="af-header-right">
+            <button
+              type="button"
+              className="af-theme-toggle"
+              aria-label={themeMode === "dark" ? "切换到浅色模式" : "切换到深色模式"}
+              onClick={toggleTheme}
+            >
+              {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
+            </button>
             <div className="af-status-chip">实时同步</div>
             <div className="af-user-chip">
               <span className="af-user-avatar">管</span>
