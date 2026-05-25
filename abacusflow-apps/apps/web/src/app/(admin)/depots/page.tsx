@@ -191,9 +191,9 @@ export default function DepotsPage() {
           { label: "当前显示", value: filtered.length },
         ]}
         actions={
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          新增储存点
-        </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            新增储存点
+          </Button>
         }
       />
 

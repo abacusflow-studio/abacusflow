@@ -60,11 +60,12 @@ class GlobalExceptionHandler {
     @ExceptionHandler(OAuth2AuthenticationException::class)
     fun handleOAuth2Authentication(ex: OAuth2AuthenticationException): ResponseEntity<ErrorResponseVO> {
         val error = ex.error
-        val status = when (error.errorCode) {
-            "invalid_token" -> HttpStatus.UNAUTHORIZED
-            "access_denied" -> HttpStatus.FORBIDDEN
-            else -> HttpStatus.UNAUTHORIZED
-        }
+        val status =
+            when (error.errorCode) {
+                "invalid_token" -> HttpStatus.UNAUTHORIZED
+                "access_denied" -> HttpStatus.FORBIDDEN
+                else -> HttpStatus.UNAUTHORIZED
+            }
         return ResponseEntity.status(status).body(
             ErrorResponseVO(status.value(), error.description ?: "认证失败"),
         )

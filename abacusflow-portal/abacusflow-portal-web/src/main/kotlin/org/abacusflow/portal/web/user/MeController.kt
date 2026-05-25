@@ -3,8 +3,6 @@ package org.abacusflow.portal.web.user
 import org.abacusflow.portal.web.api.MeApi
 import org.abacusflow.portal.web.model.BootstrapResultVO
 import org.abacusflow.portal.web.model.CurrentUserVO
-import org.abacusflow.usecase.user.BootstrapResultTO
-import org.abacusflow.usecase.user.CurrentUserTO
 import org.abacusflow.usecase.user.service.BootstrapService
 import org.abacusflow.usecase.user.service.CurrentUserService
 import org.slf4j.LoggerFactory
@@ -21,7 +19,6 @@ class MeController(
     private val currentUserService: CurrentUserService,
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}") private val issuerUri: String,
 ) : MeApi {
-
     private val restClient = RestClient.create()
 
     override fun bootstrap(): ResponseEntity<BootstrapResultVO> {
@@ -35,14 +32,15 @@ class MeController(
         val displayName = (userInfo?.get("name") as? String) ?: (userInfo?.get("nickname") as? String)
         val pictureUrl = userInfo?.get("picture") as? String
 
-        val result = bootstrapService.bootstrap(
-            issuer = issuer,
-            subject = subject,
-            email = email,
-            emailVerified = emailVerified,
-            displayName = displayName,
-            pictureUrl = pictureUrl,
-        )
+        val result =
+            bootstrapService.bootstrap(
+                issuer = issuer,
+                subject = subject,
+                email = email,
+                emailVerified = emailVerified,
+                displayName = displayName,
+                pictureUrl = pictureUrl,
+            )
 
         return ResponseEntity.ok(result.toVO())
     }
@@ -52,8 +50,9 @@ class MeController(
         val issuer = jwt.issuer?.toString() ?: return ResponseEntity.badRequest().build()
         val subject = jwt.subject ?: return ResponseEntity.badRequest().build()
 
-        val currentUser = currentUserService.getCurrentUser(issuer, subject)
-            ?: return ResponseEntity.status(403).build()
+        val currentUser =
+            currentUserService.getCurrentUser(issuer, subject)
+                ?: return ResponseEntity.status(403).build()
 
         return ResponseEntity.ok(currentUser.toVO())
     }
@@ -66,14 +65,15 @@ class MeController(
     private fun fetchUserInfo(accessToken: String): Map<String, Any?>? {
         return try {
             val userinfoUrl = issuerUri.trimEnd('/') + "/userinfo"
-            val response = restClient.get()
-                .uri(userinfoUrl)
-                .header("Authorization", "Bearer $accessToken")
-                .retrieve()
-                .onStatus({ it == HttpStatus.UNAUTHORIZED || it == HttpStatus.FORBIDDEN }) { _, _ ->
-                    logger.warn("Auth0 userinfo returned unauthorized")
-                }
-                .toEntity(Map::class.java)
+            val response =
+                restClient.get()
+                    .uri(userinfoUrl)
+                    .header("Authorization", "Bearer $accessToken")
+                    .retrieve()
+                    .onStatus({ it == HttpStatus.UNAUTHORIZED || it == HttpStatus.FORBIDDEN }) { _, _ ->
+                        logger.warn("Auth0 userinfo returned unauthorized")
+                    }
+                    .toEntity(Map::class.java)
 
             @Suppress("UNCHECKED_CAST")
             response.body as? Map<String, Any?>
@@ -87,4 +87,3 @@ class MeController(
         private val logger = LoggerFactory.getLogger(MeController::class.java)
     }
 }
-

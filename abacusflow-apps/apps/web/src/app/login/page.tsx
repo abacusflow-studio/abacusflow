@@ -60,7 +60,11 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <section ref={cardRef} className="af-login-floating-card af-mouse-glow af-gradient-border" aria-label="登录">
+      <section
+        ref={cardRef}
+        className="af-login-floating-card af-mouse-glow af-gradient-border"
+        aria-label="登录"
+      >
         <div className="af-login-brand">
           <div className="af-brand-mark">
             <CalculatorOutlined />

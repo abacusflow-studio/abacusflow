@@ -187,9 +187,9 @@ export default function CustomersPage() {
           { label: "当前页", value: data.length },
         ]}
         actions={
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          新增客户
-        </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            新增客户
+          </Button>
         }
       />
 

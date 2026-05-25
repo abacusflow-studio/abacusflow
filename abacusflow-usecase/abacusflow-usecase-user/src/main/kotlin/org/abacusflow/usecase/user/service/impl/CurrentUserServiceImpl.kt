@@ -11,9 +11,13 @@ import org.springframework.transaction.annotation.Transactional
 class CurrentUserServiceImpl(
     private val externalIdentityRepository: ExternalIdentityRepository,
 ) : CurrentUserService {
-    override fun getCurrentUser(issuer: String, subject: String): CurrentUserTO? {
-        val identity = externalIdentityRepository.findByIssuerAndSubject(issuer, subject)
-            ?: return null
+    override fun getCurrentUser(
+        issuer: String,
+        subject: String,
+    ): CurrentUserTO? {
+        val identity =
+            externalIdentityRepository.findByIssuerAndSubject(issuer, subject)
+                ?: return null
 
         val user = identity.user
         val roles = user.roles.map { it.name }

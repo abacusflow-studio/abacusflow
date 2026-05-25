@@ -219,14 +219,14 @@ export default function ProductCategoriesPage() {
           { label: "当前显示", value: filteredRows.length },
         ]}
         actions={
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => openCreate()}
-          disabled={!rootCategory}
-        >
-          新增产品类别
-        </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => openCreate()}
+            disabled={!rootCategory}
+          >
+            新增产品类别
+          </Button>
         }
       />
 

@@ -276,9 +276,9 @@ export default function ProductsPage() {
           { label: "类别数量", value: categories.length },
         ]}
         actions={
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          新增产品
-        </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            新增产品
+          </Button>
         }
       />
 

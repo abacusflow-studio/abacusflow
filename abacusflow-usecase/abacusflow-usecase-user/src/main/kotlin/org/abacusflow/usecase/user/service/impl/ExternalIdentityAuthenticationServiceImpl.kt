@@ -30,7 +30,7 @@ class ExternalIdentityAuthenticationServiceImpl(
     private fun initViewerRole() {
         viewerRole = roleRepository.findByName(DEFAULT_VIEWER_ROLE_NAME)
             ?: throw IllegalStateException(
-                "Default role '$DEFAULT_VIEWER_ROLE_NAME' not found. Ensure RoleDataInitializer has run."
+                "Default role '$DEFAULT_VIEWER_ROLE_NAME' not found. Ensure RoleDataInitializer has run.",
             )
     }
 
@@ -62,14 +62,18 @@ class ExternalIdentityAuthenticationServiceImpl(
             id = user.id,
             name = user.name,
             roleNames = user.roles.map { it.name }.toSet(),
-            permissionNames = user.roles
-                .flatMap { it.permissions }
-                .map { it.name }
-                .toSet(),
+            permissionNames =
+                user.roles
+                    .flatMap { it.permissions }
+                    .map { it.name }
+                    .toSet(),
         )
     }
 
-    private fun createUserAndIdentity(issuer: String, subject: String): AuthenticatedUserTO? {
+    private fun createUserAndIdentity(
+        issuer: String,
+        subject: String,
+    ): AuthenticatedUserTO? {
         val user = User(name = generateLocalUserName(issuer, subject))
         user.enable()
 
@@ -77,30 +81,36 @@ class ExternalIdentityAuthenticationServiceImpl(
 
         val savedUser = userRepository.save(user)
 
-        val externalIdentity = ExternalIdentity(
-            issuer = issuer,
-            subject = subject,
-            user = savedUser,
-            provider = extractProvider(subject),
-        )
+        val externalIdentity =
+            ExternalIdentity(
+                issuer = issuer,
+                subject = subject,
+                user = savedUser,
+                provider = extractProvider(subject),
+            )
         externalIdentityRepository.save(externalIdentity)
 
         return AuthenticatedUserTO(
             id = savedUser.id,
             name = savedUser.name,
             roleNames = savedUser.roles.map { it.name }.toSet(),
-            permissionNames = savedUser.roles
-                .flatMap { it.permissions }
-                .map { it.name }
-                .toSet(),
+            permissionNames =
+                savedUser.roles
+                    .flatMap { it.permissions }
+                    .map { it.name }
+                    .toSet(),
         )
     }
 
-    private fun generateLocalUserName(issuer: String, subject: String): String {
-        val digest = MessageDigest
-            .getInstance("SHA-256")
-            .digest("$issuer|$subject".toByteArray())
-            .joinToString("") { "%02x".format(it) }
+    private fun generateLocalUserName(
+        issuer: String,
+        subject: String,
+    ): String {
+        val digest =
+            MessageDigest
+                .getInstance("SHA-256")
+                .digest("$issuer|$subject".toByteArray())
+                .joinToString("") { "%02x".format(it) }
         return "oidc_${digest.take(24)}"
     }
 

@@ -367,39 +367,40 @@ export default function InventoryPage() {
         metrics={[
           { label: "当前记录", value: total },
           { label: "产品类别", value: categories.length },
-          { label: "视图模式", value: viewMode === "inventories" ? "汇总" : "明细" },
+          {
+            label: "视图模式",
+            value: viewMode === "inventories" ? "汇总" : "明细",
+          },
         ]}
         actions={
-        <Space wrap>
-          <Button
-            type="primary"
-            icon={<DownloadOutlined />}
-            onClick={() => handleExport("excel")}
-          >
-            导出 Excel
-          </Button>
-          <Button
-            type="primary"
-            icon={<FileTextOutlined />}
-            onClick={() => handleExport("pdf")}
-          >
-            导出 PDF
-          </Button>
-          <Button
-            icon={<PrinterOutlined />}
-            onClick={() => handleExport("pdf", true)}
-          >
-            打印库存
-          </Button>
-        </Space>
+          <Space wrap>
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              onClick={() => handleExport("excel")}
+            >
+              导出 Excel
+            </Button>
+            <Button
+              type="primary"
+              icon={<FileTextOutlined />}
+              onClick={() => handleExport("pdf")}
+            >
+              导出 PDF
+            </Button>
+            <Button
+              icon={<PrinterOutlined />}
+              onClick={() => handleExport("pdf", true)}
+            >
+              打印库存
+            </Button>
+          </Space>
         }
       />
 
       <div className="grid grid-cols-[260px_1fr] gap-4 max-lg:grid-cols-1">
         <div className="card af-side-card self-start">
-          <div className="af-section-hint">
-            打印/导出依据所选分类
-          </div>
+          <div className="af-section-hint">打印/导出依据所选分类</div>
           <div className="af-section-label">产品类别</div>
           <CategoryTree
             categories={categories}

@@ -117,7 +117,8 @@
 }
 
 @keyframes af-float-1 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   25% {
@@ -132,7 +133,8 @@
 }
 
 @keyframes af-float-2 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   33% {
@@ -144,7 +146,8 @@
 }
 
 @keyframes af-float-3 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   20% {
@@ -171,7 +174,8 @@
 }
 
 @keyframes af-glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.5;
   }
   50% {
@@ -206,7 +210,13 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-fira-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    var(--font-fira-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -215,7 +225,9 @@ body {
     linear-gradient(135deg, var(--af-hero-gradient-1), transparent 34%),
     linear-gradient(315deg, var(--af-hero-gradient-2), transparent 36%),
     var(--af-ink);
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Floating gradient orbs — adds depth to dark backgrounds */
@@ -227,10 +239,25 @@ body::after {
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 520px 520px at 15% 20%, rgba(34, 197, 94, 0.14), transparent 70%),
-    radial-gradient(ellipse 440px 440px at 82% 75%, rgba(56, 189, 248, 0.12), transparent 70%),
-    radial-gradient(ellipse 380px 380px at 50% 50%, rgba(167, 139, 250, 0.08), transparent 70%);
-  animation: af-float-1 22s ease-in-out infinite, af-float-2 28s ease-in-out infinite, af-float-3 34s ease-in-out infinite;
+    radial-gradient(
+      ellipse 520px 520px at 15% 20%,
+      rgba(34, 197, 94, 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 440px 440px at 82% 75%,
+      rgba(56, 189, 248, 0.12),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 380px 380px at 50% 50%,
+      rgba(167, 139, 250, 0.08),
+      transparent 70%
+    );
+  animation:
+    af-float-1 22s ease-in-out infinite,
+    af-float-2 28s ease-in-out infinite,
+    af-float-3 34s ease-in-out infinite;
   filter: blur(60px);
   opacity: 0.9;
 }
@@ -251,7 +278,10 @@ body::before {
       transparent 1px,
       transparent 22px
     );
-  background-size: 44px 44px, 44px 44px, 180px 180px;
+  background-size:
+    44px 44px,
+    44px 44px,
+    180px 180px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.82), transparent 92%);
 }
 
@@ -276,7 +306,13 @@ body::before {
 
 /* Gradient text — for hero titles */
 .af-gradient-text {
-  background: linear-gradient(135deg, #ffffff 0%, #b8ffcf 35%, var(--af-cyan) 65%, #ffffff 100%);
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #b8ffcf 35%,
+    var(--af-cyan) 65%,
+    #ffffff 100%
+  );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -303,7 +339,9 @@ body::before {
     var(--af-violet),
     var(--af-green)
   );
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
   pointer-events: none;
@@ -354,11 +392,17 @@ a:hover {
   border-radius: var(--af-radius);
   padding: 20px;
   margin-bottom: 16px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card:hover {
-  border-color: color-mix(in srgb, var(--page-accent, var(--af-green)) 32%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--page-accent, var(--af-green)) 32%,
+    transparent
+  );
   box-shadow: 0 16px 48px var(--af-shadow-strong);
 }
 
@@ -417,7 +461,11 @@ a:hover {
 
 .ant-table-tbody > tr:hover > td,
 .ant-table-tbody > tr.ant-table-row:hover > td {
-  background: color-mix(in srgb, var(--page-accent, var(--af-green)) 8%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--page-accent, var(--af-green)) 8%,
+    transparent
+  ) !important;
 }
 
 .ant-table-wrapper,
@@ -705,7 +753,12 @@ a:hover {
   top: 0;
   bottom: 0;
   width: 46%;
-  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.14), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(34, 197, 94, 0.14),
+    transparent
+  );
   animation: af-scan 4.6s linear infinite;
 }
 
@@ -749,16 +802,18 @@ a:hover {
   content: "";
   height: 7px;
   border-radius: 999px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      var(--lane-color, var(--af-green)) 0,
-      var(--lane-color, var(--af-green)) 18px,
-      transparent 18px,
-      transparent 30px
-    );
+  background: repeating-linear-gradient(
+    90deg,
+    var(--lane-color, var(--af-green)) 0,
+    var(--lane-color, var(--af-green)) 18px,
+    transparent 18px,
+    transparent 30px
+  );
   background-size: 96px 7px;
-  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--lane-color, var(--af-green)) 46%, transparent));
+  filter: drop-shadow(
+    0 0 12px
+      color-mix(in srgb, var(--lane-color, var(--af-green)) 46%, transparent)
+  );
   animation: af-dash-flow 2.8s linear infinite;
 }
 
@@ -926,7 +981,11 @@ a:hover {
   position: relative;
   min-height: 100vh;
   background:
-    linear-gradient(115deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 9%, transparent), transparent 32%),
+    linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--page-accent, var(--af-green)) 9%, transparent),
+      transparent 32%
+    ),
     linear-gradient(260deg, rgba(56, 189, 248, 0.08), transparent 42%),
     var(--af-ink);
 }
@@ -994,14 +1053,23 @@ a:hover {
 }
 
 .af-sidebar .ant-menu-item-selected {
-  border: 1px solid color-mix(in srgb, var(--page-accent, var(--af-green)) 28%, transparent);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 18%, transparent), rgba(56, 189, 248, 0.08)) !important;
+  border: 1px solid
+    color-mix(in srgb, var(--page-accent, var(--af-green)) 28%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--page-accent, var(--af-green)) 18%, transparent),
+    rgba(56, 189, 248, 0.08)
+  ) !important;
   box-shadow: inset 3px 0 0 var(--page-accent, var(--af-green));
 }
 
 .af-sidebar .ant-menu-item-selected a,
 .af-sidebar .ant-menu-item-selected .anticon {
-  color: color-mix(in srgb, var(--page-accent, var(--af-green)) 80%, white) !important;
+  color: color-mix(
+    in srgb,
+    var(--page-accent, var(--af-green)) 80%,
+    white
+  ) !important;
 }
 
 .af-admin-header {
@@ -1179,7 +1247,12 @@ a:hover {
   top: 0;
   bottom: 0;
   width: 42%;
-  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.13), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(34, 197, 94, 0.13),
+    transparent
+  );
   animation: af-scan 5.2s linear infinite;
 }
 
@@ -1304,14 +1377,13 @@ a:hover {
 .af-route-line {
   height: 8px;
   border-radius: 999px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      var(--route-color, var(--af-green)) 0,
-      var(--route-color, var(--af-green)) 20px,
-      transparent 20px,
-      transparent 32px
-    );
+  background: repeating-linear-gradient(
+    90deg,
+    var(--route-color, var(--af-green)) 0,
+    var(--route-color, var(--af-green)) 20px,
+    transparent 20px,
+    transparent 32px
+  );
   background-size: 96px 8px;
   animation: af-dash-flow 3s linear infinite;
 }
@@ -1381,7 +1453,11 @@ a:hover {
   border: 1px solid var(--af-border);
   border-radius: 22px;
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--card-accent, var(--af-green)) 14%, transparent), transparent 54%),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--card-accent, var(--af-green)) 14%, transparent),
+      transparent 54%
+    ),
     var(--af-panel-bg);
   box-shadow: 0 20px 64px var(--af-shadow);
   overflow: hidden;
@@ -1395,7 +1471,8 @@ a:hover {
   bottom: -32px;
   width: 128px;
   height: 128px;
-  border: 1px solid color-mix(in srgb, var(--card-accent, var(--af-green)) 34%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--card-accent, var(--af-green)) 34%, transparent);
   border-radius: 28px;
   transform: rotate(18deg);
 }
@@ -1416,7 +1493,8 @@ a:hover {
   height: 46px;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--card-accent, var(--af-green)) 40%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--card-accent, var(--af-green)) 40%, transparent);
   border-radius: 15px;
   color: var(--card-accent, var(--af-green));
   background: var(--af-panel);
@@ -1458,14 +1536,13 @@ a:hover {
   width: 72px;
   height: 7px;
   border-radius: 999px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      var(--card-accent, var(--af-green)) 0,
-      var(--card-accent, var(--af-green)) 8px,
-      transparent 8px,
-      transparent 14px
-    );
+  background: repeating-linear-gradient(
+    90deg,
+    var(--card-accent, var(--af-green)) 0,
+    var(--card-accent, var(--af-green)) 8px,
+    transparent 8px,
+    transparent 14px
+  );
   opacity: 0.75;
   animation: af-dash-flow 3.6s linear infinite;
 }
@@ -1544,7 +1621,11 @@ a:hover {
   width: var(--workflow-value, 0%);
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--workflow-color, var(--af-green)), #ffffff);
+  background: linear-gradient(
+    90deg,
+    var(--workflow-color, var(--af-green)),
+    #ffffff
+  );
   animation: af-meter-pulse 2.8s ease-in-out infinite;
 }
 
@@ -1587,7 +1668,12 @@ a:hover {
   width: var(--risk-value, 0%);
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--af-green), var(--af-amber), var(--af-rose));
+  background: linear-gradient(
+    90deg,
+    var(--af-green),
+    var(--af-amber),
+    var(--af-rose)
+  );
 }
 
 .af-dashboard-loading,
@@ -1630,7 +1716,11 @@ a:hover {
   border: 1px solid var(--af-border);
   border-radius: 18px;
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 14%, transparent), transparent 36%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--page-accent, var(--af-green)) 14%, transparent),
+      transparent 36%
+    ),
     linear-gradient(270deg, rgba(56, 189, 248, 0.08), transparent 38%),
     var(--af-panel-bg);
   box-shadow: 0 16px 48px var(--af-shadow);
@@ -1653,8 +1743,13 @@ a:hover {
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--page-accent, var(--af-green)), var(--af-cyan));
-  box-shadow: 0 0 22px color-mix(in srgb, var(--page-accent, var(--af-green)) 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    var(--page-accent, var(--af-green)),
+    var(--af-cyan)
+  );
+  box-shadow: 0 0 22px
+    color-mix(in srgb, var(--page-accent, var(--af-green)) 55%, transparent);
 }
 
 .af-page-hero-copy,
@@ -1769,7 +1864,11 @@ a:hover {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--page-accent, var(--af-green)) 8%, transparent), transparent 42%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--page-accent, var(--af-green)) 8%, transparent),
+    transparent 42%
+  );
   opacity: 0.75;
 }
 

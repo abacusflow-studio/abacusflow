@@ -12,11 +12,7 @@ const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
 
 export function useCountUp(
   target: number,
-  {
-    duration = 1200,
-    delay = 0,
-    easing = easeOutExpo,
-  }: UseCountUpOptions = {},
+  { duration = 1200, delay = 0, easing = easeOutExpo }: UseCountUpOptions = {},
 ) {
   const [value, setValue] = useState(0);
   const prevTarget = useRef(0);

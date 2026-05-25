@@ -528,11 +528,11 @@ export function OrderListPage({
           { label: "当前页", value: data.length },
         ]}
         actions={
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={openCreate}
-        >{`新增${orderLabel}单`}</Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openCreate}
+          >{`新增${orderLabel}单`}</Button>
         }
       />
 

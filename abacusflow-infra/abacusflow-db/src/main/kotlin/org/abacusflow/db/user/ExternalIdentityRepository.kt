@@ -6,7 +6,10 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface ExternalIdentityRepository : JpaRepository<ExternalIdentity, Long> {
-    fun findByIssuerAndSubject(issuer: String, subject: String): ExternalIdentity?
+    fun findByIssuerAndSubject(
+        issuer: String,
+        subject: String,
+    ): ExternalIdentity?
 
     fun findByUserId(userId: Long): List<ExternalIdentity>
 

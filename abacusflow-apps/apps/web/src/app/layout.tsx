@@ -34,7 +34,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className={`${firaSans.variable} ${firaCode.variable} af-root-body`}>
+      <body
+        className={`${firaSans.variable} ${firaCode.variable} af-root-body`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

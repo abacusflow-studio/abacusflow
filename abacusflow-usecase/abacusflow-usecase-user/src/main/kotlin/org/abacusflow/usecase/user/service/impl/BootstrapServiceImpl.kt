@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional
 class BootstrapServiceImpl(
     private val externalIdentityRepository: ExternalIdentityRepository,
 ) : BootstrapService {
-
     override fun bootstrap(
         issuer: String,
         subject: String,
@@ -22,11 +21,12 @@ class BootstrapServiceImpl(
         displayName: String?,
         pictureUrl: String?,
     ): BootstrapResultTO {
-        val externalIdentity = externalIdentityRepository.findByIssuerAndSubject(issuer, subject)
-            ?: throw IllegalStateException(
-                "ExternalIdentity not found for issuer=$issuer subject=$subject. " +
-                    "User should have been auto-created during authentication."
-            )
+        val externalIdentity =
+            externalIdentityRepository.findByIssuerAndSubject(issuer, subject)
+                ?: throw IllegalStateException(
+                    "ExternalIdentity not found for issuer=$issuer subject=$subject. " +
+                        "User should have been auto-created during authentication.",
+                )
 
         val user = externalIdentity.user
 

@@ -21,7 +21,9 @@ export function ParticleNetwork() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const ctx = canvas.getContext("2d", { willReadFrequently: false });
     if (!ctx) return;
 
@@ -36,12 +38,15 @@ export function ParticleNetwork() {
     resize();
     window.addEventListener("resize", resize);
 
-    const particles: Particle[] = Array.from({ length: PARTICLE_COUNT }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * SPEED,
-      vy: (Math.random() - 0.5) * SPEED,
-    }));
+    const particles: Particle[] = Array.from(
+      { length: PARTICLE_COUNT },
+      () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * SPEED,
+        vy: (Math.random() - 0.5) * SPEED,
+      }),
+    );
 
     const draw = (now: number) => {
       if (now - lastTime < interval) {
@@ -89,8 +94,12 @@ export function ParticleNetwork() {
     if (prefersReduced) {
       // Static gradient fallback
       const grad = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, 0,
-        canvas.width / 2, canvas.height / 2, canvas.width / 2,
+        canvas.width / 2,
+        canvas.height / 2,
+        0,
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.width / 2,
       );
       grad.addColorStop(0, "rgba(34, 197, 94, 0.08)");
       grad.addColorStop(1, "transparent");

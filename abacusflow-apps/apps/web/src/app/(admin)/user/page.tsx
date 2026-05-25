@@ -258,9 +258,9 @@ export default function UsersPage() {
           { label: "当前显示", value: total },
         ]}
         actions={
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          新增用户
-        </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            新增用户
+          </Button>
         }
       />
 

@@ -1,7 +1,6 @@
 package org.abacusflow.portal.web
 
 import org.abacusflow.portal.web.authentication.AbacusFlowJwtAuthenticationConverter
-import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity

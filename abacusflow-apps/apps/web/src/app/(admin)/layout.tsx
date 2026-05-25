@@ -106,12 +106,32 @@ const NAV_ITEMS: MenuItemType[] = [
 const ROUTE_META = [
   { key: "/dashboard", title: "业务仪表盘", subtitle: "全链路库存与订单信号" },
   { key: "/user", title: "用户管理", subtitle: "团队身份与权限入口" },
-  { key: "/inventory", title: "库存管理", subtitle: "库存单元、仓点与安全库存" },
-  { key: "/transaction/purchase-order", title: "采购单管理", subtitle: "入库采购链路" },
-  { key: "/transaction/sale-order", title: "销售单管理", subtitle: "出库销售链路" },
-  { key: "/products/category", title: "产品类别管理", subtitle: "产品目录结构" },
+  {
+    key: "/inventory",
+    title: "库存管理",
+    subtitle: "库存单元、仓点与安全库存",
+  },
+  {
+    key: "/transaction/purchase-order",
+    title: "采购单管理",
+    subtitle: "入库采购链路",
+  },
+  {
+    key: "/transaction/sale-order",
+    title: "销售单管理",
+    subtitle: "出库销售链路",
+  },
+  {
+    key: "/products/category",
+    title: "产品类别管理",
+    subtitle: "产品目录结构",
+  },
   { key: "/products", title: "产品管理", subtitle: "产品编码与产品资料" },
-  { key: "/partner/customer", title: "客户管理", subtitle: "客户网络与联系方式" },
+  {
+    key: "/partner/customer",
+    title: "客户管理",
+    subtitle: "客户网络与联系方式",
+  },
   { key: "/partner/supplier", title: "供应商管理", subtitle: "供应侧伙伴资料" },
   { key: "/depots", title: "储存点管理", subtitle: "仓点位置与容量" },
 ];
@@ -160,7 +180,10 @@ export default function AdminLayout({
   }, [pathname]);
 
   return (
-    <Layout className="af-admin-shell" style={{ "--page-accent": zoneColor } as React.CSSProperties}>
+    <Layout
+      className="af-admin-shell"
+      style={{ "--page-accent": zoneColor } as React.CSSProperties}
+    >
       <Sider
         collapsible
         collapsed={collapsed}
@@ -213,7 +236,9 @@ export default function AdminLayout({
             <button
               type="button"
               className="af-theme-toggle"
-              aria-label={themeMode === "dark" ? "切换到浅色模式" : "切换到深色模式"}
+              aria-label={
+                themeMode === "dark" ? "切换到浅色模式" : "切换到深色模式"
+              }
               onClick={toggleTheme}
             >
               {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
