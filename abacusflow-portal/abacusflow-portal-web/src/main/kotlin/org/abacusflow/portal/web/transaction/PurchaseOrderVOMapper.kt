@@ -41,6 +41,7 @@ fun PurchaseOrderTO.PurchaseOrderItemTO.toVO(): PurchaseOrderItemVO =
     PurchaseOrderItemVO(
         id = id,
         productId = productId,
+        productName = productName,
         quantity = quantity,
         unitPrice = unitPrice.toDouble(),
         subtotal = subtotal.toDouble(),

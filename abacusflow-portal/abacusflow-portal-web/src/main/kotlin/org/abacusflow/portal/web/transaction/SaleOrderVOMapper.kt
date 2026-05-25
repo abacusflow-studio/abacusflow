@@ -40,6 +40,7 @@ fun SaleOrderTO.SaleOrderItemTO.toVO(): SaleOrderItemVO =
     SaleOrderItemVO(
         id = id,
         inventoryUnitId = inventoryUnitId,
+        inventoryUnitTitle = inventoryUnitTitle,
         quantity = quantity,
         unitPrice = unitPrice.toDouble(),
         discountedPrice = discountedPrice.toDouble(),

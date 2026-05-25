@@ -1052,6 +1052,16 @@ a:hover {
   color: var(--af-muted) !important;
 }
 
+.af-sidebar .ant-menu-submenu {
+  margin-block: 0 !important;
+}
+
+.af-sidebar .ant-menu-sub > .ant-menu-item {
+  padding-left: 52px !important;
+  min-height: 38px;
+  margin-block: 2px;
+}
+
 .af-sidebar .ant-menu-item-selected {
   border: 1px solid
     color-mix(in srgb, var(--page-accent, var(--af-green)) 28%, transparent);

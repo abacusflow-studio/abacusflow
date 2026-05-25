@@ -19,6 +19,7 @@ data class SaleOrderTO(
     data class SaleOrderItemTO(
         val id: Long,
         val inventoryUnitId: Long,
+        val inventoryUnitTitle: String,
         val quantity: Int,
         val unitPrice: BigDecimal,
         val discountedPrice: BigDecimal,

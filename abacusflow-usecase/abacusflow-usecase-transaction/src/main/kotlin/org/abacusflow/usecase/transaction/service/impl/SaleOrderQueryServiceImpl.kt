@@ -146,9 +146,80 @@ class SaleOrderQueryServiceImpl(
         return PageImpl(records, pageable, total)
     }
 
-    override fun getSaleOrder(id: Long): SaleOrderTO =
-        saleOrderRepository
-            .findById(id)
-            .orElseThrow { NoSuchElementException("SaleOrder not found") }
-            .toTO()
+    override fun getSaleOrder(id: Long): SaleOrderTO {
+        val order =
+            jooqDsl
+                .select(
+                    SALE_ORDER.ID,
+                    SALE_ORDER.NO,
+                    SALE_ORDER.CUSTOMER_ID,
+                    SALE_ORDER.STATUS,
+                    SALE_ORDER.ORDER_DATE,
+                    SALE_ORDER.NOTE,
+                    SALE_ORDER.CREATED_AT,
+                    SALE_ORDER.UPDATED_AT,
+                )
+                .from(SALE_ORDER)
+                .where(SALE_ORDER.ID.eq(id))
+                .fetchOne()
+                ?: throw NoSuchElementException("SaleOrder not found with id: $id")
+
+        val items =
+            jooqDsl
+                .select(
+                    SALE_ORDER_ITEM.ID,
+                    SALE_ORDER_ITEM.INVENTORY_UNIT_ID,
+                    INVENTORY_UNIT.UNIT_TYPE,
+                    INVENTORY_UNIT.BATCH_CODE,
+                    INVENTORY_UNIT.SERIAL_NUMBER,
+                    PRODUCT.NAME,
+                    PRODUCT.SPECIFICATION,
+                    SALE_ORDER_ITEM.QUANTITY,
+                    SALE_ORDER_ITEM.UNIT_PRICE,
+                    SALE_ORDER_ITEM.DISCOUNT_FACTOR,
+                )
+                .from(SALE_ORDER_ITEM)
+                .leftJoin(INVENTORY_UNIT).on(SALE_ORDER_ITEM.INVENTORY_UNIT_ID.eq(INVENTORY_UNIT.ID))
+                .leftJoin(INVENTORY).on(INVENTORY_UNIT.INVENTORY_ID.eq(INVENTORY.ID))
+                .leftJoin(PRODUCT).on(INVENTORY.PRODUCT_ID.eq(PRODUCT.ID))
+                .where(SALE_ORDER_ITEM.ORDER_ID.eq(id))
+                .fetch()
+                .map {
+                    val unitType = it[INVENTORY_UNIT.UNIT_TYPE]
+                    val title =
+                        when (unitType) {
+                            "BATCH" ->
+                                "${it[PRODUCT.NAME]}-${it[PRODUCT.SPECIFICATION]}" +
+                                    "-${it[INVENTORY_UNIT.BATCH_CODE]}"
+                            else ->
+                                "${it[PRODUCT.NAME]}-${it[PRODUCT.SPECIFICATION]}" +
+                                    "-${it[INVENTORY_UNIT.SERIAL_NUMBER]}"
+                        }
+                    val quantity = it[SALE_ORDER_ITEM.QUANTITY]!!
+                    val unitPrice = it[SALE_ORDER_ITEM.UNIT_PRICE]!!
+                    val discountFactor = it[SALE_ORDER_ITEM.DISCOUNT_FACTOR] ?: java.math.BigDecimal.ONE
+                    val discountedPrice = unitPrice.multiply(discountFactor)
+                    SaleOrderTO.SaleOrderItemTO(
+                        id = it[SALE_ORDER_ITEM.ID]!!,
+                        inventoryUnitId = it[SALE_ORDER_ITEM.INVENTORY_UNIT_ID]!!,
+                        inventoryUnitTitle = title,
+                        quantity = quantity,
+                        unitPrice = unitPrice,
+                        discountedPrice = discountedPrice,
+                        subtotal = discountedPrice.multiply(quantity.toBigDecimal()),
+                    )
+                }
+
+        return SaleOrderTO(
+            id = order[SALE_ORDER.ID]!!,
+            orderNo = order[SALE_ORDER.NO]!!,
+            customerId = order[SALE_ORDER.CUSTOMER_ID]!!,
+            status = order[SALE_ORDER.STATUS].name,
+            note = order[SALE_ORDER.NOTE],
+            items = items,
+            createdAt = order[SALE_ORDER.CREATED_AT]!!.toInstant(),
+            updatedAt = order[SALE_ORDER.UPDATED_AT]!!.toInstant(),
+            orderDate = order[SALE_ORDER.ORDER_DATE]!!,
+        )
+    }
 }

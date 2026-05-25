@@ -333,7 +333,9 @@ class InventoryUnitQueryServiceImpl(
             id = id,
             title = title,
             type = unitType.name, // 通常是枚举/字符串，如 "INSTANCE" 或 "BATCH"
-            purchaseOrderNo = this[PURCHASE_ORDER.NO]!!,
+            purchaseOrderId = this[INVENTORY_UNIT.PURCHASE_ORDER_ID],
+            purchaseOrderNo = this[PURCHASE_ORDER.NO],
+            saleOrderIds = this[INVENTORY_UNIT.SALE_ORDER_IDS]?.toList() ?: emptyList(),
             saleOrderNos = saleOrderNos,
             depotName = this[DEPOT.NAME],
             initialQuantity = this[INVENTORY_UNIT.INITIAL_QUANTITY] ?: 0L,

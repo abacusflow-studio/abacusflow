@@ -102,6 +102,7 @@ export interface OrderItem {
   inventoryUnitId?: number;
   productName?: string;
   title?: string;
+  inventoryUnitTitle?: string;
   quantity: number;
   unitPrice: number;
   discountedPrice?: number;

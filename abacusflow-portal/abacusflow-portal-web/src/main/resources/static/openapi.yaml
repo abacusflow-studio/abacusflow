@@ -2484,9 +2484,21 @@ components:
           $ref: "#/components/schemas/InventoryUnitStatus"
         title:
           type: string
+        purchaseOrderId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 采购单ID
         purchaseOrderNo:
           type: string
           format: uuid
+          nullable: true
+        saleOrderIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: 销售单ID列表
         saleOrderNos:
           type: array
           items:
@@ -2893,6 +2905,7 @@ components:
       required:
         - id
         - inventoryUnitId
+        - inventoryUnitTitle
         - quantity
         - unitPrice
         - discountedPrice
@@ -2906,6 +2919,9 @@ components:
           type: integer
           format: int64
           description: 库存单元ID
+        inventoryUnitTitle:
+          type: string
+          description: 库存单元名称
         quantity:
           type: integer
           description: 数量
@@ -2954,6 +2970,7 @@ components:
       required:
         - id
         - productId
+        - productName
         - quantity
         - unitPrice
         - subtotal
@@ -2966,6 +2983,9 @@ components:
           type: integer
           format: int64
           description: 产品ID
+        productName:
+          type: string
+          description: 产品名称
         quantity:
           type: integer
           description: 数量

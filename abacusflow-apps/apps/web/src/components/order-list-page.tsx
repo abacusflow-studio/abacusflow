@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Button,
   Table,
@@ -218,6 +219,8 @@ export function OrderListPage({
     }
   };
 
+  const searchParams = useSearchParams();
+
   const openDetail = async (id: number) => {
     setShowDetail(true);
     setDetailLoading(true);
@@ -231,6 +234,16 @@ export function OrderListPage({
       setDetailLoading(false);
     }
   };
+
+  useEffect(() => {
+    const idParam = searchParams.get("id");
+    if (idParam) {
+      const id = Number(idParam);
+      if (!isNaN(id)) {
+        openDetail(id);
+      }
+    }
+  }, [searchParams]);
 
   const updateItem = (index: number, patch: Partial<OrderItemForm>) => {
     setForm((prev) => ({
@@ -453,6 +466,7 @@ export function OrderListPage({
       key: "productName",
       render: (_, record) =>
         record.productName ??
+        record.inventoryUnitTitle ??
         record.title ??
         (record.productId ? `产品 #${record.productId}` : undefined) ??
         (record.inventoryUnitId ? `库存单元 #${record.inventoryUnitId}` : "-"),

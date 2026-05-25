@@ -9,7 +9,9 @@ data class BasicInventoryUnitTO(
     val title: String,
     val type: String, // "INSTANCE" 或 "BATCH"
     val status: String,
-    val purchaseOrderNo: UUID,
+    val purchaseOrderId: Long?,
+    val purchaseOrderNo: UUID?,
+    val saleOrderIds: List<Long>,
     val saleOrderNos: List<UUID>,
     val depotName: String?,
     val initialQuantity: Long,

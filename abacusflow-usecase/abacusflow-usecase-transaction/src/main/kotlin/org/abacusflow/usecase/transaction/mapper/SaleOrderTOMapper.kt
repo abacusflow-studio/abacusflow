@@ -25,4 +25,5 @@ fun SaleOrderItem.toTO() =
         discountedPrice = discountedPrice,
         subtotal = subtotal,
         inventoryUnitId = inventoryUnitId,
+        inventoryUnitTitle = "", // TODO
     )

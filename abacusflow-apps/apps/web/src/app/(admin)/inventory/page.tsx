@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Table,
@@ -10,6 +11,7 @@ import {
   Select,
   App,
   Space,
+  Typography,
 } from "antd";
 import {
   DownloadOutlined,
@@ -61,6 +63,7 @@ const productTypeOptions = PRODUCT_TYPES.map((t) => ({
 
 export default function InventoryPage() {
   const { message } = App.useApp();
+  const router = useRouter();
 
   const [viewMode, setViewMode] = useState<InventoryViewMode>("units");
   const [filters, setFilters] = useState<InventoryFilters>(defaultFilters);
@@ -337,14 +340,39 @@ export default function InventoryPage() {
     },
     {
       title: "采购单号",
-      dataIndex: "purchaseOrderNo",
       key: "purchaseOrderNo",
       ellipsis: true,
+      render: (_, record) =>
+        record.purchaseOrderId ? (
+          <Typography.Link
+            onClick={() =>
+              router.push(`/transaction/purchase-order?id=${record.purchaseOrderId}`)
+            }
+          >
+            {record.purchaseOrderNo ?? "-"}
+          </Typography.Link>
+        ) : (
+          record.purchaseOrderNo ?? "-"
+        ),
     },
     {
       title: "销售单号",
       key: "saleOrderNos",
-      render: (_, record) => record.saleOrderNos?.join(", ") || "-",
+      render: (_, record) => {
+        if (!record.saleOrderIds?.length) return record.saleOrderNos?.join(", ") || "-";
+        return record.saleOrderNos?.map((no: string, idx: number) => (
+          <span key={no}>
+            {idx > 0 && ", "}
+            <Typography.Link
+              onClick={() =>
+                router.push(`/transaction/sale-order?id=${record.saleOrderIds![idx]}`)
+              }
+            >
+              {no}
+            </Typography.Link>
+          </span>
+        ));
+      },
     },
     { title: "储存点", dataIndex: "depotName", key: "depotName" },
     {

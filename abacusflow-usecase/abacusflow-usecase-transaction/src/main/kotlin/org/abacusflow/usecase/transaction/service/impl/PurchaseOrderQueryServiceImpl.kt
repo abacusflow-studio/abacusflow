@@ -142,9 +142,63 @@ class PurchaseOrderQueryServiceImpl(
         return PageImpl(records, pageable, total)
     }
 
-    override fun getPurchaseOrder(id: Long): PurchaseOrderTO =
-        purchaseOrderRepository
-            .findById(id)
-            .orElseThrow { NoSuchElementException("PurchaseOrder not found") }
-            .toTO()
+    override fun getPurchaseOrder(id: Long): PurchaseOrderTO {
+        val order =
+            jooqDsl
+                .select(
+                    PURCHASE_ORDER.ID,
+                    PURCHASE_ORDER.NO,
+                    PURCHASE_ORDER.SUPPLIER_ID,
+                    PURCHASE_ORDER.STATUS,
+                    PURCHASE_ORDER.ORDER_DATE,
+                    PURCHASE_ORDER.NOTE,
+                    PURCHASE_ORDER.CREATED_AT,
+                    PURCHASE_ORDER.UPDATED_AT,
+                )
+                .from(PURCHASE_ORDER)
+                .where(PURCHASE_ORDER.ID.eq(id))
+                .fetchOne()
+                ?: throw NoSuchElementException("PurchaseOrder not found with id: $id")
+
+        val items =
+            jooqDsl
+                .select(
+                    PURCHASE_ORDER_ITEM.ID,
+                    PURCHASE_ORDER_ITEM.PRODUCT_ID,
+                    PRODUCT.NAME,
+                    PURCHASE_ORDER_ITEM.QUANTITY,
+                    PURCHASE_ORDER_ITEM.UNIT_PRICE,
+                    PURCHASE_ORDER_ITEM.SERIAL_NUMBER,
+                )
+                .from(PURCHASE_ORDER_ITEM)
+                .leftJoin(PRODUCT).on(PURCHASE_ORDER_ITEM.PRODUCT_ID.eq(PRODUCT.ID))
+                .where(PURCHASE_ORDER_ITEM.ORDER_ID.eq(id))
+                .fetch()
+                .map {
+                    PurchaseOrderTO.PurchaseOrderItemTO(
+                        id = it[PURCHASE_ORDER_ITEM.ID]!!,
+                        productId = it[PURCHASE_ORDER_ITEM.PRODUCT_ID]!!,
+                        productName = it[PRODUCT.NAME] ?: "未知产品",
+                        quantity = it[PURCHASE_ORDER_ITEM.QUANTITY]!!,
+                        unitPrice = it[PURCHASE_ORDER_ITEM.UNIT_PRICE]!!,
+                        subtotal =
+                            it[PURCHASE_ORDER_ITEM.UNIT_PRICE]!!.multiply(
+                                it[PURCHASE_ORDER_ITEM.QUANTITY]!!.toBigDecimal(),
+                            ),
+                        serialNumber = it[PURCHASE_ORDER_ITEM.SERIAL_NUMBER],
+                    )
+                }
+
+        return PurchaseOrderTO(
+            id = order[PURCHASE_ORDER.ID]!!,
+            orderNo = order[PURCHASE_ORDER.NO]!!,
+            supplierId = order[PURCHASE_ORDER.SUPPLIER_ID]!!,
+            status = order[PURCHASE_ORDER.STATUS].name,
+            orderDate = order[PURCHASE_ORDER.ORDER_DATE]!!,
+            items = items,
+            note = order[PURCHASE_ORDER.NOTE],
+            createdAt = order[PURCHASE_ORDER.CREATED_AT]!!.toInstant(),
+            updatedAt = order[PURCHASE_ORDER.UPDATED_AT]!!.toInstant(),
+        )
+    }
 }
