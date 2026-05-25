@@ -16,9 +16,11 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 
@@ -26,6 +28,7 @@ private const val TEST_ISSUER = "https://issuer.abacusflow.test/"
 private const val TEST_AUDIENCE = "https://api.abacusflow.test"
 private const val PROTECTED_PATH = "/security-probe"
 private const val PERMISSION_PATH = "/security-probe/user-permission"
+private const val BOOTSTRAP_PATH = "/me/bootstrap"
 
 @WebMvcTest(
     controllers = [SecurityProbeController::class],
@@ -95,9 +98,17 @@ class SecurityConfigurationTest(
     }
 
     @Test
-    fun `protected api rejects unlinked external identities`() {
+    fun `protected api auto-creates user for unlinked external identities`() {
         mockMvc.perform(get(PROTECTED_PATH).header(HttpHeaders.AUTHORIZATION, "Bearer unlinked-token"))
-            .andExpect(status().isUnauthorized)
+            .andExpect(status().isOk)
+            .andExpect(content().string("ok"))
+    }
+
+    @Test
+    fun `bootstrap api accepts a valid bearer token without linked external identity`() {
+        mockMvc.perform(post(BOOTSTRAP_PATH).header(HttpHeaders.AUTHORIZATION, "Bearer unlinked-token"))
+            .andExpect(status().isOk)
+            .andExpect(content().string("bootstrap-ok"))
     }
 
     @TestConfiguration
@@ -121,8 +132,6 @@ class SecurityConfigurationTest(
                 override fun resolveAuthorizedUser(
                     issuer: String,
                     subject: String,
-                    email: String?,
-                    displayName: String?,
                 ): AuthenticatedUserTO? {
                     if (issuer != TEST_ISSUER) {
                         return null
@@ -140,6 +149,13 @@ class SecurityConfigurationTest(
                             AuthenticatedUserTO(
                                 id = 2,
                                 name = "viewer",
+                                roleNames = setOf("viewer"),
+                                permissionNames = emptySet(),
+                            )
+                        "unlinked-subject" ->
+                            AuthenticatedUserTO(
+                                id = 3,
+                                name = "auto-created-user",
                                 roleNames = setOf("viewer"),
                                 permissionNames = emptySet(),
                             )
@@ -168,7 +184,10 @@ private class SecurityProbeController {
     @GetMapping("/security-probe")
     fun protectedEndpoint(): String = "ok"
 
-    @PreAuthorize("hasAuthority('PERMISSION_user')")
+    @PreAuthorize("hasAuthority('user')")
     @GetMapping("/security-probe/user-permission")
     fun permissionProtectedEndpoint(): String = "permission-ok"
+
+    @PostMapping("/me/bootstrap")
+    fun bootstrapProbeEndpoint(): String = "bootstrap-ok"
 }

@@ -18,18 +18,14 @@ class SecurityConfiguration {
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,
-        jwtAuthenticationConverter: AbacusFlowJwtAuthenticationConverter,
+        appJwtAuthenticationConverter: AbacusFlowJwtAuthenticationConverter,
     ): SecurityFilterChain {
         http {
             csrf { disable() }
             httpBasic { disable() }
             formLogin { disable() }
             logout { disable() }
-
-            sessionManagement {
-                sessionCreationPolicy = SessionCreationPolicy.STATELESS
-            }
-
+            sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
             authorizeHttpRequests {
                 authorize("/static/**", permitAll)
                 authorize("/openapi.yaml", permitAll)
@@ -38,11 +34,8 @@ class SecurityConfiguration {
                 authorize("/error", permitAll)
                 authorize(anyRequest, authenticated)
             }
-
             oauth2ResourceServer {
-                jwt {
-                    this.jwtAuthenticationConverter = jwtAuthenticationConverter
-                }
+                jwt { jwtAuthenticationConverter = appJwtAuthenticationConverter }
             }
         }
         return http.build()
@@ -51,10 +44,10 @@ class SecurityConfiguration {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
-    @Bean
-    fun jwtAuthenticationConverter(
-        externalIdentityAuthenticationService: ExternalIdentityAuthenticationService,
-    ): AbacusFlowJwtAuthenticationConverter {
-        return AbacusFlowJwtAuthenticationConverter(externalIdentityAuthenticationService)
-    }
+//    @Bean
+//    fun appJwtAuthenticationConverter(
+//        externalIdentityAuthenticationService: ExternalIdentityAuthenticationService,
+//    ): AbacusFlowJwtAuthenticationConverter {
+//        return AbacusFlowJwtAuthenticationConverter(externalIdentityAuthenticationService)
+//    }
 }

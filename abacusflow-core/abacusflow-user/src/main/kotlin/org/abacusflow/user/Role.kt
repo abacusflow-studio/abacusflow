@@ -26,12 +26,12 @@ import java.time.Instant
     ],
 )
 class Role(
-    @field:NotBlank(message = "UserName is required and cannot be blank")
+    @field:NotBlank(message = "Role name is required and cannot be blank")
     @field:Pattern(
-        regexp = "^[a-zA-Z0-9_]*\$",
-        message = "User names should contain only letters, numbers and underscores.",
+        regexp = "^[a-zA-Z0-9_:]*\$",
+        message = "Role names should contain only letters, numbers, underscores and colons.",
     )
-    @field:Size(min = 5, max = 50, message = "Name must be between 1 and 50 characters")
+    @field:Size(min = 1, max = 50, message = "Name must be between 1 and 50 characters")
     val name: String,
 ) : AbstractAggregateRoot<Role>() {
     @Id

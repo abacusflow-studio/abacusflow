@@ -33,14 +33,28 @@ class ExternalIdentity(
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
+    @Column(length = 32)
+    var provider: String? = null,
     @Column(length = 320)
-    val email: String? = null,
+    var email: String? = null,
+    @Column(name = "email_verified")
+    var emailVerified: Boolean = false,
     @Column(name = "display_name")
-    val displayName: String? = null,
+    var displayName: String? = null,
+    @Column(name = "picture_url", length = 1024)
+    var pictureUrl: String? = null,
 ) : AbstractAggregateRoot<ExternalIdentity>() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0
+
+    @Column(name = "last_login_at")
+    var lastLoginAt: Instant? = null
+        private set
+
+    @Column(name = "profile_synced_at")
+    var profileSyncedAt: Instant? = null
+        private set
 
     @CreationTimestamp
     val createdAt: Instant = Instant.now()
@@ -48,4 +62,23 @@ class ExternalIdentity(
     @UpdateTimestamp
     var updatedAt: Instant = Instant.EPOCH
         private set
+
+    fun syncProfile(
+        newEmail: String?,
+        newEmailVerified: Boolean?,
+        newDisplayName: String?,
+        newPictureUrl: String?,
+    ) {
+        newEmail?.let { email = it }
+        newEmailVerified?.let { emailVerified = it }
+        newDisplayName?.let { displayName = it }
+        newPictureUrl?.let { pictureUrl = it }
+        profileSyncedAt = Instant.now()
+        updatedAt = Instant.now()
+    }
+
+    fun recordLogin() {
+        lastLoginAt = Instant.now()
+        updatedAt = Instant.now()
+    }
 }

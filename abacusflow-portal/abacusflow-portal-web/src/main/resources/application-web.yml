@@ -7,3 +7,7 @@ spring:
           issuer-uri: ${ABACUSFLOW_OIDC_ISSUER_URI:https://wls1964302791.us.auth0.com/}
           audiences:
             - ${ABACUSFLOW_OIDC_AUDIENCE:https://admin.abacusflow.cn}
+
+abacusflow:
+  oidc:
+    client-id: ${ABACUSFLOW_OIDC_CLIENT_ID:}

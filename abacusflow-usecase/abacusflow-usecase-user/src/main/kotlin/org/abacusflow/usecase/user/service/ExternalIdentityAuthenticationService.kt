@@ -6,7 +6,5 @@ interface ExternalIdentityAuthenticationService {
     fun resolveAuthorizedUser(
         issuer: String,
         subject: String,
-        email: String? = null,
-        displayName: String? = null,
     ): AuthenticatedUserTO?
 }

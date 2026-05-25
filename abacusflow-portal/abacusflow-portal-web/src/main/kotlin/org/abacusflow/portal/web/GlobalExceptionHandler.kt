@@ -5,6 +5,8 @@ import org.abacusflow.portal.web.model.ErrorResponseVO
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -50,6 +52,29 @@ class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException::class)
     fun handleIllegalState(ex: IllegalStateException): ResponseEntity<ErrorResponseVO> =
         ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseVO(409, "状态异常：${ex.message}"))
+
+    @ExceptionHandler(NoSuchElementException::class)
+    fun handleNotFound(ex: NoSuchElementException): ResponseEntity<ErrorResponseVO> =
+        ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponseVO(404, "资源不存在：${ex.message}"))
+
+    @ExceptionHandler(OAuth2AuthenticationException::class)
+    fun handleOAuth2Authentication(ex: OAuth2AuthenticationException): ResponseEntity<ErrorResponseVO> {
+        val error = ex.error
+        val status = when (error.errorCode) {
+            "invalid_token" -> HttpStatus.UNAUTHORIZED
+            "access_denied" -> HttpStatus.FORBIDDEN
+            else -> HttpStatus.UNAUTHORIZED
+        }
+        return ResponseEntity.status(status).body(
+            ErrorResponseVO(status.value(), error.description ?: "认证失败"),
+        )
+    }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ErrorResponseVO> =
+        ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+            ErrorResponseVO(403, "权限不足：您没有执行此操作的权限"),
+        )
 
     companion object {
         val DUPLICATE_KEY_REGEX = Regex("""Key \(.+?\)=\((.+?)\) already exists""")

@@ -42,6 +42,38 @@ security:
   - bearerAuth: []
 
 paths:
+  /me/bootstrap:
+    post:
+      operationId: bootstrap
+      tags:
+        - user
+      summary: Bootstrap current user
+      description: |
+        同步当前用户资料。后端使用 Access Token 调用 Auth0 /userinfo 获取 email/name/picture，
+        更新本地 User 和 ExternalIdentity 的 profile 信息。
+      responses:
+        "200":
+          description: Bootstrap result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BootstrapResult"
+
+  /me:
+    get:
+      operationId: getCurrentUser
+      tags:
+        - user
+      summary: Get current user info
+      description: 返回当前登录用户的本地身份、角色、权限信息
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+
   /users:
     get:
       operationId: listBasicUsers
@@ -1429,6 +1461,102 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    # ============= Me schemas =============
+    BootstrapResult:
+      type: object
+      required:
+        - userId
+        - status
+        - enabled
+        - locked
+        - roles
+        - permissions
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: 本地用户 ID
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - LOCKED
+          description: 用户状态
+        enabled:
+          type: boolean
+          description: 是否启用
+        locked:
+          type: boolean
+          description: 是否锁定
+        roles:
+          type: array
+          items:
+            type: string
+          description: 角色列表
+        permissions:
+          type: array
+          items:
+            type: string
+          description: 权限列表
+        email:
+          type: string
+          nullable: true
+          description: 邮箱
+        displayName:
+          type: string
+          nullable: true
+          description: 显示名称
+        pictureUrl:
+          type: string
+          nullable: true
+          description: 头像 URL
+
+    CurrentUser:
+      type: object
+      required:
+        - userId
+        - username
+        - enabled
+        - locked
+        - roles
+        - permissions
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: 本地用户 ID
+        username:
+          type: string
+          description: 用户名
+        email:
+          type: string
+          nullable: true
+          description: 邮箱
+        displayName:
+          type: string
+          nullable: true
+          description: 显示名称
+        pictureUrl:
+          type: string
+          nullable: true
+          description: 头像 URL
+        enabled:
+          type: boolean
+          description: 是否启用
+        locked:
+          type: boolean
+          description: 是否锁定
+        roles:
+          type: array
+          items:
+            type: string
+          description: 角色列表
+        permissions:
+          type: array
+          items:
+            type: string
+          description: 权限列表
+
     # ============= User schemas =============
     User:
       type: object
