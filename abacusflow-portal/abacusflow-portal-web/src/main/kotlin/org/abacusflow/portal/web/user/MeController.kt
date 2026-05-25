@@ -3,8 +3,7 @@ package org.abacusflow.portal.web.user
 import org.abacusflow.portal.web.api.MeApi
 import org.abacusflow.portal.web.model.BootstrapResultVO
 import org.abacusflow.portal.web.model.CurrentUserVO
-import org.abacusflow.usecase.user.service.BootstrapService
-import org.abacusflow.usecase.user.service.CurrentUserService
+import org.abacusflow.usecase.user.service.UserAuthenticationService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -15,8 +14,7 @@ import org.springframework.web.client.RestClient
 
 @RestController
 class MeController(
-    private val bootstrapService: BootstrapService,
-    private val currentUserService: CurrentUserService,
+    private val userAuthenticationService: UserAuthenticationService,
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}") private val issuerUri: String,
 ) : MeApi {
     private val restClient = RestClient.create()
@@ -33,7 +31,7 @@ class MeController(
         val pictureUrl = userInfo?.get("picture") as? String
 
         val result =
-            bootstrapService.bootstrap(
+            userAuthenticationService.bootstrap(
                 issuer = issuer,
                 subject = subject,
                 email = email,
@@ -51,7 +49,7 @@ class MeController(
         val subject = jwt.subject ?: return ResponseEntity.badRequest().build()
 
         val currentUser =
-            currentUserService.getCurrentUser(issuer, subject)
+            userAuthenticationService.getCurrentUser(issuer, subject)
                 ?: return ResponseEntity.status(403).build()
 
         return ResponseEntity.ok(currentUser.toVO())

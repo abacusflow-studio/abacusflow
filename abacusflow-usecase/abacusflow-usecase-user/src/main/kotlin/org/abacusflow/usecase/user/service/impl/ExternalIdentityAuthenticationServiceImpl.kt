@@ -28,7 +28,7 @@ class ExternalIdentityAuthenticationServiceImpl(
     }
 
     private fun initViewerRole() {
-        viewerRole = roleRepository.findByName(DEFAULT_VIEWER_ROLE_NAME)
+        viewerRole = roleRepository.findByNameWithPermissions(DEFAULT_VIEWER_ROLE_NAME)
             ?: throw IllegalStateException(
                 "Default role '$DEFAULT_VIEWER_ROLE_NAME' not found. Ensure RoleDataInitializer has run.",
             )

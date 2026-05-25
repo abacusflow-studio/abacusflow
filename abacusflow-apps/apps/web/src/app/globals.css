@@ -1200,6 +1200,12 @@ a:hover {
   line-height: 1.75;
 }
 
+.af-admin-auth-loading {
+  display: grid;
+  min-height: calc(100vh - 148px);
+  place-items: center;
+}
+
 .af-admin-footer {
   padding: 14px 24px 22px !important;
   color: var(--af-muted) !important;

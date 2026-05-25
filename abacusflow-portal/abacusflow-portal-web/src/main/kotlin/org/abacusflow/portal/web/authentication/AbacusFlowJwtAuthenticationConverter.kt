@@ -9,7 +9,9 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import org.springframework.stereotype.Component
 
+@Component
 class AbacusFlowJwtAuthenticationConverter(
     private val externalIdentityAuthenticationService: ExternalIdentityAuthenticationService,
 ) : Converter<Jwt, AbstractAuthenticationToken> {

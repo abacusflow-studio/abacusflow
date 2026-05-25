@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Layout, Menu } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -23,6 +23,7 @@ import {
   TransactionOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { getAuthClient } from "@abacusflow/core";
 import { useTheme } from "../../components/providers";
 
 const { Sider, Header, Content, Footer } = Layout;
@@ -138,14 +139,59 @@ const ROUTE_META = [
 
 const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
 
+type AuthStatus = "checking" | "authenticated" | "redirecting";
+
+function getCurrentBrowserPath() {
+  if (typeof window === "undefined") {
+    return "/dashboard";
+  }
+  const { pathname, search, hash } = window.location;
+  return `${pathname}${search}${hash}` || "/dashboard";
+}
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
   const { themeMode, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const guardRoute = async () => {
+      try {
+        const auth = getAuthClient();
+        if (await auth.isAuthenticated()) {
+          if (!cancelled) {
+            setAuthStatus("authenticated");
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setAuthStatus("redirecting");
+        }
+        await auth.login(getCurrentBrowserPath());
+      } catch (err) {
+        console.error("[admin auth] failed:", err);
+        if (!cancelled) {
+          setAuthStatus("redirecting");
+          router.replace("/login");
+        }
+      }
+    };
+
+    void guardRoute();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, router]);
 
   const selectedKeys = useMemo(() => {
     const match = ALL_ROUTE_KEYS.filter(
@@ -251,7 +297,22 @@ export default function AdminLayout({
           </div>
         </Header>
 
-        <Content className="af-admin-content">{children}</Content>
+        <Content className="af-admin-content">
+          {authStatus === "authenticated" ? (
+            children
+          ) : (
+            <div className="af-admin-auth-loading" role="status">
+              <div className="af-loader-card">
+                <div className="af-loader-ring" />
+                <span className="af-loader-text">
+                  {authStatus === "redirecting"
+                    ? "正在前往身份认证..."
+                    : "正在检查登录状态..."}
+                </span>
+              </div>
+            </div>
+          )}
+        </Content>
 
         <Footer className="af-admin-footer">小算盘业务指挥台 ©2026</Footer>
       </Layout>

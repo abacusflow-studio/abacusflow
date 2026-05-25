@@ -1,14 +1,20 @@
 package org.abacusflow.usecase.user.service
 
-import org.abacusflow.usecase.user.UserDetailsForLoginTO
+import org.abacusflow.usecase.user.BootstrapResultTO
+import org.abacusflow.usecase.user.CurrentUserTO
 
 interface UserAuthenticationService {
-    fun getUserForLogin(username: String): UserDetailsForLoginTO?
+    fun bootstrap(
+        issuer: String,
+        subject: String,
+        email: String?,
+        emailVerified: Boolean?,
+        displayName: String?,
+        pictureUrl: String?,
+    ): BootstrapResultTO
 
-    fun validateCredentials(
-        username: String,
-        password: String,
-    ): Boolean
-
-    fun updateLastLoginTime(userId: Long)
+    fun getCurrentUser(
+        issuer: String,
+        subject: String,
+    ): CurrentUserTO?
 }

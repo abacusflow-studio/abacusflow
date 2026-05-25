@@ -129,7 +129,7 @@ function createApiConfig(): Configuration {
           if (ctx.response.status === 401) {
             try {
               const auth = getAuthClient();
-              await auth.login("/");
+              await auth.login(getCurrentBrowserPath());
             } catch {
               redirect("/");
             }
@@ -142,6 +142,14 @@ function createApiConfig(): Configuration {
 }
 
 let _config: Configuration | null = null;
+
+function getCurrentBrowserPath(): string {
+  if (typeof window === "undefined") {
+    return "/";
+  }
+  const { pathname, search, hash } = window.location;
+  return `${pathname}${search}${hash}` || "/";
+}
 
 function getApiConfig(): Configuration {
   if (!_config) {

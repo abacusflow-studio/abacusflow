@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthClient } from "@abacusflow/core";
+import { bootstrapWebAuthSession } from "../../lib/auth-provider";
 
 let isHandlingCallback = false;
 
@@ -17,6 +18,7 @@ export default function CallbackPage() {
       try {
         const auth = getAuthClient();
         await auth.handleRedirectCallback();
+        await bootstrapWebAuthSession();
 
         const returnTo =
           sessionStorage.getItem("auth_return_to") || "/dashboard";

@@ -1,6 +1,8 @@
 package org.abacusflow.usecase.user.service.impl
 
 import org.abacusflow.db.user.ExternalIdentityRepository
+import org.abacusflow.db.user.RoleRepository
+import org.abacusflow.db.user.UserRepository
 import org.abacusflow.user.ExternalIdentity
 import org.abacusflow.user.Permission
 import org.abacusflow.user.Role
@@ -17,7 +19,11 @@ import kotlin.test.assertNull
 
 class ExternalIdentityAuthenticationServiceImplTest {
     private val externalIdentityRepository = mock(ExternalIdentityRepository::class.java)
-    private val service = ExternalIdentityAuthenticationServiceImpl(externalIdentityRepository)
+    private val userRepository = mock(UserRepository::class.java)
+    private val roleRepository = mock(RoleRepository::class.java)
+
+    private val service =
+        ExternalIdentityAuthenticationServiceImpl(externalIdentityRepository, userRepository, roleRepository)
 
     @Test
     fun `linked enabled identity resolves business authorities`() {
