@@ -9,6 +9,7 @@ import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.abacusflow.user.ExternalIdentity
 import org.abacusflow.user.Role
 import org.abacusflow.user.User
+import org.abacusflow.user.WellKnownRole
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.MessageDigest
@@ -20,22 +21,18 @@ class ExternalIdentityAuthenticationServiceImpl(
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository,
 ) : ExternalIdentityAuthenticationService {
-    private lateinit var viewerRole: Role
+    private lateinit var defaultUserRole: Role
 
     @PostConstruct
     fun init() {
-        initViewerRole()
+        initDefaultUserRole()
     }
 
-    private fun initViewerRole() {
-        viewerRole = roleRepository.findByNameWithPermissions(DEFAULT_VIEWER_ROLE_NAME)
+    private fun initDefaultUserRole() {
+        defaultUserRole = roleRepository.findByNameWithPermissions(WellKnownRole.OPERATOR.name.lowercase())
             ?: throw IllegalStateException(
-                "Default role '$DEFAULT_VIEWER_ROLE_NAME' not found. Ensure RoleDataInitializer has run.",
+                "Default role '${WellKnownRole.OPERATOR.name.lowercase()}' not found. Ensure seed data has run.",
             )
-    }
-
-    companion object {
-        private const val DEFAULT_VIEWER_ROLE_NAME = "viewer"
     }
 
     override fun resolveAuthorizedUser(
@@ -77,7 +74,7 @@ class ExternalIdentityAuthenticationServiceImpl(
         val user = User(name = generateLocalUserName(issuer, subject))
         user.enable()
 
-        user.addRole(viewerRole)
+        user.addRole(defaultUserRole)
 
         val savedUser = userRepository.save(user)
 

@@ -9,6 +9,7 @@ import org.abacusflow.usecase.transaction.service.PurchaseOrderCommandService
 import org.abacusflow.usecase.transaction.service.PurchaseOrderQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import java.util.UUID
@@ -18,6 +19,7 @@ class PurchaseOrderController(
     private val purchaseOrderCommandService: PurchaseOrderCommandService,
     private val purchaseOrderQueryService: PurchaseOrderQueryService,
 ) : PurchaseOrdersApi {
+    @PreAuthorize("hasAuthority('purchase-order:read')")
     override fun listBasicPurchaseOrdersPage(
         pageIndex: Int,
         pageSize: Int,
@@ -52,6 +54,7 @@ class PurchaseOrderController(
         return ResponseEntity.ok(pageVO)
     }
 
+    @PreAuthorize("hasAuthority('purchase-order:read')")
     override fun getPurchaseOrder(id: Long): ResponseEntity<PurchaseOrderVO> {
         val order = purchaseOrderQueryService.getPurchaseOrder(id)
         return ResponseEntity.ok(
@@ -59,6 +62,7 @@ class PurchaseOrderController(
         )
     }
 
+    @PreAuthorize("hasAuthority('purchase-order:create')")
     override fun addPurchaseOrder(createPurchaseOrderInputVO: CreatePurchaseOrderInputVO): ResponseEntity<PurchaseOrderVO> {
         val order =
             purchaseOrderCommandService.createPurchaseOrder(
@@ -74,16 +78,19 @@ class PurchaseOrderController(
         )
     }
 
+    @PreAuthorize("hasAuthority('purchase-order:approve')")
     override fun completePurchaseOrder(id: Long): ResponseEntity<Unit> {
         purchaseOrderCommandService.completeOrder(id)
         return ResponseEntity.ok().build()
     }
 
+    @PreAuthorize("hasAuthority('purchase-order:approve')")
     override fun cancelPurchaseOrder(id: Long): ResponseEntity<Unit> {
         purchaseOrderCommandService.cancelOrder(id)
         return ResponseEntity.ok().build()
     }
 
+    @PreAuthorize("hasAuthority('purchase-order:approve')")
     override fun reversePurchaseOrder(id: Long): ResponseEntity<Unit> {
         purchaseOrderCommandService.reverseOrder(id)
         return ResponseEntity.ok().build()

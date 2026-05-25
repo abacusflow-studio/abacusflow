@@ -1,3 +1,7 @@
+-- ============================================================
+-- 01-schema.sql  表结构与枚举定义（DDL）
+-- ============================================================
+
 -- ✅ 枚举类型定义
 create type product_type as enum ('MATERIAL', 'ASSET');
 create type product_unit as enum (
@@ -32,6 +36,11 @@ create table user_external_identity (
                                         user_id bigint not null constraint fk_user_external_identity_user_id references user_account,
                                         email varchar(320),
                                         display_name varchar(255),
+                                        provider varchar(32),
+                                        email_verified boolean not null default false,
+                                        picture_url varchar(1024),
+                                        last_login_at timestamp(6) with time zone,
+                                        profile_synced_at timestamp(6) with time zone,
                                         created_at timestamp(6) with time zone not null default now(),
                                         updated_at timestamp(6) with time zone not null default now(),
                                         constraint uq_user_external_identity_issuer_subject unique (issuer, subject)

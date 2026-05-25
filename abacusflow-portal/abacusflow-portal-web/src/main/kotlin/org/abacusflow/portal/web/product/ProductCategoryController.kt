@@ -12,6 +12,7 @@ import org.abacusflow.usecase.product.UpdateProductCategoryInputTO
 import org.abacusflow.usecase.product.service.ProductCategoryCommandService
 import org.abacusflow.usecase.product.service.ProductCategoryQueryService
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -19,6 +20,7 @@ class ProductCategoryController(
     private val productCategoryCommandService: ProductCategoryCommandService,
     private val productCategoryQueryService: ProductCategoryQueryService,
 ) : ProductCategoriesApi {
+    @PreAuthorize("hasAuthority('product-category:read')")
     override fun listBasicProductCategories(): ResponseEntity<List<BasicProductCategoryVO>> {
         val categories = productCategoryQueryService.listBasicProductCategories()
         val categoryVOs =
@@ -28,6 +30,7 @@ class ProductCategoryController(
         return ResponseEntity.ok(categoryVOs)
     }
 
+    @PreAuthorize("hasAuthority('product-category:read')")
     override fun listSelectableProductCategories(): ResponseEntity<List<SelectableProductCategoryVO>> {
         val productCategoryVOs =
             productCategoryQueryService.listProductCategories().map {
@@ -41,6 +44,7 @@ class ProductCategoryController(
         return ResponseEntity.ok(productCategoryVOs)
     }
 
+    @PreAuthorize("hasAuthority('product-category:read')")
     override fun getProductCategory(id: Long): ResponseEntity<ProductCategoryVO> {
         val category = productCategoryQueryService.getProductCategory(id)
         return ResponseEntity.ok(
@@ -48,6 +52,7 @@ class ProductCategoryController(
         )
     }
 
+    @PreAuthorize("hasAuthority('product-category:create')")
     override fun addProductCategory(createProductCategoryInputVO: CreateProductCategoryInputVO): ResponseEntity<ProductCategoryVO> {
         val category =
             productCategoryCommandService.createProductCategory(
@@ -62,6 +67,7 @@ class ProductCategoryController(
         )
     }
 
+    @PreAuthorize("hasAuthority('product-category:update')")
     override fun updateProductCategory(
         id: Long,
         updateProductCategoryInputVO: UpdateProductCategoryInputVO,
@@ -80,6 +86,7 @@ class ProductCategoryController(
         )
     }
 
+    @PreAuthorize("hasAuthority('product-category:delete')")
     override fun deleteProductCategory(id: Long): ResponseEntity<Unit> {
         productCategoryCommandService.deleteProductCategory(id)
         return ResponseEntity.ok().build()
