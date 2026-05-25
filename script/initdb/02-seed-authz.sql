@@ -18,6 +18,7 @@ ALTER SEQUENCE role_id_seq RESTART WITH 100;
 INSERT INTO permission (name, label, description)
 VALUES
     ('user:read', '查看用户', '允许查看用户列表和详情'),
+    ('role:read', '查看角色', '允许查看角色和权限'),
     ('user:manage', '管理用户', '允许管理用户角色和状态'),
     ('role:manage', '管理角色', '允许管理角色和权限'),
     ('product:read', '查看产品', '允许查看产品列表和详情'),
@@ -73,5 +74,5 @@ INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'operator'
-  AND p.name NOT IN ('user', 'user:manage', 'role:manage')
+  AND p.name NOT IN ('user:read', 'role:read', 'user:manage', 'role:manage')
 ON CONFLICT DO NOTHING;

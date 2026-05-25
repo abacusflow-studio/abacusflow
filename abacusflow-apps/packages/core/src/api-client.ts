@@ -126,15 +126,30 @@ function createApiConfig(): Configuration {
     middleware: [
       {
         post: async (ctx: { response: Response }) => {
-          if (ctx.response.status === 401) {
+          const { response } = ctx;
+
+          if (response.status === 401) {
             try {
               const auth = getAuthClient();
               await auth.login(getCurrentBrowserPath());
             } catch {
               redirect("/");
             }
+            return response;
           }
-          return ctx.response;
+
+          if (!response.ok) {
+            let msg: string | undefined;
+            try {
+              const body = await response.clone().json();
+              msg = body?.message;
+            } catch {
+              // 非 JSON 响应，忽略
+            }
+            throw new Error(msg ?? `请求失败 (${response.status})`);
+          }
+
+          return response;
         },
       } satisfies Middleware,
     ],
