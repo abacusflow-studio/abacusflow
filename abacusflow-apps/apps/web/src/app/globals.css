@@ -1056,6 +1056,10 @@ a:hover {
   margin-block: 0 !important;
 }
 
+.af-sidebar .ant-menu-sub {
+  padding-block: 0 !important;
+}
+
 .af-sidebar .ant-menu-sub > .ant-menu-item {
   padding-left: 52px !important;
   min-height: 38px;
