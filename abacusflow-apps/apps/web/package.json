@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build-turbopack": "next build --turbopack",
+    "generate:core": "npm run generate -w @abacusflow/core",
+    "build": "npm run generate:core && next build",
+    "build-turbopack": "npm run generate:core && next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },
