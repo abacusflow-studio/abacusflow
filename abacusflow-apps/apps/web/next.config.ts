@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const apiProxyTarget = (
-  process.env.ABACUSFLOW_API_PROXY_TARGET ?? "http://localhost:8080"
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"
 ).replace(/\/$/, "");
 
 const nextConfig: NextConfig = {

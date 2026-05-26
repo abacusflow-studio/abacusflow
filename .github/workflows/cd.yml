@@ -1,5 +1,3 @@
-# This is a basic CD workflow
-
 name: CD
 
 on:
@@ -21,8 +19,7 @@ permissions:
 
 jobs:
   deploy-prod:
-    # if: github.event_name == 'release'
-    name: Deploy abacusflow to production
+    name: Deploy abacusflow server to production
     runs-on: ubuntu-latest
     environment: production
 
@@ -31,38 +28,30 @@ jobs:
         id: vars
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
-            echo "release_version=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "release_version=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            echo "release_version=${{ github.event.inputs.release_version }}" >> $GITHUB_OUTPUT
+            echo "release_version=${{ github.event.inputs.release_version }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Deploy to Server
+      - name: Deploy server to production
         uses: appleboy/ssh-action@master
-        env:
-          RELEASE_VERSION: ${{ steps.vars.outputs.release_version }}
         with:
           host: ${{ secrets.SSH_IP }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-
-          # 在远程服务器上执行的脚本
           script: |
             set -e
 
             echo "Logging into GitHub Container Registry..."
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u "${{ github.actor }}" --password-stdin
 
-            export ABACUSFLOW_SERVER_VERSION=${{ env.RELEASE_VERSION }}
-            export ABACUSFLOW_WEBAPP_VERSION=${{ env.RELEASE_VERSION }}
+            export ABACUSFLOW_SERVER_VERSION="${{ steps.vars.outputs.release_version }}"
 
-            # 进入项目部署目录
             cd /opt/abacusflow/abacusflow/
 
-            echo "Starting deployment of version ${{ env.RELEASE_VERSION }} to production..."
+            echo "Deploying server version ${{ steps.vars.outputs.release_version }} to production..."
+            docker compose -f docker-compose-prod.yml pull abacusflow-server
+            docker compose -f docker-compose-prod.yml up -d --no-deps abacusflow-server
 
-            echo "Using production compose file..."
-            docker compose -f docker-compose-prod.yml pull
-            docker compose -f docker-compose-prod.yml up -d --remove-orphans
-
-            echo "Deployment completed successfully."
+            echo "Server deployment completed successfully."

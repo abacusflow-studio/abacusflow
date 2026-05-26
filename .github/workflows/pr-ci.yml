@@ -24,8 +24,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Gradle build
+      - name: Backend build
         run: |
           chmod +x ./gradlew
-          ./gradlew clean build -PnoVersion --no-daemon
-          ./gradlew test --no-daemon
+          ./gradlew clean :abacusflow-server:build -PnoVersion --no-daemon
