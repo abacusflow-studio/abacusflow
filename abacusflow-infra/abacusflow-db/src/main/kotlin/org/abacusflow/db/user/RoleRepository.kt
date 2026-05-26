@@ -16,7 +16,7 @@ interface RoleRepository : JpaRepository<Role, Long> {
         from Role r
         left join fetch r.permissions
         where r.name = :name
-        """
+        """,
     )
     fun findByNameWithPermissions(name: String): Role?
 

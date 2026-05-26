@@ -346,26 +346,31 @@ export default function InventoryPage() {
         record.purchaseOrderId ? (
           <Typography.Link
             onClick={() =>
-              router.push(`/transaction/purchase-order?id=${record.purchaseOrderId}`)
+              router.push(
+                `/transaction/purchase-order?id=${record.purchaseOrderId}`,
+              )
             }
           >
             {record.purchaseOrderNo ?? "-"}
           </Typography.Link>
         ) : (
-          record.purchaseOrderNo ?? "-"
+          (record.purchaseOrderNo ?? "-")
         ),
     },
     {
       title: "销售单号",
       key: "saleOrderNos",
       render: (_, record) => {
-        if (!record.saleOrderIds?.length) return record.saleOrderNos?.join(", ") || "-";
+        if (!record.saleOrderIds?.length)
+          return record.saleOrderNos?.join(", ") || "-";
         return record.saleOrderNos?.map((no: string, idx: number) => (
           <span key={no}>
             {idx > 0 && ", "}
             <Typography.Link
               onClick={() =>
-                router.push(`/transaction/sale-order?id=${record.saleOrderIds![idx]}`)
+                router.push(
+                  `/transaction/sale-order?id=${record.saleOrderIds![idx]}`,
+                )
               }
             >
               {no}

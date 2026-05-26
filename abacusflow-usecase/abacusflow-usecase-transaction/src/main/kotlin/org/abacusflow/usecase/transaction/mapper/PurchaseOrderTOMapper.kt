@@ -25,5 +25,5 @@ fun PurchaseOrderItem.toTO() =
         unitPrice = unitPrice,
         subtotal = subtotal,
         serialNumber = serialNumber,
-        productName = "", //TODO
+        productName = "", // TODO
     )

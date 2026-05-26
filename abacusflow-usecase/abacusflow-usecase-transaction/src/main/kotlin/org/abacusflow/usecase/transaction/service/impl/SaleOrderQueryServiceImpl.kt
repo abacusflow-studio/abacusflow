@@ -11,7 +11,6 @@ import org.abacusflow.generated.jooq.enums.OrderStatusDbEnum
 import org.abacusflow.transaction.OrderStatus
 import org.abacusflow.usecase.transaction.BasicSaleOrderTO
 import org.abacusflow.usecase.transaction.SaleOrderTO
-import org.abacusflow.usecase.transaction.mapper.toTO
 import org.abacusflow.usecase.transaction.service.SaleOrderQueryService
 import org.jooq.Condition
 import org.jooq.DSLContext

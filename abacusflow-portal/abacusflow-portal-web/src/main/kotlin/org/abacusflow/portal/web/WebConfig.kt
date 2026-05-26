@@ -1,8 +1,5 @@
 package org.abacusflow.portal.web
 
-import jakarta.validation.Validator
-import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator
-import org.hibernate.validator.resourceloading.PlatformResourceBundleLocator
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
