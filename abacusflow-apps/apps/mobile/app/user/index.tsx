@@ -48,12 +48,12 @@ export default function UserListScreen() {
       { text: "取消", style: "cancel" },
       {
         text: "删除",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await userApi.deleteUser({ id });
-              loadData();
-            } catch (err) {
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await userApi.deleteUser({ id });
+            loadData();
+          } catch (err) {
             console.error(err);
           }
         },

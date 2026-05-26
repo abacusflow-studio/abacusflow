@@ -16,10 +16,7 @@ export async function getItemAsync(key: string): Promise<string | null> {
   return null;
 }
 
-export async function setItemAsync(
-  key: string,
-  value: string,
-): Promise<void> {
+export async function setItemAsync(key: string, value: string): Promise<void> {
   if (SecureStore) {
     return SecureStore.setItemAsync(key, value);
   }

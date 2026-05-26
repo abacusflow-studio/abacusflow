@@ -28,7 +28,9 @@ export default function InventoryDetailScreen() {
         pageIndex: 1,
         pageSize: 100,
       });
-      const item = page.content.find((inventory) => inventory.id === inventoryId);
+      const item = page.content.find(
+        (inventory) => inventory.id === inventoryId,
+      );
       setData(item ?? null);
       setSafetyStock(item?.safetyStock?.toString() ?? "");
       setMaxStock(item?.maxStock?.toString() ?? "");
@@ -79,7 +81,10 @@ export default function InventoryDetailScreen() {
       setEditingWarning(false);
       loadData();
     } catch (error) {
-      Alert.alert("错误", error instanceof Error ? error.message : "更新预警线失败");
+      Alert.alert(
+        "错误",
+        error instanceof Error ? error.message : "更新预警线失败",
+      );
     }
   };
 

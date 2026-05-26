@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
 
-const apiProxyTarget = (
-  "http://localhost:8080"
-).replace(/\/$/, "");
+const apiProxyTarget = "http://localhost:8080".replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "production" ? { output: "export" } : {}),

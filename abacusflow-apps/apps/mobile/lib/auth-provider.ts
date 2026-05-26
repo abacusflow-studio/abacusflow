@@ -71,7 +71,7 @@ function getRedirectUri(): string {
   return AuthSession.makeRedirectUri({
     scheme: MOBILE_AUTH_SCHEME,
     path: MOBILE_AUTH_CALLBACK_PATH,
-    native: `${MOBILE_AUTH_SCHEME}://${MOBILE_AUTH_CALLBACK_PATH}`
+    native: `${MOBILE_AUTH_SCHEME}://${MOBILE_AUTH_CALLBACK_PATH}`,
   });
 }
 
@@ -299,7 +299,8 @@ const mobileAuthClient: AuthClient = {
   },
 
   async logout() {
-    const tokenToRevoke = currentToken?.refreshToken ?? currentToken?.accessToken;
+    const tokenToRevoke =
+      currentToken?.refreshToken ?? currentToken?.accessToken;
     try {
       const discovery = await getDiscovery();
       if (tokenToRevoke && discovery.revocationEndpoint) {

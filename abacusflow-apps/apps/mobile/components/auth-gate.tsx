@@ -24,9 +24,7 @@ interface AuthGateProps {
 }
 
 export function AuthGate({ children }: AuthGateProps) {
-  const [auth, setAuth] = useState<MobileAuthSnapshot>(
-    getMobileAuthSnapshot(),
-  );
+  const [auth, setAuth] = useState<MobileAuthSnapshot>(getMobileAuthSnapshot());
 
   useEffect(() => {
     const unsubscribe = subscribeMobileAuth(setAuth);
@@ -58,7 +56,9 @@ export function AuthGate({ children }: AuthGateProps) {
               {issue}
             </Text>
           ))}
-          <Text style={styles.hint}>Auth0 回调地址: abacusflow://oauth/callback</Text>
+          <Text style={styles.hint}>
+            Auth0 回调地址: abacusflow://oauth/callback
+          </Text>
         </View>
       </SafeAreaView>
     );

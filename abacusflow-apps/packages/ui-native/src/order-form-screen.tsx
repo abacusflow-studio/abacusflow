@@ -220,7 +220,9 @@ export function OrderFormScreen({
         {items.map((item, idx) => (
           <View key={idx} style={styles.itemCard}>
             <View style={styles.itemHeader}>
-              <Text style={styles.itemTitle}>{itemLabel} {idx + 1}</Text>
+              <Text style={styles.itemTitle}>
+                {itemLabel} {idx + 1}
+              </Text>
               {items.length > 1 && (
                 <TouchableOpacity onPress={() => removeItem(idx)}>
                   <Text style={styles.removeItem}>删除</Text>
