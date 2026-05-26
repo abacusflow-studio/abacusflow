@@ -26,6 +26,7 @@ export default function RootLayout() {
       <AuthGate>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="oauth/callback" options={{ headerShown: false }} />
           {/* Product screens */}
           <Stack.Screen name="product/[id]" options={{ title: "产品详情" }} />
           <Stack.Screen name="product/add" options={{ title: "新增产品" }} />
