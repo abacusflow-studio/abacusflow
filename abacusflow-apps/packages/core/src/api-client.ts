@@ -1,7 +1,11 @@
 import { getConfig } from "@abacusflow/config";
 import { getAuthClient } from "./auth";
 import { redirect } from "./platform";
-import { Configuration, type Middleware } from "./openapi/runtime";
+import {
+  Configuration,
+  type ConfigurationParameters,
+  type Middleware,
+} from "./openapi/runtime";
 import {
   ProductApi,
   DepotApi,
@@ -112,10 +116,18 @@ export interface OrderItem {
 
 // ---- API Configuration ----
 
+class DynamicApiConfiguration extends Configuration {
+  constructor(configuration: ConfigurationParameters = {}) {
+    super(configuration);
+  }
+
+  get basePath(): string {
+    return getConfig().apiBaseUrl.replace(/\/+$/, "");
+  }
+}
+
 function createApiConfig(): Configuration {
-  const config = getConfig();
-  return new Configuration({
-    basePath: config.apiBaseUrl,
+  return new DynamicApiConfiguration({
     accessToken: async () => {
       try {
         const auth = getAuthClient();
