@@ -46,6 +46,7 @@ bin/
 !.vscode/tasks.json
 !.vscode/extensions.json
 
+.env
 
 ### Mac OS ###
 .DS_Store
