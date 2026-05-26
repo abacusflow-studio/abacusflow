@@ -12,7 +12,7 @@ export default function DepotDetailScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const res = await depotApi.getDepot(Number(id));
+      const res = await depotApi.getDepot({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -45,7 +45,7 @@ export default function DepotDetailScreen() {
       ]}
       onEdit={() => router.push(`/depot/edit/${id}` as any)}
       onDelete={async () => {
-        await depotApi.deleteDepot(Number(id));
+        await depotApi.deleteDepot({ id: Number(id) });
         router.back();
       }}
     />

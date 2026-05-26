@@ -1,17 +1,19 @@
 {
   "expo": {
-    "name": "abacusflow-moblie",
-    "slug": "abacusflow-moblie",
+    "name": "abacusflow-mobile",
+    "slug": "abacusflow-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "abacusflowmoblie",
+    "scheme": "abacusflow",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "cn.abacusflow.mobile",
       "supportsTablet": true
     },
     "android": {
+      "package": "cn.abacusflow.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,11 +40,20 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fd1a2653-5d1e-4d9d-ac45-bc9a3e6e41e2"
+      }
     }
   }
 }

@@ -50,16 +50,19 @@ export default function HomeScreen() {
         depots,
       ] = await Promise.all([
         productApi.listBasicProductsPage({ pageIndex: 1, pageSize: 1 }),
-        inventoryApi.listInventoriesPage({ pageIndex: 1, pageSize: 100 }),
-        transactionApi.listPurchaseOrdersPage({ pageIndex: 1, pageSize: 1 }),
-        transactionApi.listSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
+        inventoryApi.listBasicInventoriesPage({ pageIndex: 1, pageSize: 100 }),
+        transactionApi.listBasicPurchaseOrdersPage({
+          pageIndex: 1,
+          pageSize: 1,
+        }),
+        transactionApi.listBasicSaleOrdersPage({ pageIndex: 1, pageSize: 1 }),
         partnerApi.listBasicCustomersPage({ pageIndex: 1, pageSize: 1 }),
         partnerApi.listBasicSuppliersPage({ pageIndex: 1, pageSize: 1 }),
         depotApi.listBasicDepots(),
       ]);
 
       const lowStock = inventories.content.filter(
-        (i) => i.safetyStock && i.quantity < i.safetyStock,
+        (item) => item.safetyStock && item.quantity < item.safetyStock,
       ).length;
 
       setStats({

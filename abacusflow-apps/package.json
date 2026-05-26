@@ -24,7 +24,9 @@
     "lint": "npm run lint -ws --if-present",
     "test": "npm run test -ws --if-present",
     "format": "prettier --write .",
-    "clean": "npm run clean -ws --if-present"
+    "clean": "npm run clean -ws --if-present",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
@@ -36,5 +38,11 @@
     "prettier": "^3.2.5",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "expo": "~54.0.34",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   }
 }

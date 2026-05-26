@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { inventoryApi, type InventoryUnit } from "@abacusflow/core";
-import { translateProductUnit, COLORS } from "@abacusflow/utils";
+import { inventoryApi, type BasicInventory } from "@abacusflow/core";
+import { translateProductType, COLORS } from "@abacusflow/utils";
 import { ListScreen } from "@abacusflow/ui-native";
 
 export default function InventoryScreen() {
   const router = useRouter();
-  const [data, setData] = useState<InventoryUnit[]>([]);
+  const [data, setData] = useState<BasicInventory[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState("");
   const [pageIndex, setPageIndex] = useState(1);
@@ -17,7 +17,7 @@ export default function InventoryScreen() {
     async (page = pageIndex) => {
       setLoading(true);
       try {
-        const res = await inventoryApi.listInventoriesPage({
+        const res = await inventoryApi.listBasicInventoriesPage({
           pageIndex: page,
           pageSize: 20,
           productName: searchName || undefined,
@@ -42,7 +42,7 @@ export default function InventoryScreen() {
     loadData(1);
   };
 
-  const getHealthStatus = (item: InventoryUnit) => {
+  const getHealthStatus = (item: BasicInventory) => {
     if (item.safetyStock && item.quantity < item.safetyStock)
       return { text: "低库存", color: COLORS.danger };
     if (item.maxStock && item.quantity > item.maxStock)
@@ -50,7 +50,7 @@ export default function InventoryScreen() {
     return { text: "正常", color: COLORS.success };
   };
 
-  const renderItem = (item: InventoryUnit) => {
+  const renderItem = (item: BasicInventory) => {
     const health = getHealthStatus(item);
     return (
       <TouchableOpacity
@@ -68,10 +68,15 @@ export default function InventoryScreen() {
           </View>
         </View>
         <Text style={styles.cardDetail}>
-          数量: {item.quantity} {translateProductUnit(item.productUnit)}
+          数量: {item.quantity} · 可用: {item.remainingQuantity}
         </Text>
-        {item.depotName && (
-          <Text style={styles.cardDetail}>储存点: {item.depotName}</Text>
+        <Text style={styles.cardDetail}>
+          类型: {translateProductType(item.productType)}
+        </Text>
+        {item.depotNames.length > 0 && (
+          <Text style={styles.cardDetail}>
+            储存点: {item.depotNames.join("、")}
+          </Text>
         )}
       </TouchableOpacity>
     );

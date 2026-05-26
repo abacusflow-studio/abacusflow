@@ -11,7 +11,7 @@ export default function EditDepotScreen() {
 
   const loadDepot = useCallback(async () => {
     try {
-      const res = await depotApi.getDepot(Number(id));
+      const res = await depotApi.getDepot({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -67,17 +67,18 @@ export default function EditDepotScreen() {
       ]}
       initialValues={{
         name: data.name,
-        location: data.location,
-        capacity: data.capacity,
+        location: data.location ?? undefined,
+        capacity: data.capacity ?? undefined,
         enabled: data.enabled,
       }}
       onSubmit={async (values) => {
         await depotApi.updateDepot({
           id: Number(id),
-          name: values.name as string,
-          location: values.location as string | undefined,
-          capacity: values.capacity as number | undefined,
-          enabled: values.enabled as boolean,
+          updateDepotInput: {
+            name: values.name as string,
+            location: values.location as string | undefined,
+            capacity: values.capacity as number | undefined,
+          },
         });
       }}
       submitLabel="保存修改"

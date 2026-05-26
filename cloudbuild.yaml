@@ -1,0 +1,58 @@
+# # Builds the backend jar, packages it with abacusflow-server/Dockerfile, and
+# # deploys the resulting image to Cloud Run.
+# #
+# # Before first use, make sure the Artifact Registry Docker repository named by
+# # _AR_REPOSITORY exists in _REGION.
+# substitutions:
+#   _REGION: asia-northeast1
+#   _SERVICE: abacusflow
+#   _AR_REPOSITORY: abacusflow
+#   _IMAGE_NAME: abacusflow-server
+
+# steps:
+#   - id: Build server jar
+#     name: eclipse-temurin:21-jdk
+#     entrypoint: bash
+#     args:
+#       - -c
+#       - |
+#         chmod +x ./gradlew
+#         ./gradlew clean :abacusflow-server:bootJar -PnoVersion --no-daemon
+
+#   - id: Build backend image
+#     name: gcr.io/cloud-builders/docker
+#     args:
+#       - build
+#       - --file=abacusflow-server/Dockerfile
+#       - --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:${BUILD_ID}
+#       - --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:latest
+#       - ./abacusflow-server
+
+#   - id: Deploy to Cloud Run
+#     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+#     entrypoint: gcloud
+#     args:
+#       - run
+#       - deploy
+#       - ${_SERVICE}
+#       - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:${BUILD_ID}
+#       - --region=${_REGION}
+#       - --platform=managed
+#       - --allow-unauthenticated
+#       - --port=8080
+#       - --memory=512Mi
+#       - --cpu=1
+#       - --concurrency=80
+#       - --timeout=300
+#       - --min-instances=1
+#       - --max-instances=3
+
+# images:
+#   - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:${BUILD_ID}
+#   - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:latest
+
+# options:
+#   logging: CLOUD_LOGGING_ONLY
+#   machineType: E2_HIGHCPU_8
+
+# timeout: 1200s

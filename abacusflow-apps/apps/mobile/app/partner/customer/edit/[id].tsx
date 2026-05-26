@@ -66,8 +66,8 @@ export default function EditCustomerScreen() {
       ]}
       initialValues={{
         name: data.name,
-        phone: data.phone,
-        address: data.address,
+        phone: data.phone ?? undefined,
+        address: data.address ?? undefined,
       }}
       onSubmit={async (values) => {
         await partnerApi.updateCustomer({

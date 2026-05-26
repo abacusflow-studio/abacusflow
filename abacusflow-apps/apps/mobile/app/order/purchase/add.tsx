@@ -7,24 +7,28 @@ export default function AddPurchaseOrderScreen() {
       orderType="purchase"
       partnerLabel="供应商"
       loadPartners={async () => {
-        const res = await partnerApi.listBasicSuppliersPage({
-          pageIndex: 1,
-          pageSize: 100,
-        });
-        return res.content;
+        return partnerApi.listSelectableSuppliers();
       }}
-      loadProducts={async () => {
-        const res = await productApi.listBasicProductsPage({
-          pageIndex: 1,
-          pageSize: 100,
-        });
-        return res.content;
+      itemLabel="产品"
+      loadItems={async () => {
+        const products = await productApi.listSelectableProducts();
+        return products.map((product) => ({
+          id: product.id,
+          label: product.name,
+          detail: product.barcode,
+        }));
       }}
       buildSubmitData={async ({ partnerId, orderDate, items }) => {
-        await transactionApi.createPurchaseOrder({
-          supplierId: partnerId,
-          orderDate,
-          items,
+        await transactionApi.addPurchaseOrder({
+          createPurchaseOrderInput: {
+            supplierId: partnerId,
+            orderDate,
+            orderItems: items.map((item) => ({
+              productId: item.itemId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+            })),
+          },
         });
       }}
     />

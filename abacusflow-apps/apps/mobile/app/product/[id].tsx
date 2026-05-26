@@ -16,7 +16,7 @@ export default function ProductDetailScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const res = await productApi.getProduct(Number(id));
+      const res = await productApi.getProduct({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -43,7 +43,7 @@ export default function ProductDetailScreen() {
       fields={(d) => [
         { label: "类型", value: translateProductType(d.type) },
         { label: "单位", value: translateProductUnit(d.unit) },
-        { label: "类别", value: d.categoryName },
+        { label: "类别ID", value: d.categoryId },
         { label: "规格", value: d.specification },
         { label: "条码", value: d.barcode },
         { label: "备注", value: d.note },
@@ -51,7 +51,7 @@ export default function ProductDetailScreen() {
       ]}
       onEdit={() => router.push(`/product/edit/${id}` as any)}
       onDelete={async () => {
-        await productApi.deleteProduct(Number(id));
+        await productApi.deleteProduct({ id: Number(id) });
         router.back();
       }}
     />

@@ -12,7 +12,7 @@ export default function EditProductScreen() {
 
   const loadProduct = useCallback(async () => {
     try {
-      const res = await productApi.getProduct(Number(id));
+      const res = await productApi.getProduct({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -96,29 +96,28 @@ export default function EditProductScreen() {
           type: "textarea",
           placeholder: "请输入备注",
         },
-        { key: "enabled", label: "启用状态", type: "switch" },
       ]}
       initialValues={{
         name: data.name,
-        specification: data.specification,
+        specification: data.specification ?? undefined,
         type: data.type,
         categoryId: data.categoryId,
         barcode: data.barcode,
         unit: data.unit,
-        note: data.note,
-        enabled: data.enabled,
+        note: data.note ?? undefined,
       }}
       onSubmit={async (values) => {
         await productApi.updateProduct({
           id: Number(id),
-          name: values.name as string,
-          specification: values.specification as string | undefined,
-          type: values.type as any,
-          categoryId: values.categoryId as number | undefined,
-          barcode: values.barcode as string | undefined,
-          unit: values.unit as any,
-          note: values.note as string | undefined,
-          enabled: values.enabled as boolean,
+          updateProductInput: {
+            name: values.name as string,
+            specification: values.specification as string | undefined,
+            type: values.type as any,
+            categoryId: values.categoryId as number | undefined,
+            barcode: values.barcode as string | undefined,
+            unit: values.unit as any,
+            note: values.note as string | undefined,
+          },
         });
       }}
       submitLabel="保存修改"

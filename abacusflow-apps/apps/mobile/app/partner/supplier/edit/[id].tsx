@@ -78,10 +78,10 @@ export default function EditSupplierScreen() {
       ]}
       initialValues={{
         name: data.name,
-        contactPerson: data.contactPerson,
-        phone: data.phone,
-        email: data.email,
-        address: data.address,
+        contactPerson: data.contactPerson ?? undefined,
+        phone: data.phone ?? undefined,
+        email: data.email ?? undefined,
+        address: data.address ?? undefined,
       }}
       onSubmit={async (values) => {
         await partnerApi.updateSupplier({

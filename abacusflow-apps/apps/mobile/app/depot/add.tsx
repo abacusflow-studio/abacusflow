@@ -27,10 +27,12 @@ export default function AddDepotScreen() {
         },
       ]}
       onSubmit={async (values) => {
-        await depotApi.createDepot({
-          name: values.name as string,
-          location: values.location as string | undefined,
-          capacity: values.capacity as number | undefined,
+        await depotApi.addDepot({
+          createDepotInput: {
+            name: values.name as string,
+            location: values.location as string | undefined,
+            capacity: values.capacity as number | undefined,
+          },
         });
       }}
       submitLabel="创建储存点"

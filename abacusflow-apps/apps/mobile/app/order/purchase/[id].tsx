@@ -10,7 +10,7 @@ export default function PurchaseOrderDetailScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const res = await transactionApi.getPurchaseOrder(Number(id));
+      const res = await transactionApi.getPurchaseOrder({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -29,17 +29,17 @@ export default function PurchaseOrderDetailScreen() {
       data={data}
       emptyMessage="采购单不存在"
       partnerLabel="供应商"
-      partnerName={data?.supplierName ?? "-"}
+      partnerName={data ? `供应商#${data.supplierId}` : "-"}
       onComplete={async () => {
-        await transactionApi.completePurchaseOrder(Number(id));
+        await transactionApi.completePurchaseOrder({ id: Number(id) });
         loadData();
       }}
       onCancel={async () => {
-        await transactionApi.cancelPurchaseOrder(Number(id));
+        await transactionApi.cancelPurchaseOrder({ id: Number(id) });
         loadData();
       }}
       onReverse={async () => {
-        await transactionApi.reversePurchaseOrder(Number(id));
+        await transactionApi.reversePurchaseOrder({ id: Number(id) });
         loadData();
       }}
     />

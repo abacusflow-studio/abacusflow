@@ -44,46 +44,6 @@ const nextConfig: NextConfig = {
       ".jsx",
       ".js",
     ];
-    // Handle .js imports resolving to .ts files (TypeScript nodenext module resolution)
-    config.resolve.plugins = config.resolve.plugins ?? [];
-    config.resolve.plugins.push({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      apply(resolver: any) {
-        const target = resolver.ensureHook("resolve");
-        resolver.getHook("described-resolve").tapAsync(
-          "JsToTsPlugin",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (request: any, resolveContext: any, callback: any) => {
-            const req = request.request as string | undefined;
-            if (req && req.endsWith(".js")) {
-              const tsReq = req.slice(0, -3) + ".ts";
-              const tsxReq = req.slice(0, -3) + ".tsx";
-              const newRequest = { ...request, request: tsReq };
-              resolver.doResolve(
-                target,
-                newRequest,
-                `try .js -> .ts: ${tsReq}`,
-                resolveContext,
-                (err: Error | null, result: unknown) => {
-                  if (err) return callback(err);
-                  if (result) return callback(null, result);
-                  const newRequestTsx = { ...request, request: tsxReq };
-                  resolver.doResolve(
-                    target,
-                    newRequestTsx,
-                    `try .js -> .tsx: ${tsxReq}`,
-                    resolveContext,
-                    callback,
-                  );
-                },
-              );
-            } else {
-              callback();
-            }
-          },
-        );
-      },
-    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     return config;
   },
 };

@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
-import { userApi, type User } from "@abacusflow/core";
+import { userApi, type BasicUser } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
 import { ListScreen } from "@abacusflow/ui-native";
 
 export default function UserListScreen() {
-  const [data, setData] = useState<User[]>([]);
+  const [data, setData] = useState<BasicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState("");
   const [pageIndex, setPageIndex] = useState(1);
@@ -15,13 +15,12 @@ export default function UserListScreen() {
     async (page = pageIndex) => {
       setLoading(true);
       try {
-        const res = await userApi.listUsersPage({
-          pageIndex: page,
-          pageSize: 20,
-          name: searchName || undefined,
-        });
-        setData(res.content);
-        setTotal(res.totalElements);
+        const users = await userApi.listBasicUsers();
+        const filtered = users.filter((user) =>
+          searchName ? user.name.includes(searchName) : true,
+        );
+        setData(filtered.slice(0, page * 20));
+        setTotal(filtered.length);
       } catch (err) {
         console.error(err);
       } finally {
@@ -49,12 +48,12 @@ export default function UserListScreen() {
       { text: "取消", style: "cancel" },
       {
         text: "删除",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await userApi.deleteUser(id);
-            loadData();
-          } catch (err) {
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await userApi.deleteUser({ id });
+              loadData();
+            } catch (err) {
             console.error(err);
           }
         },
@@ -62,7 +61,7 @@ export default function UserListScreen() {
     ]);
   };
 
-  const renderItem = (item: User) => (
+  const renderItem = (item: BasicUser) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.name}</Text>
@@ -73,10 +72,10 @@ export default function UserListScreen() {
         )}
       </View>
       {item.nick && <Text style={styles.cardDetail}>昵称: {item.nick}</Text>}
-      {item.age != null && (
-        <Text style={styles.cardDetail}>年龄: {item.age}</Text>
-      )}
-      {item.sex && <Text style={styles.cardDetail}>性别: {item.sex}</Text>}
+      <Text style={styles.cardDetail}>
+        状态: {item.enabled ? "启用" : "禁用"}
+        {item.locked ? " / 已锁定" : ""}
+      </Text>
       {item.name !== "admin" && (
         <TouchableOpacity
           style={styles.deleteBtn}

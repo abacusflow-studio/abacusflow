@@ -10,7 +10,7 @@ export default function SaleOrderDetailScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const res = await transactionApi.getSaleOrder(Number(id));
+      const res = await transactionApi.getSaleOrder({ id: Number(id) });
       setData(res);
     } catch (err) {
       console.error(err);
@@ -23,29 +23,23 @@ export default function SaleOrderDetailScreen() {
     loadData();
   }, [loadData]);
 
-  const extraFields =
-    data?.discountFactor != null
-      ? [{ label: "折扣", value: String(data.discountFactor) }]
-      : undefined;
-
   return (
     <OrderDetailScreen
       loading={loading}
       data={data}
       emptyMessage="销售单不存在"
       partnerLabel="客户"
-      partnerName={data?.customerName ?? "-"}
-      extraFields={extraFields}
+      partnerName={data ? `客户#${data.customerId}` : "-"}
       onComplete={async () => {
-        await transactionApi.completeSaleOrder(Number(id));
+        await transactionApi.completeSaleOrder({ id: Number(id) });
         loadData();
       }}
       onCancel={async () => {
-        await transactionApi.cancelSaleOrder(Number(id));
+        await transactionApi.cancelSaleOrder({ id: Number(id) });
         loadData();
       }}
       onReverse={async () => {
-        await transactionApi.reverseSaleOrder(Number(id));
+        await transactionApi.reverseSaleOrder({ id: Number(id) });
         loadData();
       }}
     />

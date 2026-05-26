@@ -2,24 +2,26 @@
 
 ## Goal
 
-Rebuild the Web app under `abacusflow-apps/apps/web` by using `abacusflow-app/abacusflow-webapp` as the functional reference: identify what each screen requests, how responses are combined for display, then implement the web-first version in the apps workspace.
+Bring `abacusflow-apps/apps/mobile` from demo-state to a shippable first app build: real backend configuration, real Auth0/OIDC login, usable core data-entry flows, and Expo/EAS release preparation.
 
 ## Phases
 
-1. [complete] Inventory the reference webapp routes, pages, API calls, and response composition patterns.
-2. [complete] Compare the current `apps/web` and shared packages against the reference behavior.
-3. [complete] Implement the missing web screens/data wiring with the existing apps workspace conventions.
-4. [complete] Verify lint/type/build behavior and record any backend/runtime assumptions.
+1. [complete] Audit mobile app startup, auth, API configuration, data-entry screens, and release config.
+2. [complete] Implement mobile app configuration and Auth0/OIDC login with token storage, logout, and `/me/bootstrap`.
+3. [complete] Repair the highest-impact data-entry flows for purchase/sale orders and basic master-data forms.
+4. [complete] Add Expo/EAS release configuration and environment examples for preview/production builds.
+5. [complete] Verify lint/type behavior and record remaining release account/manual steps.
 
 ## Decisions
 
-- Prefer the existing `abacusflow-apps` stack and shared packages over introducing a second framework.
-- Evaluate Ant Design only after checking current dependencies and UI conventions; do not add it unless the implementation benefits enough to justify the dependency.
+- Keep the existing Expo Router + shared package architecture.
+- Prefer small production-ready fixes over a full visual redesign.
+- Use Expo-compatible auth libraries and public `EXPO_PUBLIC_*` config for app build-time values.
+- Preserve existing user changes and avoid touching unrelated backend/cloud files unless required by mobile.
 
 ## Errors Encountered
 
 | Error | Attempt | Resolution |
 | --- | --- | --- |
-| Previous session catchup reported an older `DataTable` runtime issue | Startup | `git status` and `git diff --stat` are clean, so continue without reverting anything. |
-| Shared API client used stale HTTP verbs for inventory/order actions | OpenAPI comparison | Updated the shared API client to use the backend's `POST` action endpoints. |
-| Inventory page conditional `DataTable` render produced a generic type mismatch | TypeScript check | Split the inventory summary and inventory-unit table renders into separate branches. |
+| Previous planning files described an old web migration | Startup | Reset plan/findings/progress for the mobile app task. |
+| Mobile TypeScript failed on stale generated API names and old DTO fields | Typecheck attempt 1 | Updated mobile screens and shared order components to the current OpenAPI client request shapes. |

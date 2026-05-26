@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { partnerApi, type Supplier } from "@abacusflow/core";
+import { partnerApi, type BasicSupplier } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
 import { ListScreen } from "@abacusflow/ui-native";
 
 export default function SupplierListScreen() {
   const router = useRouter();
-  const [data, setData] = useState<Supplier[]>([]);
+  const [data, setData] = useState<BasicSupplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState("");
   const [pageIndex, setPageIndex] = useState(1);
@@ -42,15 +42,15 @@ export default function SupplierListScreen() {
     loadData(1);
   };
 
-  const renderItem = (item: Supplier) => (
+  const renderItem = (item: BasicSupplier) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => router.push(`/partner/supplier/${item.id}` as any)}
     >
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.name}</Text>
-        {item.totalOrders != null && (
-          <Text style={styles.orderCount}>{item.totalOrders} 单</Text>
+        {item.totalOrderCount != null && (
+          <Text style={styles.orderCount}>{item.totalOrderCount} 单</Text>
         )}
       </View>
       {item.contactPerson && (
@@ -60,9 +60,9 @@ export default function SupplierListScreen() {
       {item.address && (
         <Text style={styles.cardDetail}>地址: {item.address}</Text>
       )}
-      {item.totalAmount != null && (
+      {item.totalOrderAmount != null && (
         <Text style={styles.cardAmount}>
-          累计: ¥{item.totalAmount.toLocaleString("zh-CN")}
+          累计: ¥{item.totalOrderAmount.toLocaleString("zh-CN")}
         </Text>
       )}
     </TouchableOpacity>

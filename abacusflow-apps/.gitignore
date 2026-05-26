@@ -59,6 +59,8 @@ out/
 
 # Expo
 .expo/
+/android
+/ios
 
 # Electron
 release/

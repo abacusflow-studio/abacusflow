@@ -1,18 +1,15 @@
 # Findings
 
-- Planning session catchup found an older `DataTable` undefined-data fix in prior context, but the current git worktree is clean.
-- Reference app directory exists at `abacusflow-app/abacusflow-webapp`.
-- Target web app exists at `abacusflow-apps/apps/web`.
-- Existing planning files were for a completed API proxy/path task and have been reset for this webapp migration task.
-- Reference app stack is Vue 3 + Vite + Ant Design Vue + `@tanstack/vue-query` + ECharts/Cube.js.
-- Target web stack is Next 15 + React 19, with local shared packages `@abacusflow/core`, `@abacusflow/ui`, and `@abacusflow/utils`; no Ant Design dependency is present there.
-- Target web already has first-pass pages for dashboard, products, inventory, depots, customers, suppliers, purchase orders, sale orders, and users.
-- Migration should therefore fill behavior gaps in the existing Next app instead of replacing the stack with Ant Design.
-- OpenAPI confirms several action endpoints are `POST`, not `PUT`: `/inventories/{id}/adjust-warning-line`, `/inventory-units/{id}/assign-depot`, `/purchase-orders/{id}/{complete|cancel|reverse}`, and `/sale-orders/{id}/{complete|cancel|reverse}`.
-- The reference product page combines a category tree (`listSelectableProductCategories`) with product list filters (`name`, `type`, `enabled`, `categoryId`) and product create/edit requires `categoryId` and `barcode`.
-- Reference includes a separate product category management screen with a tree table backed by `listBasicProductCategories`, plus add/edit/delete category operations.
-- Reference inventory page has two data modes: `/inventories` for product-level inventory summaries and `/inventory-units` for unit-level rows. Both share filters `productName`, `depotName`, `productType`, `inventoryUnitCode`; export uses `/inventories/export/{excel|pdf}` with optional `productCategoryId`.
-- Reference order pages use richer filters: purchase (`orderNo`, `supplierName`, `status`, `productName`, `serialNumber`, `orderDate`) and sale (`orderNo`, `customerName`, `status`, `inventoryUnitName`, `orderDate`).
-- Reference order creation supports multiple `orderItems`; purchase items select products, sale items select inventory units.
-- Verification passed for `npm run lint -w abacusflow-web`, `npx tsc --noEmit --project apps/web/tsconfig.json`, `npm run build -w abacusflow-web`, and `git diff --check`.
-- Web dev server is running at `http://localhost:3001`; port `3000` was already occupied when checked. The new category route responds with HTTP 200.
+- Mobile app lives at `abacusflow-apps/apps/mobile` and uses Expo Router (`main: expo-router/entry`).
+- Mobile auth provider has been replaced with Expo AuthSession + SecureStore. It uses Auth0 authorization code + PKCE, stores refreshable tokens, syncs `/me/bootstrap`, and exposes a reactive `AuthGate`.
+- Mobile app now imports `config/app-config.ts`, calls `setAppConfig()`, and reads `EXPO_PUBLIC_API_BASE_URL` so `@abacusflow/core` does not fall back to default `apiBaseUrl: "/api"`.
+- Shared API client now supports dynamic `Configuration.basePath`, so mobile can safely configure the base URL at runtime as long as it calls `setAppConfig()`.
+- Product/customer/supplier/depot add/edit flows use the shared `FormScreen` and are mostly present.
+- Purchase/sale order add flows use `OrderFormScreen`; purchase now selects products and sale now selects selectable inventory units.
+- React Native UX guidance from `ui-ux-pro-max`: prefer semantic roles, clear loading/error feedback, and sufficiently large touch targets; existing app still uses many `TouchableOpacity` instances, but this task will focus on functional release blockers.
+- `app.json` identifiers were fixed to `abacusflow-mobile` with scheme `abacusflow`, iOS bundle ID `cn.abacusflow.mobile`, and Android package `cn.abacusflow.mobile`.
+- EAS release preparation now exists in `apps/mobile/eas.json`; preview Android builds output APKs, and production profiles auto-increment versions.
+- Expo SDK 54 package versions have been aligned with `npx expo install`; remaining npm audit report is 22 vulnerabilities (18 moderate, 4 high), and no `--force` audit fix was applied.
+- Verification completed: `npm run typecheck`, `npm run lint`, `git diff --check`, and `npx expo config --type public` passed from the mobile app.
+- OpenAPI generated TypeScript now uses extensionless relative imports instead of `.js` suffixes. This keeps `@abacusflow/core` source-compatible with Expo Metro and Next without custom `.js -> .ts` resolver hooks.
+- Compatibility verified after regeneration: mobile Web export, mobile Android export, mobile typecheck/lint, and web `next build` all pass. Web build still reports an existing `react-hooks/exhaustive-deps` warning in `src/components/order-list-page.tsx`.

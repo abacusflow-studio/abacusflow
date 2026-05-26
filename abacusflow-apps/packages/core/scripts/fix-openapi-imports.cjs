@@ -9,12 +9,13 @@ function fixFiles(dir) {
       fixFiles(fullPath);
     } else if (entry.name.endsWith(".ts")) {
       let content = fs.readFileSync(fullPath, "utf8");
-      // Add .js extension to relative imports
-      content = content.replace(/from '(\.\.?\/[^']+)'/g, "from '$1.js'");
+      // Metro and Next consume these generated files as TypeScript source.
+      // Keep relative imports extensionless so both bundlers resolve .ts files.
+      content = content.replace(/from '(\.\.?\/[^']+)\.js'/g, "from '$1'");
       fs.writeFileSync(fullPath, content);
     }
   }
 }
 
 fixFiles(path.join(__dirname, "../src/openapi"));
-console.log("Fixed .js extensions in generated OpenAPI imports");
+console.log("Removed .js extensions from generated OpenAPI imports");

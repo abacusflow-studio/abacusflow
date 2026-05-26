@@ -9,11 +9,14 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { PurchaseOrder, SaleOrder, OrderItem } from "@abacusflow/core";
+import type { PurchaseOrder, SaleOrder } from "@abacusflow/core";
 import { translateOrderStatus, dateToFormattedString } from "@abacusflow/utils";
 import { STATUS_COLORS, COLORS } from "@abacusflow/ui-tokens";
 
 type Order = PurchaseOrder | SaleOrder;
+type DetailOrderItem =
+  | PurchaseOrder["orderItems"][number]
+  | SaleOrder["orderItems"][number];
 
 interface OrderDetailScreenProps<T extends Order> {
   loading: boolean;
@@ -75,6 +78,10 @@ export function OrderDetailScreen<T extends Order>({
 
   const statusColor = STATUS_COLORS[data.status]?.color || "#999";
   const statusBg = STATUS_COLORS[data.status]?.bg || "#f0f0f0";
+  const totalAmount = data.orderItems.reduce(
+    (sum, item) => sum + (item.subtotal ?? 0),
+    0,
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,10 +108,10 @@ export function OrderDetailScreen<T extends Order>({
               value={field.value}
             />
           ))}
-          {data.totalAmount != null && (
+          {totalAmount > 0 && (
             <InfoRow
               label="总金额"
-              value={`¥${data.totalAmount.toLocaleString("zh-CN")}`}
+              value={`¥${totalAmount.toLocaleString("zh-CN")}`}
               valueStyle={styles.amount}
             />
           )}
@@ -112,11 +119,11 @@ export function OrderDetailScreen<T extends Order>({
 
         <Text style={styles.sectionTitle}>订单明细</Text>
         <View style={styles.card}>
-          {data.items.map((item, idx) => (
+          {data.orderItems.map((item, idx) => (
             <OrderItemRow
               key={item.id ?? idx}
               item={item}
-              isLast={idx === data.items.length - 1}
+              isLast={idx === data.orderItems.length - 1}
             />
           ))}
         </View>
@@ -173,14 +180,23 @@ function InfoRow({
   );
 }
 
-function OrderItemRow({ item, isLast }: { item: OrderItem; isLast: boolean }) {
+function OrderItemRow({
+  item,
+  isLast,
+}: {
+  item: DetailOrderItem;
+  isLast: boolean;
+}) {
+  const title =
+    "productName" in item
+      ? item.productName
+      : (item.inventoryUnitTitle ?? `库存单元#${item.inventoryUnitId}`);
+
   return (
     <View style={[styles.itemRow, !isLast && styles.itemBorder]}>
       <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>
-          {item.productName ?? `产品#${item.productId}`}
-        </Text>
-        {item.serialNumber && (
+        <Text style={styles.itemName}>{title}</Text>
+        {"serialNumber" in item && item.serialNumber && (
           <Text style={styles.itemSerial}>序列号: {item.serialNumber}</Text>
         )}
       </View>

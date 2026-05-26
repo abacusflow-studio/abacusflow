@@ -12,8 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   transactionApi,
-  type PurchaseOrder,
-  type SaleOrder,
+  type BasicPurchaseOrder,
+  type BasicSaleOrder,
 } from "@abacusflow/core";
 import {
   translateOrderStatus,
@@ -22,7 +22,9 @@ import {
   COLORS,
 } from "@abacusflow/utils";
 
-type OrderItem = (PurchaseOrder | SaleOrder) & { _type: "purchase" | "sale" };
+type OrderItem =
+  | (BasicPurchaseOrder & { _type: "purchase" })
+  | (BasicSaleOrder & { _type: "sale" });
 
 export default function OrdersScreen() {
   const router = useRouter();
@@ -39,8 +41,8 @@ export default function OrdersScreen() {
         orderNo: searchOrderNo || undefined,
       };
       const [purchaseRes, saleRes] = await Promise.all([
-        transactionApi.listPurchaseOrdersPage(params),
-        transactionApi.listSaleOrdersPage(params),
+        transactionApi.listBasicPurchaseOrdersPage(params),
+        transactionApi.listBasicSaleOrdersPage(params),
       ]);
       const items: OrderItem[] = [
         ...purchaseRes.content.map((o) => ({
@@ -92,8 +94,8 @@ export default function OrdersScreen() {
         </Text>
         <Text style={styles.cardDetail}>
           {item._type === "purchase"
-            ? `供应商: ${(item as PurchaseOrder).supplierName ?? "-"}`
-            : `客户: ${(item as SaleOrder).customerName ?? "-"}`}
+            ? `供应商: ${item.supplierName ?? "-"}`
+            : `客户: ${item.customerName ?? "-"}`}
         </Text>
         {item.totalAmount != null && (
           <Text style={styles.cardAmount}>

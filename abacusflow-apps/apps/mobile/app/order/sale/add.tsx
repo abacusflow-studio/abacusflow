@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Text, TextInput, StyleSheet } from "react-native";
-import { partnerApi, productApi, transactionApi } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/utils";
+import { inventoryApi, partnerApi, transactionApi } from "@abacusflow/core";
+import { COLORS, translateInventoryUnitType } from "@abacusflow/utils";
 import { OrderFormScreen } from "@abacusflow/ui-native";
 
 export default function AddSaleOrderScreen() {
@@ -13,18 +13,18 @@ export default function AddSaleOrderScreen() {
       partnerLabel="客户"
       accentColor="#722ed1"
       loadPartners={async () => {
-        const res = await partnerApi.listBasicCustomersPage({
-          pageIndex: 1,
-          pageSize: 100,
-        });
-        return res.content;
+        return partnerApi.listSelectableCustomers();
       }}
-      loadProducts={async () => {
-        const res = await productApi.listBasicProductsPage({
-          pageIndex: 1,
-          pageSize: 100,
+      itemLabel="库存单元"
+      loadItems={async () => {
+        const units = await inventoryApi.listSelectableInventoryUnits({
+          statuses: ["normal", "reversed"],
         });
-        return res.content;
+        return units.map((unit) => ({
+          id: unit.id,
+          label: unit.title,
+          detail: translateInventoryUnitType(unit.type),
+        }));
       }}
       extraFields={
         <>
@@ -39,11 +39,22 @@ export default function AddSaleOrderScreen() {
         </>
       }
       buildSubmitData={async ({ partnerId, orderDate, items }) => {
-        await transactionApi.createSaleOrder({
-          customerId: partnerId,
-          orderDate,
-          discountFactor: discountFactor ? Number(discountFactor) : undefined,
-          items,
+        const discount = discountFactor ? Number(discountFactor) : 1;
+        if (Number.isNaN(discount) || discount <= 0 || discount > 1) {
+          throw new Error("折扣系数需大于 0 且不超过 1");
+        }
+
+        await transactionApi.addSaleOrder({
+          createSaleOrderInput: {
+            customerId: partnerId,
+            orderDate,
+            orderItems: items.map((item) => ({
+              inventoryUnitId: item.itemId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discountFactor: discount,
+            })),
+          },
         });
       }}
     />

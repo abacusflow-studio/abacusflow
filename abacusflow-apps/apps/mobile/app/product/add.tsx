@@ -60,14 +60,16 @@ export default function AddProductScreen() {
         },
       ]}
       onSubmit={async (values) => {
-        await productApi.createProduct({
-          name: values.name as string,
-          specification: values.specification as string | undefined,
-          type: values.type as any,
-          categoryId: values.categoryId as number | undefined,
-          barcode: values.barcode as string | undefined,
-          unit: values.unit as any,
-          note: values.note as string | undefined,
+        await productApi.addProduct({
+          createProductInput: {
+            name: values.name as string,
+            specification: values.specification as string | undefined,
+            type: values.type as any,
+            categoryId: values.categoryId as number,
+            barcode: values.barcode as string,
+            unit: values.unit as any,
+            note: values.note as string | undefined,
+          },
         });
       }}
       submitLabel="创建产品"

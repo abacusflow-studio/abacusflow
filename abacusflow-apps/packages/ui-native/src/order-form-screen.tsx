@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import type { BasicProduct } from "@abacusflow/core";
 import { dateToFormattedString } from "@abacusflow/utils";
 import { COLORS } from "@abacusflow/ui-tokens";
 
@@ -20,8 +19,14 @@ interface Partner {
   name: string;
 }
 
+export interface OrderItemOption {
+  id: number;
+  label: string;
+  detail?: string;
+}
+
 interface ItemRow {
-  productId: number | undefined;
+  itemId: number | undefined;
   quantity: string;
   unitPrice: string;
 }
@@ -29,29 +34,31 @@ interface ItemRow {
 interface OrderFormScreenProps {
   orderType: "purchase" | "sale";
   partnerLabel: string;
+  itemLabel?: string;
   accentColor?: string;
   loadPartners: () => Promise<Partner[]>;
-  loadProducts: () => Promise<BasicProduct[]>;
+  loadItems: () => Promise<OrderItemOption[]>;
   extraFields?: React.ReactNode;
   buildSubmitData: (params: {
     partnerId: number;
-    orderDate: string;
-    items: { productId: number; quantity: number; unitPrice: number }[];
+    orderDate: Date;
+    items: { itemId: number; quantity: number; unitPrice: number }[];
   }) => Promise<void>;
 }
 
 export function OrderFormScreen({
   orderType,
   partnerLabel,
+  itemLabel = "产品",
   accentColor = COLORS.primary,
   loadPartners,
-  loadProducts,
+  loadItems,
   extraFields,
   buildSubmitData,
 }: OrderFormScreenProps) {
   const router = useRouter();
   const [partners, setPartners] = useState<Partner[]>([]);
-  const [products, setProducts] = useState<BasicProduct[]>([]);
+  const [itemOptions, setItemOptions] = useState<OrderItemOption[]>([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState<
     number | undefined
   >();
@@ -59,7 +66,7 @@ export function OrderFormScreen({
     dateToFormattedString(new Date().toISOString()),
   );
   const [items, setItems] = useState<ItemRow[]>([
-    { productId: undefined, quantity: "", unitPrice: "" },
+    { itemId: undefined, quantity: "", unitPrice: "" },
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -72,12 +79,13 @@ export function OrderFormScreen({
     try {
       const [partnerRes, productRes] = await Promise.all([
         loadPartners(),
-        loadProducts(),
+        loadItems(),
       ]);
       setPartners(partnerRes);
-      setProducts(productRes);
+      setItemOptions(productRes);
     } catch (err) {
       console.error(err);
+      Alert.alert("错误", "加载表单数据失败");
     } finally {
       setLoading(false);
     }
@@ -96,7 +104,7 @@ export function OrderFormScreen({
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { productId: undefined, quantity: "", unitPrice: "" },
+      { itemId: undefined, quantity: "", unitPrice: "" },
     ]);
   };
 
@@ -110,21 +118,38 @@ export function OrderFormScreen({
       Alert.alert("提示", `请选择${partnerLabel}`);
       return;
     }
-    const validItems = items.filter(
-      (item) => item.productId && item.quantity && item.unitPrice,
-    );
+    const orderDateValue = new Date(`${orderDate}T00:00:00`);
+    if (Number.isNaN(orderDateValue.getTime())) {
+      Alert.alert("提示", "请输入正确的订单日期");
+      return;
+    }
+
+    const validItems = items.filter((item) => item.itemId);
     if (validItems.length === 0) {
       Alert.alert("提示", "请至少添加一个订单项");
       return;
+    }
+
+    for (const item of validItems) {
+      const quantity = Number(item.quantity);
+      const unitPrice = Number(item.unitPrice);
+      if (!item.quantity || Number.isNaN(quantity) || quantity <= 0) {
+        Alert.alert("提示", "请输入大于 0 的数量");
+        return;
+      }
+      if (!item.unitPrice || Number.isNaN(unitPrice) || unitPrice < 0) {
+        Alert.alert("提示", "请输入不小于 0 的单价");
+        return;
+      }
     }
 
     setSubmitting(true);
     try {
       await buildSubmitData({
         partnerId: selectedPartnerId,
-        orderDate,
+        orderDate: orderDateValue,
         items: validItems.map((item) => ({
-          productId: item.productId!,
+          itemId: item.itemId!,
           quantity: Number(item.quantity),
           unitPrice: Number(item.unitPrice),
         })),
@@ -195,7 +220,7 @@ export function OrderFormScreen({
         {items.map((item, idx) => (
           <View key={idx} style={styles.itemCard}>
             <View style={styles.itemHeader}>
-              <Text style={styles.itemTitle}>商品 {idx + 1}</Text>
+              <Text style={styles.itemTitle}>{itemLabel} {idx + 1}</Text>
               {items.length > 1 && (
                 <TouchableOpacity onPress={() => removeItem(idx)}>
                   <Text style={styles.removeItem}>删除</Text>
@@ -203,31 +228,34 @@ export function OrderFormScreen({
               )}
             </View>
 
-            <Text style={styles.fieldLabel}>产品</Text>
+            <Text style={styles.fieldLabel}>{itemLabel}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {products.map((p) => (
+              {itemOptions.map((option) => (
                 <TouchableOpacity
-                  key={p.id}
+                  key={option.id}
                   style={[
                     styles.optionChip,
-                    item.productId === p.id && {
+                    item.itemId === option.id && {
                       borderColor: accentColor,
                       backgroundColor: accentColor + "15",
                     },
                   ]}
-                  onPress={() => updateItem(idx, "productId", p.id)}
+                  onPress={() => updateItem(idx, "itemId", option.id)}
                 >
                   <Text
                     style={[
                       styles.optionChipText,
-                      item.productId === p.id && {
+                      item.itemId === option.id && {
                         color: accentColor,
                         fontWeight: "600",
                       },
                     ]}
                   >
-                    {p.name}
+                    {option.label}
                   </Text>
+                  {option.detail && (
+                    <Text style={styles.optionChipDetail}>{option.detail}</Text>
+                  )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -262,7 +290,7 @@ export function OrderFormScreen({
           onPress={addItem}
         >
           <Text style={[styles.addItemBtnText, { color: accentColor }]}>
-            + 添加商品
+            + 添加{itemLabel}
           </Text>
         </TouchableOpacity>
 
@@ -326,6 +354,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   optionChipText: { fontSize: 13, color: COLORS.textSecondary },
+  optionChipDetail: { fontSize: 11, color: COLORS.textTertiary, marginTop: 2 },
   itemCard: {
     backgroundColor: COLORS.bgCard,
     borderRadius: 12,

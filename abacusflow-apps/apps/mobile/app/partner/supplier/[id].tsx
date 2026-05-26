@@ -35,17 +35,7 @@ export default function SupplierDetailScreen() {
         { label: "电话", value: d.phone },
         { label: "邮箱", value: d.email },
         { label: "地址", value: d.address },
-        {
-          label: "历史订单数",
-          value: d.totalOrders != null ? String(d.totalOrders) : undefined,
-        },
-        {
-          label: "历史总金额",
-          value:
-            d.totalAmount != null
-              ? `¥${d.totalAmount.toLocaleString("zh-CN")}`
-              : undefined,
-        },
+        { label: "创建时间", value: d.createdAt },
       ]}
       onEdit={() => router.push(`/partner/supplier/edit/${id}` as any)}
       onDelete={async () => {
