@@ -1,8 +1,10 @@
 package org.abacusflow.portal.web
 
 import jakarta.servlet.http.Cookie
+import org.abacusflow.portal.web.authentication.AbacusFlowJwtAuthenticationConverter
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
+import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -16,8 +18,10 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,12 +33,14 @@ private const val TEST_AUDIENCE = "https://api.abacusflow.test"
 private const val PROTECTED_PATH = "/security-probe"
 private const val PERMISSION_PATH = "/security-probe/user-permission"
 private const val BOOTSTRAP_PATH = "/me/bootstrap"
+private const val FRONTEND_ORIGIN = "https://abacusflow-web.vercel.app"
 
 @WebMvcTest(
     controllers = [SecurityProbeController::class],
     properties = [
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=$TEST_ISSUER",
         "spring.security.oauth2.resourceserver.jwt.audiences[0]=$TEST_AUDIENCE",
+        "abacusflow.cors.allowed-origin-patterns=$FRONTEND_ORIGIN",
     ],
 )
 @ContextConfiguration(
@@ -111,6 +117,23 @@ class SecurityConfigurationTest(
             .andExpect(content().string("bootstrap-ok"))
     }
 
+    @Test
+    fun `cors preflight is allowed before authentication`() {
+        mockMvc.perform(
+            options("/purchase-orders")
+                .header(HttpHeaders.ORIGIN, FRONTEND_ORIGIN)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+                .header(
+                    HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
+                    "authorization,content-type",
+                ),
+        )
+            .andExpect(status().isOk)
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, FRONTEND_ORIGIN))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, containsString("GET")))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, containsString("authorization")))
+    }
+
     @TestConfiguration
     class JwtTestConfiguration {
         @Bean
@@ -163,6 +186,13 @@ class SecurityConfigurationTest(
                     }
                 }
             }
+
+        @Bean
+        fun appJwtAuthenticationConverter(
+            externalIdentityAuthenticationService: ExternalIdentityAuthenticationService,
+        ): AbacusFlowJwtAuthenticationConverter {
+            return AbacusFlowJwtAuthenticationConverter(externalIdentityAuthenticationService)
+        }
 
         private fun validAccessToken(
             token: String,
