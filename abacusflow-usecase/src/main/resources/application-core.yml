@@ -19,3 +19,12 @@ logging:
     console: UTF-8
   file:
     name: logs/app.log
+
+abacusflow:
+  storage:
+    s3:
+      endpoint: ${S3_ENDPOINT:http://localhost:9000}
+      bucket: ${S3_BUCKET:abacusflow}
+      access-key-id: ${S3_ACCESS_KEY:minioadmin}
+      secret-access-key: ${S3_SECRET_KEY:minioadmin}
+      region: ${S3_REGION:us-east-1}

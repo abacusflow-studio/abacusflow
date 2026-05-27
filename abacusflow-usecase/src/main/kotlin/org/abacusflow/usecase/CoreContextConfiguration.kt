@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @ComponentScan(
     basePackages = [
         "org.abacusflow.usecase",
+        "org.abacusflow.storage",
     ],
 )
 @EnableCaching

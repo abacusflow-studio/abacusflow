@@ -23,12 +23,4 @@ class StorageConfiguration {
             .forcePathStyle(true)
             .build()
     }
-
-    @Bean
-    fun fileStorageService(
-        s3Client: S3Client,
-        properties: StorageProperties,
-    ): FileStorageService {
-        return S3FileStorageService(s3Client, properties)
-    }
 }

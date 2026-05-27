@@ -4,8 +4,10 @@ import org.abacusflow.commons.file.FileStorageService
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import org.springframework.stereotype.Service
 import java.util.UUID
 
+@Service
 class S3FileStorageService(
     private val s3Client: S3Client,
     private val properties: StorageProperties,
