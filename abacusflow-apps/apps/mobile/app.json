@@ -28,6 +28,12 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "允许小算盘使用相机扫描条码和二维码"
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",

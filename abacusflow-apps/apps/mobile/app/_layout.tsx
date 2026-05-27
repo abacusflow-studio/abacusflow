@@ -30,23 +30,37 @@ export default function RootLayout() {
             name="oauth/callback"
             options={{ headerShown: false }}
           />
-          {/* Product screens */}
+          {/* Entry flows */}
+          <Stack.Screen
+            name="entry/purchase"
+            options={{ title: "入库" }}
+          />
+          <Stack.Screen
+            name="entry/sale"
+            options={{ title: "出库" }}
+          />
+          <Stack.Screen
+            name="entry/product"
+            options={{ title: "新品建档" }}
+          />
+          <Stack.Screen
+            name="scan/index"
+            options={{ headerShown: false, presentation: "fullScreenModal" }}
+          />
+          {/* Legacy routes - kept for backward compat */}
           <Stack.Screen name="product/[id]" options={{ title: "产品详情" }} />
           <Stack.Screen name="product/add" options={{ title: "新增产品" }} />
           <Stack.Screen
             name="product/edit/[id]"
             options={{ title: "编辑产品" }}
           />
-          {/* Depot screens */}
           <Stack.Screen name="depot/[id]" options={{ title: "储存点详情" }} />
           <Stack.Screen name="depot/add" options={{ title: "新增储存点" }} />
           <Stack.Screen
             name="depot/edit/[id]"
             options={{ title: "编辑储存点" }}
           />
-          {/* Inventory screens */}
           <Stack.Screen name="inventory/[id]" options={{ title: "库存详情" }} />
-          {/* Order screens */}
           <Stack.Screen
             name="order/purchase/[id]"
             options={{ title: "采购单详情" }}
@@ -57,16 +71,15 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="order/purchase/add"
-            options={{ title: "新增采购单" }}
+            options={{ title: "入库" }}
           />
           <Stack.Screen
             name="order/sale/add"
-            options={{ title: "新增销售单" }}
+            options={{ title: "出库" }}
           />
-          {/* Partner screens */}
           <Stack.Screen
             name="partner/customer/index"
-            options={{ title: "客户管理" }}
+            options={{ title: "客户资料" }}
           />
           <Stack.Screen
             name="partner/customer/[id]"
@@ -82,7 +95,7 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="partner/supplier/index"
-            options={{ title: "供应商管理" }}
+            options={{ title: "供应商资料" }}
           />
           <Stack.Screen
             name="partner/supplier/[id]"
@@ -96,8 +109,7 @@ export default function RootLayout() {
             name="partner/supplier/edit/[id]"
             options={{ title: "编辑供应商" }}
           />
-          {/* User screens */}
-          <Stack.Screen name="user/index" options={{ title: "用户管理" }} />
+          <Stack.Screen name="user/index" options={{ title: "账号与权限" }} />
         </Stack>
         <StatusBar style="auto" />
       </AuthGate>

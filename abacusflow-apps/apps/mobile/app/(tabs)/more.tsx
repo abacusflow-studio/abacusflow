@@ -7,24 +7,70 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 const MENU_SECTIONS = [
   {
+    title: "数据管理",
+    items: [
+      {
+        label: "产品列表",
+        icon: "cube-outline" as const,
+        color: "#1677ff",
+        route: "/(tabs)/products" as any,
+      },
+      {
+        label: "采购单",
+        icon: "download-outline" as const,
+        color: "#fa8c16",
+        route: "/order/purchase/add" as any,
+      },
+      {
+        label: "销售单",
+        icon: "arrow-up-outline" as const,
+        color: "#722ed1",
+        route: "/order/sale/add" as any,
+      },
+    ],
+  },
+  {
     title: "合作伙伴",
     items: [
-      { label: "客户管理", icon: "👤", route: "/partner/customer" as any },
-      { label: "供应商管理", icon: "🏪", route: "/partner/supplier" as any },
+      {
+        label: "客户管理",
+        icon: "person-outline" as const,
+        color: "#13c2c2",
+        route: "/partner/customer" as any,
+      },
+      {
+        label: "供应商管理",
+        icon: "storefront-outline" as const,
+        color: "#eb2f96",
+        route: "/partner/supplier" as any,
+      },
     ],
   },
   {
     title: "仓储管理",
     items: [
-      { label: "储存点管理", icon: "🏠", route: "/(tabs)/depots" as any },
+      {
+        label: "储存点管理",
+        icon: "location-outline" as const,
+        color: "#8c8c8c",
+        route: "/(tabs)/depots" as any,
+      },
     ],
   },
   {
     title: "系统管理",
-    items: [{ label: "用户管理", icon: "👥", route: "/user/index" as any }],
+    items: [
+      {
+        label: "用户管理",
+        icon: "people-outline" as const,
+        color: "#595959",
+        route: "/user/index" as any,
+      },
+    ],
   },
 ];
 
@@ -47,9 +93,11 @@ export default function MoreScreen() {
                   ]}
                   onPress={() => router.push(item.route)}
                 >
-                  <Text style={styles.menuIcon}>{item.icon}</Text>
+                  <View style={[styles.iconWrap, { backgroundColor: item.color + "15" }]}>
+                    <Ionicons name={item.icon} size={20} color={item.color} />
+                  </View>
                   <Text style={styles.menuLabel}>{item.label}</Text>
-                  <Text style={styles.menuArrow}>›</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#ccc" />
                 </TouchableOpacity>
               ))}
             </View>
@@ -89,7 +137,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#f0f0f0",
   },
-  menuIcon: { fontSize: 20, marginRight: 12 },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
   menuLabel: { flex: 1, fontSize: 15, color: "#333" },
-  menuArrow: { fontSize: 20, color: "#ccc" },
 });

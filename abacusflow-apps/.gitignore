@@ -31,7 +31,14 @@ coverage
 build/Release
 
 # Dependency directories
-node_modules/
+node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 jspm_packages/
 
 # TypeScript cache

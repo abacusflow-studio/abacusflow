@@ -1,65 +1,68 @@
 import { Tabs } from "expo-router";
 import React from "react";
+import { Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS } from "@abacusflow/ui-tokens";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#1677ff",
+        tabBarActiveTintColor: COLORS.primary,
         headerShown: true,
+        tabBarStyle: {
+          height: Platform.OS === "ios" ? 88 : 64,
+          paddingBottom: Platform.OS === "ios" ? 28 : 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "500",
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "首页",
+          title: "录入",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="scan-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="products"
+        name="drafts"
         options={{
-          title: "产品",
+          title: "草稿",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cube-outline" size={size} color={color} />
+            <Ionicons name="document-text-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="inventory"
+        name="lookup"
         options={{
-          title: "库存",
+          title: "查询",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="file-tray-outline" size={size} color={color} />
+            <Ionicons name="search-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="orders"
+        name="me"
         options={{
-          title: "订单",
+          title: "我的",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="swap-horizontal-outline"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="more"
-        options={{
-          title: "更多",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="ellipsis-horizontal" size={size} color={color} />
-          ),
-        }}
-      />
+      {/* Hidden tabs - accessible via navigation but not in tab bar */}
+      <Tabs.Screen name="inventory" options={{ href: null }} />
+      <Tabs.Screen name="orders" options={{ href: null }} />
+      <Tabs.Screen name="products" options={{ href: null }} />
       <Tabs.Screen name="depots" options={{ href: null }} />
+      <Tabs.Screen name="more" options={{ href: null }} />
     </Tabs>
   );
 }

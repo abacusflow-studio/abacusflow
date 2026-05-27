@@ -18,3 +18,13 @@
 - Verification passed: `npm run typecheck`, `npm run lint`, `git diff --check`, and `npx expo config --type public`.
 - Changed `@abacusflow/core` OpenAPI post-generation script to remove `.js` suffixes from relative imports, removed the need for mobile Metro resolver hacks, and simplified web Next config accordingly.
 - Verified the extensionless OpenAPI import strategy with mobile typecheck, mobile Web export, mobile Android export, and web production build.
+
+## 2026-05-27
+
+- Started a documentation-only mobile整改方案 focused on repositioning the app from management to fast data entry.
+- Ran planning session catchup; found current uncommitted scan/barcode work and an Expo Camera native-module discussion, which should be included in the developer plan.
+- Checked current git diff stat and mobile file inventory before auditing screens.
+- Audited mobile root layout, tabs, home, more, scanner, product add, purchase add, sale add, list/form shared components, tokens, app config, and auth storage wrapper.
+- Ran `ui-ux-pro-max` design/UX lookups for React Native/mobile entry guidance and recorded touch/feedback constraints.
+- Created `docs/mobile-entry-redesign-plan.md` with product positioning, IA, flow, style, component, API, implementation, and acceptance guidance.
+- Verified the new document with `git diff --check -- docs/mobile-entry-redesign-plan.md task_plan.md findings.md progress.md`.
