@@ -32,6 +32,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
         "org.abacusflow.product",
         "org.abacusflow.transaction",
         "org.abacusflow.depot",
+        "org.abacusflow.feedback",
     ],
 )
 @PropertySource("classpath:application-core.yml", factory = YamlPropertySourceFactory::class)
