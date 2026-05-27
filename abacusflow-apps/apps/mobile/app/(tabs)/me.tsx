@@ -71,9 +71,7 @@ export default function MeScreen() {
   };
 
   const displayName =
-    authSnapshot.user?.nickname ||
-    authSnapshot.user?.name ||
-    "未登录";
+    authSnapshot.user?.nickname || authSnapshot.user?.name || "未登录";
   const displayEmail = authSnapshot.user?.email ?? "";
   const avatarLetter = displayName.charAt(0).toUpperCase();
 
@@ -116,7 +114,11 @@ export default function MeScreen() {
                     color={COLORS.textSecondary}
                   />
                   <Text style={styles.menuLabel}>{item.label}</Text>
-                  <Ionicons name="chevron-forward" size={18} color={COLORS.textDisabled} />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={COLORS.textDisabled}
+                  />
                 </TouchableOpacity>
               ))}
             </View>

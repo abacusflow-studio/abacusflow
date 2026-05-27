@@ -122,7 +122,8 @@ export default function ScanScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.productName}>{result.product.name}</Text>
                 <Text style={styles.productMeta}>
-                  {result.product.type === "asset" ? "资产" : "物料"} · {result.product.barcode}
+                  {result.product.type === "asset" ? "资产" : "物料"} ·{" "}
+                  {result.product.barcode}
                 </Text>
               </View>
               <View style={styles.foundBadge}>
@@ -131,37 +132,71 @@ export default function ScanScreen() {
             </View>
 
             <TouchableOpacity style={styles.actionBtn} onPress={handlePurchase}>
-              <View style={[styles.actionIcon, { backgroundColor: COLORS.primaryLight }]}>
-                <Ionicons name="download-outline" size={22} color={COLORS.primary} />
+              <View
+                style={[
+                  styles.actionIcon,
+                  { backgroundColor: COLORS.primaryLight },
+                ]}
+              >
+                <Ionicons
+                  name="download-outline"
+                  size={22}
+                  color={COLORS.primary}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.actionTitle}>入库</Text>
                 <Text style={styles.actionDesc}>创建采购入库单</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={COLORS.textDisabled} />
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={COLORS.textDisabled}
+              />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionBtn} onPress={handleSale}>
-              <View style={[styles.actionIcon, { backgroundColor: COLORS.successLight }]}>
-                <Ionicons name="arrow-up-outline" size={22} color={COLORS.success} />
+              <View
+                style={[
+                  styles.actionIcon,
+                  { backgroundColor: COLORS.successLight },
+                ]}
+              >
+                <Ionicons
+                  name="arrow-up-outline"
+                  size={22}
+                  color={COLORS.success}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.actionTitle}>出库</Text>
                 <Text style={styles.actionDesc}>
-                  创建销售出库单{result.product.type === "asset" ? "，需确认SN" : ""}
+                  创建销售出库单
+                  {result.product.type === "asset" ? "，需确认SN" : ""}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={COLORS.textDisabled} />
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={COLORS.textDisabled}
+              />
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.resultCard}>
             <View style={styles.notFoundWrap}>
-              <Ionicons name="alert-circle-outline" size={48} color={COLORS.warning} />
+              <Ionicons
+                name="alert-circle-outline"
+                size={48}
+                color={COLORS.warning}
+              />
               <Text style={styles.notFoundTitle}>产品未录入</Text>
               <Text style={styles.notFoundDesc}>该条码尚未注册</Text>
             </View>
-            <TouchableOpacity style={styles.primaryBtn} onPress={handleCreateProduct}>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={handleCreateProduct}
+            >
               <Ionicons name="add-circle-outline" size={20} color="#fff" />
               <Text style={styles.primaryBtnText}>建档并入库</Text>
             </TouchableOpacity>
@@ -203,7 +238,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
   },
-  barcodeText: { fontSize: 17, fontWeight: "600", color: COLORS.primary, flex: 1 },
+  barcodeText: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: COLORS.primary,
+    flex: 1,
+  },
   resultCard: {
     backgroundColor: COLORS.bgCard,
     borderRadius: 14,

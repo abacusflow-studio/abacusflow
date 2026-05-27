@@ -1,9 +1,9 @@
 package org.abacusflow.usecase.feedback.service.impl
 
+import org.abacusflow.db.feedback.FeedbackRepository
 import org.abacusflow.feedback.Feedback
 import org.abacusflow.feedback.FeedbackCategory
 import org.abacusflow.feedback.FeedbackContext
-import org.abacusflow.db.feedback.FeedbackRepository
 import org.abacusflow.feedback.FeedbackSource
 import org.abacusflow.feedback.Reporter
 import org.abacusflow.usecase.feedback.CreateFeedbackInputTO

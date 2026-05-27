@@ -37,13 +37,20 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; bg: string; color: string }
 > = {
-  completed: { label: "已完成", bg: COLORS.successLight, color: COLORS.success },
+  completed: {
+    label: "已完成",
+    bg: COLORS.successLight,
+    color: COLORS.success,
+  },
   pending: { label: "待处理", bg: COLORS.warningLight, color: COLORS.warning },
   canceled: { label: "已取消", bg: COLORS.bg, color: COLORS.textTertiary },
   reversed: { label: "已冲销", bg: COLORS.dangerLight, color: COLORS.danger },
 };
 
-const TYPE_CONFIG: Record<OrderType, { label: string; color: string; bg: string }> = {
+const TYPE_CONFIG: Record<
+  OrderType,
+  { label: string; color: string; bg: string }
+> = {
   purchase: { label: "入库", color: COLORS.primary, bg: COLORS.primaryLight },
   sale: { label: "出库", color: COLORS.success, bg: COLORS.successLight },
 };
@@ -70,8 +77,13 @@ export default function RecordsScreen() {
       totalAmount: o.totalAmount,
       totalQuantity: o.totalQuantity,
       itemCount: o.itemCount,
-      orderDate: o.orderDate ? new Date(o.orderDate).toLocaleDateString("zh-CN") : "",
-      createdAt: typeof o.createdAt === "number" ? o.createdAt : new Date(o.createdAt).getTime(),
+      orderDate: o.orderDate
+        ? new Date(o.orderDate).toLocaleDateString("zh-CN")
+        : "",
+      createdAt:
+        typeof o.createdAt === "number"
+          ? o.createdAt
+          : new Date(o.createdAt).getTime(),
     }));
     const saleRecords: OrderRecord[] = sales.map((o) => ({
       id: `sale-${o.id}`,
@@ -82,56 +94,58 @@ export default function RecordsScreen() {
       totalAmount: o.totalAmount,
       totalQuantity: o.totalQuantity,
       itemCount: o.itemCount,
-      orderDate: o.orderDate ? new Date(o.orderDate).toLocaleDateString("zh-CN") : "",
-      createdAt: typeof o.createdAt === "number" ? o.createdAt : new Date(o.createdAt).getTime(),
+      orderDate: o.orderDate
+        ? new Date(o.orderDate).toLocaleDateString("zh-CN")
+        : "",
+      createdAt:
+        typeof o.createdAt === "number"
+          ? o.createdAt
+          : new Date(o.createdAt).getTime(),
     }));
     return [...purchaseRecords, ...saleRecords].sort(
       (a, b) => b.createdAt - a.createdAt,
     );
   };
 
-  const fetchRecords = useCallback(
-    async (page: number, append: boolean) => {
-      if (append) setLoadingMore(true);
-      else setLoading(true);
+  const fetchRecords = useCallback(async (page: number, append: boolean) => {
+    if (append) setLoadingMore(true);
+    else setLoading(true);
 
-      try {
-        const [purchaseRes, saleRes] = await Promise.all([
-          transactionApi.listBasicPurchaseOrdersPage({
-            pageIndex: page,
-            pageSize: PAGE_SIZE,
-          }),
-          transactionApi.listBasicSaleOrdersPage({
-            pageIndex: page,
-            pageSize: PAGE_SIZE,
-          }),
-        ]);
+    try {
+      const [purchaseRes, saleRes] = await Promise.all([
+        transactionApi.listBasicPurchaseOrdersPage({
+          pageIndex: page,
+          pageSize: PAGE_SIZE,
+        }),
+        transactionApi.listBasicSaleOrdersPage({
+          pageIndex: page,
+          pageSize: PAGE_SIZE,
+        }),
+      ]);
 
-        const merged = toRecords(
-          purchaseRes.content ?? [],
-          saleRes.content ?? [],
-        );
+      const merged = toRecords(
+        purchaseRes.content ?? [],
+        saleRes.content ?? [],
+      );
 
-        if (append) {
-          setRecords((prev) => [...prev, ...merged]);
-        } else {
-          setRecords(merged);
-        }
-
-        const totalP = purchaseRes.totalElements ?? 0;
-        const totalS = saleRes.totalElements ?? 0;
-        const maxTotal = Math.max(totalP, totalS);
-        setHasMore((page + 1) * PAGE_SIZE < maxTotal);
-        setPageIndex(page);
-      } catch (err) {
-        console.error("Failed to load records:", err);
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
+      if (append) {
+        setRecords((prev) => [...prev, ...merged]);
+      } else {
+        setRecords(merged);
       }
-    },
-    [],
-  );
+
+      const totalP = purchaseRes.totalElements ?? 0;
+      const totalS = saleRes.totalElements ?? 0;
+      const maxTotal = Math.max(totalP, totalS);
+      setHasMore((page + 1) * PAGE_SIZE < maxTotal);
+      setPageIndex(page);
+    } catch (err) {
+      console.error("Failed to load records:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -176,7 +190,9 @@ export default function RecordsScreen() {
             <Text style={styles.metric}>
               {item.itemCount} 种 · {item.totalQuantity} 件
             </Text>
-            <Text style={styles.amount}>{formatCurrency(item.totalAmount)}</Text>
+            <Text style={styles.amount}>
+              {formatCurrency(item.totalAmount)}
+            </Text>
           </View>
         </View>
 
@@ -203,9 +219,15 @@ export default function RecordsScreen() {
         </View>
       ) : records.length === 0 ? (
         <View style={styles.center}>
-          <Ionicons name="document-text-outline" size={48} color={COLORS.textDisabled} />
+          <Ionicons
+            name="document-text-outline"
+            size={48}
+            color={COLORS.textDisabled}
+          />
           <Text style={styles.emptyText}>暂无流水记录</Text>
-          <Text style={styles.emptyHint}>完成入库或出库后，记录会显示在这里</Text>
+          <Text style={styles.emptyHint}>
+            完成入库或出库后，记录会显示在这里
+          </Text>
         </View>
       ) : (
         <FlatList

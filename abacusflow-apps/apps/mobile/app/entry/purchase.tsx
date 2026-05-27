@@ -14,11 +14,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { partnerApi, productApi, transactionApi, type SelectableProduct } from "@abacusflow/core";
+import {
+  partnerApi,
+  productApi,
+  transactionApi,
+  type SelectableProduct,
+} from "@abacusflow/core";
 import { COLORS } from "@abacusflow/ui-tokens";
 import { dateToFormattedString } from "@abacusflow/utils";
 import { BarcodeScanner } from "@/components/barcode-scanner";
-import { saveDraft, deleteDraft, listDrafts, type Draft } from "@/lib/draft-store";
+import {
+  saveDraft,
+  deleteDraft,
+  listDrafts,
+  type Draft,
+} from "@/lib/draft-store";
 
 interface OrderItem {
   productId: number;
@@ -43,8 +53,12 @@ export default function PurchaseEntryScreen() {
 
   const [partners, setPartners] = useState<{ id: number; name: string }[]>([]);
   const [products, setProducts] = useState<SelectableProduct[]>([]);
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | undefined>();
-  const [orderDate, setOrderDate] = useState(dateToFormattedString(new Date().toISOString()));
+  const [selectedPartnerId, setSelectedPartnerId] = useState<
+    number | undefined
+  >();
+  const [orderDate, setOrderDate] = useState(
+    dateToFormattedString(new Date().toISOString()),
+  );
   const [items, setItems] = useState<OrderItem[]>([]);
   const [note, setNote] = useState("");
   const [showMore, setShowMore] = useState(false);
@@ -99,7 +113,11 @@ export default function PurchaseEntryScreen() {
   };
 
   const autoSaveDraft = useCallback(
-    async (currentItems: OrderItem[], currentPartner?: number, currentNote?: string) => {
+    async (
+      currentItems: OrderItem[],
+      currentPartner?: number,
+      currentNote?: string,
+    ) => {
       if (currentItems.length === 0) return;
       const summary = `${currentItems.length} 个产品`;
       const payload = {
@@ -150,7 +168,10 @@ export default function PurchaseEntryScreen() {
           {
             text: "建档",
             onPress: () =>
-              router.push({ pathname: "/entry/product", params: { barcode, returnTo: "purchase" } } as any),
+              router.push({
+                pathname: "/entry/product",
+                params: { barcode, returnTo: "purchase" },
+              } as any),
           },
         ]);
       }
@@ -223,7 +244,10 @@ export default function PurchaseEntryScreen() {
       const msg = err instanceof Error ? err.message : "提交失败";
       if (draftId) {
         const { updateDraft } = await import("@/lib/draft-store");
-        await updateDraft("purchase", draftId, { status: "failed", lastError: msg });
+        await updateDraft("purchase", draftId, {
+          status: "failed",
+          lastError: msg,
+        });
       }
       Alert.alert("提交失败", msg + "\n\n已保存草稿，可稍后重试");
     } finally {
@@ -322,7 +346,11 @@ export default function PurchaseEntryScreen() {
                       style={styles.deleteHit}
                       onPress={() => removeItem(idx)}
                     >
-                      <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+                      <Ionicons
+                        name="trash-outline"
+                        size={18}
+                        color={COLORS.danger}
+                      />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.itemRow}>

@@ -2,10 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Button, Card, Space, Typography, Spin } from "antd";
-import {
-  AndroidOutlined,
-  MobileOutlined,
-} from "@ant-design/icons";
+import { AndroidOutlined, MobileOutlined } from "@ant-design/icons";
 import { QRCode } from "antd";
 
 const { Title, Text, Paragraph } = Typography;

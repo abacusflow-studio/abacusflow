@@ -23,7 +23,10 @@ import {
   type SelectableProduct,
 } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/ui-tokens";
-import { dateToFormattedString, translateInventoryUnitType } from "@abacusflow/utils";
+import {
+  dateToFormattedString,
+  translateInventoryUnitType,
+} from "@abacusflow/utils";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { saveDraft, deleteDraft, listDrafts } from "@/lib/draft-store";
 
@@ -49,10 +52,16 @@ export default function SaleEntryScreen() {
   const [draftId, setDraftId] = useState<string | undefined>(params.draftId);
 
   const [partners, setPartners] = useState<{ id: number; name: string }[]>([]);
-  const [inventoryUnits, setInventoryUnits] = useState<SelectableInventoryUnit[]>([]);
+  const [inventoryUnits, setInventoryUnits] = useState<
+    SelectableInventoryUnit[]
+  >([]);
   const [products, setProducts] = useState<SelectableProduct[]>([]);
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | undefined>();
-  const [orderDate, setOrderDate] = useState(dateToFormattedString(new Date().toISOString()));
+  const [selectedPartnerId, setSelectedPartnerId] = useState<
+    number | undefined
+  >();
+  const [orderDate, setOrderDate] = useState(
+    dateToFormattedString(new Date().toISOString()),
+  );
   const [items, setItems] = useState<SaleItem[]>([]);
   const [discountFactor, setDiscountFactor] = useState("");
   const [note, setNote] = useState("");
@@ -71,7 +80,11 @@ export default function SaleEntryScreen() {
 
   // Auto-add from scan
   useEffect(() => {
-    if (params.scanProductId && inventoryUnits.length > 0 && products.length > 0) {
+    if (
+      params.scanProductId &&
+      inventoryUnits.length > 0 &&
+      products.length > 0
+    ) {
       const pid = Number(params.scanProductId);
       const product = products.find((p) => p.id === pid);
       if (product) {
@@ -84,7 +97,9 @@ export default function SaleEntryScreen() {
     try {
       const [partnerRes, unitRes, productRes] = await Promise.all([
         partnerApi.listSelectableCustomers(),
-        inventoryApi.listSelectableInventoryUnits({ statuses: ["normal", "reversed"] }),
+        inventoryApi.listSelectableInventoryUnits({
+          statuses: ["normal", "reversed"],
+        }),
         productApi.listSelectableProducts(),
       ]);
       setPartners(partnerRes.map((p) => ({ id: p.id, name: p.name })));
@@ -152,13 +167,15 @@ export default function SaleEntryScreen() {
 
   const handleScannedProduct = (product: SelectableProduct) => {
     const available = inventoryUnits.filter(
-      (u) => (u.status === "normal" || u.status === "reversed"),
+      (u) => u.status === "normal" || u.status === "reversed",
     );
 
     if (product.type === "asset") {
       // Asset: must select SN
       const matching = available.filter(
-        (u) => u.type === "instance" && !items.some((i) => i.inventoryUnitId === u.id),
+        (u) =>
+          u.type === "instance" &&
+          !items.some((i) => i.inventoryUnitId === u.id),
       );
       if (matching.length === 0) {
         Alert.alert("提示", `「${product.name}」没有可用的资产库存`);
@@ -182,7 +199,8 @@ export default function SaleEntryScreen() {
       // Material: must match by product context
       // Since SelectableInventoryUnit lacks productId, show selection
       const matching = available.filter(
-        (u) => u.type === "batch" && !items.some((i) => i.inventoryUnitId === u.id),
+        (u) =>
+          u.type === "batch" && !items.some((i) => i.inventoryUnitId === u.id),
       );
       if (matching.length === 0) {
         Alert.alert("提示", `「${product.name}」没有可用库存`);
@@ -213,7 +231,10 @@ export default function SaleEntryScreen() {
           {
             text: "建档",
             onPress: () =>
-              router.push({ pathname: "/entry/product", params: { barcode, returnTo: "sale" } } as any),
+              router.push({
+                pathname: "/entry/product",
+                params: { barcode, returnTo: "sale" },
+              } as any),
           },
         ]);
         return;
@@ -283,7 +304,10 @@ export default function SaleEntryScreen() {
     }
 
     const discount = discountFactor ? Number(discountFactor) : 1;
-    if (discountFactor && (Number.isNaN(discount) || discount <= 0 || discount > 1)) {
+    if (
+      discountFactor &&
+      (Number.isNaN(discount) || discount <= 0 || discount > 1)
+    ) {
       Alert.alert("提示", "折扣系数需大于 0 且不超过 1");
       return;
     }
@@ -312,7 +336,10 @@ export default function SaleEntryScreen() {
       const msg = err instanceof Error ? err.message : "提交失败";
       if (draftId) {
         const { updateDraft } = await import("@/lib/draft-store");
-        await updateDraft("sale", draftId, { status: "failed", lastError: msg });
+        await updateDraft("sale", draftId, {
+          status: "failed",
+          lastError: msg,
+        });
       }
       Alert.alert("提交失败", msg + "\n\n已保存草稿，可稍后重试");
     } finally {
@@ -421,7 +448,11 @@ export default function SaleEntryScreen() {
                       style={styles.deleteHit}
                       onPress={() => removeItem(idx)}
                     >
-                      <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+                      <Ionicons
+                        name="trash-outline"
+                        size={18}
+                        color={COLORS.danger}
+                      />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.itemRow}>
@@ -475,7 +506,9 @@ export default function SaleEntryScreen() {
                 keyboardType="numeric"
                 placeholder="默认 1（不打折）"
               />
-              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>订单日期</Text>
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>
+                订单日期
+              </Text>
               <TextInput
                 style={styles.input}
                 value={orderDate}

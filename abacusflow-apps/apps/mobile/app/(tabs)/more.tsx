@@ -93,7 +93,12 @@ export default function MoreScreen() {
                   ]}
                   onPress={() => router.push(item.route)}
                 >
-                  <View style={[styles.iconWrap, { backgroundColor: item.color + "15" }]}>
+                  <View
+                    style={[
+                      styles.iconWrap,
+                      { backgroundColor: item.color + "15" },
+                    ]}
+                  >
                     <Ionicons name={item.icon} size={20} color={item.color} />
                   </View>
                   <Text style={styles.menuLabel}>{item.label}</Text>

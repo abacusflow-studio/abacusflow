@@ -3,7 +3,6 @@ package org.abacusflow.portal.web.feedback
 import org.abacusflow.portal.web.api.FeedbackApi
 import org.abacusflow.portal.web.feedback.mapper.toBasicVO
 import org.abacusflow.portal.web.feedback.mapper.toVO
-import org.abacusflow.portal.web.model.BasicFeedbackVO
 import org.abacusflow.portal.web.model.CreateFeedbackInputVO
 import org.abacusflow.portal.web.model.FeedbackCategoryVO
 import org.abacusflow.portal.web.model.FeedbackSourceVO

@@ -28,7 +28,11 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; bg: string; color: string }
 > = {
-  in_progress: { label: "未完成", bg: COLORS.warningLight, color: COLORS.warning },
+  in_progress: {
+    label: "未完成",
+    bg: COLORS.warningLight,
+    color: COLORS.warning,
+  },
   pending: { label: "待提交", bg: COLORS.primaryLight, color: COLORS.primary },
   failed: { label: "提交失败", bg: COLORS.dangerLight, color: COLORS.danger },
 };
@@ -59,13 +63,22 @@ export default function DraftsScreen() {
   const handleResume = (draft: Draft) => {
     switch (draft.type) {
       case "purchase":
-        router.push({ pathname: "/entry/purchase", params: { draftId: draft.id } } as any);
+        router.push({
+          pathname: "/entry/purchase",
+          params: { draftId: draft.id },
+        } as any);
         break;
       case "sale":
-        router.push({ pathname: "/entry/sale", params: { draftId: draft.id } } as any);
+        router.push({
+          pathname: "/entry/sale",
+          params: { draftId: draft.id },
+        } as any);
         break;
       case "product":
-        router.push({ pathname: "/entry/product", params: { draftId: draft.id } } as any);
+        router.push({
+          pathname: "/entry/product",
+          params: { draftId: draft.id },
+        } as any);
         break;
     }
   };
@@ -130,7 +143,11 @@ export default function DraftsScreen() {
         </View>
       ) : drafts.length === 0 ? (
         <View style={styles.center}>
-          <Ionicons name="document-text-outline" size={48} color={COLORS.textDisabled} />
+          <Ionicons
+            name="document-text-outline"
+            size={48}
+            color={COLORS.textDisabled}
+          />
           <Text style={styles.emptyText}>暂无草稿</Text>
           <Text style={styles.emptyHint}>录入中断或失败的单据会保存在这里</Text>
         </View>
@@ -177,7 +194,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusTagText: { fontSize: 12, fontWeight: "500" },
-  summary: { fontSize: 15, fontWeight: "600", color: COLORS.text, marginBottom: 4 },
+  summary: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginBottom: 4,
+  },
   errorText: { fontSize: 13, color: COLORS.danger, marginBottom: 4 },
   timeText: { fontSize: 12, color: COLORS.textTertiary },
   emptyText: { fontSize: 15, color: COLORS.textTertiary, marginTop: 8 },

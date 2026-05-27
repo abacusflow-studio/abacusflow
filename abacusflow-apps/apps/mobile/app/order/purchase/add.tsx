@@ -12,7 +12,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { partnerApi, productApi, transactionApi, type SelectableProduct } from "@abacusflow/core";
+import {
+  partnerApi,
+  productApi,
+  transactionApi,
+  type SelectableProduct,
+} from "@abacusflow/core";
 import { COLORS, dateToFormattedString } from "@abacusflow/utils";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 
@@ -26,7 +31,10 @@ interface OrderItem {
 
 export default function AddPurchaseOrderScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ scanProductId?: string; scanBarcode?: string }>();
+  const params = useLocalSearchParams<{
+    scanProductId?: string;
+    scanBarcode?: string;
+  }>();
 
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,8 +42,12 @@ export default function AddPurchaseOrderScreen() {
 
   const [partners, setPartners] = useState<{ id: number; name: string }[]>([]);
   const [products, setProducts] = useState<SelectableProduct[]>([]);
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | undefined>();
-  const [orderDate, setOrderDate] = useState(dateToFormattedString(new Date().toISOString()));
+  const [selectedPartnerId, setSelectedPartnerId] = useState<
+    number | undefined
+  >();
+  const [orderDate, setOrderDate] = useState(
+    dateToFormattedString(new Date().toISOString()),
+  );
   const [items, setItems] = useState<OrderItem[]>([]);
   const [note, setNote] = useState("");
 
@@ -104,7 +116,10 @@ export default function AddPurchaseOrderScreen() {
           {
             text: "新增产品",
             onPress: () =>
-              router.push({ pathname: "/product/add", params: { barcode } } as any),
+              router.push({
+                pathname: "/product/add",
+                params: { barcode },
+              } as any),
           },
         ]);
       }
@@ -309,7 +324,9 @@ export default function AddPurchaseOrderScreen() {
             onPress={() => setScanning(true)}
           >
             <Ionicons name="scan" size={18} color="#1677ff" />
-            <Text style={[styles.addBtnText, { color: "#1677ff" }]}>扫码添加</Text>
+            <Text style={[styles.addBtnText, { color: "#1677ff" }]}>
+              扫码添加
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.addBtn, styles.manualAddBtn]}

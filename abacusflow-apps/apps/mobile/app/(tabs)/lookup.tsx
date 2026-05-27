@@ -21,7 +21,11 @@ import {
   type BasicSaleOrder,
 } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/ui-tokens";
-import { translateProductType, translateProductUnit, formatCurrency } from "@abacusflow/utils";
+import {
+  translateProductType,
+  translateProductUnit,
+  formatCurrency,
+} from "@abacusflow/utils";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 
 type LookupMode = "menu" | "product" | "inventory" | "order";
@@ -30,7 +34,11 @@ const ORDER_STATUS_CONFIG: Record<
   string,
   { label: string; bg: string; color: string }
 > = {
-  completed: { label: "已完成", bg: COLORS.successLight, color: COLORS.success },
+  completed: {
+    label: "已完成",
+    bg: COLORS.successLight,
+    color: COLORS.success,
+  },
   pending: { label: "待处理", bg: COLORS.warningLight, color: COLORS.warning },
   canceled: { label: "已取消", bg: COLORS.bg, color: COLORS.textTertiary },
   reversed: { label: "已冲销", bg: COLORS.dangerLight, color: COLORS.danger },
@@ -43,7 +51,9 @@ export default function LookupScreen() {
   const [searchValue, setSearchValue] = useState("");
   const [products, setProducts] = useState<BasicProduct[]>([]);
   const [inventories, setInventories] = useState<BasicInventory[]>([]);
-  const [purchaseOrders, setPurchaseOrders] = useState<BasicPurchaseOrder[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<BasicPurchaseOrder[]>(
+    [],
+  );
   const [saleOrders, setSaleOrders] = useState<BasicSaleOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -173,7 +183,9 @@ export default function LookupScreen() {
       <BarcodeScanner
         onScan={handleBarcodeScan}
         onClose={() => setScanning(false)}
-        title={mode === "inventory" || mode === "menu" ? "扫码查库存" : "扫码查产品"}
+        title={
+          mode === "inventory" || mode === "menu" ? "扫码查库存" : "扫码查产品"
+        }
       />
     );
   }
@@ -219,7 +231,11 @@ export default function LookupScreen() {
                 setSearched(false);
               }}
             >
-              <Ionicons name="file-tray-outline" size={28} color={COLORS.success} />
+              <Ionicons
+                name="file-tray-outline"
+                size={28}
+                color={COLORS.success}
+              />
               <Text style={styles.menuCardTitle}>查库存</Text>
             </TouchableOpacity>
 
@@ -233,7 +249,11 @@ export default function LookupScreen() {
                 setSearched(false);
               }}
             >
-              <Ionicons name="receipt-outline" size={28} color={COLORS.warning} />
+              <Ionicons
+                name="receipt-outline"
+                size={28}
+                color={COLORS.warning}
+              />
               <Text style={styles.menuCardTitle}>查单据</Text>
             </TouchableOpacity>
           </View>
@@ -269,10 +289,7 @@ export default function LookupScreen() {
         >
           <Ionicons name="scan" size={20} color={COLORS.primary} />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={currentSearch()}
-          style={styles.searchBtn}
-        >
+        <TouchableOpacity onPress={currentSearch()} style={styles.searchBtn}>
           <Ionicons name="search" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -305,7 +322,8 @@ export default function LookupScreen() {
                 <Text style={styles.cardBarcode}>{item.barcode}</Text>
               </View>
               <Text style={styles.cardDetail}>
-                {translateProductType(item.type)} · {translateProductUnit(item.unit)}
+                {translateProductType(item.type)} ·{" "}
+                {translateProductUnit(item.unit)}
                 {item.categoryName ? ` · ${item.categoryName}` : ""}
               </Text>
             </TouchableOpacity>
@@ -338,7 +356,9 @@ export default function LookupScreen() {
               </View>
               <Text style={styles.cardDetail}>
                 库存: {item.quantity}
-                {item.depotNames?.length ? ` · ${item.depotNames.join(", ")}` : ""}
+                {item.depotNames?.length
+                  ? ` · ${item.depotNames.join(", ")}`
+                  : ""}
               </Text>
             </TouchableOpacity>
           )}
@@ -347,11 +367,20 @@ export default function LookupScreen() {
         /* 订单查询 */
         <FlatList
           data={[
-            ...purchaseOrders.map((o) => ({ ...o, _type: "purchase" as const })),
+            ...purchaseOrders.map((o) => ({
+              ...o,
+              _type: "purchase" as const,
+            })),
             ...saleOrders.map((o) => ({ ...o, _type: "sale" as const })),
           ].sort((a, b) => {
-            const ta = typeof a.createdAt === "number" ? a.createdAt : new Date(a.createdAt).getTime();
-            const tb = typeof b.createdAt === "number" ? b.createdAt : new Date(b.createdAt).getTime();
+            const ta =
+              typeof a.createdAt === "number"
+                ? a.createdAt
+                : new Date(a.createdAt).getTime();
+            const tb =
+              typeof b.createdAt === "number"
+                ? b.createdAt
+                : new Date(b.createdAt).getTime();
             return tb - ta;
           })}
           keyExtractor={(item) => `${item._type}-${item.id}`}
@@ -362,12 +391,15 @@ export default function LookupScreen() {
             searched ? (
               <View style={styles.empty}>
                 <Text style={styles.emptyText}>未找到单据</Text>
-                <Text style={styles.emptyHint}>输入供应商名、客户名或单号搜索</Text>
+                <Text style={styles.emptyHint}>
+                  输入供应商名、客户名或单号搜索
+                </Text>
               </View>
             ) : null
           }
           renderItem={({ item }) => {
-            const statusCfg = ORDER_STATUS_CONFIG[item.status] ?? ORDER_STATUS_CONFIG.pending;
+            const statusCfg =
+              ORDER_STATUS_CONFIG[item.status] ?? ORDER_STATUS_CONFIG.pending;
             const isPurchase = item._type === "purchase";
             const partyName = isPurchase
               ? (item as BasicPurchaseOrder).supplierName
@@ -375,18 +407,37 @@ export default function LookupScreen() {
             return (
               <TouchableOpacity style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <View style={[styles.orderTypeTag, {
-                    backgroundColor: isPurchase ? COLORS.primaryLight : COLORS.successLight,
-                  }]}>
-                    <Text style={[styles.orderTypeTagText, {
-                      color: isPurchase ? COLORS.primary : COLORS.success,
-                    }]}>
+                  <View
+                    style={[
+                      styles.orderTypeTag,
+                      {
+                        backgroundColor: isPurchase
+                          ? COLORS.primaryLight
+                          : COLORS.successLight,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.orderTypeTagText,
+                        {
+                          color: isPurchase ? COLORS.primary : COLORS.success,
+                        },
+                      ]}
+                    >
                       {isPurchase ? "入库" : "出库"}
                     </Text>
                   </View>
                   <Text style={styles.orderNo}>{item.orderNo}</Text>
-                  <View style={[styles.statusTag, { backgroundColor: statusCfg.bg }]}>
-                    <Text style={[styles.statusText, { color: statusCfg.color }]}>
+                  <View
+                    style={[
+                      styles.statusTag,
+                      { backgroundColor: statusCfg.bg },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.statusText, { color: statusCfg.color }]}
+                    >
                       {statusCfg.label}
                     </Text>
                   </View>
@@ -399,7 +450,9 @@ export default function LookupScreen() {
                     <Text style={styles.orderMetric}>
                       {item.itemCount} 种 · {item.totalQuantity} 件
                     </Text>
-                    <Text style={styles.orderAmount}>{formatCurrency(item.totalAmount)}</Text>
+                    <Text style={styles.orderAmount}>
+                      {formatCurrency(item.totalAmount)}
+                    </Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -415,8 +468,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   menuContent: { flex: 1, padding: 16 },
-  menuTitle: { fontSize: 22, fontWeight: "700", color: COLORS.text, marginTop: 8 },
-  menuHint: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4, marginBottom: 24 },
+  menuTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginTop: 8,
+  },
+  menuHint: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+    marginBottom: 24,
+  },
   scanLookupBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -428,7 +491,11 @@ const styles = StyleSheet.create({
   },
   scanLookupText: { flex: 1 },
   scanLookupTitle: { fontSize: 18, fontWeight: "700", color: "#fff" },
-  scanLookupDesc: { fontSize: 13, color: "rgba(255,255,255,0.8)", marginTop: 2 },
+  scanLookupDesc: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.8)",
+    marginTop: 2,
+  },
   menuGrid: { flexDirection: "row", gap: 12 },
   menuCard: {
     flex: 1,
@@ -501,7 +568,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   orderTypeTagText: { fontSize: 12, fontWeight: "600" },
-  orderNo: { fontSize: 14, fontWeight: "600", color: COLORS.text, flex: 1, marginLeft: 8 },
+  orderNo: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.text,
+    flex: 1,
+    marginLeft: 8,
+  },
   statusTag: {
     paddingHorizontal: 8,
     paddingVertical: 2,

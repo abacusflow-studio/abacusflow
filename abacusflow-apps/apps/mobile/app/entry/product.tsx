@@ -33,7 +33,9 @@ export default function ProductEntryScreen() {
 
   const [scanning, setScanning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+    [],
+  );
   const [draftId, setDraftId] = useState<string | undefined>(params.draftId);
 
   const [name, setName] = useState("");
@@ -83,7 +85,15 @@ export default function ProductEntryScreen() {
   const autoSaveDraft = useCallback(async () => {
     if (!name.trim() && !barcode.trim()) return;
     const summary = name.trim() || barcode || "未命名产品";
-    const payload = { name, barcode, type, unit, specification, categoryId, note };
+    const payload = {
+      name,
+      barcode,
+      type,
+      unit,
+      specification,
+      categoryId,
+      note,
+    };
     if (draftId) {
       const { updateDraft } = await import("@/lib/draft-store");
       await updateDraft("product", draftId, { payload, summary });
@@ -146,7 +156,10 @@ export default function ProductEntryScreen() {
       const msg = err instanceof Error ? err.message : "创建失败";
       if (draftId) {
         const { updateDraft } = await import("@/lib/draft-store");
-        await updateDraft("product", draftId, { status: "failed", lastError: msg });
+        await updateDraft("product", draftId, {
+          status: "failed",
+          lastError: msg,
+        });
       }
       Alert.alert("创建失败", msg + "\n\n已保存草稿");
     } finally {
@@ -300,7 +313,10 @@ export default function ProductEntryScreen() {
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>备注</Text>
                 <TextInput
-                  style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]}
+                  style={[
+                    styles.input,
+                    { minHeight: 80, textAlignVertical: "top" },
+                  ]}
                   value={note}
                   onChangeText={setNote}
                   placeholder="可选"

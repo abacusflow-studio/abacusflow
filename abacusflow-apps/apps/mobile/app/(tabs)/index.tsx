@@ -57,15 +57,30 @@ export default function EntryScreen() {
           activeOpacity={0.85}
         >
           <View style={styles.mainActionLeft}>
-            <View style={[styles.mainActionIcon, { backgroundColor: COLORS.primaryLight }]}>
-              <Ionicons name="download-outline" size={28} color={COLORS.primary} />
+            <View
+              style={[
+                styles.mainActionIcon,
+                { backgroundColor: COLORS.primaryLight },
+              ]}
+            >
+              <Ionicons
+                name="download-outline"
+                size={28}
+                color={COLORS.primary}
+              />
             </View>
             <View>
               <Text style={styles.mainActionTitle}>扫码入库</Text>
-              <Text style={styles.mainActionDesc}>扫描条码，创建采购入库单</Text>
+              <Text style={styles.mainActionDesc}>
+                扫描条码，创建采购入库单
+              </Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={22} color={COLORS.textDisabled} />
+          <Ionicons
+            name="chevron-forward"
+            size={22}
+            color={COLORS.textDisabled}
+          />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -74,15 +89,30 @@ export default function EntryScreen() {
           activeOpacity={0.85}
         >
           <View style={styles.mainActionLeft}>
-            <View style={[styles.mainActionIcon, { backgroundColor: COLORS.successLight }]}>
-              <Ionicons name="arrow-up-outline" size={28} color={COLORS.success} />
+            <View
+              style={[
+                styles.mainActionIcon,
+                { backgroundColor: COLORS.successLight },
+              ]}
+            >
+              <Ionicons
+                name="arrow-up-outline"
+                size={28}
+                color={COLORS.success}
+              />
             </View>
             <View>
               <Text style={styles.mainActionTitle}>扫码出库</Text>
-              <Text style={styles.mainActionDesc}>扫描条码，创建销售出库单</Text>
+              <Text style={styles.mainActionDesc}>
+                扫描条码，创建销售出库单
+              </Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={22} color={COLORS.textDisabled} />
+          <Ionicons
+            name="chevron-forward"
+            size={22}
+            color={COLORS.textDisabled}
+          />
         </TouchableOpacity>
 
         {/* Secondary actions */}
@@ -92,7 +122,11 @@ export default function EntryScreen() {
             style={styles.secondaryCard}
             onPress={() => router.push("/entry/product" as any)}
           >
-            <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
+            <Ionicons
+              name="add-circle-outline"
+              size={24}
+              color={COLORS.primary}
+            />
             <Text style={styles.secondaryTitle}>新品建档</Text>
           </TouchableOpacity>
 
@@ -100,7 +134,11 @@ export default function EntryScreen() {
             style={styles.secondaryCard}
             onPress={() => router.push("/(tabs)/lookup" as any)}
           >
-            <Ionicons name="search-outline" size={24} color={COLORS.textSecondary} />
+            <Ionicons
+              name="search-outline"
+              size={24}
+              color={COLORS.textSecondary}
+            />
             <Text style={styles.secondaryTitle}>扫码查库存</Text>
           </TouchableOpacity>
         </View>
@@ -122,7 +160,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 20,
   },
-  draftBannerText: { flex: 1, fontSize: 14, color: COLORS.warning, fontWeight: "500" },
+  draftBannerText: {
+    flex: 1,
+    fontSize: 14,
+    color: COLORS.warning,
+    fontWeight: "500",
+  },
   sectionTitle: {
     fontSize: 13,
     fontWeight: "600",

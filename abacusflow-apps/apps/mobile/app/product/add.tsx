@@ -25,7 +25,9 @@ export default function AddProductScreen() {
 
   const [scanning, setScanning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+    [],
+  );
 
   const [name, setName] = useState("");
   const [barcode, setBarcode] = useState(params.barcode || "");
@@ -147,10 +149,7 @@ export default function AddProductScreen() {
               {PRODUCT_TYPES.map((t) => (
                 <TouchableOpacity
                   key={t.value}
-                  style={[
-                    styles.chip,
-                    type === t.value && styles.chipActive,
-                  ]}
+                  style={[styles.chip, type === t.value && styles.chipActive]}
                   onPress={() => setType(t.value)}
                 >
                   <Text
@@ -176,10 +175,7 @@ export default function AddProductScreen() {
               {PRODUCT_UNITS.map((u) => (
                 <TouchableOpacity
                   key={u.value}
-                  style={[
-                    styles.chip,
-                    unit === u.value && styles.chipActive,
-                  ]}
+                  style={[styles.chip, unit === u.value && styles.chipActive]}
                   onPress={() => setUnit(u.value)}
                 >
                   <Text
@@ -247,7 +243,11 @@ export default function AddProductScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={20}
+                color="#fff"
+              />
               <Text style={styles.submitText}>创建产品</Text>
             </>
           )}

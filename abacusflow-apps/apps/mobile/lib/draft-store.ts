@@ -62,10 +62,7 @@ export async function updateDraft(
   await SecureStore.setItemAsync(keyFor(type), JSON.stringify(existing));
 }
 
-export async function deleteDraft(
-  type: DraftType,
-  id: string,
-): Promise<void> {
+export async function deleteDraft(type: DraftType, id: string): Promise<void> {
   const existing = await listDrafts(type);
   const filtered = existing.filter((d) => d.id !== id);
   await SecureStore.setItemAsync(keyFor(type), JSON.stringify(filtered));

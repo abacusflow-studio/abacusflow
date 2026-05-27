@@ -36,7 +36,10 @@ interface SaleOrderItem {
 
 export default function AddSaleOrderScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ scanProductId?: string; scanBarcode?: string }>();
+  const params = useLocalSearchParams<{
+    scanProductId?: string;
+    scanBarcode?: string;
+  }>();
 
   const [scanning, setScanning] = useState(false);
   const [scanningSN, setScanningSN] = useState(false);
@@ -44,10 +47,16 @@ export default function AddSaleOrderScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const [partners, setPartners] = useState<{ id: number; name: string }[]>([]);
-  const [inventoryUnits, setInventoryUnits] = useState<SelectableInventoryUnit[]>([]);
+  const [inventoryUnits, setInventoryUnits] = useState<
+    SelectableInventoryUnit[]
+  >([]);
   const [products, setProducts] = useState<SelectableProduct[]>([]);
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | undefined>();
-  const [orderDate, setOrderDate] = useState(dateToFormattedString(new Date().toISOString()));
+  const [selectedPartnerId, setSelectedPartnerId] = useState<
+    number | undefined
+  >();
+  const [orderDate, setOrderDate] = useState(
+    dateToFormattedString(new Date().toISOString()),
+  );
   const [items, setItems] = useState<SaleOrderItem[]>([]);
   const [discountFactor, setDiscountFactor] = useState("");
   const [note, setNote] = useState("");
@@ -58,7 +67,11 @@ export default function AddSaleOrderScreen() {
 
   // Auto-add from scan
   useEffect(() => {
-    if (params.scanProductId && inventoryUnits.length > 0 && products.length > 0) {
+    if (
+      params.scanProductId &&
+      inventoryUnits.length > 0 &&
+      products.length > 0
+    ) {
       const pid = Number(params.scanProductId);
       const product = products.find((p) => p.id === pid);
       if (product) {
@@ -127,8 +140,7 @@ export default function AddSaleOrderScreen() {
     // Since SelectableInventoryUnit doesn't have productId, we match by title prefix
     const matching = available.filter(
       (u) =>
-        u.type === "instance" &&
-        !items.some((i) => i.inventoryUnitId === u.id),
+        u.type === "instance" && !items.some((i) => i.inventoryUnitId === u.id),
     );
 
     if (matching.length === 0) {
@@ -166,7 +178,10 @@ export default function AddSaleOrderScreen() {
           {
             text: "新增产品",
             onPress: () =>
-              router.push({ pathname: "/product/add", params: { barcode } } as any),
+              router.push({
+                pathname: "/product/add",
+                params: { barcode },
+              } as any),
           },
         ]);
         return;
@@ -236,7 +251,11 @@ export default function AddSaleOrderScreen() {
     );
   };
 
-  const updateItem = (index: number, field: keyof SaleOrderItem, value: string) => {
+  const updateItem = (
+    index: number,
+    field: keyof SaleOrderItem,
+    value: string,
+  ) => {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
     );
@@ -269,7 +288,10 @@ export default function AddSaleOrderScreen() {
     }
 
     const discount = discountFactor ? Number(discountFactor) : 1;
-    if (discountFactor && (Number.isNaN(discount) || discount <= 0 || discount > 1)) {
+    if (
+      discountFactor &&
+      (Number.isNaN(discount) || discount <= 0 || discount > 1)
+    ) {
       Alert.alert("提示", "折扣系数需大于 0 且不超过 1");
       return;
     }
@@ -432,7 +454,9 @@ export default function AddSaleOrderScreen() {
             onPress={() => setScanning(true)}
           >
             <Ionicons name="scan" size={18} color="#722ed1" />
-            <Text style={[styles.addBtnText, { color: "#722ed1" }]}>扫码添加</Text>
+            <Text style={[styles.addBtnText, { color: "#722ed1" }]}>
+              扫码添加
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.addBtn, styles.manualAddBtn]}

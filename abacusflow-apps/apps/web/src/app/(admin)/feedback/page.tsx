@@ -123,7 +123,12 @@ export default function FeedbackPage() {
       const updated = await feedbackApi.updateFeedback({
         id: detailItem.id,
         updateFeedbackInput: {
-          action: actionType as "confirm" | "startHandling" | "resolve" | "close" | "reopen",
+          action: actionType as
+            | "confirm"
+            | "startHandling"
+            | "resolve"
+            | "close"
+            | "reopen",
           resolutionNote: values.resolutionNote,
           assigneeUserId: values.assigneeUserId,
         },
@@ -283,10 +288,7 @@ export default function FeedbackPage() {
               )}
               {detailItem.status !== "RESOLVED" &&
                 detailItem.status !== "CLOSED" && (
-                  <Button
-                    type="primary"
-                    onClick={() => openAction("resolve")}
-                  >
+                  <Button type="primary" onClick={() => openAction("resolve")}>
                     标记解决
                   </Button>
                 )}

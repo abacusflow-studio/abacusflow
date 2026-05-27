@@ -9,7 +9,11 @@ interface BarcodeScannerProps {
   title?: string;
 }
 
-export function BarcodeScanner({ onScan, onClose, title }: BarcodeScannerProps) {
+export function BarcodeScanner({
+  onScan,
+  onClose,
+  title,
+}: BarcodeScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 

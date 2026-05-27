@@ -31,18 +31,9 @@ export default function RootLayout() {
             options={{ headerShown: false }}
           />
           {/* Entry flows */}
-          <Stack.Screen
-            name="entry/purchase"
-            options={{ title: "入库" }}
-          />
-          <Stack.Screen
-            name="entry/sale"
-            options={{ title: "出库" }}
-          />
-          <Stack.Screen
-            name="entry/product"
-            options={{ title: "新品建档" }}
-          />
+          <Stack.Screen name="entry/purchase" options={{ title: "入库" }} />
+          <Stack.Screen name="entry/sale" options={{ title: "出库" }} />
+          <Stack.Screen name="entry/product" options={{ title: "新品建档" }} />
           <Stack.Screen
             name="scan/index"
             options={{ headerShown: false, presentation: "fullScreenModal" }}
@@ -69,14 +60,8 @@ export default function RootLayout() {
             name="order/sale/[id]"
             options={{ title: "销售单详情" }}
           />
-          <Stack.Screen
-            name="order/purchase/add"
-            options={{ title: "入库" }}
-          />
-          <Stack.Screen
-            name="order/sale/add"
-            options={{ title: "出库" }}
-          />
+          <Stack.Screen name="order/purchase/add" options={{ title: "入库" }} />
+          <Stack.Screen name="order/sale/add" options={{ title: "出库" }} />
           <Stack.Screen
             name="partner/customer/index"
             options={{ title: "客户资料" }}
