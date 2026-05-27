@@ -13,7 +13,6 @@ import java.net.URI
 @Configuration
 @EnableConfigurationProperties(StorageProperties::class)
 class StorageConfiguration {
-
     @Bean
     fun s3Client(properties: StorageProperties): S3Client {
         val credentials = AwsBasicCredentials.create(properties.accessKeyId, properties.secretAccessKey)
@@ -26,7 +25,10 @@ class StorageConfiguration {
     }
 
     @Bean
-    fun fileStorageService(s3Client: S3Client, properties: StorageProperties): FileStorageService {
+    fun fileStorageService(
+        s3Client: S3Client,
+        properties: StorageProperties,
+    ): FileStorageService {
         return S3FileStorageService(s3Client, properties)
     }
 }

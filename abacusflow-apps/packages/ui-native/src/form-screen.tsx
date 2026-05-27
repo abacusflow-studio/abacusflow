@@ -112,15 +112,12 @@ export function FormScreen({
     [imageUris],
   );
 
-  const removeImage = useCallback(
-    (fieldKey: string, index: number) => {
-      setImageUris((prev) => ({
-        ...prev,
-        [fieldKey]: (prev[fieldKey] || []).filter((_, i) => i !== index),
-      }));
-    },
-    [],
-  );
+  const removeImage = useCallback((fieldKey: string, index: number) => {
+    setImageUris((prev) => ({
+      ...prev,
+      [fieldKey]: (prev[fieldKey] || []).filter((_, i) => i !== index),
+    }));
+  }, []);
 
   const setValue = useCallback(
     (key: string, value: string | number | boolean | undefined) => {
@@ -197,16 +194,27 @@ export function FormScreen({
                           style={styles.imageRemove}
                           onPress={() => removeImage(field.key, idx)}
                         >
-                          <Ionicons name="close-circle" size={20} color={COLORS.danger} />
+                          <Ionicons
+                            name="close-circle"
+                            size={20}
+                            color={COLORS.danger}
+                          />
                         </TouchableOpacity>
                       </View>
                     ))}
-                    {(imageUris[field.key] || []).length < (field.maxImages || 9) && (
+                    {(imageUris[field.key] || []).length <
+                      (field.maxImages || 9) && (
                       <TouchableOpacity
                         style={styles.imageAdd}
-                        onPress={() => pickImage(field.key, field.maxImages || 9)}
+                        onPress={() =>
+                          pickImage(field.key, field.maxImages || 9)
+                        }
                       >
-                        <Ionicons name="camera-outline" size={28} color={COLORS.textTertiary} />
+                        <Ionicons
+                          name="camera-outline"
+                          size={28}
+                          color={COLORS.textTertiary}
+                        />
                         <Text style={styles.imageAddText}>添加</Text>
                       </TouchableOpacity>
                     )}

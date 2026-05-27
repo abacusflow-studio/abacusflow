@@ -16,10 +16,11 @@ data class StorageProperties(
         if (publicUrlPrefix.isNotBlank()) return publicUrlPrefix.trimEnd('/')
         // Supabase S3: endpoint 是 .../storage/v1/s3
         // 公开 URL 是 .../storage/v1/object/public/<bucket>
-        val base = endpoint
-            .removeSuffix("/")
-            .removeSuffix("/s3")
-            .removeSuffix("/storage/v1/s3")
+        val base =
+            endpoint
+                .removeSuffix("/")
+                .removeSuffix("/s3")
+                .removeSuffix("/storage/v1/s3")
         return "$base/storage/v1/object/public/$bucket"
     }
 }

@@ -356,16 +356,18 @@ export default function FeedbackPage() {
               <Descriptions.Item label="附件图片">
                 <Image.PreviewGroup>
                   <Space wrap>
-                    {(detailItem.imageUrls as string[]).map((url: string, idx: number) => (
-                      <Image
-                        key={idx}
-                        src={url}
-                        width={80}
-                        height={80}
-                        alt={`附件图片 ${idx + 1}`}
-                        style={{ objectFit: "cover", borderRadius: 4 }}
-                      />
-                    ))}
+                    {(detailItem.imageUrls as string[]).map(
+                      (url: string, idx: number) => (
+                        <Image
+                          key={idx}
+                          src={url}
+                          width={80}
+                          height={80}
+                          alt={`附件图片 ${idx + 1}`}
+                          style={{ objectFit: "cover", borderRadius: 4 }}
+                        />
+                      ),
+                    )}
                   </Space>
                 </Image.PreviewGroup>
               </Descriptions.Item>

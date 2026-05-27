@@ -10,20 +10,25 @@ class S3FileStorageService(
     private val s3Client: S3Client,
     private val properties: StorageProperties,
 ) : FileStorageService {
-
-    override fun upload(fileBytes: ByteArray, originalFilename: String, contentType: String): String {
+    override fun upload(
+        fileBytes: ByteArray,
+        originalFilename: String,
+        contentType: String,
+    ): String {
         val extension = originalFilename.substringAfterLast('.', "")
-        val key = if (extension.isNotEmpty()) {
-            "feedback/${UUID.randomUUID()}.$extension"
-        } else {
-            "feedback/${UUID.randomUUID()}"
-        }
+        val key =
+            if (extension.isNotEmpty()) {
+                "feedback/${UUID.randomUUID()}.$extension"
+            } else {
+                "feedback/${UUID.randomUUID()}"
+            }
 
-        val putRequest = PutObjectRequest.builder()
-            .bucket(properties.bucket)
-            .key(key)
-            .contentType(contentType)
-            .build()
+        val putRequest =
+            PutObjectRequest.builder()
+                .bucket(properties.bucket)
+                .key(key)
+                .contentType(contentType)
+                .build()
 
         s3Client.putObject(putRequest, RequestBody.fromBytes(fileBytes))
 
