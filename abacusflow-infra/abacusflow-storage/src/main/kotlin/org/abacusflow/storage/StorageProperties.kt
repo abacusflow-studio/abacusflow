@@ -19,8 +19,8 @@ data class StorageProperties(
         val base =
             endpoint
                 .removeSuffix("/")
-                .removeSuffix("/s3")
                 .removeSuffix("/storage/v1/s3")
+                .removeSuffix("/s3")
         return "$base/storage/v1/object/public/$bucket"
     }
 }
