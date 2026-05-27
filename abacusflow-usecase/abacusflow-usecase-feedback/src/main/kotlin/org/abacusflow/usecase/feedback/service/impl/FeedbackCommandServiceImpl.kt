@@ -42,6 +42,7 @@ class FeedbackCommandServiceImpl(
                 reporterUserId = input.reporterUserId,
             )
 
+        feedback.setImageUrls(input.imageUrls)
         val saved = feedbackRepository.save(feedback)
         return saved.toTO()
     }

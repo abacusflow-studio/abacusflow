@@ -2,14 +2,19 @@ package org.abacusflow.feedback
 
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.AttributeOverrides
+import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.OrderColumn
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -96,12 +101,24 @@ class Feedback(
     var resolvedAt: Instant? = null
         private set
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "feedback_image", joinColumns = [JoinColumn(name = "feedback_id")])
+    @Column(name = "image_url", length = 1024)
+    @OrderColumn(name = "sort_order")
+    var imageUrls: MutableList<String> = mutableListOf()
+        private set
+
     @CreationTimestamp
     val createdAt: Instant = Instant.now()
 
     @UpdateTimestamp
     var updatedAt: Instant = Instant.now()
         private set
+
+    fun setImageUrls(urls: List<String>) {
+        require(urls.size <= 9) { "最多上传9张图片" }
+        imageUrls = urls.toMutableList()
+    }
 
     fun confirm() {
         require(status == FeedbackStatus.NEW) { "只有新问题可以确认" }

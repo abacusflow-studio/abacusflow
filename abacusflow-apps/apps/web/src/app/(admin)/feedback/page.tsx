@@ -12,6 +12,7 @@ import {
   App,
   Descriptions,
   Space,
+  Image,
 } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -349,6 +350,24 @@ export default function FeedbackPage() {
             {detailItem.resolutionNote && (
               <Descriptions.Item label="解决说明">
                 {detailItem.resolutionNote}
+              </Descriptions.Item>
+            )}
+            {detailItem.imageUrls && detailItem.imageUrls.length > 0 && (
+              <Descriptions.Item label="附件图片">
+                <Image.PreviewGroup>
+                  <Space wrap>
+                    {(detailItem.imageUrls as string[]).map((url: string, idx: number) => (
+                      <Image
+                        key={idx}
+                        src={url}
+                        width={80}
+                        height={80}
+                        alt={`附件图片 ${idx + 1}`}
+                        style={{ objectFit: "cover", borderRadius: 4 }}
+                      />
+                    ))}
+                  </Space>
+                </Image.PreviewGroup>
               </Descriptions.Item>
             )}
             <Descriptions.Item label="提交时间">

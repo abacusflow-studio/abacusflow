@@ -22,6 +22,7 @@ data class FeedbackTO(
     val resolvedAt: Instant?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val imageUrls: List<String> = emptyList(),
 )
 
 data class BasicFeedbackTO(
@@ -35,4 +36,5 @@ data class BasicFeedbackTO(
     val reporterUserId: Long?,
     val assigneeUserId: Long?,
     val createdAt: Instant,
+    val imageUrls: List<String> = emptyList(),
 )

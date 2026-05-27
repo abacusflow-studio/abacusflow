@@ -12,6 +12,7 @@ data class CreateFeedbackInputTO(
     val platform: String?,
     val deviceInfo: String?,
     val errorContext: String?,
+    val imageUrls: List<String> = emptyList(),
     val reporterUserId: Long?,
 )
 

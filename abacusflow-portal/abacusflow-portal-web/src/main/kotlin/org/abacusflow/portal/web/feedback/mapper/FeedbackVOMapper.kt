@@ -29,6 +29,7 @@ fun FeedbackTO.toVO() =
         resolvedAt = resolvedAt?.toEpochMilli(),
         createdAt = createdAt.toEpochMilli(),
         updatedAt = updatedAt.toEpochMilli(),
+        imageUrls = imageUrls,
     )
 
 fun BasicFeedbackTO.toBasicVO() =
@@ -43,4 +44,5 @@ fun BasicFeedbackTO.toBasicVO() =
         reporterUserId = reporterUserId,
         assigneeUserId = assigneeUserId,
         createdAt = createdAt.toEpochMilli(),
+        imageUrls = imageUrls,
     )

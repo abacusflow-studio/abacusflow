@@ -20,6 +20,7 @@ docker-java = "3.2.13"
 querydsl = "5.1.0"
 jooq = "3.19.15"
 testcontainers = "1.20.0"
+aws-sdk = "2.25.0"
 
 [plugins]
 jsonschema2pojo = { id = "org.jsonschema2pojo", version = "1.2.2" }
@@ -95,3 +96,6 @@ springdoc-openapi-ui = { module = "org.springdoc:springdoc-openapi-ui", version.
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 jakarta-validation = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
 docker-java-core = { module = "com.github.docker-java:docker-java-core", version.ref = "docker-java" }
+
+# AWS S3
+aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }

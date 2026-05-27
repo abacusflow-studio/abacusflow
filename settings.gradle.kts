@@ -10,6 +10,7 @@ val infraModules =
     listOf(
         "abacusflow-db",
         "abacusflow-commons",
+        "abacusflow-storage",
     )
 infraModules.forEach {
     include(

@@ -20,6 +20,8 @@ tags:
     description: 管理物理储存点及其内部存储空间，包括库位分配、容量规划和储存点布局设计。
   - name: feedback
     description: 收集和管理用户反馈，支持问题提交、状态流转、负责人分配和内部备注。
+  - name: file
+    description: 文件上传管理
 
 
 x-error-responses:
@@ -1526,6 +1528,34 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/BasicFeedback"
+
+  # ============= File upload endpoints =============
+  /files/upload:
+    post:
+      operationId: uploadFile
+      tags:
+        - file
+      summary: Upload a file and get its URL
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload
+      responses:
+        "200":
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileUploadResult"
 
   /feedback/{id}:
     get:
@@ -3341,6 +3371,11 @@ components:
           type: integer
           format: int64
           description: 更新时间戳
+        imageUrls:
+          type: array
+          items:
+            type: string
+          description: 附件图片URL列表
 
     BasicFeedback:
       type: object
@@ -3387,6 +3422,11 @@ components:
           type: integer
           format: int64
           description: 创建时间戳
+        imageUrls:
+          type: array
+          items:
+            type: string
+          description: 附件图片URL列表
 
     CreateFeedbackInput:
       type: object
@@ -3441,6 +3481,12 @@ components:
           type: string
           nullable: true
           description: 错误上下文（脱敏后）
+        imageUrls:
+          type: array
+          items:
+            type: string
+          maxItems: 9
+          description: 附件图片URL列表（先通过文件上传接口获取）
 
     UpdateFeedbackInput:
       type: object
@@ -3505,6 +3551,20 @@ components:
       x-enum-descriptions:
         - Web端
         - Mobile端
+
+    # ============= File schemas =============
+    FileUploadResult:
+      type: object
+      required:
+        - url
+        - filename
+      properties:
+        url:
+          type: string
+          description: Public URL of the uploaded file
+        filename:
+          type: string
+          description: Original filename
   # responses:
   #   BadRequest:
   #     description: Bad Request - 参数错误

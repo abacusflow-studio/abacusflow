@@ -40,6 +40,7 @@ class FeedbackController(
                     platform = createFeedbackInputVO.platform,
                     deviceInfo = createFeedbackInputVO.deviceInfo,
                     errorContext = createFeedbackInputVO.errorContext,
+                    imageUrls = createFeedbackInputVO.imageUrls ?: emptyList(),
                     reporterUserId = null,
                 ),
             )

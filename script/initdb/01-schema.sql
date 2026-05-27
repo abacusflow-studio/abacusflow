@@ -256,3 +256,11 @@ create index idx_feedback_status_created_at on feedback (status, created_at desc
 create index idx_feedback_source_created_at on feedback (source, created_at desc);
 create index idx_feedback_reporter_created_at on feedback (reporter_user_id, created_at desc);
 create index idx_feedback_category_status on feedback (category, status);
+
+create table feedback_image (
+    feedback_id bigint not null constraint fk_feedback_image_feedback_id references feedback,
+    image_url varchar(1024) not null,
+    sort_order integer not null,
+    primary key (feedback_id, sort_order)
+);
+alter table feedback_image owner to abacusflow;

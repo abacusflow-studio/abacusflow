@@ -7,9 +7,20 @@ spring:
           issuer-uri: ${ABACUSFLOW_OIDC_ISSUER_URI:https://wls1964302791.us.auth0.com/}
           audiences:
             - ${ABACUSFLOW_OIDC_AUDIENCE:https://admin.abacusflow.cn}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
 
 abacusflow:
   cors:
     allowed-origin-patterns: ${ABACUSFLOW_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,https://abacusflow-web.vercel.app,https://abacusflow-web-*.vercel.app}
   oidc:
     client-id: ${ABACUSFLOW_OIDC_CLIENT_ID:}
+  storage:
+    s3:
+      endpoint: ${S3_ENDPOINT:http://localhost:9000}
+      bucket: ${S3_BUCKET:abacusflow}
+      access-key-id: ${S3_ACCESS_KEY:minioadmin}
+      secret-access-key: ${S3_SECRET_KEY:minioadmin}
+      region: ${S3_REGION:us-east-1}

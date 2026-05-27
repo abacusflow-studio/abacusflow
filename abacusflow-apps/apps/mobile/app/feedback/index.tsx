@@ -2,8 +2,8 @@ import { Alert, Platform } from "react-native";
 import { usePathname } from "expo-router";
 import Constants from "expo-constants";
 import { FormScreen } from "@abacusflow/ui-native";
-import { feedbackApi } from "@abacusflow/core";
-import { CURRENT_VERSION } from "@abacusflow/config";
+import { feedbackApi, getAuthClient } from "@abacusflow/core";
+import { CURRENT_VERSION, getConfig } from "@abacusflow/config";
 
 const CATEGORY_OPTIONS = [
   { label: "Bug", value: "BUG" },
@@ -12,6 +12,39 @@ const CATEGORY_OPTIONS = [
   { label: "功能建议", value: "FEATURE_REQUEST" },
   { label: "其他", value: "OTHER" },
 ];
+
+async function uploadImages(uris: string[]): Promise<string[]> {
+  if (uris.length === 0) return [];
+
+  const auth = getAuthClient();
+  const token = await auth.getAccessToken();
+  const baseUrl = getConfig().apiBaseUrl.replace(/\/+$/, "");
+
+  const urls: string[] = [];
+  for (const uri of uris) {
+    const formData = new FormData();
+    const filename = uri.split("/").pop() || "image.jpg";
+    formData.append("file", {
+      uri,
+      name: filename,
+      type: "image/jpeg",
+    } as unknown as Blob);
+
+    const res = await fetch(`${baseUrl}/files/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      throw new Error(`图片上传失败: ${res.status}`);
+    }
+
+    const data = await res.json();
+    urls.push(data.url);
+  }
+  return urls;
+}
 
 export default function FeedbackScreen() {
   const pathname = usePathname();
@@ -36,6 +69,12 @@ export default function FeedbackScreen() {
           required: true,
         },
         {
+          key: "images",
+          label: "截图（可选）",
+          type: "image",
+          maxImages: 9,
+        },
+        {
           key: "title",
           label: "标题（可选）",
           type: "text",
@@ -56,6 +95,20 @@ export default function FeedbackScreen() {
           modelName: Constants.expoConfig?.name,
         });
 
+        // Upload images if any were selected
+        let imageUrls: string[] = [];
+        const imagesRaw = values.images as string | undefined;
+        if (imagesRaw) {
+          try {
+            const uris: string[] = JSON.parse(imagesRaw);
+            if (uris.length > 0) {
+              imageUrls = await uploadImages(uris);
+            }
+          } catch {
+            // If parsing fails, skip images
+          }
+        }
+
         await feedbackApi.createFeedback({
           createFeedbackInput: {
             category: values.category as any,
@@ -67,6 +120,7 @@ export default function FeedbackScreen() {
             appVersion: CURRENT_VERSION,
             platform: Platform.OS,
             deviceInfo,
+            imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
           },
         });
 

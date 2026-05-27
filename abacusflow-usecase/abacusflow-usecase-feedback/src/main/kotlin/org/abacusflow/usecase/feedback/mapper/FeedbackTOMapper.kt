@@ -25,6 +25,7 @@ fun Feedback.toTO() =
         resolvedAt = resolvedAt,
         createdAt = createdAt,
         updatedAt = updatedAt,
+        imageUrls = imageUrls.toList(),
     )
 
 fun Feedback.toBasicTO() =
@@ -39,4 +40,5 @@ fun Feedback.toBasicTO() =
         reporterUserId = reporterUserId,
         assigneeUserId = assigneeUserId,
         createdAt = createdAt,
+        imageUrls = imageUrls.toList(),
     )

@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Modal, Form, Input, Select, App } from "antd";
-import { feedbackApi, type FeedbackCategory } from "@abacusflow/core";
+import { Modal, Form, Input, Select, Upload, App } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { UploadFile, UploadProps } from "antd";
+import { feedbackApi, type FeedbackCategory, getAuthClient } from "@abacusflow/core";
+import { getConfig } from "@abacusflow/config";
 import { usePathname } from "next/navigation";
 
 interface FeedbackModalProps {
@@ -27,7 +30,51 @@ export function FeedbackModal({
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const pathname = usePathname();
+
+  const handleUpload: UploadProps["customRequest"] = async ({
+    file,
+    onSuccess,
+    onError,
+  }) => {
+    try {
+      const auth = getAuthClient();
+      const token = await auth.getAccessToken();
+      const baseUrl = getConfig().apiBaseUrl.replace(/\/+$/, "");
+
+      const formData = new FormData();
+      formData.append("file", file as Blob);
+
+      const res = await fetch(`${baseUrl}/files/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Upload failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setImageUrls((prev) => [...prev, data.url]);
+      onSuccess?.(data);
+    } catch (err) {
+      onError?.(err as Error);
+      message.error("图片上传失败");
+    }
+  };
+
+  const handleRemove = (file: UploadFile) => {
+    const url = file.response?.url;
+    if (url) {
+      setImageUrls((prev) => prev.filter((u) => u !== url));
+    }
+    return true;
+  };
 
   const handleSubmit = async () => {
     try {
@@ -42,11 +89,14 @@ export function FeedbackModal({
           description: values.description,
           contact: values.contact || undefined,
           pagePath: pathname,
+          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         },
       });
 
       message.success("反馈已提交，我们会尽快处理");
       form.resetFields();
+      setFileList([]);
+      setImageUrls([]);
       onClose();
     } catch (err) {
       if (err instanceof Error && !err.message.includes("validate")) {
@@ -59,6 +109,8 @@ export function FeedbackModal({
 
   const handleCancel = () => {
     form.resetFields();
+    setFileList([]);
+    setImageUrls([]);
     onClose();
   };
 
@@ -96,6 +148,24 @@ export function FeedbackModal({
             maxLength={3000}
             showCount
           />
+        </Form.Item>
+        <Form.Item label="截图（可选）">
+          <Upload
+            listType="picture-card"
+            fileList={fileList}
+            customRequest={handleUpload}
+            onRemove={handleRemove}
+            onChange={({ fileList: newFileList }) => setFileList(newFileList)}
+            accept="image/*"
+            maxCount={9}
+          >
+            {fileList.length >= 9 ? null : (
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>上传</div>
+              </div>
+            )}
+          </Upload>
         </Form.Item>
         <Form.Item name="title" label="标题（可选）">
           <Input placeholder="一句话概括问题" maxLength={120} />
