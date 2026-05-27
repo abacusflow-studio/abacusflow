@@ -1,4 +1,19 @@
 services:
+  minio:
+    container_name: minio
+    image: minio/minio:latest
+    environment:
+      - MINIO_ROOT_USER=${S3_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${S3_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    networks:
+      - abacusflow-network
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    command: server /data --console-address ":9001"
+
   postgres:
     container_name: postgres
     image: postgres:${POSTGRES_VERSION}
@@ -21,16 +36,16 @@ services:
     image: cubejs/cube:${CUBE_VERSION}
     environment:
       - CUBEJS_API_SECRET=123ABCdef*1qaz2wsx3edc4rfv5tgb6yhn7ujm
-      - CUBEJS_DEV_MODE=false
+      - CUBEJS_DEV_MODE=true
       - CUBEJS_DB_TYPE=postgres
       - CUBEJS_DB_HOST=postgres
       - CUBEJS_DB_PORT=${POSTGRES_PORT}
       - CUBEJS_DB_NAME=${POSTGRES_DB}
       - CUBEJS_DB_USER=${POSTGRES_USER}
       - CUBEJS_DB_PASS=${POSTGRES_PASSWORD}
-      - CUBEJS_CUBESTORE_HOST=cubestore
-    depends_on:
-      - cubestore
+#      - CUBEJS_CUBESTORE_HOST=cubestore
+#    depends_on:
+#      - cubestore
     networks:
       - abacusflow-network
     ports:
@@ -40,13 +55,13 @@ services:
     volumes:
       - ./config/cube:/cube/conf
 
-  cubestore:
-    container_name: abacusflow-cubestore
-    image: cubejs/cubestore:${CUBE_VERSION}
-    expose:
-      - 3030
-    networks:
-      - abacusflow-network
+#  cubestore:
+#    container_name: cubestore
+#    image: cubejs/cubestore:${CUBE_VERSION}
+#    expose:
+#      - 3030
+#    networks:
+#      - abacusflow-network
 networks:
   abacusflow-network:
     driver: bridge
@@ -54,3 +69,4 @@ networks:
 
 volumes:
   postgres_data:
+  minio_data:

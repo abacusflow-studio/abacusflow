@@ -1,10 +1,10 @@
 package org.abacusflow.storage
 
 import org.abacusflow.commons.file.FileStorageService
+import org.springframework.stereotype.Service
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
-import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
