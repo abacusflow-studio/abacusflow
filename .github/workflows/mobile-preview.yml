@@ -1,0 +1,36 @@
+name: Mobile Preview
+
+on:
+  workflow_dispatch:
+
+jobs:
+  android-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: abacusflow-apps/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: abacusflow-apps
+
+      - name: Typecheck mobile app
+        run: npm run typecheck -w abacusflow-mobile
+        working-directory: abacusflow-apps
+
+      - name: Lint mobile app
+        run: npm run lint -w abacusflow-mobile
+        working-directory: abacusflow-apps
+
+      - name: Build Android preview APK via EAS
+        run: npx eas build --platform android --profile preview --non-interactive --wait --json
+        working-directory: abacusflow-apps/apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

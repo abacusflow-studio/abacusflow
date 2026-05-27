@@ -50,7 +50,10 @@ VALUES
     ('supplier:read', '查看供应商', '允许查看供应商列表和详情'),
     ('supplier:create', '创建供应商', '允许创建新供应商'),
     ('supplier:update', '更新供应商', '允许更新供应商信息'),
-    ('supplier:delete', '删除供应商', '允许删除供应商')
+    ('supplier:delete', '删除供应商', '允许删除供应商'),
+    ('feedback:create', '提交反馈', '允许提交问题反馈'),
+    ('feedback:read', '查看反馈', '允许查看反馈列表和详情'),
+    ('feedback:update', '更新反馈', '允许更新反馈状态和负责人')
 ON CONFLICT DO NOTHING;
 ALTER SEQUENCE permission_id_seq RESTART WITH 100;
 

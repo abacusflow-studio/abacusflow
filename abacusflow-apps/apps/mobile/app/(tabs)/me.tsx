@@ -39,6 +39,16 @@ const MENU_SECTIONS = [
       },
     ],
   },
+  {
+    title: "帮助",
+    items: [
+      {
+        label: "问题反馈",
+        icon: "chatbubble-ellipses-outline" as const,
+        route: "/feedback" as any,
+      },
+    ],
+  },
 ];
 
 export default function MeScreen() {

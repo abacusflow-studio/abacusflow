@@ -110,6 +110,7 @@ export default function RootLayout() {
             options={{ title: "编辑供应商" }}
           />
           <Stack.Screen name="user/index" options={{ title: "账号与权限" }} />
+          <Stack.Screen name="feedback/index" options={{ title: "问题反馈" }} />
         </Stack>
         <StatusBar style="auto" />
       </AuthGate>

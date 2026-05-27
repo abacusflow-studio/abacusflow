@@ -29,6 +29,7 @@ val coreModules =
         "abacusflow-transaction",
         "abacusflow-partner",
         "abacusflow-depot",
+        "abacusflow-feedback",
     )
 coreModules.forEach {
     include(
@@ -49,6 +50,7 @@ val usecaseModules =
         "abacusflow-usecase-transaction",
         "abacusflow-usecase-user",
         "abacusflow-usecase-depot",
+        "abacusflow-usecase-feedback",
     )
 usecaseModules.forEach {
     include(

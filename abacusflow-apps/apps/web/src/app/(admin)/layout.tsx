@@ -10,11 +10,13 @@ import {
   BankOutlined,
   CalculatorOutlined,
   DashboardOutlined,
+  ExclamationCircleOutlined,
   HomeOutlined,
   InboxOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MoonOutlined,
+  QuestionCircleOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
@@ -25,6 +27,7 @@ import {
 } from "@ant-design/icons";
 import { getAuthClient } from "@abacusflow/core";
 import { useTheme } from "../../components/providers";
+import { FeedbackModal } from "../../components/feedback-modal";
 
 const { Sider, Header, Content, Footer } = Layout;
 
@@ -102,6 +105,11 @@ const NAV_ITEMS: MenuItemType[] = [
     label: <Link href="/depots">储存点管理</Link>,
     icon: <HomeOutlined />,
   },
+  {
+    key: "/feedback",
+    label: <Link href="/feedback">问题反馈</Link>,
+    icon: <ExclamationCircleOutlined />,
+  },
 ];
 
 const ROUTE_META = [
@@ -135,6 +143,7 @@ const ROUTE_META = [
   },
   { key: "/partner/supplier", title: "供应商管理", subtitle: "供应侧伙伴资料" },
   { key: "/depots", title: "储存点管理", subtitle: "仓点位置与容量" },
+  { key: "/feedback", title: "问题反馈", subtitle: "用户反馈查看与处理" },
 ];
 
 const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
@@ -158,6 +167,7 @@ export default function AdminLayout({
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
+  const [showFeedback, setShowFeedback] = useState(false);
   const { themeMode, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -281,6 +291,27 @@ export default function AdminLayout({
           <div className="af-header-right">
             <button
               type="button"
+              className="af-feedback-btn"
+              aria-label="提交反馈"
+              onClick={() => setShowFeedback(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "4px 12px",
+                borderRadius: 6,
+                border: "1px solid var(--border-color, #d9d9d9)",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: 13,
+                color: "inherit",
+              }}
+            >
+              <QuestionCircleOutlined />
+              <span>反馈</span>
+            </button>
+            <button
+              type="button"
               className="af-theme-toggle"
               aria-label={
                 themeMode === "dark" ? "切换到浅色模式" : "切换到深色模式"
@@ -316,6 +347,11 @@ export default function AdminLayout({
 
         <Footer className="af-admin-footer">小算盘业务指挥台 ©2026</Footer>
       </Layout>
+
+      <FeedbackModal
+        open={showFeedback}
+        onClose={() => setShowFeedback(false)}
+      />
     </Layout>
   );
 }

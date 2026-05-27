@@ -20,3 +20,9 @@
 - Current visual language is Ant-like admin styling (`#1677ff`, purple/orange accents, many white cards/shadows). For mobile entry, the style should become more operational: high-contrast actions, restrained colors, fewer decorative cards, larger touch targets, and scan/submit states that are visible under shop-floor conditions.
 - UI/UX guidance recorded for implementation: minimum 44x44 touch targets, 8px gaps between adjacent taps, explicit loading/success/error recovery, labels instead of placeholder-only inputs, and haptic feedback only on important confirmations.
 - `apps/mobile/lib/secure-storage.ts` provides a web fallback for SecureStore via localStorage; auth should keep importing this wrapper, not `expo-secure-store` directly, to avoid web/runtime deletion errors.
+- `.github/workflows/release.yml` currently builds and publishes the backend server Docker image only; `cd.yml` deploys only the server; `pr-ci.yml` checks only backend build.
+- Mobile already has `eas.json` with `preview` internal Android APK output and package scripts for EAS builds. A Web QR download flow should point to a stable download/landing URL, not a manually copied temporary link embedded in code.
+- Official Expo docs confirm internal distribution can generate Android APKs that are installable by link/QR, and EAS environment variables should be configured on EAS servers for builds rather than assuming GitHub Actions env vars are enough.
+- Web app uses Next static export in production and Ant Design in an admin shell; a feedback entry can be a global floating button or header action inside `(admin)/layout.tsx`.
+- Mobile tabs are now task-oriented (`录入`, `流水`, `查询`, `我的`); the lowest-friction feedback entry belongs in `我的`, plus a global quick action from error states.
+- OpenAPI currently has no feedback tag/path. A feedback feature should add a small backend domain/usecase/repository/API slice and regenerate `@abacusflow/core` for Web/Mobile clients.

@@ -13,6 +13,7 @@ import {
   PartnerApi,
   TransactionApi,
   UserApi,
+  FeedbackApi,
 } from "./openapi/apis/index";
 
 // Re-export all generated model types
@@ -70,6 +71,13 @@ export type {
   Sex,
   PageTemplate,
   ErrorResponse,
+  Feedback,
+  BasicFeedback,
+  FeedbackCategory,
+  FeedbackStatus,
+  FeedbackSource,
+  CreateFeedbackInput,
+  UpdateFeedbackInput,
 } from "./openapi/models/index";
 
 // Re-export generated API request interfaces
@@ -88,6 +96,8 @@ export type {
   ExportInventoryRequest,
   ExportInventoryFormatEnum,
   UpdateUserRequest as UpdateUserApiRequest,
+  ListFeedbackPageRequest,
+  UpdateFeedbackRequest,
 } from "./openapi/apis/index";
 
 // ---- Custom utility types ----
@@ -194,3 +204,4 @@ export const inventoryApi = new InventoryApi(getApiConfig());
 export const partnerApi = new PartnerApi(getApiConfig());
 export const transactionApi = new TransactionApi(getApiConfig());
 export const userApi = new UserApi(getApiConfig());
+export const feedbackApi = new FeedbackApi(getApiConfig());

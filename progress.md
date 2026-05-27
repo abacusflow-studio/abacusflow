@@ -28,3 +28,11 @@
 - Ran `ui-ux-pro-max` design/UX lookups for React Native/mobile entry guidance and recorded touch/feedback constraints.
 - Created `docs/mobile-entry-redesign-plan.md` with product positioning, IA, flow, style, component, API, implementation, and acceptance guidance.
 - Verified the new document with `git diff --check -- docs/mobile-entry-redesign-plan.md task_plan.md findings.md progress.md`.
+
+## 2026-05-27
+
+- Started plan-only task for Web/Mobile issue collection and Android APK download link/QR distribution.
+- Ran planning catchup and confirmed current worktree was clean before this documentation task.
+- Audited `.github` workflows, Web app layout/components, Mobile tabs/Me page, Mobile EAS config, and backend OpenAPI/module structure.
+- Consulted Expo official documentation search results for internal APK distribution and EAS environment variable behavior.
+- Created `docs/feedback-and-mobile-download-plan.md` covering backend feedback APIs, Web/Mobile UX, Android QR download page, EAS APK publishing, and `.github` workflow changes.

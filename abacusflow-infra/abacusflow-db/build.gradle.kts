@@ -11,5 +11,6 @@ dependencies {
     implementation(project(":abacusflow-core:abacusflow-transaction"))
     implementation(project(":abacusflow-core:abacusflow-partner"))
     implementation(project(":abacusflow-core:abacusflow-depot"))
+    implementation(project(":abacusflow-core:abacusflow-feedback"))
     api(libs.spring.data.jpa)
 }
