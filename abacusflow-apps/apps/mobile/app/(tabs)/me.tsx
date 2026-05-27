@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   StyleSheet,
   ScrollView,
@@ -11,6 +12,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@abacusflow/ui-tokens";
 import { CURRENT_VERSION } from "@abacusflow/config";
 import { getAuthClient } from "@abacusflow/core";
+import {
+  getMobileAuthSnapshot,
+  subscribeMobileAuth,
+  type MobileAuthSnapshot,
+} from "@/lib/auth-provider";
 
 const MENU_SECTIONS = [
   {
@@ -37,6 +43,13 @@ const MENU_SECTIONS = [
 
 export default function MeScreen() {
   const router = useRouter();
+  const [authSnapshot, setAuthSnapshot] = useState<MobileAuthSnapshot>(
+    getMobileAuthSnapshot(),
+  );
+
+  useEffect(() => {
+    return subscribeMobileAuth(setAuthSnapshot);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -47,17 +60,30 @@ export default function MeScreen() {
     }
   };
 
+  const displayName =
+    authSnapshot.user?.nickname ||
+    authSnapshot.user?.name ||
+    "未登录";
+  const displayEmail = authSnapshot.user?.email ?? "";
+  const avatarLetter = displayName.charAt(0).toUpperCase();
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* User Section */}
         <View style={styles.userCard}>
           <View style={styles.avatar}>
-            <Ionicons name="person" size={28} color={COLORS.primary} />
+            <Text style={styles.avatarText}>{avatarLetter}</Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>当前用户</Text>
-            <Text style={styles.userHint}>已连接后端</Text>
+            <Text style={styles.userName}>{displayName}</Text>
+            {displayEmail ? (
+              <Text style={styles.userHint}>{displayEmail}</Text>
+            ) : (
+              <Text style={styles.userHint}>
+                {authSnapshot.authenticated ? "已连接" : "未登录"}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -121,6 +147,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryLight,
     justifyContent: "center",
     alignItems: "center",
+  },
+  avatarText: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: COLORS.primary,
   },
   userInfo: { flex: 1 },
   userName: { fontSize: 17, fontWeight: "700", color: COLORS.text },

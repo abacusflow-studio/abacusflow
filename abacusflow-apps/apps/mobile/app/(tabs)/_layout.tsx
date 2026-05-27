@@ -31,11 +31,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="drafts"
+        name="records"
         options={{
-          title: "草稿",
+          title: "流水",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="document-text-outline" size={size} color={color} />
+            <Ionicons name="list-outline" size={size} color={color} />
           ),
         }}
       />
@@ -58,6 +58,7 @@ export default function TabLayout() {
         }}
       />
       {/* Hidden tabs - accessible via navigation but not in tab bar */}
+      <Tabs.Screen name="drafts" options={{ href: null }} />
       <Tabs.Screen name="inventory" options={{ href: null }} />
       <Tabs.Screen name="orders" options={{ href: null }} />
       <Tabs.Screen name="products" options={{ href: null }} />
