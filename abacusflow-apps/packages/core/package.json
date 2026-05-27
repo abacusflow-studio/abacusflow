@@ -5,6 +5,7 @@
   "private": true,
   "main": "src/index.ts",
   "scripts": {
+    "postinstall": "npm run generate",
     "generate": "openapi-generator-cli generate -i ../../../abacusflow-portal/abacusflow-portal-web/src/main/resources/static/openapi.yaml -g typescript-fetch -o src/openapi --additional-properties withInterfaces=true,basePath= --generate-alias-as-model && npm run fix-imports",
     "fix-imports": "node scripts/fix-openapi-imports.cjs",
     "lint": "eslint ."
