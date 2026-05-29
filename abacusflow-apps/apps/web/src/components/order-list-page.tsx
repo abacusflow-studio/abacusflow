@@ -183,13 +183,13 @@ export function OrderListPage({
         setPartnerOptions(
           suppliers.map((supplier) => ({
             label: supplier.name,
-            value: supplier.id,
+            value: String(supplier.id),
           })),
         );
         setItemOptions(
           selectableProducts.map((product) => ({
             label: `${product.name} / ${product.barcode}`,
-            value: product.id,
+            value: String(product.id),
           })),
         );
       } else {
@@ -202,13 +202,13 @@ export function OrderListPage({
         setPartnerOptions(
           customers.map((customer) => ({
             label: customer.name,
-            value: customer.id,
+            value: String(customer.id),
           })),
         );
         setItemOptions(
           selectableInventoryUnits.map((unit) => ({
             label: `${unit.title} / ${translateInventoryUnitType(unit.type)}`,
-            value: unit.id,
+            value: String(unit.id),
           })),
         );
       }
@@ -278,6 +278,13 @@ export function OrderListPage({
       }
       if (!item.unitPrice || Number(item.unitPrice) < 0) {
         nextErrors[`unitPrice-${index}`] = "请输入不小于 0 的单价";
+      }
+      if (
+        orderType === "purchase" &&
+        isAssetProduct(item.itemId) &&
+        !item.serialNumber.trim()
+      ) {
+        nextErrors[`serialNumber-${index}`] = "资产类产品必须填写序列号";
       }
       if (orderType === "sale") {
         const discount = Number(item.discountFactor || "100");
@@ -753,7 +760,10 @@ export function OrderListPage({
                     <Select
                       value={item.itemId || undefined}
                       onChange={(val) =>
-                        updateItem(index, { itemId: String(val) })
+                        updateItem(index, {
+                          itemId: String(val),
+                          serialNumber: "",
+                        })
                       }
                       placeholder={`请选择${itemLabel}`}
                       options={itemOptions}
@@ -815,18 +825,30 @@ export function OrderListPage({
                     </Form.Item>
                   </Flex>
                   {orderType === "purchase" ? (
-                    <Form.Item label="序列号" style={{ marginBottom: 8 }}>
+                    <Form.Item
+                      label="序列号"
+                      required={isAssetProduct(item.itemId)}
+                      style={{ marginBottom: 8 }}
+                    >
                       <Input
                         value={item.serialNumber}
                         onChange={(e) =>
                           updateItem(index, { serialNumber: e.target.value })
                         }
+                        {...(errors[`serialNumber-${index}`]
+                          ? { status: "error" as const }
+                          : {})}
                         placeholder={
                           isAssetProduct(item.itemId)
-                            ? "资产类产品建议填写序列号"
+                            ? "资产类产品必须填写序列号"
                             : "可选"
                         }
                       />
+                      {errors[`serialNumber-${index}`] && (
+                        <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                          {errors[`serialNumber-${index}`]}
+                        </div>
+                      )}
                     </Form.Item>
                   ) : (
                     <Form.Item label="折扣率" style={{ marginBottom: 8 }}>

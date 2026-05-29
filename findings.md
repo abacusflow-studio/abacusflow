@@ -1,28 +1,53 @@
 # Findings
 
-- Mobile app lives at `abacusflow-apps/apps/mobile` and uses Expo Router (`main: expo-router/entry`).
-- Mobile auth provider has been replaced with Expo AuthSession + SecureStore. It uses Auth0 authorization code + PKCE, stores refreshable tokens, syncs `/me/bootstrap`, and exposes a reactive `AuthGate`.
-- Mobile app now imports `config/app-config.ts`, calls `setAppConfig()`, and reads `EXPO_PUBLIC_API_BASE_URL` so `@abacusflow/core` does not fall back to default `apiBaseUrl: "/api"`.
-- Shared API client now supports dynamic `Configuration.basePath`, so mobile can safely configure the base URL at runtime as long as it calls `setAppConfig()`.
-- Product/customer/supplier/depot add/edit flows use the shared `FormScreen` and are mostly present.
-- Purchase/sale order add flows use `OrderFormScreen`; purchase now selects products and sale now selects selectable inventory units.
-- React Native UX guidance from `ui-ux-pro-max`: prefer semantic roles, clear loading/error feedback, and sufficiently large touch targets; existing app still uses many `TouchableOpacity` instances, but this task will focus on functional release blockers.
-- `app.json` identifiers were fixed to `abacusflow-mobile` with scheme `abacusflow`, iOS bundle ID `cn.abacusflow.mobile`, and Android package `cn.abacusflow.mobile`.
-- EAS release preparation now exists in `apps/mobile/eas.json`; preview Android builds output APKs, and production profiles auto-increment versions.
-- Expo SDK 54 package versions have been aligned with `npx expo install`; remaining npm audit report is 22 vulnerabilities (18 moderate, 4 high), and no `--force` audit fix was applied.
-- Verification completed: `npm run typecheck`, `npm run lint`, `git diff --check`, and `npx expo config --type public` passed from the mobile app.
-- OpenAPI generated TypeScript now uses extensionless relative imports instead of `.js` suffixes. This keeps `@abacusflow/core` source-compatible with Expo Metro and Next without custom `.js -> .ts` resolver hooks.
-- Compatibility verified after regeneration: mobile Web export, mobile Android export, mobile typecheck/lint, and web `next build` all pass. Web build still reports an existing `react-hooks/exhaustive-deps` warning in `src/components/order-list-page.tsx`.
-- Current mobile branch already contains scan-oriented work: `app/scan/index.tsx`, `components/barcode-scanner.tsx`, and scan entry points in home/purchase/sale/product flows.
-- The mobile app is still split between entry and management: home says "扫码录入", but tabs/list/detail/more screens still expose inventory/orders/products/users as management surfaces.
-- Purchase/sale entry screens are functional but form-heavy. They preload full selectable lists, use `Alert.alert` for product/inventory selection, and lack searchable/virtualized pickers, drafts, inline validation, and retry/queue behavior.
-- Sale scan is risky as currently modeled: `SelectableInventoryUnit` does not expose enough product identity, so asset/material matching can degrade into selecting the first available inventory unit or matching by title/SN text.
-- Current visual language is Ant-like admin styling (`#1677ff`, purple/orange accents, many white cards/shadows). For mobile entry, the style should become more operational: high-contrast actions, restrained colors, fewer decorative cards, larger touch targets, and scan/submit states that are visible under shop-floor conditions.
-- UI/UX guidance recorded for implementation: minimum 44x44 touch targets, 8px gaps between adjacent taps, explicit loading/success/error recovery, labels instead of placeholder-only inputs, and haptic feedback only on important confirmations.
-- `apps/mobile/lib/secure-storage.ts` provides a web fallback for SecureStore via localStorage; auth should keep importing this wrapper, not `expo-secure-store` directly, to avoid web/runtime deletion errors.
-- `.github/workflows/release.yml` currently builds and publishes the backend server Docker image only; `cd.yml` deploys only the server; `pr-ci.yml` checks only backend build.
-- Mobile already has `eas.json` with `preview` internal Android APK output and package scripts for EAS builds. A Web QR download flow should point to a stable download/landing URL, not a manually copied temporary link embedded in code.
-- Official Expo docs confirm internal distribution can generate Android APKs that are installable by link/QR, and EAS environment variables should be configured on EAS servers for builds rather than assuming GitHub Actions env vars are enough.
-- Web app uses Next static export in production and Ant Design in an admin shell; a feedback entry can be a global floating button or header action inside `(admin)/layout.tsx`.
-- Mobile tabs are now task-oriented (`录入`, `流水`, `查询`, `我的`); the lowest-friction feedback entry belongs in `我的`, plus a global quick action from error states.
-- OpenAPI currently has no feedback tag/path. A feedback feature should add a small backend domain/usecase/repository/API slice and regenerate `@abacusflow/core` for Web/Mobile clients.
+- Current branch is `master...origin/master` ahead by 2 commits.
+- Worktree already has mobile changes before this audit:
+  - `abacusflow-apps/apps/mobile/app/entry/product.tsx`
+  - `abacusflow-apps/apps/mobile/app/inventory/[id].tsx`
+  - `abacusflow-apps/apps/mobile/app/product/edit/[id].tsx`
+  - deleted `abacusflow-apps/apps/mobile/components/screens/order-form-screen.tsx`
+  - `abacusflow-apps/apps/mobile/components/ui/index.ts`
+  - untracked `AGENTS.md`
+- Session catchup says a previous session fixed mobile product required fields:
+  - `product/edit/[id].tsx`: added required handling for `barcode` and `categoryId`
+  - `entry/product.tsx`: added `categoryId` validation and removed fallback to `0`
+- Audit source of truth: `abacusflow-portal/abacusflow-portal-web/src/main/resources/static/openapi.yaml`.
+- OpenAPI request required fields found:
+  - `CreateUserInput`: `name`, `nick`; `UpdateUserInput`: no required fields.
+  - `CreateSupplierInput`: `name`; `UpdateSupplierInput`: no required fields.
+  - `CreateCustomerInput`: `name`; `UpdateCustomerInput`: no required fields.
+  - `CreateProductInput`: `name`, `type`, `barcode`, `unit`, `categoryId`; `UpdateProductInput`: no required fields.
+  - `CreateProductCategoryInput`: `name`, `parentId`; `UpdateProductCategoryInput`: no required fields.
+  - `CreateDepotInput`: `name`; `UpdateDepotInput`: no required fields.
+  - `adjustWarningLine` inline body: `safetyStock`, `maxStock`.
+  - `CreateSaleOrderInput`: `customerId`, `orderItems`, `orderDate`; `SaleOrderItemInput`: `inventoryUnitId`, `quantity`, `unitPrice`.
+  - `CreatePurchaseOrderInput`: `supplierId`, `orderDate`, `orderItems`; `PurchaseOrderItemInput`: `productId`, `quantity`, `unitPrice`.
+  - `CreateFeedbackInput`: `category`, `source`, `description`; `UpdateFeedbackInput`: no required fields.
+  - `assignInventoryUnitDepot` inline body: `depotId`.
+  - `/files/upload` multipart body: `file`.
+- Web form audit in progress:
+  - Product create/update form validates `name`, `type`, `categoryId`, `barcode`, `unit`; matches `CreateProductInput`; update has stricter-than-OpenAPI required fields because it reuses the create form.
+  - Product category create validates `name` and `parentId`; matches `CreateProductCategoryInput`. Edit only requires `name`, stricter than `UpdateProductCategoryInput` but not missing OpenAPI requirements.
+  - Supplier/customer/depot create forms require only `name`; matches each create input. Their edit forms reuse the same required `name` although update schemas have no required fields.
+  - Web user create requires `name` and `nick`; matches `CreateUserInput`. Edit reuses those required rules although `UpdateUserInput` has no required fields.
+  - Web inventory warning modal requires `safetyStock` and `maxStock`; matches `adjustWarningLine`. Assign depot requires `depotId`; matches `assignInventoryUnitDepot`.
+  - Web feedback modal requires `category` and `description`, and supplies constant `source: "WEB"`; matches `CreateFeedbackInput`. Upload form is optional UI but when invoked sends multipart `file`.
+  - Web purchase/sale order modal validates partner, date, at least one item, item id, quantity, and unit price; matches `CreatePurchaseOrderInput`/`CreateSaleOrderInput` plus item input requirements.
+- Mobile form audit in progress:
+  - `FormScreen` enforces `required: true` fields before submit. It treats `0` as present, so numeric IDs can be required safely.
+  - Mobile product add and entry forms validate `name`, `barcode`, and `categoryId`; `type` and `unit` have defaults, so all `CreateProductInput` required fields are covered.
+  - Mobile product edit form marks `name`, `type`, `categoryId`, `barcode`, and `unit` required although `UpdateProductInput` has no required fields.
+  - Mobile supplier/customer/depot add forms require only `name`, matching their create inputs. Their edit forms reuse required `name`, stricter than update schemas.
+  - Mobile purchase/sale order forms validate partner, at least one item, each item quantity, and unit price; item IDs come from selected product/inventory-unit entries. `orderDate` has a default but there is no explicit empty-date validation yet.
+  - Mobile inventory warning-line edit validates `safetyStock` and `maxStock`, matching `adjustWarningLine`.
+  - Mobile feedback form requires `category` and `description`, supplies constant `source: "MOBILE"`, and uploads each selected image as multipart `file`; matches `CreateFeedbackInput` and `/files/upload`.
+  - Mobile has no discovered create/update forms for `CreateUserInput`/`UpdateUserInput` or product category create/update.
+- Confirmed by final `rg` pass:
+  - Web submit/API-body forms are limited to feedback modal, order modal, depots, users, inventory depot/warning modals, product category, suppliers, customers, feedback admin action, and products.
+  - Mobile submit/API-body forms are limited to depot add/edit, product add/edit/entry, purchase/sale add, purchase/sale entry, inventory warning edit, feedback, supplier add/edit, and customer add/edit.
+- Mismatch/risk:
+  - Mobile order forms submit OpenAPI-required `orderDate` but do not explicitly validate it before constructing `new Date(`${orderDate}T00:00:00`)`.
+  - Affected files: `app/entry/purchase.tsx`, `app/entry/sale.tsx`, `app/order/purchase/add.tsx`, `app/order/sale/add.tsx`.
+  - Web order form does validate `orderDate`.
+- Exact-match note:
+  - Several edit forms are stricter than OpenAPI update schemas, because update schemas have no `required` array but the UI reuses create-style required fields.
