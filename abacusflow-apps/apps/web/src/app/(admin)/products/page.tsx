@@ -13,6 +13,7 @@ import {
   Space,
   Descriptions,
   Checkbox,
+  Spin,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -32,6 +33,7 @@ import {
   type ProductUnit,
 } from "@abacusflow/utils";
 import { usePaginatedList } from "../../../hooks/use-paginated-list";
+import { CategoryTree } from "../../../components/category-tree";
 
 const enabledOptions = [
   { label: "启用", value: "true" },
@@ -373,9 +375,9 @@ export default function ProductsPage() {
         destroyOnHidden
       >
         {formLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
-            加载中...
-          </p>
+          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+            <Spin />
+          </div>
         ) : (
           <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
             <Form.Item
@@ -444,9 +446,9 @@ export default function ProductsPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
-            加载中...
-          </p>
+          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+            <Spin />
+          </div>
         ) : detailItem ? (
           <Descriptions column={1} size="small" labelStyle={{ width: 100 }}>
             <Descriptions.Item label="产品名称">
@@ -484,57 +486,6 @@ export default function ProductsPage() {
           </Descriptions>
         ) : null}
       </Modal>
-    </div>
-  );
-}
-
-function CategoryTree({
-  categories,
-  selectedId,
-  onSelect,
-}: {
-  categories: SelectableProductCategory[];
-  selectedId?: number;
-  onSelect: (id: number | undefined) => void;
-}) {
-  const childrenByParent = useMemo(() => {
-    const map = new Map<number | undefined, SelectableProductCategory[]>();
-    for (const category of categories) {
-      const parentId = category.parentId ?? undefined;
-      const list = map.get(parentId) ?? [];
-      list.push(category);
-      map.set(parentId, list);
-    }
-    return map;
-  }, [categories]);
-
-  const renderNodes = (parentId?: number, depth = 0): React.ReactNode => {
-    const nodes = childrenByParent.get(parentId) ?? [];
-    return nodes.map((category) => (
-      <div key={category.id}>
-        <button
-          type="button"
-          onClick={() => onSelect(category.id)}
-          className={`w-full text-left px-2 py-1.5 rounded-md text-sm ${selectedId === category.id ? "bg-blue-50 text-blue-600 font-semibold" : "hover:bg-gray-50"}`}
-          style={{ paddingLeft: 8 + depth * 16 }}
-        >
-          {category.name}
-        </button>
-        {renderNodes(category.id, depth + 1)}
-      </div>
-    ));
-  };
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => onSelect(undefined)}
-        className={`w-full text-left px-2 py-1.5 rounded-md text-sm ${selectedId === undefined ? "bg-blue-50 text-blue-600 font-semibold" : "hover:bg-gray-50"}`}
-      >
-        全部类别
-      </button>
-      {renderNodes(undefined)}
     </div>
   );
 }

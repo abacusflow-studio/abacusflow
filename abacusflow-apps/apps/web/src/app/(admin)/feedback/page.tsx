@@ -13,6 +13,7 @@ import {
   Descriptions,
   Space,
   Image,
+  Spin,
 } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -309,7 +310,9 @@ export default function FeedbackPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <div style={{ textAlign: "center", padding: 40 }}>加载中...</div>
+          <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+            <Spin />
+          </div>
         ) : detailItem ? (
           <Descriptions column={1} size="small">
             <Descriptions.Item label="状态">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { message } from "antd";
 import type { PageResponse } from "@abacusflow/core";
 
 interface UsePaginatedListOptions<T, F> {
@@ -52,6 +53,7 @@ export function usePaginatedList<T, F extends object>({
       setTotal(res.totalElements);
     } catch (err) {
       console.error(err);
+      message.error(err instanceof Error ? err.message : "加载数据失败");
     } finally {
       setLoading(false);
     }

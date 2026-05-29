@@ -12,6 +12,7 @@ import {
   App,
   Space,
   Typography,
+  Form,
 } from "antd";
 import {
   DownloadOutlined,
@@ -37,6 +38,7 @@ import {
   translateProductType,
   type ProductType,
 } from "@abacusflow/utils";
+import { CategoryTree } from "../../../components/category-tree";
 
 type InventoryViewMode = "units" | "inventories";
 
@@ -64,6 +66,8 @@ const productTypeOptions = PRODUCT_TYPES.map((t) => ({
 export default function InventoryPage() {
   const { message } = App.useApp();
   const router = useRouter();
+  const [warningForm] = Form.useForm();
+  const [depotForm] = Form.useForm();
 
   const [viewMode, setViewMode] = useState<InventoryViewMode>("units");
   const [filters, setFilters] = useState<InventoryFilters>(defaultFilters);
@@ -85,9 +89,6 @@ export default function InventoryPage() {
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [showUnitsModal, setShowUnitsModal] = useState(false);
   const [depots, setDepots] = useState<BasicDepot[]>([]);
-  const [selectedDepotId, setSelectedDepotId] = useState<number | undefined>();
-  const [safetyStock, setSafetyStock] = useState<number | null>(null);
-  const [maxStock, setMaxStock] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const pageSize = 10;
@@ -155,14 +156,14 @@ export default function InventoryPage() {
 
   const openDepotModal = async (item: BasicInventoryUnit) => {
     setActionInventoryUnit(item);
-    setSelectedDepotId(undefined);
+    depotForm.resetFields();
     try {
       const [depotList, detail] = await Promise.all([
         depotApi.listBasicDepots(),
         inventoryApi.getInventoryUnit({ id: item.id }),
       ]);
       setDepots(depotList);
-      setSelectedDepotId(detail.depotId ?? undefined);
+      depotForm.setFieldsValue({ depotId: detail.depotId ?? undefined });
     } catch {
       const depotList = await depotApi.listBasicDepots().catch(() => []);
       setDepots(depotList);
@@ -172,24 +173,29 @@ export default function InventoryPage() {
 
   const openWarningModal = (item: BasicInventory) => {
     setActionInventory(item);
-    setSafetyStock(item.safetyStock ?? null);
-    setMaxStock(item.maxStock ?? null);
+    warningForm.setFieldsValue({
+      safetyStock: item.safetyStock ?? undefined,
+      maxStock: item.maxStock ?? undefined,
+    });
     setShowWarningModal(true);
   };
 
   const handleAssignDepot = async () => {
-    if (!actionInventoryUnit || !selectedDepotId) return;
-    setSubmitting(true);
+    if (!actionInventoryUnit) return;
     try {
+      const values = await depotForm.validateFields();
+      setSubmitting(true);
       await inventoryApi.assignInventoryUnitDepot({
         id: actionInventoryUnit.id,
-        assignInventoryUnitDepotRequest: { depotId: selectedDepotId },
+        assignInventoryUnitDepotRequest: { depotId: values.depotId },
       });
       message.success("分配成功");
       setShowDepotModal(false);
       loadData();
     } catch (err) {
-      message.error(err instanceof Error ? err.message : "分配失败");
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -197,21 +203,23 @@ export default function InventoryPage() {
 
   const handleUpdateWarning = async () => {
     if (!actionInventory) return;
-    if (safetyStock === null || maxStock === null) {
-      message.error("请输入有效的预警线");
-      return;
-    }
-    setSubmitting(true);
     try {
+      const values = await warningForm.validateFields();
+      setSubmitting(true);
       await inventoryApi.adjustWarningLine({
         id: actionInventory.id,
-        adjustWarningLineRequest: { safetyStock, maxStock },
+        adjustWarningLineRequest: {
+          safetyStock: values.safetyStock,
+          maxStock: values.maxStock,
+        },
       });
       message.success("更新成功");
       setShowWarningModal(false);
       loadData();
     } catch (err) {
-      message.error(err instanceof Error ? err.message : "更新失败");
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -552,19 +560,19 @@ export default function InventoryPage() {
         confirmLoading={submitting}
         destroyOnHidden
       >
-        <div className="flex flex-col gap-3">
-          <label className="text-sm text-gray-500">选择储存点</label>
-          <Select
-            value={selectedDepotId ?? undefined}
-            onChange={(value) =>
-              setSelectedDepotId(value as number | undefined)
-            }
-            options={depotOptions}
-            allowClear
-            placeholder="请选择"
-            style={{ width: "100%" }}
-          />
-        </div>
+        <Form form={depotForm} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="depotId"
+            label="选择储存点"
+            rules={[{ required: true, message: "请选择储存点" }]}
+          >
+            <Select
+              options={depotOptions}
+              allowClear
+              placeholder="请选择储存点"
+            />
+          </Form.Item>
+        </Form>
       </Modal>
 
       <Modal
@@ -575,28 +583,34 @@ export default function InventoryPage() {
         confirmLoading={submitting}
         destroyOnHidden
       >
-        <div className="flex flex-col gap-3">
-          <div className="form-item">
-            <label className="text-sm text-gray-500">安全库存</label>
+        <Form
+          form={warningForm}
+          layout="vertical"
+          style={{ marginTop: 16 }}
+        >
+          <Form.Item
+            name="safetyStock"
+            label="安全库存"
+            rules={[{ required: true, message: "请输入安全库存" }]}
+          >
             <InputNumber
-              value={safetyStock}
-              onChange={(value) => setSafetyStock(value)}
               placeholder="请输入安全库存"
               style={{ width: "100%" }}
               min={0}
             />
-          </div>
-          <div className="form-item">
-            <label className="text-sm text-gray-500">最大库存</label>
+          </Form.Item>
+          <Form.Item
+            name="maxStock"
+            label="最大库存"
+            rules={[{ required: true, message: "请输入最大库存" }]}
+          >
             <InputNumber
-              value={maxStock}
-              onChange={(value) => setMaxStock(value)}
               placeholder="请输入最大库存"
               style={{ width: "100%" }}
               min={0}
             />
-          </div>
-        </div>
+          </Form.Item>
+        </Form>
       </Modal>
 
       <Modal
@@ -615,57 +629,6 @@ export default function InventoryPage() {
           pagination={false}
         />
       </Modal>
-    </div>
-  );
-}
-
-function CategoryTree({
-  categories,
-  selectedId,
-  onSelect,
-}: {
-  categories: SelectableProductCategory[];
-  selectedId?: number;
-  onSelect: (id: number | undefined) => void;
-}) {
-  const childrenByParent = useMemo(() => {
-    const map = new Map<number | undefined, SelectableProductCategory[]>();
-    for (const category of categories) {
-      const parentId = category.parentId ?? undefined;
-      const list = map.get(parentId) ?? [];
-      list.push(category);
-      map.set(parentId, list);
-    }
-    return map;
-  }, [categories]);
-
-  const renderNodes = (parentId?: number, depth = 0): React.ReactNode => {
-    const nodes = childrenByParent.get(parentId) ?? [];
-    return nodes.map((category) => (
-      <div key={category.id}>
-        <button
-          type="button"
-          onClick={() => onSelect(category.id)}
-          className={`w-full text-left px-2 py-1.5 rounded-md text-sm ${selectedId === category.id ? "bg-blue-50 text-blue-600 font-semibold" : "hover:bg-gray-50"}`}
-          style={{ paddingLeft: 8 + depth * 16 }}
-        >
-          {category.name}
-        </button>
-        {renderNodes(category.id, depth + 1)}
-      </div>
-    ));
-  };
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => onSelect(undefined)}
-        className={`w-full text-left px-2 py-1.5 rounded-md text-sm ${selectedId === undefined ? "bg-blue-50 text-blue-600 font-semibold" : "hover:bg-gray-50"}`}
-      >
-        全部类别
-      </button>
-      {renderNodes(undefined)}
     </div>
   );
 }

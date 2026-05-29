@@ -13,6 +13,7 @@ import {
   App,
   Space,
   Descriptions,
+  Spin,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -349,9 +350,9 @@ export default function UsersPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
-            加载中...
-          </p>
+          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+            <Spin />
+          </div>
         ) : detailItem ? (
           <Descriptions
             column={1}

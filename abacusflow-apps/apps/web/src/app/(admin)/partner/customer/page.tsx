@@ -11,6 +11,7 @@ import {
   App,
   Space,
   Descriptions,
+  Spin,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -263,9 +264,25 @@ export default function CustomersPage() {
         destroyOnHidden
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
-            表单开发中...
-          </p>
+          <Form.Item
+            name="name"
+            label="客户名称"
+            rules={[{ required: true, message: "请输入客户名称" }]}
+          >
+            <Input placeholder="请输入客户名称" />
+          </Form.Item>
+          <Form.Item
+            name="phone"
+            label="联系电话"
+            rules={[
+              { pattern: /^1[3-9]\d{9}$/, message: "请输入正确的手机号" },
+            ]}
+          >
+            <Input placeholder="请输入联系电话" />
+          </Form.Item>
+          <Form.Item name="address" label="地址">
+            <Input placeholder="请输入地址" />
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -278,11 +295,15 @@ export default function CustomersPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <p style={{ color: "#999", textAlign: "center", padding: "2rem 0" }}>
-            加载中...
-          </p>
+          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+            <Spin />
+          </div>
         ) : detailItem ? (
-          <Descriptions column={1} size="small" labelStyle={{ width: 120 }}>
+          <Descriptions
+            column={1}
+            size="small"
+            styles={{ label: { width: 120 } }}
+          >
             <Descriptions.Item label="客户名称">
               {detailItem.name}
             </Descriptions.Item>
