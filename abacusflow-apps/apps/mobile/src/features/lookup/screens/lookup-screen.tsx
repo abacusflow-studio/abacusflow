@@ -30,6 +30,20 @@ import { BarcodeScanner } from "@components/ui/barcode-scanner";
 
 type LookupMode = "menu" | "product" | "inventory" | "order";
 
+const PAGE_SIZE = 50;
+
+const normalizeSearch = (value: string) => value.trim();
+
+const mergeById = <T extends { id: number }>(
+  ...groups: (readonly T[] | undefined)[]
+) => {
+  const map = new Map<number, T>();
+  groups.flatMap((group) => group ?? []).forEach((item) => {
+    map.set(item.id, item);
+  });
+  return Array.from(map.values());
+};
+
 const ORDER_STATUS_CONFIG: Record<
   string,
   { label: string; bg: string; color: string }
@@ -58,111 +72,226 @@ export default function LookupScreen() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  const handleProductSearch = useCallback(async () => {
-    if (!searchValue.trim()) return;
-    setLoading(true);
-    setSearched(true);
-    try {
-      const res = await productApi.listBasicProductsPage({
-        pageIndex: 1,
-        pageSize: 50,
-        name: searchValue || undefined,
-      });
-      setProducts(res.content);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchValue]);
+  const findBasicProductByBarcode = useCallback(async (barcode: string) => {
+    const selectableProducts = await productApi.listSelectableProducts();
+    const matched = selectableProducts.find(
+      (item) => item.barcode === barcode,
+    );
+    if (!matched) return null;
 
-  const handleInventorySearch = useCallback(async () => {
-    if (!searchValue.trim()) return;
-    setLoading(true);
-    setSearched(true);
-    try {
+    const res = await productApi.listBasicProductsPage({
+      pageIndex: 1,
+      pageSize: PAGE_SIZE,
+      name: matched.name,
+      type: matched.type,
+    });
+    return (
+      res.content.find((item) => item.id === matched.id) ??
+      res.content.find((item) => item.barcode === barcode) ??
+      null
+    );
+  }, []);
+
+  const findInventoriesForProduct = useCallback(
+    async (product: BasicProduct) => {
       const res = await inventoryApi.listBasicInventoriesPage({
         pageIndex: 1,
-        pageSize: 50,
-        productName: searchValue || undefined,
+        pageSize: PAGE_SIZE,
+        productName: product.name,
+        productType: product.type,
       });
-      setInventories(res.content);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchValue]);
+      return res.content.filter(
+        (item) =>
+          item.productName === product.name &&
+          item.productType === product.type,
+      );
+    },
+    [],
+  );
 
-  const handleOrderSearch = useCallback(async () => {
-    if (!searchValue.trim()) return;
-    setLoading(true);
-    setSearched(true);
-    try {
-      const [purchaseRes, saleRes] = await Promise.all([
-        transactionApi.listBasicPurchaseOrdersPage({
-          pageIndex: 1,
-          pageSize: 50,
-          supplierName: searchValue || undefined,
-        }),
-        transactionApi.listBasicSaleOrdersPage({
-          pageIndex: 1,
-          pageSize: 50,
-          customerName: searchValue || undefined,
-        }),
-      ]);
-      setPurchaseOrders(purchaseRes.content ?? []);
-      setSaleOrders(saleRes.content ?? []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchValue]);
-
-  const handleBarcodeScan = useCallback(
-    (barcode: string) => {
-      setScanning(false);
-      setSearchValue(barcode);
-      // 扫码查库存：用条码查产品，再查该产品的库存
-      if (mode === "menu" || mode === "inventory") {
-        setMode("inventory");
-        setTimeout(async () => {
-          setLoading(true);
-          setSearched(true);
-          try {
-            const prodRes = await productApi.listBasicProductsPage({
-              pageIndex: 1,
-              pageSize: 200,
-              enabled: true,
-            });
-            const product = prodRes.content.find(
-              (item) => item.barcode === barcode,
-            );
-            if (product) {
-              const invRes = await inventoryApi.listBasicInventoriesPage({
-                pageIndex: 1,
-                pageSize: 50,
-                productName: product.name,
-              });
-              setInventories(invRes.content);
-            } else {
-              setInventories([]);
-            }
-          } catch (err) {
-            console.error(err);
-          } finally {
-            setLoading(false);
-          }
-        }, 100);
-      } else {
-        // 产品查询模式：直接搜产品
-        setMode("product");
-        setTimeout(() => handleProductSearch(), 100);
+  const handleProductSearch = useCallback(
+    async (nextValue = searchValue) => {
+      const query = normalizeSearch(nextValue);
+      if (!query) return;
+      setLoading(true);
+      setSearched(true);
+      try {
+        const [nameRes, barcodeProduct] = await Promise.all([
+          productApi.listBasicProductsPage({
+            pageIndex: 1,
+            pageSize: PAGE_SIZE,
+            name: query,
+          }),
+          findBasicProductByBarcode(query),
+        ]);
+        setProducts(
+          mergeById(nameRes.content, barcodeProduct ? [barcodeProduct] : []),
+        );
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     },
-    [mode, handleProductSearch],
+    [findBasicProductByBarcode, searchValue],
   );
+
+  const handleInventorySearch = useCallback(
+    async (nextValue = searchValue) => {
+      const query = normalizeSearch(nextValue);
+      if (!query) return;
+      setLoading(true);
+      setSearched(true);
+      try {
+        const [productNameRes, unitCodeRes, barcodeProduct] =
+          await Promise.all([
+            inventoryApi.listBasicInventoriesPage({
+              pageIndex: 1,
+              pageSize: PAGE_SIZE,
+              productName: query,
+            }),
+            inventoryApi.listBasicInventoriesPage({
+              pageIndex: 1,
+              pageSize: PAGE_SIZE,
+              inventoryUnitCode: query,
+            }),
+            findBasicProductByBarcode(query),
+          ]);
+        const barcodeInventories = barcodeProduct
+          ? await findInventoriesForProduct(barcodeProduct)
+          : [];
+        setInventories(
+          mergeById(
+            productNameRes.content,
+            unitCodeRes.content,
+            barcodeInventories,
+          ),
+        );
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [findBasicProductByBarcode, findInventoriesForProduct, searchValue],
+  );
+
+  const handleOrderSearch = useCallback(
+    async (nextValue = searchValue) => {
+      const query = normalizeSearch(nextValue);
+      if (!query) return;
+      setLoading(true);
+      setSearched(true);
+      try {
+        const [
+          purchaseByNo,
+          purchaseBySupplier,
+          purchaseByProduct,
+          saleByNo,
+          saleByCustomer,
+          saleByInventoryUnit,
+        ] = await Promise.all([
+          transactionApi.listBasicPurchaseOrdersPage({
+            pageIndex: 1,
+            pageSize: PAGE_SIZE,
+            orderNo: query,
+          }),
+          transactionApi.listBasicPurchaseOrdersPage({
+            pageIndex: 1,
+            pageSize: PAGE_SIZE,
+            supplierName: query,
+          }),
+          transactionApi.listBasicPurchaseOrdersPage({
+            pageIndex: 1,
+            pageSize: PAGE_SIZE,
+            productName: query,
+          }),
+          transactionApi.listBasicSaleOrdersPage({
+            pageIndex: 1,
+            pageSize: PAGE_SIZE,
+            orderNo: query,
+          }),
+          transactionApi.listBasicSaleOrdersPage({
+            pageIndex: 1,
+            pageSize: PAGE_SIZE,
+            customerName: query,
+          }),
+          transactionApi.listBasicSaleOrdersPage({
+            pageIndex: 1,
+            pageSize: PAGE_SIZE,
+            inventoryUnitName: query,
+          }),
+        ]);
+        setPurchaseOrders(
+          mergeById(
+            purchaseByNo.content,
+            purchaseBySupplier.content,
+            purchaseByProduct.content,
+          ),
+        );
+        setSaleOrders(
+          mergeById(
+            saleByNo.content,
+            saleByCustomer.content,
+            saleByInventoryUnit.content,
+          ),
+        );
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [searchValue],
+  );
+
+  const handleBarcodeScan = useCallback(
+    async (barcode: string) => {
+      setScanning(false);
+      setSearchValue(barcode);
+      if (mode === "menu" || mode === "inventory") {
+        setMode("inventory");
+        setLoading(true);
+        setSearched(true);
+        try {
+          const product = await findBasicProductByBarcode(barcode);
+          if (product) {
+            setInventories(await findInventoriesForProduct(product));
+          } else {
+            const unitCodeRes = await inventoryApi.listBasicInventoriesPage({
+              pageIndex: 1,
+              pageSize: PAGE_SIZE,
+              inventoryUnitCode: barcode,
+            });
+            setInventories(unitCodeRes.content);
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setMode("product");
+        await handleProductSearch(barcode);
+      }
+    },
+    [
+      findBasicProductByBarcode,
+      findInventoriesForProduct,
+      handleProductSearch,
+      mode,
+    ],
+  );
+
+  const handleCurrentSearch = useCallback(() => {
+    if (mode === "product") {
+      void handleProductSearch();
+    } else if (mode === "inventory") {
+      void handleInventorySearch();
+    } else {
+      void handleOrderSearch();
+    }
+  }, [handleInventorySearch, handleOrderSearch, handleProductSearch, mode]);
 
   const goBack = () => {
     setMode("menu");
@@ -172,12 +301,6 @@ export default function LookupScreen() {
     setPurchaseOrders([]);
     setSaleOrders([]);
     setSearched(false);
-  };
-
-  const currentSearch = () => {
-    if (mode === "product") return handleProductSearch;
-    if (mode === "inventory") return handleInventorySearch;
-    return handleOrderSearch;
   };
 
   if (scanning) {
@@ -276,12 +399,12 @@ export default function LookupScreen() {
           onChangeText={setSearchValue}
           placeholder={
             mode === "product"
-              ? "搜索产品名称"
+              ? "搜索产品名称 / 条码"
               : mode === "inventory"
-                ? "搜索产品名称查库存"
+                ? "搜索产品名 / 库存单元码 / 条码"
                 : "搜索供应商 / 客户 / 单号"
           }
-          onSubmitEditing={currentSearch()}
+          onSubmitEditing={handleCurrentSearch}
           returnKeyType="search"
           autoFocus
         />
@@ -291,7 +414,10 @@ export default function LookupScreen() {
         >
           <Ionicons name="scan" size={20} color={COLORS.primary} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={currentSearch()} style={styles.searchBtn}>
+        <TouchableOpacity
+          onPress={handleCurrentSearch}
+          style={styles.searchBtn}
+        >
           <Ionicons name="search" size={20} color="#fff" />
         </TouchableOpacity>
       </View>

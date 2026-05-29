@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   ScrollView,
@@ -19,7 +19,7 @@ import {
   inventoryApi,
   productApi,
   transactionApi,
-  type SelectableInventoryUnit,
+  type BasicInventoryUnit,
   type SelectableProduct,
 } from "@abacusflow/core";
 import {
@@ -35,7 +35,28 @@ interface SaleItem {
   title: string;
   quantity: string;
   unitPrice: string;
+  remainingQuantity?: number;
 }
+
+const isSellableUnit = (unit: BasicInventoryUnit) =>
+  (unit.status === "normal" || unit.status === "reversed") &&
+  unit.remainingQuantity > 0;
+
+const matchesUnitCode = (unit: BasicInventoryUnit, code: string) => {
+  const keyword = code.trim();
+  if (!keyword) return false;
+  return (
+    unit.serialNumber === keyword ||
+    unit.batchCode === keyword ||
+    unit.title.includes(keyword)
+  );
+};
+
+const formatUnitOption = (unit: BasicInventoryUnit) => {
+  const code = unit.serialNumber || unit.batchCode || unit.title;
+  const depot = unit.depotName ? ` · ${unit.depotName}` : "";
+  return `${code} · 可用 ${unit.remainingQuantity}${depot}`;
+};
 
 export default function SaleEntryScreen() {
   const router = useRouter();
@@ -50,12 +71,12 @@ export default function SaleEntryScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [draftId, setDraftId] = useState<string | undefined>(params.draftId);
+  const handledScanProductIdRef = useRef<string | undefined>(undefined);
 
   const [partners, setPartners] = useState<{ id: number; name: string }[]>([]);
-  const [inventoryUnits, setInventoryUnits] = useState<
-    SelectableInventoryUnit[]
-  >([]);
   const [products, setProducts] = useState<SelectableProduct[]>([]);
+  const [snProductContext, setSnProductContext] =
+    useState<SelectableProduct | null>(null);
   const [selectedPartnerId, setSelectedPartnerId] = useState<
     number | undefined
   >();
@@ -71,39 +92,13 @@ export default function SaleEntryScreen() {
     loadData();
   }, []);
 
-  // Restore draft
-  useEffect(() => {
-    if (params.draftId && partners.length > 0) {
-      restoreDraft(params.draftId);
-    }
-  }, [params.draftId, partners]);
-
-  // Auto-add from scan
-  useEffect(() => {
-    if (
-      params.scanProductId &&
-      inventoryUnits.length > 0 &&
-      products.length > 0
-    ) {
-      const pid = Number(params.scanProductId);
-      const product = products.find((p) => p.id === pid);
-      if (product) {
-        handleScannedProduct(product);
-      }
-    }
-  }, [params.scanProductId, inventoryUnits, products]);
-
   const loadData = async () => {
     try {
-      const [partnerRes, unitRes, productRes] = await Promise.all([
+      const [partnerRes, productRes] = await Promise.all([
         partnerApi.listSelectableCustomers(),
-        inventoryApi.listSelectableInventoryUnits({
-          statuses: ["normal", "reversed"],
-        }),
         productApi.listSelectableProducts(),
       ]);
       setPartners(partnerRes.map((p) => ({ id: p.id, name: p.name })));
-      setInventoryUnits(unitRes);
       setProducts(productRes);
     } catch (err) {
       console.error(err);
@@ -112,7 +107,7 @@ export default function SaleEntryScreen() {
     }
   };
 
-  const restoreDraft = async (id: string) => {
+  const restoreDraft = useCallback(async (id: string) => {
     const drafts = await listDrafts("sale");
     const draft = drafts.find((d) => d.id === id);
     if (!draft) return;
@@ -123,7 +118,14 @@ export default function SaleEntryScreen() {
     setDiscountFactor((p.discountFactor as string) || "");
     setNote((p.note as string) || "");
     setDraftId(id);
-  };
+  }, [orderDate]);
+
+  // Restore draft
+  useEffect(() => {
+    if (params.draftId && partners.length > 0) {
+      void restoreDraft(params.draftId);
+    }
+  }, [params.draftId, partners, restoreDraft]);
 
   const autoSaveDraft = useCallback(
     async (currentItems: SaleItem[], currentPartner?: number) => {
@@ -147,79 +149,127 @@ export default function SaleEntryScreen() {
     [draftId, orderDate, discountFactor, note],
   );
 
-  const addUnitToItems = (unit: SelectableInventoryUnit) => {
-    if (items.some((i) => i.inventoryUnitId === unit.id)) {
-      Alert.alert("提示", `「${unit.title}」已在明细中`);
-      return;
-    }
-    const newItems = [
-      ...items,
-      {
-        inventoryUnitId: unit.id,
-        title: unit.title,
-        quantity: "1",
-        unitPrice: "",
-      },
-    ];
-    setItems(newItems);
-    autoSaveDraft(newItems, selectedPartnerId);
-  };
+  const isUnitAlreadySelected = useCallback(
+    (unit: BasicInventoryUnit) =>
+      items.some((item) => item.inventoryUnitId === unit.id),
+    [items],
+  );
 
-  const handleScannedProduct = (product: SelectableProduct) => {
-    const available = inventoryUnits.filter(
-      (u) => u.status === "normal" || u.status === "reversed",
-    );
+  const findUnitsForProduct = useCallback(
+    async (product: SelectableProduct) => {
+      const res = await inventoryApi.listBasicInventoriesPage({
+        pageIndex: 1,
+        pageSize: 100,
+        productName: product.name,
+        productType: product.type,
+      });
+      return res.content
+        .filter(
+          (inventory) =>
+            inventory.productName === product.name &&
+            inventory.productType === product.type,
+        )
+        .flatMap((inventory) => inventory.units)
+        .filter(isSellableUnit)
+        .filter((unit) => !isUnitAlreadySelected(unit));
+    },
+    [isUnitAlreadySelected],
+  );
 
-    if (product.type === "asset") {
-      // Asset: must select SN
-      const matching = available.filter(
-        (u) =>
-          u.type === "instance" &&
-          !items.some((i) => i.inventoryUnitId === u.id),
-      );
-      if (matching.length === 0) {
-        Alert.alert("提示", `「${product.name}」没有可用的资产库存`);
+  const addUnitToItems = useCallback(
+    (unit: BasicInventoryUnit) => {
+      if (isUnitAlreadySelected(unit)) {
+        Alert.alert("提示", `「${unit.title}」已在明细中`);
         return;
       }
-      Alert.alert(
-        "选择资产",
-        "请确认SN或扫描SN条码",
-        matching
-          .slice(0, 8)
-          .map((u) => ({
-            text: u.title,
-            onPress: () => addUnitToItems(u),
-          }))
-          .concat([
-            { text: "扫描SN", onPress: () => setScanningSN(true) },
-            { text: "取消", onPress: () => {} },
-          ]),
-      );
-    } else {
-      // Material: must match by product context
-      // Since SelectableInventoryUnit lacks productId, show selection
-      const matching = available.filter(
-        (u) =>
-          u.type === "batch" && !items.some((i) => i.inventoryUnitId === u.id),
-      );
-      if (matching.length === 0) {
-        Alert.alert("提示", `「${product.name}」没有可用库存`);
+      const newItems = [
+        ...items,
+        {
+          inventoryUnitId: unit.id,
+          title: unit.title,
+          quantity: "1",
+          unitPrice: "",
+          remainingQuantity: unit.remainingQuantity,
+        },
+      ];
+      setItems(newItems);
+      autoSaveDraft(newItems, selectedPartnerId);
+    },
+    [autoSaveDraft, isUnitAlreadySelected, items, selectedPartnerId],
+  );
+
+  const handleScannedProduct = useCallback(
+    async (product: SelectableProduct) => {
+      let available: BasicInventoryUnit[];
+      try {
+        available = await findUnitsForProduct(product);
+      } catch (err) {
+        console.error(err);
+        Alert.alert("查询失败", "库存单元查询失败，请稍后重试");
         return;
       }
-      // Show selection for user to confirm - don't silently pick first
-      Alert.alert(
-        "确认库存单元",
-        `为「${product.name}」选择库存单元`,
-        matching
-          .slice(0, 8)
-          .map((u) => ({
-            text: `${u.title} (${translateInventoryUnitType(u.type)})`,
-            onPress: () => addUnitToItems(u),
-          }))
-          .concat([{ text: "取消", onPress: () => {} }]),
-      );
+
+      if (product.type === "asset") {
+        const matching = available.filter((u) => u.type === "instance");
+        if (matching.length === 0) {
+          Alert.alert("提示", `「${product.name}」没有可用的资产库存`);
+          return;
+        }
+        Alert.alert(
+          "选择资产",
+          "请确认SN或扫描SN条码",
+          matching
+            .slice(0, 8)
+            .map((u) => ({
+              text: formatUnitOption(u),
+              onPress: () => addUnitToItems(u),
+            }))
+            .concat([
+              {
+                text: "扫描SN",
+                onPress: () => {
+                  setSnProductContext(product);
+                  setScanningSN(true);
+                },
+              },
+              { text: "取消", onPress: () => {} },
+            ]),
+        );
+      } else {
+        const matching = available.filter((u) => u.type === "batch");
+        if (matching.length === 0) {
+          Alert.alert("提示", `「${product.name}」没有可用库存`);
+          return;
+        }
+        Alert.alert(
+          "确认库存单元",
+          `为「${product.name}」选择库存单元`,
+          matching
+            .slice(0, 8)
+            .map((u) => ({
+              text: `${formatUnitOption(u)} (${translateInventoryUnitType(
+                u.type,
+              )})`,
+              onPress: () => addUnitToItems(u),
+            }))
+            .concat([{ text: "取消", onPress: () => {} }]),
+        );
+      }
+    },
+    [addUnitToItems, findUnitsForProduct],
+  );
+
+  // Auto-add from scan
+  useEffect(() => {
+    if (!params.scanProductId || products.length === 0) return;
+    if (handledScanProductIdRef.current === params.scanProductId) return;
+    const productId = Number(params.scanProductId);
+    const product = products.find((p) => p.id === productId);
+    if (product) {
+      handledScanProductIdRef.current = params.scanProductId;
+      void handleScannedProduct(product);
     }
-  };
+  }, [params.scanProductId, products, handleScannedProduct]);
 
   const handleScan = useCallback(
     (barcode: string) => {
@@ -239,29 +289,50 @@ export default function SaleEntryScreen() {
         ]);
         return;
       }
-      handleScannedProduct(product);
+      void handleScannedProduct(product);
     },
-    [products, inventoryUnits, items],
+    [handleScannedProduct, products, router],
   );
 
   const handleSNScan = useCallback(
-    (sn: string) => {
+    async (sn: string) => {
       setScanningSN(false);
-      const unit = inventoryUnits.find(
-        (u) =>
-          (u.status === "normal" || u.status === "reversed") &&
-          u.title.includes(sn),
+      const product = snProductContext;
+      setSnProductContext(null);
+      if (!product) {
+        Alert.alert("提示", "请先扫描商品，再扫描SN");
+        return;
+      }
+
+      let available: BasicInventoryUnit[];
+      try {
+        available = await findUnitsForProduct(product);
+      } catch (err) {
+        console.error(err);
+        Alert.alert("查询失败", "库存单元查询失败，请稍后重试");
+        return;
+      }
+
+      const unit = available.find(
+        (u) => u.type === "instance" && matchesUnitCode(u, sn),
       );
       if (unit) {
         addUnitToItems(unit);
       } else {
-        Alert.alert("未找到", `未找到SN为「${sn}」的库存单元`);
+        Alert.alert(
+          "未找到",
+          `「${product.name}」下未找到SN为「${sn}」的可用库存单元`,
+        );
       }
     },
-    [inventoryUnits, items],
+    [addUnitToItems, findUnitsForProduct, snProductContext],
   );
 
-  const updateItem = (index: number, field: keyof SaleItem, value: string) => {
+  const updateItem = (
+    index: number,
+    field: "quantity" | "unitPrice",
+    value: string,
+  ) => {
     const newItems = items.map((item, i) =>
       i === index ? { ...item, [field]: value } : item,
     );
@@ -295,6 +366,13 @@ export default function SaleEntryScreen() {
       const price = Number(item.unitPrice);
       if (!item.quantity || Number.isNaN(qty) || qty <= 0) {
         Alert.alert("提示", `${item.title} 的数量需大于 0`);
+        return;
+      }
+      if (item.remainingQuantity != null && qty > item.remainingQuantity) {
+        Alert.alert(
+          "提示",
+          `${item.title} 的出库数量不能超过可用库存 ${item.remainingQuantity}`,
+        );
         return;
       }
       if (!item.unitPrice || Number.isNaN(price) || price < 0) {
