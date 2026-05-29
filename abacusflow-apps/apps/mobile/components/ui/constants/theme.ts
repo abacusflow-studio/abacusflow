@@ -4,7 +4,7 @@
  */
 
 import { Platform } from "react-native";
-import { COLORS } from "@abacusflow/ui-tokens";
+import { COLORS } from "@abacusflow/utils";
 
 export const Colors = {
   light: {

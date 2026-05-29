@@ -1,12 +1,12 @@
 export { ThemedText, type ThemedTextProps } from "./themed-text";
 export { ThemedView, type ThemedViewProps } from "./themed-view";
-export { ListScreen } from "./list-screen";
-export { FormScreen } from "./form-screen";
-export { DetailScreen, type InfoField } from "./detail-screen";
-export { OrderDetailScreen } from "./order-detail-screen";
-export { OrderFormScreen } from "./order-form-screen";
 export { Collapsible } from "./collapsible";
 export { IconSymbol } from "./icon-symbol";
 export { useThemeColor } from "./hooks/use-theme-color";
 export { useColorScheme } from "./hooks/use-color-scheme";
 export { Colors, Fonts } from "./constants/theme";
+export { ListScreen } from "../screens/list-screen";
+export { FormScreen } from "../screens/form-screen";
+export { DetailScreen, type InfoField } from "../screens/detail-screen";
+export { OrderDetailScreen } from "../screens/order-detail-screen";
+export { OrderFormScreen } from "../screens/order-form-screen";

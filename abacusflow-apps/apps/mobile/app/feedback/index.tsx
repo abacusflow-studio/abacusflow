@@ -1,7 +1,7 @@
 import { Alert, Platform } from "react-native";
 import { usePathname } from "expo-router";
 import Constants from "expo-constants";
-import { FormScreen } from "@abacusflow/ui-native";
+import { FormScreen } from "@/components/ui";
 import { feedbackApi, getAuthClient } from "@abacusflow/core";
 import { CURRENT_VERSION, getConfig } from "@abacusflow/config";
 

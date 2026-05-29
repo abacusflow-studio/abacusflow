@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { dateToFormattedString } from "@abacusflow/utils";
-import { COLORS } from "@abacusflow/ui-tokens";
+import { COLORS } from "@abacusflow/utils";
 
 interface Partner {
   id: number;

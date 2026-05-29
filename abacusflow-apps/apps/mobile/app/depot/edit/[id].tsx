@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
-import { FormScreen } from "@abacusflow/ui-native";
+import { FormScreen } from "@/components/ui";
 
 export default function EditDepotScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { transactionApi, type PurchaseOrder } from "@abacusflow/core";
-import { OrderDetailScreen } from "@abacusflow/ui-native";
+import { OrderDetailScreen } from "@/components/ui";
 
 export default function PurchaseOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

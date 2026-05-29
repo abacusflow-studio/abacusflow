@@ -20,7 +20,7 @@ import {
   transactionApi,
   type SelectableProduct,
 } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/ui-tokens";
+import { COLORS } from "@abacusflow/utils";
 import { dateToFormattedString } from "@abacusflow/utils";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import {

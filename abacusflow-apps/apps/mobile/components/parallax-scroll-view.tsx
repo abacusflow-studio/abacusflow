@@ -11,7 +11,7 @@ import {
   ThemedView,
   useColorScheme,
   useThemeColor,
-} from "@abacusflow/ui-native";
+} from "@/components/ui";
 
 const HEADER_HEIGHT = 250;
 

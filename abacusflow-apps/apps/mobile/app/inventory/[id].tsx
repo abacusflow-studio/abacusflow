@@ -10,7 +10,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { inventoryApi, type BasicInventory } from "@abacusflow/core";
 import { COLORS, translateProductType } from "@abacusflow/utils";
-import { DetailScreen } from "@abacusflow/ui-native";
+import { DetailScreen } from "@/components/ui";
 
 export default function InventoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

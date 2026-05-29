@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { DetailScreen } from "@abacusflow/ui-native";
+import { DetailScreen } from "@/components/ui";
 
 export default function DepotDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

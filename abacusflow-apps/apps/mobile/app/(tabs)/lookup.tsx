@@ -20,7 +20,7 @@ import {
   type BasicPurchaseOrder,
   type BasicSaleOrder,
 } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/ui-tokens";
+import { COLORS } from "@abacusflow/utils";
 import {
   translateProductType,
   translateProductUnit,

@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/ui-tokens";
+import { COLORS } from "@abacusflow/utils";
 import { CURRENT_VERSION } from "@abacusflow/config";
 import { getAuthClient } from "@abacusflow/core";
 import {

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Tag } from "antd";
-import { STATUS_COLORS } from "@abacusflow/ui-tokens";
+import { STATUS_COLORS } from "@abacusflow/utils";
 import type { OrderStatus } from "@abacusflow/utils";
 import { translateOrderStatus } from "@abacusflow/utils";
 

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { depotApi, type BasicDepot } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
-import { ListScreen } from "@abacusflow/ui-native";
+import { ListScreen } from "@/components/ui";
 
 export default function DepotsScreen() {
   const router = useRouter();

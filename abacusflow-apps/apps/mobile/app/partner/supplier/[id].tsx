@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { partnerApi, type Supplier } from "@abacusflow/core";
-import { DetailScreen } from "@abacusflow/ui-native";
+import { DetailScreen } from "@/components/ui";
 
 export default function SupplierDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

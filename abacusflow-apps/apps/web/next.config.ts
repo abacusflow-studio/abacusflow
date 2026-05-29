@@ -7,7 +7,6 @@ const nextConfig: NextConfig = {
 
   transpilePackages: [
     "@abacusflow/core",
-    "@abacusflow/ui-web",
     "@abacusflow/utils",
     "@abacusflow/config",
   ],

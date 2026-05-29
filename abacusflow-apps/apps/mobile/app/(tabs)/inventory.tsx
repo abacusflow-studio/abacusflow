@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { inventoryApi, type BasicInventory } from "@abacusflow/core";
 import { translateProductType, COLORS } from "@abacusflow/utils";
-import { ListScreen } from "@abacusflow/ui-native";
+import { ListScreen } from "@/components/ui";
 
 export default function InventoryScreen() {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import { partnerApi } from "@abacusflow/core";
-import { FormScreen } from "@abacusflow/ui-native";
+import { FormScreen } from "@/components/ui";
 
 export default function AddSupplierScreen() {
   return (

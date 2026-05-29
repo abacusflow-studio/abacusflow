@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { productApi } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/ui-tokens";
+import { COLORS } from "@abacusflow/utils";
 import { PRODUCT_UNITS, PRODUCT_TYPES } from "@abacusflow/utils";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { saveDraft, deleteDraft, listDrafts } from "@/lib/draft-store";
