@@ -1,1 +1,1 @@
-export { default } from "@features/depots/screens/depot-create-screen";
+export { DepotCreateScreen as default } from "@features/depots";

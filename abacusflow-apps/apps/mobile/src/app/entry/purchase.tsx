@@ -1,1 +1,1 @@
-export { default } from "@features/entry/screens/purchase-entry-screen";
+export { PurchaseEntryScreen as default } from "@features/entry";

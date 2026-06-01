@@ -5,7 +5,7 @@ import { depotApi, type BasicDepot } from "@abacusflow/core";
 import { COLORS } from "@abacusflow/utils";
 import { ListScreen } from "@components/layout/list-screen";
 
-export default function DepotsScreen() {
+export default function DepotListScreen() {
   const router = useRouter();
   const [data, setData] = useState<BasicDepot[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,1 +1,1 @@
-export { default } from "@features/feedback/screens/feedback-screen";
+export { FeedbackScreen as default } from "@features/feedback";

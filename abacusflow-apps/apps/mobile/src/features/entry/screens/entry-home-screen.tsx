@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@abacusflow/utils";
 import { listAllDrafts } from "@lib/draft-store";
 
-export default function EntryScreen() {
+export default function EntryHomeScreen() {
   const router = useRouter();
   const [draftCount, setDraftCount] = useState(0);
 

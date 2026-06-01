@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { partnerApi, type Supplier } from "@abacusflow/core";
 import { FormScreen } from "@components/layout/form-screen";
 
-export default function EditSupplierScreen() {
+export default function SupplierEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [data, setData] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(true);

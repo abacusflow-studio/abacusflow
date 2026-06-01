@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
 import { FormScreen } from "@components/layout/form-screen";
 
-export default function EditDepotScreen() {
+export default function DepotEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [data, setData] = useState<Depot | null>(null);
   const [loading, setLoading] = useState(true);

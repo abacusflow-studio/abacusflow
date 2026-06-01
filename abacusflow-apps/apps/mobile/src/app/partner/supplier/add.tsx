@@ -1,1 +1,1 @@
-export { default } from "@features/partners/screens/supplier-create-screen";
+export { SupplierCreateScreen as default } from "@features/partners";

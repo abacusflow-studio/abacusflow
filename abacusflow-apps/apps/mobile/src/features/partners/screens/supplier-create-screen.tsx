@@ -1,7 +1,7 @@
 import { partnerApi } from "@abacusflow/core";
 import { FormScreen } from "@components/layout/form-screen";
 
-export default function AddSupplierScreen() {
+export default function SupplierCreateScreen() {
   return (
     <FormScreen
       title="新增供应商"

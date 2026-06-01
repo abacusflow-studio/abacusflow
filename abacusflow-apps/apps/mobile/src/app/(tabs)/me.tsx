@@ -1,1 +1,1 @@
-export { default } from "@features/profile/screens/me-screen";
+export { MeScreen as default } from "@features/profile";

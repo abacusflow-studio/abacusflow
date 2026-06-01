@@ -1,1 +1,1 @@
-export { default } from "@features/entry/screens/entry-home-screen";
+export { EntryHomeScreen as default } from "@features/entry";

@@ -1,7 +1,7 @@
 import { depotApi } from "@abacusflow/core";
 import { FormScreen } from "@components/layout/form-screen";
 
-export default function AddDepotScreen() {
+export default function DepotCreateScreen() {
   return (
     <FormScreen
       title="新增储存点"

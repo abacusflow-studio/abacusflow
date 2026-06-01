@@ -5,7 +5,7 @@ import { productApi, type Product } from "@abacusflow/core";
 import { PRODUCT_UNITS, PRODUCT_TYPES } from "@abacusflow/utils";
 import { FormScreen } from "@components/layout/form-screen";
 
-export default function EditProductScreen() {
+export default function ProductEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [data, setData] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);

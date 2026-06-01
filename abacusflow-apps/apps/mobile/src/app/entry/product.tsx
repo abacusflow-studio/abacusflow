@@ -1,1 +1,1 @@
-export { default } from "@features/entry/screens/product-entry-screen";
+export { ProductEntryScreen as default } from "@features/entry";

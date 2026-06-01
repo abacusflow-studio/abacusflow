@@ -1,7 +1,7 @@
 import { partnerApi } from "@abacusflow/core";
 import { FormScreen } from "@components/layout/form-screen";
 
-export default function AddCustomerScreen() {
+export default function CustomerCreateScreen() {
   return (
     <FormScreen
       title="新增客户"

@@ -1,1 +1,1 @@
-export { default } from "@features/depots/screens/depot-list-screen";
+export { DepotListScreen as default } from "@features/depots";

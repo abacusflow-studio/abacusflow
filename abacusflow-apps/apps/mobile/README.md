@@ -33,6 +33,13 @@ apps/mobile/
 
 `src/app/` 下的页面文件应保持很薄，通常只 re-export `src/features/*/screens/*`。新增业务页面时，先放到对应 feature，再在 `src/app/` 建路由壳。
 
+更细的文件职责说明：
+
+- `src/README.md`: source tree 阅读规则。
+- `src/app/README.md`: URL route 到 feature screen 的映射。
+- `src/features/README.md`: 每个业务 screen 的作用。
+- `src/components/README.md`: 通用布局模板和 UI 组件说明。
+
 ## Feature Map
 
 - `src/features/entry`: 现场录入流程，包含入库、出库、新品建档和首页入口。

@@ -1,1 +1,1 @@
-export { default } from "@features/inventory/screens/inventory-detail-screen";
+export { InventoryDetailScreen as default } from "@features/inventory";

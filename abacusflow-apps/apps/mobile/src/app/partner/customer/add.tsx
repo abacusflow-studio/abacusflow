@@ -1,1 +1,1 @@
-export { default } from "@features/partners/screens/customer-create-screen";
+export { CustomerCreateScreen as default } from "@features/partners";

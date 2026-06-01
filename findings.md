@@ -1,21 +1,22 @@
 # Findings
 
-- `static/img/icon/*` currently contains:
-  - `favicon-64.ico`
-  - `favicon-no-background.png`
-  - `favicon-no-background.svg`
-  - `favicon.png`
-  - `favicon.svg`
-- Web (`abacusflow-apps/apps/web`):
-  - Next app exposes the prepared icons from `public/static/img/icon/*`.
-  - `src/app/layout.tsx` metadata points browser and Apple icons to `/static/img/icon/*`.
-  - `src/app/favicon.ico` matches `static/img/icon/favicon-64.ico`.
-  - Admin sidebar and login brand marks use `/static/img/icon/favicon-no-background.png` through `next/image`.
-- Mobile:
-  - Expo config points to local files under `abacusflow-apps/apps/mobile/assets/images/*`.
-  - Current mobile app icon, favicon, splash icon, and adaptive icon PNGs do not match the prepared `static/img/icon/*` hashes.
+- Mobile has 48 active TypeScript files under `src`.
+- `src/app` contains Expo Router route shells and layout files.
+- `src/components/layout` contains page templates:
+  - `detail-screen.tsx`
+  - `form-screen.tsx`
+  - `list-screen.tsx`
+- `src/components/ui` currently contains one device/UI primitive:
+  - `barcode-scanner.tsx`
+- `src/features/*/screens` contains the business screens. The current names are mostly accurate, but there is no nearby map that explains which screen powers which route or workflow.
+- The existing `README.md` explains top-level folders but does not enumerate each `.tsx` file's role.
+- Low-risk naming mismatches found:
+  - `entry-home-screen.tsx` exported `EntryScreen`.
+  - create/edit screens exported `Add*Screen` or `Edit*Screen` instead of names matching their files.
+  - `depot-list-screen.tsx` exported `DepotsScreen`.
 - Implemented:
-  - Mobile app icon, favicon, splash icon, Android foreground icon, and Android monochrome icon were regenerated from `static/img/icon/favicon.png` or `static/img/icon/favicon-no-background.png`.
-  - Removed Mobile adaptive `backgroundImage` config to avoid overlaying two complete icons; it now uses `backgroundColor` + foreground image.
-  - Removed unused `android-icon-background.png`.
-  - Web `abacusflow-apps/apps/web` visible favicon/login/sidebar brand now use `/static/img/icon/*`.
+  - Added source-level READMEs under `src`, `src/app`, `src/features`, and `src/components`.
+  - Updated mobile README to link those maps.
+  - Renamed default function symbols to match file names for entry home, depot create/edit/list, customer create/edit, supplier create/edit, and product edit.
+  - Added feature-level `index.ts` public exports.
+  - Updated `src/app` route shells to re-export screens from feature public exports instead of reaching into `screens/*` directly.

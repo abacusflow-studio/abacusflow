@@ -1,1 +1,1 @@
-export { default } from "@features/scan/screens/scan-screen";
+export { ScanScreen as default } from "@features/scan";

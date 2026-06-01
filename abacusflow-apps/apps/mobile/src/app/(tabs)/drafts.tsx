@@ -1,1 +1,1 @@
-export { default } from "@features/drafts/screens/drafts-screen";
+export { DraftsScreen as default } from "@features/drafts";

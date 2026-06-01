@@ -1,1 +1,1 @@
-export { default } from "@features/partners/screens/supplier-edit-screen";
+export { SupplierEditScreen as default } from "@features/partners";

@@ -1,1 +1,1 @@
-export { default } from "@features/partners/screens/customer-edit-screen";
+export { CustomerEditScreen as default } from "@features/partners";
