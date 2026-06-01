@@ -3,6 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "resolveJsonModule": true,
     "paths": {
       "@/*": ["src/*"],
       "@app/*": ["src/app/*"],

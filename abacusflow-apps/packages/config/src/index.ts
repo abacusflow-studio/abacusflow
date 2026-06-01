@@ -1,3 +1,6 @@
+import { DEFAULT_APP_VERSION, resolveAppVersion } from "./version";
+export * from "./version";
+
 export interface Auth0Config {
   domain: string;
   clientId: string;
@@ -36,7 +39,7 @@ const DEFAULT_CONFIG: AppConfig = {
     audience: "https://admin.abacusflow.cn",
   },
   cubeEndpoint: "/cubejs-api",
-  version: "0.1.1",
+  version: DEFAULT_APP_VERSION,
 };
 
 let appConfig: AppConfig = DEFAULT_CONFIG;
@@ -68,7 +71,7 @@ export function defineAppConfig(
       redirectUri: input.auth0?.redirectUri,
     },
     cubeEndpoint: input.cubeEndpoint ?? DEFAULT_CONFIG.cubeEndpoint,
-    version: input.version ?? DEFAULT_CONFIG.version,
+    version: resolveAppVersion(input.version),
   };
 }
 
@@ -84,6 +87,7 @@ export function getCurrentVersion(): string {
   return getConfig().version;
 }
 
+/** Default fallback only; use getCurrentVersion() for runtime app version. */
 export const CURRENT_VERSION = DEFAULT_CONFIG.version;
 
 export interface VersionAnnouncement {

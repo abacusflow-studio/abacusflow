@@ -1,11 +1,19 @@
 import type { NextConfig } from "next";
+import appVersion from "../../app-version.json";
 
 const apiProxyTarget = (
   process.env.API_PROXY_TARGET ?? "http://localhost:8080"
 ).replace(/\/$/, "");
+const productVersion =
+  process.env.NEXT_PUBLIC_APP_VERSION ??
+  process.env.APP_VERSION ??
+  appVersion.version;
 
 const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "production" ? { output: "export" } : {}),
+  env: {
+    NEXT_PUBLIC_APP_VERSION: productVersion,
+  },
 
   transpilePackages: [
     "@abacusflow/core",

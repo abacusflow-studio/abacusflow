@@ -3,7 +3,7 @@ import { usePathname } from "expo-router";
 import Constants from "expo-constants";
 import { FormScreen } from "@components/layout/form-screen";
 import { feedbackApi, getAuthClient } from "@abacusflow/core";
-import { CURRENT_VERSION, getConfig } from "@abacusflow/config";
+import { getConfig, getCurrentVersion } from "@abacusflow/config";
 
 const CATEGORY_OPTIONS = [
   { label: "Bug", value: "BUG" },
@@ -117,7 +117,7 @@ export default function FeedbackScreen() {
             description: String(values.description),
             contact: values.contact ? String(values.contact) : undefined,
             pagePath: pathname,
-            appVersion: CURRENT_VERSION,
+            appVersion: getCurrentVersion(),
             platform: Platform.OS,
             deviceInfo,
             imageUrls: imageUrls.length > 0 ? imageUrls : undefined,

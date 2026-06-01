@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { defineAppConfig, setAppConfig } from "@abacusflow/config";
 
 export const MOBILE_AUTH_SCHEME = "abacusflow";
@@ -13,7 +14,9 @@ export const appConfig = defineAppConfig({
     audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
     redirectUri: process.env.EXPO_PUBLIC_AUTH0_REDIRECT_URI,
   },
-  version: process.env.EXPO_PUBLIC_APP_VERSION,
+  version:
+    (Constants.expoConfig?.extra?.appVersion as string | undefined) ??
+    process.env.EXPO_PUBLIC_APP_VERSION,
 });
 
 setAppConfig(appConfig);

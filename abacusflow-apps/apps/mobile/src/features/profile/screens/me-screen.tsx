@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@components/ui/button";
 import { Text } from "@components/ui/text";
-import { CURRENT_VERSION } from "@abacusflow/config";
+import { getCurrentVersion } from "@abacusflow/config";
 import { THEME } from "@lib/theme";
 import { MenuSection } from "../components/menu-section";
 import { UserProfileCard } from "../components/user-profile-card";
@@ -62,7 +62,7 @@ export default function MeScreen() {
         </Button>
 
         <Text className="text-center text-xs text-muted-foreground">
-          v{CURRENT_VERSION}
+          v{getCurrentVersion()}
         </Text>
       </ScrollView>
     </SafeAreaView>

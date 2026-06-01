@@ -1,7 +1,7 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { feedbackApi, getAuthClient } from "@abacusflow/core";
-import { CURRENT_VERSION, getConfig } from "@abacusflow/config";
+import { getConfig, getCurrentVersion } from "@abacusflow/config";
 
 /** 上传图片到服务器 */
 export async function uploadImages(uris: string[]): Promise<string[]> {
@@ -61,7 +61,7 @@ export async function submitFeedback(input: {
       description: input.description,
       contact: input.contact || undefined,
       pagePath: input.pagePath,
-      appVersion: CURRENT_VERSION,
+      appVersion: getCurrentVersion(),
       platform: Platform.OS,
       deviceInfo,
       imageUrls: input.imageUrls?.length ? input.imageUrls : undefined,
