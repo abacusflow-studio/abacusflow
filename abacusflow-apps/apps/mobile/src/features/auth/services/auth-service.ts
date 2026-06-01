@@ -12,6 +12,7 @@ import {
 import {
   appConfig,
   getAuth0Issuer,
+  isMobileDevAuthDisabled,
   MOBILE_AUTH_CALLBACK_PATH,
   MOBILE_AUTH_SCHEME,
   mobileConfigIssues,
@@ -33,19 +34,42 @@ export interface MobileAuthSnapshot {
 
 type Listener = (snapshot: MobileAuthSnapshot) => void;
 
+const DEV_AUTH_USER: UserProfile = {
+  sub: "dev-mobile-user",
+  name: "Dev User",
+  nickname: "Dev",
+  email: "dev@local",
+  roles: ["dev"],
+  permissions: ["*"],
+  enabled: true,
+  locked: false,
+};
+
+const DEV_AUTH_SNAPSHOT: MobileAuthSnapshot = {
+  ready: true,
+  authenticated: true,
+  signingIn: false,
+  user: DEV_AUTH_USER,
+  configIssues: [],
+};
+
 let authInitialized = false;
 let initializePromise: Promise<void> | null = null;
 let discoveryPromise: Promise<AuthSession.DiscoveryDocument> | null = null;
 let currentToken: AuthSession.TokenResponse | null = null;
-let currentUser: UserProfile | undefined;
+let currentUser: UserProfile | undefined = isMobileDevAuthDisabled
+  ? DEV_AUTH_USER
+  : undefined;
 const listeners = new Set<Listener>();
 
-let snapshot: MobileAuthSnapshot = {
-  ready: false,
-  authenticated: false,
-  signingIn: false,
-  configIssues: mobileConfigIssues,
-};
+let snapshot: MobileAuthSnapshot = isMobileDevAuthDisabled
+  ? DEV_AUTH_SNAPSHOT
+  : {
+      ready: false,
+      authenticated: false,
+      signingIn: false,
+      configIssues: mobileConfigIssues,
+    };
 
 function publish(patch: Partial<MobileAuthSnapshot>): void {
   snapshot = { ...snapshot, ...patch };
@@ -342,25 +366,62 @@ const mobileAuthClient: AuthClient = {
   },
 };
 
+const devAuthClient: AuthClient = {
+  async initialize() {
+    currentUser = DEV_AUTH_USER;
+    publish(DEV_AUTH_SNAPSHOT);
+  },
+
+  async login() {
+    currentUser = DEV_AUTH_USER;
+    publish(DEV_AUTH_SNAPSHOT);
+  },
+
+  async handleRedirectCallback() {
+    return;
+  },
+
+  async logout() {
+    currentUser = DEV_AUTH_USER;
+    publish(DEV_AUTH_SNAPSHOT);
+  },
+
+  async isAuthenticated() {
+    return true;
+  },
+
+  async getAccessToken() {
+    return process.env.EXPO_PUBLIC_MOBILE_DEV_ACCESS_TOKEN ?? "";
+  },
+
+  async getUser() {
+    return DEV_AUTH_USER;
+  },
+};
+
+function getActiveAuthClient(): AuthClient {
+  return isMobileDevAuthDisabled ? devAuthClient : mobileAuthClient;
+}
+
 export function initMobileAuth(): void {
   if (authInitialized) return;
-  setAuthClient(mobileAuthClient);
+  setAuthClient(getActiveAuthClient());
   authInitialized = true;
 }
 
 export function initializeMobileAuthSession(): Promise<void> {
   initMobileAuth();
-  return mobileAuthClient.initialize();
+  return getActiveAuthClient().initialize();
 }
 
 export function loginMobileAuth(): Promise<void> {
   initMobileAuth();
-  return mobileAuthClient.login();
+  return getActiveAuthClient().login();
 }
 
 export function logoutMobileAuth(): Promise<void> {
   initMobileAuth();
-  return mobileAuthClient.logout();
+  return getActiveAuthClient().logout();
 }
 
 export function getMobileAuthSnapshot(): MobileAuthSnapshot {

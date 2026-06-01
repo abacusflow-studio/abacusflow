@@ -2,6 +2,8 @@ import { defineAppConfig, setAppConfig } from "@abacusflow/config";
 
 export const MOBILE_AUTH_SCHEME = "abacusflow";
 export const MOBILE_AUTH_CALLBACK_PATH = "oauth/callback";
+export const isMobileDevAuthDisabled =
+  __DEV__ && process.env.EXPO_PUBLIC_MOBILE_AUTH_DISABLED === "true";
 
 export const appConfig = defineAppConfig({
   apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
@@ -16,12 +18,16 @@ export const appConfig = defineAppConfig({
 
 setAppConfig(appConfig);
 
-export const mobileConfigIssues = [
-  !process.env.EXPO_PUBLIC_API_BASE_URL && "EXPO_PUBLIC_API_BASE_URL",
-  !process.env.EXPO_PUBLIC_AUTH0_DOMAIN && "EXPO_PUBLIC_AUTH0_DOMAIN",
-  !process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID && "EXPO_PUBLIC_AUTH0_CLIENT_ID",
-  !process.env.EXPO_PUBLIC_AUTH0_AUDIENCE && "EXPO_PUBLIC_AUTH0_AUDIENCE",
-].filter(Boolean) as string[];
+export const mobileConfigIssues = isMobileDevAuthDisabled
+  ? []
+  : ([
+      !process.env.EXPO_PUBLIC_API_BASE_URL && "EXPO_PUBLIC_API_BASE_URL",
+      !process.env.EXPO_PUBLIC_AUTH0_DOMAIN && "EXPO_PUBLIC_AUTH0_DOMAIN",
+      !process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID &&
+        "EXPO_PUBLIC_AUTH0_CLIENT_ID",
+      !process.env.EXPO_PUBLIC_AUTH0_AUDIENCE &&
+        "EXPO_PUBLIC_AUTH0_AUDIENCE",
+    ].filter(Boolean) as string[]);
 
 export function apiUrl(path: string): string {
   return `${appConfig.apiBaseUrl.replace(/\/+$/, "")}${path}`;
