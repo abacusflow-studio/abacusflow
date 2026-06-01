@@ -25,6 +25,7 @@ import { OrderItemCard } from "../components/order-item-card";
 import { OrderBottomBar } from "../components/order-bottom-bar";
 import { MoreOptionsSection } from "../components/more-options-section";
 import { ScanButton } from "../components/scan-button";
+import { ProductSelector } from "../components/product-selector";
 
 export default function PurchaseEntryScreen() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function PurchaseEntryScreen() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showProductSelector, setShowProductSelector] = useState(false);
   const [partners, setPartners] = useState<PartnerOption[]>([]);
   const [products, setProducts] = useState<
     Awaited<ReturnType<typeof loadPurchaseSelectionData>>["products"]
@@ -109,9 +111,11 @@ export default function PurchaseEntryScreen() {
         {
           productId: product.id,
           productName: product.name,
+          productType: product.type,
           barcode: product.barcode,
           quantity: "1",
           unitPrice: "",
+          serialNumber: undefined,
         },
       ]);
     },
@@ -136,6 +140,14 @@ export default function PurchaseEntryScreen() {
     }
     if (!form.validateItems("productName")) return;
 
+    // 校验资产产品必须有序列号
+    for (const item of form.items) {
+      if (item.productType === "asset" && !item.serialNumber?.trim()) {
+        Alert.alert("提示", `「${item.productName}」是资产产品，必须填写序列号`);
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       await createPurchaseOrder({
@@ -145,7 +157,7 @@ export default function PurchaseEntryScreen() {
         note: form.note,
       });
       await draft.clearOnSuccess();
-      Alert.alert("入库成功", "采购单已提交", [
+      Alert.alert("入库成功", "采购单已创建并完成入库", [
         { text: "继续入库", onPress: () => { form.resetForm(); draft.resetDraftId(); } },
         { text: "回到录入", onPress: () => router.replace("/(tabs)") },
       ]);
@@ -194,7 +206,11 @@ export default function PurchaseEntryScreen() {
           />
 
           <Text style={styles.stepLabel}>2. 扫描产品</Text>
-          <ScanButton label="扫码添加产品" onPress={() => setScanning(true)} />
+          <ScanButton
+            label="扫码添加产品"
+            onPress={() => setScanning(true)}
+            onManualSelect={() => setShowProductSelector(true)}
+          />
 
           {form.items.length > 0 && (
             <View style={styles.itemsSection}>
@@ -205,8 +221,15 @@ export default function PurchaseEntryScreen() {
                   subtitle={item.barcode}
                   quantity={item.quantity}
                   unitPrice={item.unitPrice}
+                  isAsset={item.productType === "asset"}
+                  serialNumber={item.serialNumber}
                   onQuantityChange={(v) => form.updateItem(idx, "quantity", v)}
                   onUnitPriceChange={(v) => form.updateItem(idx, "unitPrice", v)}
+                  onSerialNumberChange={
+                    item.productType === "asset"
+                      ? (v) => form.updateItem(idx, "serialNumber", v)
+                      : undefined
+                  }
                   onDelete={() => form.removeItem(idx)}
                 />
               ))}
@@ -231,6 +254,14 @@ export default function PurchaseEntryScreen() {
           onSubmit={handleSubmit}
         />
       </KeyboardAvoidingView>
+
+      <ProductSelector
+        visible={showProductSelector}
+        products={products}
+        selectedIds={form.items.map((i) => i.productId)}
+        onSelect={(product) => addItem(product)}
+        onClose={() => setShowProductSelector(false)}
+      />
     </SafeAreaView>
   );
 }

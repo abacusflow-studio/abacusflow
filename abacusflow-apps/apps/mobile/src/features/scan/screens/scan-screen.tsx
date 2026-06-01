@@ -11,6 +11,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@abacusflow/utils";
 import { BarcodeScanner } from "@components/ui/barcode-scanner";
+import { showToast } from "@hooks/use-toast";
 
 import type { ScanMode, ScanResult } from "../types";
 import { findProductByBarcode } from "../services/scan-service";
@@ -30,7 +31,9 @@ export default function ScanScreen() {
     try {
       const product = await findProductByBarcode(barcode);
       setResult({ barcode, product });
-    } catch {
+    } catch (err) {
+      console.error(err);
+      showToast(err instanceof Error ? err.message : "查询产品失败", "error");
       setResult({ barcode, product: null });
     } finally {
       setLoading(false);

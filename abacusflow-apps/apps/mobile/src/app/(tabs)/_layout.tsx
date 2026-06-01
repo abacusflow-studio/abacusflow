@@ -33,9 +33,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="records"
         options={{
-          title: "流水",
+          title: "交易",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list-outline" size={size} color={color} />
+            <Ionicons name="swap-horizontal-outline" size={size} color={color} />
           ),
         }}
       />

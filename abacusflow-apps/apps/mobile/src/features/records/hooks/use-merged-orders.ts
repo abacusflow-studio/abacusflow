@@ -1,44 +1,68 @@
 import { useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
-import type { OrderRecord } from "../types";
-import { fetchMergedRecords } from "../services/records-service";
+import { showToast } from "@hooks/use-toast";
+import type { OrderRecord, OrderType } from "../types";
+import { fetchPurchaseRecords, fetchSaleRecords } from "../services/records-service";
+
+export type OrderFilter = OrderType;
 
 /**
- * 合并订单记录 hook
- * 封装双 API 调用 + 合并排序 + 无限滚动
+ * 订单记录 hook
+ * 按类型（入库/出库）独立拉取，支持切换 + 分页
+ * pageIndex 从 1 开始（与后端一致）
  */
-export function useMergedOrders() {
+export function useOrderRecords() {
+  const [filter, setFilter] = useState<OrderFilter>("sale");
   const [records, setRecords] = useState<OrderRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [pageIndex, setPageIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchRecords = useCallback(async (page: number, append: boolean) => {
-    if (append) setLoadingMore(true);
-    else setLoading(true);
+  const fetchFn = filter === "purchase" ? fetchPurchaseRecords : fetchSaleRecords;
 
-    try {
-      const result = await fetchMergedRecords(page);
-      if (append) {
-        setRecords((prev) => [...prev, ...result.records]);
-      } else {
-        setRecords(result.records);
+  const fetchRecords = useCallback(
+    async (page: number, append: boolean) => {
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+
+      try {
+        const result = await fetchFn(page);
+        if (append) {
+          setRecords((prev) => [...prev, ...result.records]);
+        } else {
+          setRecords(result.records);
+        }
+        setHasMore(result.hasMore);
+        setPageIndex(page);
+      } catch (err) {
+        console.error("Failed to load records:", err);
+        showToast(err instanceof Error ? err.message : "加载订单失败", "error");
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-      setHasMore(result.hasMore);
-      setPageIndex(page);
-    } catch (err) {
-      console.error("Failed to load records:", err);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
+    },
+    [fetchFn],
+  );
 
-  // 页面获得焦点时刷新
+  // 切换类型时重置并重新拉取
+  const handleFilterChange = useCallback(
+    (newFilter: OrderFilter) => {
+      if (newFilter === filter) return;
+      setFilter(newFilter);
+      setRecords([]);
+      setPageIndex(1);
+      setHasMore(true);
+      setLoading(true);
+    },
+    [filter],
+  );
+
+  // filter 变化后拉取数据
   useFocusEffect(
     useCallback(() => {
-      fetchRecords(0, false);
+      fetchRecords(1, false);
     }, [fetchRecords]),
   );
 
@@ -51,7 +75,7 @@ export function useMergedOrders() {
 
   /** 下拉刷新 */
   const handleRefresh = useCallback(() => {
-    fetchRecords(0, false);
+    fetchRecords(1, false);
   }, [fetchRecords]);
 
   return {
@@ -59,6 +83,8 @@ export function useMergedOrders() {
     loading,
     loadingMore,
     hasMore,
+    filter,
+    setFilter: handleFilterChange,
     handleLoadMore,
     handleRefresh,
   };

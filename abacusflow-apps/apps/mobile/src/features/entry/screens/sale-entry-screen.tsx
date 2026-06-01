@@ -33,6 +33,7 @@ import { OrderItemCard } from "../components/order-item-card";
 import { OrderBottomBar } from "../components/order-bottom-bar";
 import { MoreOptionsSection } from "../components/more-options-section";
 import { ScanButton } from "../components/scan-button";
+import { InventoryUnitSelector } from "../components/inventory-unit-selector";
 
 const isSellableUnit = (unit: BasicInventoryUnit) =>
   (unit.status === "normal" || unit.status === "reversed") &&
@@ -65,6 +66,7 @@ export default function SaleEntryScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [scanningSN, setScanningSN] = useState(false);
+  const [showProductSelector, setShowProductSelector] = useState(false);
   const [partners, setPartners] = useState<PartnerOption[]>([]);
   const [products, setProducts] = useState<SelectableProduct[]>([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState<
@@ -383,7 +385,11 @@ export default function SaleEntryScreen() {
           />
 
           <Text style={styles.stepLabel}>2. 扫描商品</Text>
-          <ScanButton label="扫码出库" onPress={() => setScanning(true)} />
+          <ScanButton
+            label="扫码出库"
+            onPress={() => setScanning(true)}
+            onManualSelect={() => setShowProductSelector(true)}
+          />
 
           {form.items.length > 0 && (
             <View style={styles.itemsSection}>
@@ -431,6 +437,13 @@ export default function SaleEntryScreen() {
           onSubmit={handleSubmit}
         />
       </KeyboardAvoidingView>
+
+      <InventoryUnitSelector
+        visible={showProductSelector}
+        selectedIds={form.items.map((i) => i.inventoryUnitId)}
+        onSelect={(unit) => addUnitToItems(unit)}
+        onClose={() => setShowProductSelector(false)}
+      />
     </SafeAreaView>
   );
 }

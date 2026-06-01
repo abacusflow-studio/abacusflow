@@ -5,6 +5,7 @@ import type {
   BasicPurchaseOrder,
   BasicSaleOrder,
 } from "@abacusflow/core";
+import { showToast } from "@hooks/use-toast";
 import type { LookupMode } from "../types";
 import {
   searchProducts,
@@ -42,6 +43,7 @@ export function useLookupSearch() {
         setProducts(await searchProducts(query));
       } catch (err) {
         console.error(err);
+        showToast(err instanceof Error ? err.message : "搜索产品失败", "error");
       } finally {
         setLoading(false);
       }
@@ -60,6 +62,7 @@ export function useLookupSearch() {
         setInventories(await searchInventories(query));
       } catch (err) {
         console.error(err);
+        showToast(err instanceof Error ? err.message : "搜索库存失败", "error");
       } finally {
         setLoading(false);
       }
@@ -80,6 +83,7 @@ export function useLookupSearch() {
         setSaleOrders(result.saleOrders);
       } catch (err) {
         console.error(err);
+        showToast(err instanceof Error ? err.message : "搜索订单失败", "error");
       } finally {
         setLoading(false);
       }
@@ -99,6 +103,7 @@ export function useLookupSearch() {
           setInventories(await findInventoriesByBarcode(barcode));
         } catch (err) {
           console.error(err);
+          showToast(err instanceof Error ? err.message : "扫码查询失败", "error");
         } finally {
           setLoading(false);
         }

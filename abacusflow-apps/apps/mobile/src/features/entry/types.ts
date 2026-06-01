@@ -4,9 +4,11 @@ import type { SelectableProduct } from "@abacusflow/core";
 export interface PurchaseOrderItem {
   productId: number;
   productName: string;
+  productType: string;
   barcode: string;
   quantity: string;
   unitPrice: string;
+  serialNumber?: string;
 }
 
 /** 销售出库单行项目 */

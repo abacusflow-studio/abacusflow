@@ -10,6 +10,8 @@ import "react-native-reanimated";
 import { AuthGate } from "@providers/auth-provider";
 import { useColorScheme } from "@hooks/use-color-scheme";
 import { initMobileAuth } from "@features/auth/services/auth-service";
+import { useToast } from "@hooks/use-toast";
+import { Toast } from "@components/ui/toast";
 
 // Initialize auth on app start
 initMobileAuth();
@@ -20,6 +22,7 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const { toast, hideToast } = useToast();
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -86,6 +89,12 @@ export default function RootLayout() {
           <Stack.Screen name="feedback/index" options={{ title: "问题反馈" }} />
         </Stack>
         <StatusBar style="auto" />
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onHide={hideToast}
+        />
       </AuthGate>
     </ThemeProvider>
   );
