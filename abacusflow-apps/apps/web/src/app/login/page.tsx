@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { Button } from "antd";
 import {
   BarChartOutlined,
-  CalculatorOutlined,
   DatabaseOutlined,
   LockOutlined,
   MoonOutlined,
@@ -67,7 +67,13 @@ export default function LoginPage() {
       >
         <div className="af-login-brand">
           <div className="af-brand-mark">
-            <CalculatorOutlined />
+            <Image
+              src="/static/img/icon/favicon-no-background.png"
+              alt="小算盘"
+              width={40}
+              height={40}
+              priority
+            />
           </div>
           <div className="af-brand-copy">
             <strong>小算盘</strong>

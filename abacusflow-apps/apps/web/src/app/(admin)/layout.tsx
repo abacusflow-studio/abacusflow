@@ -2,13 +2,13 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Layout, Menu } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
   BankOutlined,
-  CalculatorOutlined,
   DashboardOutlined,
   ExclamationCircleOutlined,
   HomeOutlined,
@@ -253,7 +253,13 @@ export default function AdminLayout({
       >
         <div className="af-brand">
           <div className="af-brand-mark">
-            <CalculatorOutlined />
+            <Image
+              src="/static/img/icon/favicon-no-background.png"
+              alt="小算盘"
+              width={40}
+              height={40}
+              priority
+            />
           </div>
           {!collapsed && (
             <div className="af-brand-text">

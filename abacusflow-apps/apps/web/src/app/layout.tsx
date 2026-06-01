@@ -20,6 +20,20 @@ const firaCode = Fira_Code({
 export const metadata: Metadata = {
   title: "小算盘 | 业务指挥台",
   description: "小算盘智能库存与交易指挥台",
+  icons: {
+    icon: [
+      {
+        url: "/static/img/icon/favicon-64.ico",
+        sizes: "64x64",
+        type: "image/x-icon",
+      },
+      {
+        url: "/static/img/icon/favicon.png",
+        type: "image/png",
+      },
+    ],
+    apple: "/static/img/icon/favicon.png",
+  },
 };
 
 export const viewport: Viewport = {

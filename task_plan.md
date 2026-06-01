@@ -2,24 +2,25 @@
 
 ## Goal
 
-Audit Web and Mobile forms to verify their required-field validation matches the required fields declared in `openapi.yaml`.
+Make Web and Mobile use the prepared AbacusFlow icon assets from `static/img/icon/*` consistently.
 
 ## Phases
 
-1. [complete] Preserve current session context and identify OpenAPI request schemas with required fields.
-2. [complete] Inventory Web forms and map each submit payload to its OpenAPI schema.
-3. [complete] Inventory Mobile forms and map each submit payload to its OpenAPI schema.
-4. [complete] Compare required fields, record mismatches, and distinguish already-fixed local changes from remaining issues.
-5. [complete] Report findings with file references and recommended fixes.
+1. [complete] Inventory existing icon references in Web, Mobile, and shared static assets.
+2. [complete] Decide the least invasive asset wiring for each platform.
+3. [complete] Update configuration/assets so app icons resolve from the prepared icon set.
+4. [complete] Run focused validation for Web and Mobile.
+5. [complete] Summarize changed files and any remaining icon gaps.
 
 ## Decisions
 
-- This is an audit/check task unless the user asks for implementation after reviewing findings.
-- Treat existing dirty mobile files as user/session work in progress and do not revert them.
-- Use `openapi.yaml` as the source of truth for required request fields.
+- Preserve unrelated existing files and avoid broad UI icon refactors unless they are clearly app-icon related.
+- Prefer reusing the source assets under `static/img/icon/*`; copy only where a platform requires local files.
+- Keep platform-specific generated binaries where required by Expo/Electron, but derive them from `static/img/icon/*`.
+- Do not replace the macOS `.icns` package icon until a prepared `.icns` exists under `static/img/icon/*`.
 
 ## Errors Encountered
 
 | Error | Attempt | Resolution |
 | --- | --- | --- |
-| Session catchup detected unsynced mobile required-field fixes | Startup | Record as current context and verify against the actual diff/code instead of assuming clean state. |
+| Web `npm run build` failed on `eslint.config.ts` type config and missing `src/core/openapi` import target | Validation | Recorded as existing non-icon blockers; Mobile export passed and icon file checks passed. |
