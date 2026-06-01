@@ -1,5 +1,6 @@
 {
   "name": "abacusflow-apps",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -8,6 +9,7 @@
   "scripts": {
     "generate": "npm run generate:core",
     "generate:core": "npm run generate -w @abacusflow/core",
+
     "dev:web": "npm run dev -w abacusflow-web",
     "dev:mobile": "npm run start -w abacusflow-mobile",
     "dev:mobile:android": "npm run android -w abacusflow-mobile",
@@ -18,6 +20,10 @@
     "dev:mobile:ios:tunnel": "npm run ios -w abacusflow-mobile -- --tunnel",
     "dev:mobile:web:tunnel": "npm run web -w abacusflow-mobile -- --tunnel",
     "dev:desktop": "npm run start -w abacusflow-desktop",
+
+    "android": "npm run android -w abacusflow-mobile",
+    "ios": "npm run ios -w abacusflow-mobile",
+
     "eas:dev:android": "npm run eas:dev:android -w abacusflow-mobile",
     "eas:dev:ios": "npm run eas:dev:ios -w abacusflow-mobile",
     "eas:preview:android": "npm run eas:preview:android -w abacusflow-mobile",
@@ -25,19 +31,23 @@
     "eas:production:android": "npm run eas:production:android -w abacusflow-mobile",
     "eas:production:ios": "npm run eas:production:ios -w abacusflow-mobile",
     "eas:submit": "npm run eas:submit -w abacusflow-mobile",
+
     "build": "npm run build:web",
     "build:web": "npm run build -w abacusflow-web",
     "build:web:turbopack": "npm run build-turbopack -w abacusflow-web",
     "build:desktop": "npm run build -w abacusflow-desktop",
     "build:all": "npm run build -ws --if-present",
+
     "lint:web": "npm run lint -w abacusflow-web",
+    "lint:mobile": "npm run lint -w abacusflow-mobile",
     "lint:core": "npm run lint -w @abacusflow/core",
     "lint": "npm run lint -ws --if-present",
+
     "test": "npm run test -ws --if-present",
     "format": "prettier --write .",
     "clean": "npm run clean -ws --if-present",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+
+    "check:deps": "npm ls react react-dom expo react-native react-native-screens expo-router"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
@@ -49,13 +59,5 @@
     "prettier": "^3.2.5",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1"
-  },
-  "version": "1.0.0",
-  "dependencies": {
-    "electron": "42.3.0",
-    "expo": "^56.0.8",
-    "next": "^15.0.0",
-    "react": "19.2.3",
-    "react-native": "0.81.5"
   }
 }

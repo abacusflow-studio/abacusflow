@@ -1,7 +1,8 @@
 {
   "name": "abacusflow-mobile",
-  "main": "expo-router/entry",
   "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -31,7 +32,6 @@
     "@rn-primitives/slot": "^1.4.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "electron": "42.3.0",
     "expo": "^56.0.8",
     "expo-auth-session": "^56.0.13",
     "expo-camera": "~56.0.7",
@@ -51,13 +51,13 @@
     "expo-web-browser": "~56.0.5",
     "moti": "^0.30.0",
     "nativewind": "^4.2.4",
-        "react": "19.2.3",
+    "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.3",
+    "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.31.1",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2",
+    "react-native-screens": "~4.23.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.8.3",
     "tailwind-merge": "^3.6.0",
@@ -71,6 +71,5 @@
     "prettier-plugin-tailwindcss": "^0.5.14",
     "tailwindcss": "^3.4.19",
     "typescript": "~6.0.3"
-  },
-  "private": true
+  }
 }
