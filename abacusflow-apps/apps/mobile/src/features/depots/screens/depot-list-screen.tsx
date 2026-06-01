@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { depotApi, type BasicDepot } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/utils";
+import { Text } from "@components/ui/text";
+import { Badge } from "@components/ui/badge";
+import { THEME } from "@lib/theme";
 import { ListScreen } from "@components/layout/list-screen";
 
 export default function DepotListScreen() {
@@ -30,40 +32,21 @@ export default function DepotListScreen() {
     loadData();
   }, [loadData]);
 
-  const filtered = searchName
-    ? data.filter((d) => d.name.includes(searchName))
-    : data;
+  const filtered = searchName ? data.filter((d) => d.name.includes(searchName)) : data;
 
   const renderItem = (item: BasicDepot) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => router.push(`/depot/${item.id}` as any)}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        <View
-          style={[
-            styles.badge,
-            { backgroundColor: item.enabled ? "#f6ffed" : "#fff1f0" },
-          ]}
-        >
-          <Text
-            style={[
-              styles.badgeText,
-              { color: item.enabled ? COLORS.success : COLORS.danger },
-            ]}
-          >
-            {item.enabled ? "启用" : "禁用"}
-          </Text>
-        </View>
+    <View className="py-1.5">
+      <View className="flex-row justify-between items-center mb-1">
+        <Text className="text-base font-semibold flex-1">{item.name}</Text>
+        <Badge
+          label={item.enabled ? "启用" : "禁用"}
+          color={item.enabled ? "#16a34a" : THEME.light.destructive}
+          bgColor={item.enabled ? "#dcfce7" : "#fee2e2"}
+        />
       </View>
-      {item.location && (
-        <Text style={styles.cardDetail}>地址: {item.location}</Text>
-      )}
-      {item.capacity != null && (
-        <Text style={styles.cardDetail}>容量: {item.capacity}</Text>
-      )}
-    </TouchableOpacity>
+      {item.location && <Text variant="muted" className="text-sm mt-0.5">地址: {item.location}</Text>}
+      {item.capacity != null && <Text variant="muted" className="text-sm mt-0.5">容量: {item.capacity}</Text>}
+    </View>
   );
 
   return (
@@ -84,17 +67,3 @@ export default function DepotListScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  card: { paddingVertical: 4 },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  badgeText: { fontSize: 12, fontWeight: "500" },
-  cardDetail: { fontSize: 13, color: "#666", marginTop: 2 },
-});

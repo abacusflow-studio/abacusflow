@@ -1,15 +1,11 @@
 import { useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
+import { Text } from "@components/ui/text";
+import { Button } from "@components/ui/button";
+import { THEME } from "@lib/theme";
 import { BarcodeScanner } from "@components/ui/barcode-scanner";
 import { showToast } from "@hooks/use-toast";
 
@@ -52,10 +48,7 @@ export default function ScanScreen() {
     if (result?.product) {
       router.replace({
         pathname: "/entry/purchase",
-        params: {
-          scanProductId: String(result.product.id),
-          scanBarcode: result.barcode,
-        },
+        params: { scanProductId: String(result.product.id), scanBarcode: result.barcode },
       } as any);
     }
   };
@@ -64,10 +57,7 @@ export default function ScanScreen() {
     if (result?.product) {
       router.replace({
         pathname: "/entry/sale",
-        params: {
-          scanProductId: String(result.product.id),
-          scanBarcode: result.barcode,
-        },
+        params: { scanProductId: String(result.product.id), scanBarcode: result.barcode },
       } as any);
     }
   };
@@ -89,20 +79,20 @@ export default function ScanScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>正在查询...</Text>
+      <View className="flex-1 items-center justify-center gap-3">
+        <ActivityIndicator size="large" color={THEME.light.primary} />
+        <Text variant="muted">正在查询...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>扫描结果</Text>
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-row items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <Button variant="ghost" size="icon" onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color={THEME.light.foreground} />
+        </Button>
+        <Text className="text-lg font-semibold">扫描结果</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -116,41 +106,14 @@ export default function ScanScreen() {
         />
       )}
 
-      <TouchableOpacity style={styles.rescanBtn} onPress={handleRescan}>
-        <Ionicons name="scan" size={18} color={COLORS.primary} />
-        <Text style={styles.rescanText}>重新扫描</Text>
-      </TouchableOpacity>
+      <View className="p-4">
+        <Button variant="outline" onPress={handleRescan}>
+          <Ionicons name="scan" size={18} color={THEME.light.primary} />
+          <Text className="text-base font-semibold" style={{ color: THEME.light.primary }}>
+            重新扫描
+          </Text>
+        </Button>
+      </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
-  loadingText: { fontSize: 14, color: COLORS.textSecondary },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.bgCard,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  backBtn: { width: 44, height: 44, justifyContent: "center" },
-  headerTitle: { fontSize: 17, fontWeight: "600", color: COLORS.text },
-  rescanBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bgCard,
-    margin: 16,
-  },
-  rescanText: { color: COLORS.primary, fontSize: 15, fontWeight: "600" },
-});

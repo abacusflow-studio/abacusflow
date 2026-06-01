@@ -1,23 +1,22 @@
 import { useState, useEffect } from "react";
-import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { productApi } from "@abacusflow/core";
-import { COLORS, PRODUCT_UNITS, PRODUCT_TYPES } from "@abacusflow/utils";
+import { PRODUCT_UNITS, PRODUCT_TYPES } from "@abacusflow/utils";
+
+import { AnimatedCard } from "@components/ui/animated-card";
 import { BarcodeScanner } from "@components/ui/barcode-scanner";
+import { Button } from "@components/ui/button";
+import { CardContent } from "@components/ui/card";
+import { Input } from "@components/ui/input";
+import { PressableScale } from "@components/ui/pressable-scale";
+import { Text } from "@components/ui/text";
 import { deleteDraft, listDrafts } from "@lib/draft-store";
+import { triggerHaptic } from "@lib/haptics";
+import { THEME } from "@lib/theme";
+import { cn } from "@lib/utils";
 
 type ProductType = (typeof PRODUCT_TYPES)[number]["value"];
 type ProductUnit = (typeof PRODUCT_UNITS)[number]["value"];
@@ -50,7 +49,6 @@ export default function ProductEntryScreen() {
     loadCategories();
   }, []);
 
-  // Restore draft
   useEffect(() => {
     if (params.draftId) {
       restoreDraft(params.draftId);
@@ -82,20 +80,24 @@ export default function ProductEntryScreen() {
   };
 
   const handleScan = (data: string) => {
+    void triggerHaptic("selection");
     setBarcode(data);
     setScanning(false);
   };
 
   const handleSubmit = async (andEnter: boolean) => {
     if (!name.trim()) {
+      void triggerHaptic("error");
       Alert.alert("提示", "请输入产品名称");
       return;
     }
     if (!barcode.trim()) {
+      void triggerHaptic("error");
       Alert.alert("提示", "请扫描或输入条码");
       return;
     }
     if (!categoryId) {
+      void triggerHaptic("error");
       Alert.alert("提示", "请选择类别");
       return;
     }
@@ -108,15 +110,15 @@ export default function ProductEntryScreen() {
           type,
           barcode: barcode.trim(),
           unit,
-          categoryId: categoryId!,
+          categoryId,
           specification: specification.trim() || undefined,
           note: note.trim() || undefined,
         },
       });
       if (draftId) await deleteDraft("product", draftId);
 
+      void triggerHaptic("success");
       if (andEnter) {
-        // Navigate to purchase entry with this product
         router.replace({
           pathname: "/entry/purchase",
           params: { scanProductId: String(product.id), scanBarcode: barcode },
@@ -143,6 +145,7 @@ export default function ProductEntryScreen() {
           lastError: msg,
         });
       }
+      void triggerHaptic("error");
       Alert.alert("创建失败", msg + "\n\n已保存草稿");
     } finally {
       setSubmitting(false);
@@ -160,265 +163,247 @@ export default function ProductEntryScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerClassName="gap-5 p-4 pb-5"
           keyboardShouldPersistTaps="handled"
         >
-          {/* Barcode */}
-          <Text style={styles.stepLabel}>条码</Text>
-          <View style={styles.barcodeRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              value={barcode}
-              onChangeText={setBarcode}
-              placeholder="扫描或手动输入"
-            />
-            <TouchableOpacity
-              style={styles.scanIconBtn}
-              onPress={() => setScanning(true)}
-            >
-              <Ionicons name="scan" size={22} color="#fff" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Required fields */}
-          <Text style={styles.stepLabel}>必填信息</Text>
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>产品名称</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="请输入产品名称"
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>类型</Text>
-            <View style={styles.chipRow}>
-              {PRODUCT_TYPES.map((t) => (
-                <TouchableOpacity
-                  key={t.value}
-                  style={[styles.chip, type === t.value && styles.chipActive]}
-                  onPress={() => setType(t.value)}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      type === t.value && styles.chipTextActive,
-                    ]}
-                  >
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+          <View className="overflow-hidden rounded-[22px] border border-border bg-card p-5">
+            <View className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-primary/10" />
+            <View className="flex-row items-start gap-4">
+              <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                <Ionicons
+                  name="add-circle-outline"
+                  size={24}
+                  color={THEME.light.primary}
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-2xl font-bold">新品建档</Text>
+                <Text className="mt-1 text-sm leading-5 text-muted-foreground">
+                  先扫条码，再补基础资料，后续可直接入库
+                </Text>
+              </View>
             </View>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>单位</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {PRODUCT_UNITS.map((u) => (
-                <TouchableOpacity
-                  key={u.value}
-                  style={[styles.chip, unit === u.value && styles.chipActive]}
-                  onPress={() => setUnit(u.value)}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      unit === u.value && styles.chipTextActive,
-                    ]}
-                  >
-                    {u.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+          <AnimatedCard index={0}>
+            <CardContent className="gap-4 px-4 py-4">
+              <StepTitle step="01" title="产品身份" desc="条码是现场流转的关键索引" />
+              <View className="flex-row gap-3">
+                <Input
+                  className="h-12 flex-1 bg-background"
+                  value={barcode}
+                  onChangeText={setBarcode}
+                  placeholder="扫描或手动输入"
+                />
+                <PressableScale haptic="medium" onPress={() => setScanning(true)}>
+                  <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary">
+                    <Ionicons
+                      name="scan"
+                      size={22}
+                      color={THEME.light.primaryForeground}
+                    />
+                  </View>
+                </PressableScale>
+              </View>
+            </CardContent>
+          </AnimatedCard>
 
-          {/* More fields */}
-          <TouchableOpacity
-            style={styles.moreToggle}
-            onPress={() => setShowMore(!showMore)}
-          >
-            <Text style={styles.moreToggleText}>
-              {showMore ? "收起" : "更多信息（可稍后补充）"}
-            </Text>
-            <Ionicons
-              name={showMore ? "chevron-up" : "chevron-down"}
-              size={16}
-              color={COLORS.textTertiary}
-            />
-          </TouchableOpacity>
+          <AnimatedCard index={1}>
+            <CardContent className="gap-4 px-4 py-4">
+              <StepTitle step="02" title="基础资料" desc="名称、类型、单位和分类" />
+              <View className="gap-2">
+                <Text className="text-xs font-medium text-muted-foreground">
+                  产品名称
+                </Text>
+                <Input
+                  className="h-12 bg-background"
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="请输入产品名称"
+                />
+              </View>
 
-          {showMore && (
-            <>
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>规格</Text>
-                <TextInput
-                  style={styles.input}
+              <View className="gap-2">
+                <Text className="text-xs font-medium text-muted-foreground">
+                  规格
+                </Text>
+                <Input
+                  className="h-12 bg-background"
                   value={specification}
                   onChangeText={setSpecification}
                   placeholder="可选"
                 />
               </View>
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>类别</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {categories.map((c) => (
-                    <TouchableOpacity
-                      key={c.id}
-                      style={[
-                        styles.chip,
-                        categoryId === c.id && styles.chipActive,
-                      ]}
-                      onPress={() => setCategoryId(c.id)}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          categoryId === c.id && styles.chipTextActive,
-                        ]}
-                      >
-                        {c.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>备注</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    { minHeight: 80, textAlignVertical: "top" },
-                  ]}
-                  value={note}
-                  onChangeText={setNote}
-                  placeholder="可选"
-                  multiline
-                />
-              </View>
-            </>
+
+              <ChoiceGroup
+                label="类型"
+                options={PRODUCT_TYPES}
+                value={type}
+                onChange={(value) => setType(value as ProductType)}
+              />
+
+              <ChoiceGroup
+                label="单位"
+                options={PRODUCT_UNITS}
+                value={unit}
+                onChange={(value) => setUnit(value as ProductUnit)}
+                horizontal
+              />
+
+              <ChoiceGroup
+                label="类别"
+                options={categories.map((c) => ({
+                  label: c.name,
+                  value: String(c.id),
+                }))}
+                value={categoryId ? String(categoryId) : ""}
+                onChange={(value) => setCategoryId(Number(value))}
+                horizontal
+              />
+            </CardContent>
+          </AnimatedCard>
+
+          <Button
+            variant="ghost"
+            className="h-10 justify-start gap-2 px-1"
+            onPress={() => setShowMore(!showMore)}
+          >
+            <Text className="text-sm text-muted-foreground">
+              {showMore ? "收起更多信息" : "更多信息（可稍后补充）"}
+            </Text>
+            <Ionicons
+              name={showMore ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={THEME.light.mutedForeground}
+            />
+          </Button>
+
+          {showMore && (
+            <AnimatedCard index={2}>
+              <CardContent className="gap-4 px-4 py-4">
+                <View className="gap-2">
+                  <Text className="text-xs font-medium text-muted-foreground">
+                    备注
+                  </Text>
+                  <Input
+                    className="min-h-24 bg-background py-3"
+                    value={note}
+                    onChangeText={setNote}
+                    placeholder="可选"
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </View>
+              </CardContent>
+            </AnimatedCard>
           )}
         </ScrollView>
 
-        {/* Bottom actions */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={[styles.bottomBtn, styles.saveBtn]}
+        <View className="flex-row gap-3 border-t border-border bg-card px-4 py-3">
+          <Button
+            variant="outline"
+            className="h-12 flex-1 bg-card"
             onPress={() => handleSubmit(false)}
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator color={COLORS.primary} size="small" />
+              <ActivityIndicator color={THEME.light.primary} size="small" />
             ) : (
-              <Text style={styles.saveBtnText}>保存</Text>
+              <Text className="font-semibold">保存</Text>
             )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bottomBtn, styles.enterBtn]}
+          </Button>
+          <Button
+            className="h-12 flex-1"
             onPress={() => handleSubmit(true)}
             disabled={submitting}
           >
-            <Text style={styles.enterBtnText}>保存并入库</Text>
-          </TouchableOpacity>
+            <Text className="font-bold">保存并入库</Text>
+          </Button>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 16, paddingBottom: 16 },
-  stepLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textTertiary,
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  barcodeRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
-  scanIconBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  field: { marginBottom: 16 },
-  fieldLabel: {
-    fontSize: 12,
-    color: COLORS.textTertiary,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: COLORS.text,
-    minHeight: 44,
-  },
-  chipRow: { flexDirection: "row", gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bgCard,
-    marginRight: 8,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  chipActive: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryLight,
-  },
-  chipText: { fontSize: 14, color: COLORS.textSecondary },
-  chipTextActive: { color: COLORS.primary, fontWeight: "600" },
-  moreToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 8,
-    marginBottom: 8,
-  },
-  moreToggleText: { fontSize: 13, color: COLORS.textTertiary },
-  bottomBar: {
-    flexDirection: "row",
-    padding: 16,
-    gap: 12,
-    backgroundColor: COLORS.bgCard,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  bottomBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 52,
-  },
-  saveBtn: {
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  saveBtnText: { color: COLORS.text, fontSize: 15, fontWeight: "600" },
-  enterBtn: { backgroundColor: COLORS.primary },
-  enterBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
-});
+function StepTitle({
+  step,
+  title,
+  desc,
+}: {
+  step: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className="rounded-lg bg-primary/10 px-2 py-1">
+        <Text className="text-xs font-bold text-primary">{step}</Text>
+      </View>
+      <View className="flex-1">
+        <Text className="text-base font-bold">{title}</Text>
+        <Text className="mt-1 text-xs text-muted-foreground">{desc}</Text>
+      </View>
+    </View>
+  );
+}
+
+interface ChoiceOption {
+  label: string;
+  value: string;
+}
+
+function ChoiceGroup({
+  label,
+  options,
+  value,
+  onChange,
+  horizontal,
+}: {
+  label: string;
+  options: readonly ChoiceOption[];
+  value: string;
+  onChange: (value: string) => void;
+  horizontal?: boolean;
+}) {
+  return (
+    <View className="gap-2">
+      <Text className="text-xs font-medium text-muted-foreground">{label}</Text>
+      <ScrollView horizontal={horizontal} showsHorizontalScrollIndicator={false}>
+        <View className={cn("flex-row flex-wrap gap-2", horizontal && "flex-nowrap")}>
+          {options.map((option) => {
+            const active = value === option.value;
+            return (
+              <PressableScale
+                key={option.value}
+                haptic="selection"
+                onPress={() => onChange(option.value)}
+              >
+                <View
+                  className={cn(
+                    "min-h-11 justify-center rounded-xl border border-border bg-card px-4 py-2",
+                    active && "border-primary bg-primary/10",
+                  )}
+                >
+                  <Text
+                    className={cn(
+                      "text-sm font-medium text-muted-foreground",
+                      active && "text-primary",
+                    )}
+                  >
+                    {option.label}
+                  </Text>
+                </View>
+              </PressableScale>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}

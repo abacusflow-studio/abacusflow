@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { productApi, type Product } from "@abacusflow/core";
 import { PRODUCT_UNITS, PRODUCT_TYPES } from "@abacusflow/utils";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 import { FormScreen } from "@components/layout/form-screen";
 
 export default function ProductEditScreen() {
@@ -27,15 +29,15 @@ export default function ProductEditScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1677ff" />
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.light.primary} />
       </View>
     );
   }
 
   if (!data) {
     return (
-      <View style={styles.center}>
+      <View className="flex-1 items-center justify-center">
         <Text>产品不存在</Text>
       </View>
     );
@@ -45,59 +47,25 @@ export default function ProductEditScreen() {
     <FormScreen
       title="编辑产品"
       fields={[
-        {
-          key: "name",
-          label: "产品名称",
-          type: "text",
-          placeholder: "请输入产品名称",
-          required: true,
-        },
-        {
-          key: "specification",
-          label: "规格",
-          type: "text",
-          placeholder: "请输入规格",
-        },
+        { key: "name", label: "产品名称", type: "text", placeholder: "请输入产品名称", required: true },
+        { key: "specification", label: "规格", type: "text", placeholder: "请输入规格" },
         {
           key: "type",
           label: "产品类型",
           type: "select",
           required: true,
-          options: PRODUCT_TYPES.map((t) => ({
-            label: t.label,
-            value: t.value,
-          })),
+          options: PRODUCT_TYPES.map((t) => ({ label: t.label, value: t.value })),
         },
-        {
-          key: "categoryId",
-          label: "类别ID",
-          type: "number",
-          placeholder: "请输入类别ID",
-          required: true,
-        },
-        {
-          key: "barcode",
-          label: "条码",
-          type: "text",
-          placeholder: "请输入条码",
-          required: true,
-        },
+        { key: "categoryId", label: "类别ID", type: "number", placeholder: "请输入类别ID", required: true },
+        { key: "barcode", label: "条码", type: "text", placeholder: "请输入条码", required: true },
         {
           key: "unit",
           label: "单位",
           type: "select",
           required: true,
-          options: PRODUCT_UNITS.map((u) => ({
-            label: u.label,
-            value: u.value,
-          })),
+          options: PRODUCT_UNITS.map((u) => ({ label: u.label, value: u.value })),
         },
-        {
-          key: "note",
-          label: "备注",
-          type: "textarea",
-          placeholder: "请输入备注",
-        },
+        { key: "note", label: "备注", type: "textarea", placeholder: "请输入备注" },
       ]}
       initialValues={{
         name: data.name,
@@ -126,7 +94,3 @@ export default function ProductEditScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-});

@@ -2,10 +2,15 @@ import {
   productApi,
   inventoryApi,
   transactionApi,
+  partnerApi,
+  depotApi,
   type BasicProduct,
   type BasicInventory,
   type BasicPurchaseOrder,
   type BasicSaleOrder,
+  type BasicCustomer,
+  type BasicSupplier,
+  type BasicDepot,
 } from "@abacusflow/core";
 
 const PAGE_SIZE = 50;
@@ -100,19 +105,11 @@ export async function searchInventories(
   );
 }
 
-/** 搜索订单（按单号/供应商/客户/产品名/库存单元名） */
-export async function searchOrders(query: string): Promise<{
-  purchaseOrders: BasicPurchaseOrder[];
-  saleOrders: BasicSaleOrder[];
-}> {
-  const [
-    purchaseByNo,
-    purchaseBySupplier,
-    purchaseByProduct,
-    saleByNo,
-    saleByCustomer,
-    saleByInventoryUnit,
-  ] = await Promise.all([
+/** 搜索采购单（按单号/供应商/产品名） */
+export async function searchPurchaseOrders(
+  query: string,
+): Promise<BasicPurchaseOrder[]> {
+  const [byNo, bySupplier, byProduct] = await Promise.all([
     transactionApi.listBasicPurchaseOrdersPage({
       pageIndex: 1,
       pageSize: PAGE_SIZE,
@@ -128,6 +125,15 @@ export async function searchOrders(query: string): Promise<{
       pageSize: PAGE_SIZE,
       productName: query,
     }),
+  ]);
+  return mergeById(byNo.content, bySupplier.content, byProduct.content);
+}
+
+/** 搜索销售单（按单号/客户/库存单元名） */
+export async function searchSaleOrders(
+  query: string,
+): Promise<BasicSaleOrder[]> {
+  const [byNo, byCustomer, byInventoryUnit] = await Promise.all([
     transactionApi.listBasicSaleOrdersPage({
       pageIndex: 1,
       pageSize: PAGE_SIZE,
@@ -144,18 +150,7 @@ export async function searchOrders(query: string): Promise<{
       inventoryUnitName: query,
     }),
   ]);
-  return {
-    purchaseOrders: mergeById(
-      purchaseByNo.content,
-      purchaseBySupplier.content,
-      purchaseByProduct.content,
-    ),
-    saleOrders: mergeById(
-      saleByNo.content,
-      saleByCustomer.content,
-      saleByInventoryUnit.content,
-    ),
-  };
+  return mergeById(byNo.content, byCustomer.content, byInventoryUnit.content);
 }
 
 /** 通过条码查库存（扫码入口用） */
@@ -173,4 +168,40 @@ export async function findInventoriesByBarcode(
     inventoryUnitCode: barcode,
   });
   return unitCodeRes.content;
+}
+
+/** 搜索客户（按名称） */
+export async function searchCustomers(
+  query: string,
+): Promise<BasicCustomer[]> {
+  const res = await partnerApi.listBasicCustomersPage({
+    pageIndex: 1,
+    pageSize: PAGE_SIZE,
+    name: query,
+  });
+  return res.content;
+}
+
+/** 搜索供应商（按名称） */
+export async function searchSuppliers(
+  query: string,
+): Promise<BasicSupplier[]> {
+  const res = await partnerApi.listBasicSuppliersPage({
+    pageIndex: 1,
+    pageSize: PAGE_SIZE,
+    name: query,
+  });
+  return res.content;
+}
+
+/** 搜索储存点（按名称） */
+export async function searchDepots(query: string): Promise<BasicDepot[]> {
+  const all = await depotApi.listBasicDepots();
+  const q = query.trim().toLowerCase();
+  if (!q) return all;
+  return all.filter(
+    (d) =>
+      d.name.toLowerCase().includes(q) ||
+      (d.location && d.location.toLowerCase().includes(q)),
+  );
 }

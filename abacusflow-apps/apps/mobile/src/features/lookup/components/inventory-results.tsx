@@ -1,6 +1,9 @@
-import { FlatList, View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { COLORS } from "@abacusflow/utils";
+import { FlatList, View } from "react-native";
 import type { BasicInventory } from "@abacusflow/core";
+import { Text } from "@components/ui/text";
+import { Button } from "@components/ui/button";
+import { Card, CardContent } from "@components/ui/card";
+import { EmptyState } from "@components/ui/empty-state";
 
 interface Props {
   data: BasicInventory[];
@@ -10,69 +13,35 @@ interface Props {
   onPress: (item: BasicInventory) => void;
 }
 
-/** 库存搜索结果列表 */
-export function InventoryResults({
-  data,
-  loading,
-  searched,
-  onRefresh,
-  onPress,
-}: Props) {
+export function InventoryResults({ data, loading, searched, onRefresh, onPress }: Props) {
   return (
     <FlatList
       data={data}
       keyExtractor={(item) => String(item.id)}
-      contentContainerStyle={styles.list}
+      contentContainerClassName="p-4 gap-3"
       onRefresh={onRefresh}
       refreshing={loading}
       ListEmptyComponent={
-        searched ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>未找到库存</Text>
-          </View>
-        ) : null
+        searched ? <EmptyState icon="file-tray-outline" message="未找到库存" /> : null
       }
       renderItem={({ item }) => (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => onPress(item)}
-        >
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{item.productName}</Text>
-            <Text style={styles.cardBarcode}>
-              {item.productType === "asset" ? "资产" : "物料"}
-            </Text>
-          </View>
-          <Text style={styles.cardDetail}>
-            库存: {item.quantity}
-            {item.depotNames?.length
-              ? ` · ${item.depotNames.join(", ")}`
-              : ""}
-          </Text>
-        </TouchableOpacity>
+        <Button variant="ghost" onPress={() => onPress(item)} className="p-0">
+          <Card className="w-full">
+            <CardContent className="p-4">
+              <View className="flex-row justify-between items-center mb-1">
+                <Text className="text-base font-semibold flex-1">{item.productName}</Text>
+                <Text variant="muted" className="text-xs">
+                  {item.productType === "asset" ? "资产" : "物料"}
+                </Text>
+              </View>
+              <Text variant="muted" className="text-sm">
+                库存: {item.quantity}
+                {item.depotNames?.length ? ` · ${item.depotNames.join(", ")}` : ""}
+              </Text>
+            </CardContent>
+          </Card>
+        </Button>
       )}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  list: { padding: 16, gap: 12 },
-  card: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  cardTitle: { fontSize: 15, fontWeight: "600", color: COLORS.text },
-  cardBarcode: { fontSize: 12, color: COLORS.textTertiary },
-  cardDetail: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  empty: { paddingVertical: 60, alignItems: "center" },
-  emptyText: { fontSize: 14, color: COLORS.textTertiary },
-});

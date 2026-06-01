@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { partnerApi, type BasicCustomer } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/utils";
+import { Text } from "@components/ui/text";
+import { Badge } from "@components/ui/badge";
+import { THEME } from "@lib/theme";
 import { ListScreen } from "@components/layout/list-screen";
 
 export default function CustomerListScreen() {
@@ -43,26 +45,25 @@ export default function CustomerListScreen() {
   };
 
   const renderItem = (item: BasicCustomer) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => router.push(`/partner/customer/${item.id}` as any)}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        {item.totalOrderCount != null && (
-          <Text style={styles.orderCount}>{item.totalOrderCount} 单</Text>
+    <View className="py-1.5">
+      <View className="flex-row justify-between items-center mb-1">
+        <Text className="text-base font-semibold flex-1">{item.name}</Text>
+        {item.totalOrderCount != null && item.totalOrderCount > 0 && (
+          <Badge
+            label={`${item.totalOrderCount} 单`}
+            color={THEME.light.primary}
+            bgColor={THEME.light.primary + "20"}
+          />
         )}
       </View>
-      {item.phone && <Text style={styles.cardDetail}>电话: {item.phone}</Text>}
-      {item.address && (
-        <Text style={styles.cardDetail}>地址: {item.address}</Text>
-      )}
-      {item.totalOrderAmount != null && (
-        <Text style={styles.cardAmount}>
+      {item.phone && <Text variant="muted" className="text-sm mt-0.5">电话: {item.phone}</Text>}
+      {item.address && <Text variant="muted" className="text-sm mt-0.5">地址: {item.address}</Text>}
+      {item.totalOrderAmount != null && item.totalOrderAmount > 0 && (
+        <Text className="text-sm font-semibold mt-2" style={{ color: THEME.light.primary }}>
           累计: ¥{item.totalOrderAmount.toLocaleString("zh-CN")}
         </Text>
       )}
-    </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -86,29 +87,3 @@ export default function CustomerListScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  card: { paddingVertical: 4 },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  cardTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
-  orderCount: {
-    fontSize: 12,
-    color: COLORS.primary,
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  cardDetail: { fontSize: 13, color: "#666", marginTop: 2 },
-  cardAmount: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.primary,
-    marginTop: 8,
-  },
-});

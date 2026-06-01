@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { partnerApi, type Supplier } from "@abacusflow/core";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 import { FormScreen } from "@components/layout/form-screen";
 
 export default function SupplierEditScreen() {
@@ -26,15 +28,15 @@ export default function SupplierEditScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1677ff" />
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.light.primary} />
       </View>
     );
   }
 
   if (!data) {
     return (
-      <View style={styles.center}>
+      <View className="flex-1 items-center justify-center">
         <Text>供应商不存在</Text>
       </View>
     );
@@ -44,37 +46,11 @@ export default function SupplierEditScreen() {
     <FormScreen
       title="编辑供应商"
       fields={[
-        {
-          key: "name",
-          label: "供应商名称",
-          type: "text",
-          placeholder: "请输入供应商名称",
-          required: true,
-        },
-        {
-          key: "contactPerson",
-          label: "联系人",
-          type: "text",
-          placeholder: "请输入联系人",
-        },
-        {
-          key: "phone",
-          label: "电话",
-          type: "text",
-          placeholder: "请输入电话号码",
-        },
-        {
-          key: "email",
-          label: "邮箱",
-          type: "text",
-          placeholder: "请输入邮箱",
-        },
-        {
-          key: "address",
-          label: "地址",
-          type: "text",
-          placeholder: "请输入地址",
-        },
+        { key: "name", label: "供应商名称", type: "text", placeholder: "请输入供应商名称", required: true },
+        { key: "contactPerson", label: "联系人", type: "text", placeholder: "请输入联系人" },
+        { key: "phone", label: "电话", type: "text", placeholder: "请输入电话号码" },
+        { key: "email", label: "邮箱", type: "text", placeholder: "请输入邮箱" },
+        { key: "address", label: "地址", type: "text", placeholder: "请输入地址" },
       ]}
       initialValues={{
         name: data.name,
@@ -99,7 +75,3 @@ export default function SupplierEditScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-});

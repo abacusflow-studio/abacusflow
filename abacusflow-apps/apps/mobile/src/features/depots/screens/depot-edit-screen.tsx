@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 import { FormScreen } from "@components/layout/form-screen";
 
 export default function DepotEditScreen() {
@@ -26,50 +28,32 @@ export default function DepotEditScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1677ff" />
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.light.primary} />
       </View>
     );
   }
 
   if (!data) {
     return (
-      <View style={styles.center}>
-        <Text>储存点不存在</Text>
+      <View className="flex-1 items-center justify-center">
+        <Text>存储点不存在</Text>
       </View>
     );
   }
 
   return (
     <FormScreen
-      title="编辑储存点"
+      title="编辑存储点"
       fields={[
-        {
-          key: "name",
-          label: "储存点名称",
-          type: "text",
-          placeholder: "请输入名称",
-          required: true,
-        },
-        {
-          key: "location",
-          label: "地址",
-          type: "text",
-          placeholder: "请输入地址",
-        },
-        {
-          key: "capacity",
-          label: "容量",
-          type: "number",
-          placeholder: "请输入容量",
-        },
-        { key: "enabled", label: "启用状态", type: "switch" },
+        { key: "name", label: "存储点名称", type: "text", placeholder: "请输入名称", required: true },
+        { key: "location", label: "地址", type: "text", placeholder: "请输入地址" },
+        { key: "capacity", label: "容量", type: "number", placeholder: "请输入容量" },
       ]}
       initialValues={{
         name: data.name,
         location: data.location ?? undefined,
         capacity: data.capacity ?? undefined,
-        enabled: data.enabled,
       }}
       onSubmit={async (values) => {
         await depotApi.updateDepot({
@@ -85,7 +69,3 @@ export default function DepotEditScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-});

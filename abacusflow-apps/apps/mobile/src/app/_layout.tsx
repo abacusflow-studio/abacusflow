@@ -38,6 +38,10 @@ export default function RootLayout() {
           <Stack.Screen name="entry/sale" options={{ title: "出库" }} />
           <Stack.Screen name="entry/product" options={{ title: "新品建档" }} />
           <Stack.Screen
+            name="record/[type]/[id]"
+            options={{ title: "交易详情" }}
+          />
+          <Stack.Screen
             name="scan/index"
             options={{ headerShown: false, presentation: "fullScreenModal" }}
           />
@@ -47,11 +51,11 @@ export default function RootLayout() {
             name="product/edit/[id]"
             options={{ title: "编辑产品" }}
           />
-          <Stack.Screen name="depot/[id]" options={{ title: "储存点详情" }} />
-          <Stack.Screen name="depot/add" options={{ title: "新增储存点" }} />
+          <Stack.Screen name="depot/[id]" options={{ title: "存储点详情" }} />
+          <Stack.Screen name="depot/add" options={{ title: "新增存储点" }} />
           <Stack.Screen
             name="depot/edit/[id]"
-            options={{ title: "编辑储存点" }}
+            options={{ title: "编辑存储点" }}
           />
           <Stack.Screen name="inventory/[id]" options={{ title: "库存详情" }} />
           <Stack.Screen

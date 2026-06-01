@@ -27,7 +27,7 @@ const MENU_SECTIONS: MenuSectionType[] = [
         route: "/partner/supplier",
       },
       {
-        label: "储存点",
+        label: "存储点资料",
         icon: "location-outline",
         route: "/(tabs)/depots",
       },

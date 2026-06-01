@@ -3,10 +3,21 @@ import type {
   BasicInventory,
   BasicPurchaseOrder,
   BasicSaleOrder,
+  BasicCustomer,
+  BasicSupplier,
+  BasicDepot,
 } from "@abacusflow/core";
 
 /** 查询模式 */
-export type LookupMode = "menu" | "product" | "inventory" | "order";
+export type LookupMode =
+  | "menu"
+  | "product"
+  | "inventory"
+  | "purchase-order"
+  | "sale-order"
+  | "customer"
+  | "supplier"
+  | "depot";
 
 /** 订单状态配置 */
 export interface OrderStatusConfig {

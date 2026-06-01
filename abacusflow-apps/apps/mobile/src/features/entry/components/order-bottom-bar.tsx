@@ -1,5 +1,8 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
-import { COLORS } from "@abacusflow/utils";
+import { ActivityIndicator, View } from "react-native";
+
+import { PressableScale } from "@components/ui/pressable-scale";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 
 interface Props {
   itemCount: number;
@@ -18,51 +21,32 @@ export function OrderBottomBar({
   onSubmit,
 }: Props) {
   return (
-    <View style={styles.bottomBar}>
-      <View style={styles.bottomInfo}>
-        <Text style={styles.bottomCount}>{itemCount} 项</Text>
-        <Text style={styles.bottomTotal}>
+    <View className="flex-row items-center gap-4 border-t border-border bg-card px-4 py-3">
+      <View className="flex-1">
+        <Text className="text-xs text-muted-foreground">{itemCount} 项明细</Text>
+        <Text className="mt-1 text-2xl font-bold">
           ¥{totalAmount.toLocaleString("zh-CN")}
         </Text>
       </View>
-      <TouchableOpacity
-        style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
-        onPress={onSubmit}
+      <PressableScale
+        className="min-w-32"
+        haptic="success"
         disabled={submitting}
+        onPress={onSubmit}
       >
-        {submitting ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text style={styles.submitText}>{submitLabel}</Text>
-        )}
-      </TouchableOpacity>
+        <View className="min-h-[52px] items-center justify-center rounded-2xl bg-primary px-6 shadow-sm shadow-black/10">
+          {submitting ? (
+            <ActivityIndicator
+              color={THEME.light.primaryForeground}
+              size="small"
+            />
+          ) : (
+            <Text className="text-base font-bold text-primary-foreground">
+              {submitLabel}
+            </Text>
+          )}
+        </View>
+      </PressableScale>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  bottomBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    gap: 16,
-    backgroundColor: COLORS.bgCard,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  bottomInfo: { flex: 1 },
-  bottomCount: { fontSize: 13, color: COLORS.textSecondary },
-  bottomTotal: { fontSize: 20, fontWeight: "700", color: COLORS.text },
-  submitBtn: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-    minHeight: 52,
-    justifyContent: "center",
-    alignItems: "center",
-    minWidth: 120,
-  },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-});

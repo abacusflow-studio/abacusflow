@@ -1,6 +1,7 @@
-import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
+import { Button } from "@components/ui/button";
+import { THEME } from "@lib/theme";
 import type { LookupMode } from "../types";
 
 interface Props {
@@ -12,78 +13,43 @@ interface Props {
   onBack: () => void;
 }
 
-/** 查询搜索栏 */
-export function LookupSearchBar({
-  mode,
-  value,
-  onChange,
-  onSubmit,
-  onScan,
-  onBack,
-}: Props) {
+export function LookupSearchBar({ mode, value, onChange, onSubmit, onScan, onBack }: Props) {
   const placeholder =
     mode === "product"
       ? "搜索产品名称 / 条码"
       : mode === "inventory"
         ? "搜索产品名 / 库存单元码 / 条码"
-        : "搜索供应商 / 客户 / 单号";
+        : mode === "purchase-order"
+          ? "搜索供应商 / 单号 / 产品名"
+          : mode === "sale-order"
+            ? "搜索客户 / 单号 / 库存单元名"
+            : mode === "customer"
+              ? "搜索客户名称"
+              : mode === "supplier"
+                ? "搜索供应商名称"
+                : "搜索储存点名称";
 
   return (
-    <View style={styles.searchBar}>
-      <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-        <Ionicons name="arrow-back" size={22} color={COLORS.text} />
-      </TouchableOpacity>
+    <View className="flex-row p-3 gap-2 bg-card border-b border-border">
+      <Button variant="ghost" size="icon" onPress={onBack}>
+        <Ionicons name="arrow-back" size={22} color={THEME.light.foreground} />
+      </Button>
       <TextInput
-        style={styles.searchInput}
+        className="flex-1 bg-background rounded-lg px-3 py-2 text-sm"
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
+        placeholderTextColor={THEME.light.mutedForeground}
         onSubmitEditing={onSubmit}
         returnKeyType="search"
         autoFocus
       />
-      <TouchableOpacity onPress={onScan} style={styles.scanBtn}>
-        <Ionicons name="scan" size={20} color={COLORS.primary} />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={onSubmit} style={styles.searchBtn}>
-        <Ionicons name="search" size={20} color="#fff" />
-      </TouchableOpacity>
+      <Button variant="outline" size="icon" onPress={onScan}>
+        <Ionicons name="scan" size={20} color={THEME.light.primary} />
+      </Button>
+      <Button size="icon" onPress={onSubmit}>
+        <Ionicons name="search" size={20} color={THEME.light.primaryForeground} />
+      </Button>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  searchBar: {
-    flexDirection: "row",
-    padding: 12,
-    gap: 8,
-    backgroundColor: COLORS.bgCard,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  backBtn: { justifyContent: "center", paddingHorizontal: 4 },
-  searchInput: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
-  scanBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: COLORS.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  searchBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

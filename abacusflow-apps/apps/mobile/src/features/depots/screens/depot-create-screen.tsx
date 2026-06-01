@@ -4,11 +4,11 @@ import { FormScreen } from "@components/layout/form-screen";
 export default function DepotCreateScreen() {
   return (
     <FormScreen
-      title="新增储存点"
+      title="新增存储点"
       fields={[
         {
           key: "name",
-          label: "储存点名称",
+          label: "存储点名称",
           type: "text",
           placeholder: "请输入名称",
           required: true,
@@ -35,7 +35,7 @@ export default function DepotCreateScreen() {
           },
         });
       }}
-      submitLabel="创建储存点"
+      submitLabel="创建存储点"
     />
   );
 }

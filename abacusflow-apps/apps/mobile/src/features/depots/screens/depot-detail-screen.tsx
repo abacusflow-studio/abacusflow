@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
-import { COLORS } from "@abacusflow/utils";
 import { DetailScreen } from "@components/layout/detail-screen";
+
+const formatDateTime = (value?: number) => {
+  if (!value) return undefined;
+  return new Date(value).toLocaleString("zh-CN");
+};
 
 export default function DepotDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,22 +30,19 @@ export default function DepotDetailScreen() {
   }, [loadData]);
 
   return (
-    <DetailScreen
+      <DetailScreen
       loading={loading}
       data={data}
-      emptyMessage="储存点不存在"
+      emptyMessage="存储点不存在"
       title={(d) => d.name}
-      badge={(d) => ({
-        text: d.enabled ? "启用" : "禁用",
-        color: d.enabled ? COLORS.success : COLORS.danger,
-        bgColor: d.enabled ? "#f6ffed" : "#fff1f0",
-      })}
       fields={(d) => [
         { label: "地址", value: d.location },
         {
           label: "容量",
           value: d.capacity != null ? String(d.capacity) : undefined,
         },
+        { label: "状态", value: d.enabled ? "启用" : "禁用" },
+        { label: "创建时间", value: formatDateTime(d.createdAt) },
       ]}
       onEdit={() => router.push(`/depot/edit/${id}` as any)}
       onDelete={async () => {

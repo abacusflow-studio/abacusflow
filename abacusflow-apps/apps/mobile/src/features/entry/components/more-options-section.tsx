@@ -1,6 +1,12 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
+
+import { AnimatedCard } from "@components/ui/animated-card";
+import { Button } from "@components/ui/button";
+import { CardContent } from "@components/ui/card";
+import { Input } from "@components/ui/input";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 
 interface Props {
   showMore: boolean;
@@ -24,64 +30,51 @@ export function MoreOptionsSection({
   extraFields,
 }: Props) {
   return (
-    <>
-      <TouchableOpacity style={styles.moreToggle} onPress={onToggle}>
-        <Text style={styles.moreToggleText}>
-          {showMore ? "收起" : "更多信息"}
+    <View className="gap-3">
+      <Button
+        variant="ghost"
+        className="h-10 justify-start gap-2 px-1"
+        onPress={onToggle}
+      >
+        <Text className="text-sm text-muted-foreground">
+          {showMore ? "收起更多信息" : "更多信息"}
         </Text>
         <Ionicons
           name={showMore ? "chevron-up" : "chevron-down"}
           size={16}
-          color={COLORS.textTertiary}
+          color={THEME.light.mutedForeground}
         />
-      </TouchableOpacity>
+      </Button>
 
       {showMore && (
-        <>
-          {extraFields}
-          <Text style={styles.fieldLabel}>订单日期</Text>
-          <TextInput
-            style={styles.input}
-            value={orderDate}
-            onChangeText={onOrderDateChange}
-            placeholder="YYYY-MM-DD"
-          />
-          <Text style={[styles.fieldLabel, { marginTop: 12 }]}>备注</Text>
-          <TextInput
-            style={styles.input}
-            value={note}
-            onChangeText={onNoteChange}
-            placeholder="可选备注"
-          />
-        </>
+        <AnimatedCard>
+          <CardContent className="gap-4 px-4 py-4">
+            {extraFields}
+            <View className="gap-2">
+              <Text className="text-xs font-medium text-muted-foreground">
+                订单日期
+              </Text>
+              <Input
+                className="h-11 bg-background"
+                value={orderDate}
+                onChangeText={onOrderDateChange}
+                placeholder="YYYY-MM-DD"
+              />
+            </View>
+            <View className="gap-2">
+              <Text className="text-xs font-medium text-muted-foreground">
+                备注
+              </Text>
+              <Input
+                className="h-11 bg-background"
+                value={note}
+                onChangeText={onNoteChange}
+                placeholder="可选备注"
+              />
+            </View>
+          </CardContent>
+        </AnimatedCard>
       )}
-    </>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  moreToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 8,
-    marginBottom: 8,
-  },
-  moreToggleText: { fontSize: 13, color: COLORS.textTertiary },
-  fieldLabel: {
-    fontSize: 12,
-    color: COLORS.textTertiary,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: COLORS.bg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: COLORS.text,
-    minHeight: 44,
-  },
-});

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { partnerApi, type Customer } from "@abacusflow/core";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 import { FormScreen } from "@components/layout/form-screen";
 
 export default function CustomerEditScreen() {
@@ -26,15 +28,15 @@ export default function CustomerEditScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1677ff" />
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.light.primary} />
       </View>
     );
   }
 
   if (!data) {
     return (
-      <View style={styles.center}>
+      <View className="flex-1 items-center justify-center">
         <Text>客户不存在</Text>
       </View>
     );
@@ -44,25 +46,9 @@ export default function CustomerEditScreen() {
     <FormScreen
       title="编辑客户"
       fields={[
-        {
-          key: "name",
-          label: "客户名称",
-          type: "text",
-          placeholder: "请输入客户名称",
-          required: true,
-        },
-        {
-          key: "phone",
-          label: "电话",
-          type: "text",
-          placeholder: "请输入电话号码",
-        },
-        {
-          key: "address",
-          label: "地址",
-          type: "text",
-          placeholder: "请输入地址",
-        },
+        { key: "name", label: "客户名称", type: "text", placeholder: "请输入客户名称", required: true },
+        { key: "phone", label: "电话", type: "text", placeholder: "请输入电话号码" },
+        { key: "address", label: "地址", type: "text", placeholder: "请输入地址" },
       ]}
       initialValues={{
         name: data.name,
@@ -83,7 +69,3 @@ export default function CustomerEditScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-});

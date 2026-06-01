@@ -18,16 +18,18 @@ export function useOrderRecords() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [pageIndex, setPageIndex] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [searchValue, setSearchValue] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   const fetchFn = filter === "purchase" ? fetchPurchaseRecords : fetchSaleRecords;
 
   const fetchRecords = useCallback(
-    async (page: number, append: boolean) => {
+    async (page: number, append: boolean, keyword: string) => {
       if (append) setLoadingMore(true);
       else setLoading(true);
 
       try {
-        const result = await fetchFn(page);
+        const result = await fetchFn(page, keyword);
         if (append) {
           setRecords((prev) => [...prev, ...result.records]);
         } else {
@@ -59,24 +61,40 @@ export function useOrderRecords() {
     [filter],
   );
 
+  const handleSearch = useCallback(() => {
+    const nextKeyword = searchValue.trim();
+    setSearchKeyword(nextKeyword);
+    setPageIndex(1);
+    setHasMore(true);
+    setLoading(true);
+  }, [searchValue]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchValue("");
+    setSearchKeyword("");
+    setPageIndex(1);
+    setHasMore(true);
+    setLoading(true);
+  }, []);
+
   // filter 变化后拉取数据
   useFocusEffect(
     useCallback(() => {
-      fetchRecords(1, false);
-    }, [fetchRecords]),
+      fetchRecords(1, false, searchKeyword);
+    }, [fetchRecords, searchKeyword]),
   );
 
   /** 加载更多 */
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      fetchRecords(pageIndex + 1, true);
+      fetchRecords(pageIndex + 1, true, searchKeyword);
     }
-  }, [loadingMore, hasMore, pageIndex, fetchRecords]);
+  }, [loadingMore, hasMore, pageIndex, fetchRecords, searchKeyword]);
 
   /** 下拉刷新 */
   const handleRefresh = useCallback(() => {
-    fetchRecords(1, false);
-  }, [fetchRecords]);
+    fetchRecords(1, false, searchKeyword);
+  }, [fetchRecords, searchKeyword]);
 
   return {
     records,
@@ -84,7 +102,12 @@ export function useOrderRecords() {
     loadingMore,
     hasMore,
     filter,
+    searchValue,
+    searchKeyword,
+    setSearchValue,
     setFilter: handleFilterChange,
+    handleSearch,
+    handleClearSearch,
     handleLoadMore,
     handleRefresh,
   };

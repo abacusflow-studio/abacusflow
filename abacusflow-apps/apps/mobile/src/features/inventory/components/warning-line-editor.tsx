@@ -1,11 +1,8 @@
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
-import { COLORS } from "@abacusflow/utils";
+import { View, TextInput } from "react-native";
+import { Text } from "@components/ui/text";
+import { Button } from "@components/ui/button";
+import { Card, CardContent } from "@components/ui/card";
+import { THEME } from "@lib/theme";
 
 interface Props {
   editing: boolean;
@@ -19,7 +16,6 @@ interface Props {
   onSave: () => void;
 }
 
-/** 预警线显示/编辑区域 */
 export function WarningLineEditor({
   editing,
   safetyStock,
@@ -33,105 +29,58 @@ export function WarningLineEditor({
 }: Props) {
   return (
     <>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>预警线设置</Text>
-        <TouchableOpacity onPress={onToggle}>
-          <Text style={styles.sectionAction}>
+      <View className="flex-row justify-between items-center mb-2 mt-2">
+        <Text className="text-base font-semibold">预警线设置</Text>
+        <Button variant="ghost" onPress={onToggle}>
+          <Text style={{ color: THEME.light.primary }}>
             {editing ? "取消" : "编辑"}
           </Text>
-        </TouchableOpacity>
+        </Button>
       </View>
-      <View style={styles.card}>
-        {editing ? (
-          <View style={styles.formGroup}>
-            <View style={styles.formRow}>
-              <Text style={styles.formLabel}>安全库存</Text>
-              <TextInput
-                style={styles.formInput}
-                value={safetyStock}
-                onChangeText={onSafetyStockChange}
-                keyboardType="numeric"
-                placeholder="最低库存量"
-              />
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          {editing ? (
+            <View className="gap-3">
+              <View className="flex-row items-center gap-3">
+                <Text className="text-sm w-20">安全库存</Text>
+                <TextInput
+                  className="flex-1 border border-border rounded-md px-3 py-2 text-sm"
+                  value={safetyStock}
+                  onChangeText={onSafetyStockChange}
+                  keyboardType="numeric"
+                  placeholder="最低库存量"
+                  placeholderTextColor={THEME.light.mutedForeground}
+                />
+              </View>
+              <View className="flex-row items-center gap-3">
+                <Text className="text-sm w-20">最大库存</Text>
+                <TextInput
+                  className="flex-1 border border-border rounded-md px-3 py-2 text-sm"
+                  value={maxStock}
+                  onChangeText={onMaxStockChange}
+                  keyboardType="numeric"
+                  placeholder="最大库存量"
+                  placeholderTextColor={THEME.light.mutedForeground}
+                />
+              </View>
+              <Button onPress={onSave} className="mt-1">
+                <Text className="text-sm font-semibold text-primary-foreground">保存</Text>
+              </Button>
             </View>
-            <View style={styles.formRow}>
-              <Text style={styles.formLabel}>最大库存</Text>
-              <TextInput
-                style={styles.formInput}
-                value={maxStock}
-                onChangeText={onMaxStockChange}
-                keyboardType="numeric"
-                placeholder="最大库存量"
-              />
-            </View>
-            <TouchableOpacity style={styles.saveBtn} onPress={onSave}>
-              <Text style={styles.saveBtnText}>保存</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>安全库存</Text>
-              <Text style={styles.infoValue}>
-                {displaySafetyStock ?? "-"}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>最大库存</Text>
-              <Text style={styles.infoValue}>
-                {displayMaxStock ?? "-"}
-              </Text>
-            </View>
-          </>
-        )}
-      </View>
+          ) : (
+            <>
+              <View className="flex-row justify-between py-3 border-b border-border">
+                <Text variant="muted" className="text-sm">安全库存</Text>
+                <Text className="text-sm font-medium">{displaySafetyStock ?? "-"}</Text>
+              </View>
+              <View className="flex-row justify-between py-3">
+                <Text variant="muted" className="text-sm">最大库存</Text>
+                <Text className="text-sm font-medium">{displayMaxStock ?? "-"}</Text>
+              </View>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-    marginTop: 8,
-  },
-  sectionTitle: { fontSize: 15, fontWeight: "600", color: COLORS.text },
-  sectionAction: { fontSize: 14, color: COLORS.primary },
-  card: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  formGroup: { gap: 12 },
-  formRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  formLabel: { fontSize: 14, color: COLORS.text, width: 80 },
-  formInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
-  saveBtn: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: "center",
-    marginTop: 4,
-  },
-  saveBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  infoLabel: { fontSize: 14, color: COLORS.textTertiary },
-  infoValue: { fontSize: 14, color: COLORS.text, fontWeight: "500" },
-});

@@ -59,7 +59,10 @@ export default function TabLayout() {
       />
       {/* Hidden support screens, opened from primary tabs */}
       <Tabs.Screen name="drafts" options={{ href: null }} />
-      <Tabs.Screen name="depots" options={{ href: null }} />
+      <Tabs.Screen
+        name="depots"
+        options={{ href: null, title: "存储点资料" }}
+      />
     </Tabs>
   );
 }
