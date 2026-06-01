@@ -16,20 +16,20 @@ export default function EntryHomeScreen() {
   const router = useRouter();
   const [draftCount, setDraftCount] = useState(0);
 
-  useFocusEffect(
-    useCallback(() => {
-      checkDrafts();
-    }, []),
-  );
-
-  const checkDrafts = async () => {
+  const checkDrafts = useCallback(async () => {
     try {
       const drafts = await listAllDrafts();
       setDraftCount(drafts.length);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void checkDrafts();
+    }, [checkDrafts]),
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -123,6 +123,39 @@ export default function EntryHomeScreen() {
             />
           </View>
         </View>
+{/*
+        <View className="gap-3">
+          <SectionTitle title="资料维护" subtitle="现场需要时快速补全基础资料" />
+          <View className="flex-row gap-3">
+            <SecondaryAction
+              index={4}
+              title="客户资料"
+              description="维护客户信息"
+              icon="person-outline"
+              iconColor="#6366f1"
+              onPress={() => router.push("/partner/customer" as any)}
+            />
+            <SecondaryAction
+              index={5}
+              title="供应商资料"
+              description="维护供应商"
+              icon="storefront-outline"
+              iconColor="#8b5cf6"
+              onPress={() => router.push("/partner/supplier" as any)}
+            />
+          </View>
+          <View className="flex-row gap-3">
+            <SecondaryAction
+              index={6}
+              title="存储点资料"
+              description="维护仓储位置"
+              icon="location-outline"
+              iconColor="#ec4899"
+              onPress={() => router.push("/(tabs)/depots" as any)}
+            />
+            <View className="flex-1" />
+          </View>
+        </View> */}
       </ScrollView>
     </SafeAreaView>
   );

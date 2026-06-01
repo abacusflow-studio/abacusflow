@@ -14,26 +14,6 @@ import type { MenuSection as MenuSectionType } from "../types";
 
 const MENU_SECTIONS: MenuSectionType[] = [
   {
-    title: "资料",
-    items: [
-      {
-        label: "客户资料",
-        icon: "person-outline",
-        route: "/partner/customer",
-      },
-      {
-        label: "供应商资料",
-        icon: "storefront-outline",
-        route: "/partner/supplier",
-      },
-      {
-        label: "存储点资料",
-        icon: "location-outline",
-        route: "/(tabs)/depots",
-      },
-    ],
-  },
-  {
     title: "帮助",
     items: [
       {

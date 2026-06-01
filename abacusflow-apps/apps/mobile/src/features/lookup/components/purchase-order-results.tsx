@@ -40,7 +40,7 @@ export function PurchaseOrderResults({ data, loading, searched, onRefresh }: Pro
           <Card>
             <CardContent className="p-4">
               <View className="flex-row items-center gap-2 mb-2">
-                <Badge label="入库" color={THEME.light.primary} bgColor={THEME.light.primary + "20"} />
+                <Badge label="入库" color={THEME.light.primary} bgColor={"#dcfce7"} />
                 <Text className="text-sm font-semibold flex-1">{item.orderNo}</Text>
                 <Badge label={statusCfg.label} color={statusCfg.color} bgColor={statusCfg.bg} />
               </View>

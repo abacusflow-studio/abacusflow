@@ -52,7 +52,7 @@ export default function SupplierListScreen() {
           <Badge
             label={`${item.totalOrderCount} 单`}
             color={THEME.light.primary}
-            bgColor={THEME.light.primary + "20"}
+            bgColor={"#dcfce7"}
           />
         )}
       </View>

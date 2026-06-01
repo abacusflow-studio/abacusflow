@@ -82,7 +82,7 @@ export function OrderResults({ purchaseOrders, saleOrders, loading, searched, on
                 <Badge
                   label={isPurchase ? "入库" : "出库"}
                   color={isPurchase ? THEME.light.primary : "#16a34a"}
-                  bgColor={isPurchase ? THEME.light.primary + "20" : "#dcfce7"}
+                  bgColor={isPurchase ? "#dcfce7" : "#dcfce7"}
                 />
                 <Text className="text-sm font-semibold flex-1">{item.orderNo}</Text>
                 <Badge label={statusCfg.label} color={statusCfg.color} bgColor={statusCfg.bg} />

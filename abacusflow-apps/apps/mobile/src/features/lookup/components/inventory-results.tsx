@@ -1,8 +1,8 @@
 import { FlatList, View } from "react-native";
 import type { BasicInventory } from "@abacusflow/core";
 import { Text } from "@components/ui/text";
-import { Button } from "@components/ui/button";
 import { Card, CardContent } from "@components/ui/card";
+import { PressableScale } from "@components/ui/pressable-scale";
 import { EmptyState } from "@components/ui/empty-state";
 
 interface Props {
@@ -25,8 +25,8 @@ export function InventoryResults({ data, loading, searched, onRefresh, onPress }
         searched ? <EmptyState icon="file-tray-outline" message="未找到库存" /> : null
       }
       renderItem={({ item }) => (
-        <Button variant="ghost" onPress={() => onPress(item)} className="p-0">
-          <Card className="w-full">
+        <PressableScale haptic="selection" onPress={() => onPress(item)} scaleTo={0.99}>
+          <Card className="w-full py-0">
             <CardContent className="p-4">
               <View className="flex-row justify-between items-center mb-1">
                 <Text className="text-base font-semibold flex-1">{item.productName}</Text>
@@ -40,7 +40,7 @@ export function InventoryResults({ data, loading, searched, onRefresh, onPress }
               </Text>
             </CardContent>
           </Card>
-        </Button>
+        </PressableScale>
       )}
     />
   );

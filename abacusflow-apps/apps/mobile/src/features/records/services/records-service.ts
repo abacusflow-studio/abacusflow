@@ -1,5 +1,11 @@
 import { partnerApi, transactionApi } from "@abacusflow/core";
-import type { OrderAction, OrderDetail, OrderRecord, OrderType } from "../types";
+import type {
+  OrderAction,
+  OrderDetail,
+  OrderRecord,
+  OrderSearchField,
+  OrderType,
+} from "../types";
 
 const PAGE_SIZE = 20;
 
@@ -64,40 +70,29 @@ function mapSaleRecord(order: SaleRecordSource): OrderRecord {
   };
 }
 
-function mergeRecords(records: OrderRecord[]) {
-  const map = new Map<string, OrderRecord>();
-  records.forEach((record) => map.set(record.id, record));
-  return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
-}
-
 /** 加载采购订单记录（分页） */
 export async function fetchPurchaseRecords(
   page: number,
   keyword = "",
+  searchField: OrderSearchField = "partner",
 ): Promise<{ records: OrderRecord[]; hasMore: boolean }> {
   const query = keyword.trim();
   if (query) {
-    const [byOrderNo, bySupplierName] = await Promise.all([
-      transactionApi.listBasicPurchaseOrdersPage({
-        pageIndex: page,
-        pageSize: PAGE_SIZE,
-        orderNo: query,
-      }),
-      transactionApi.listBasicPurchaseOrdersPage({
-        pageIndex: page,
-        pageSize: PAGE_SIZE,
-        supplierName: query,
-      }),
-    ]);
+    const searchParams =
+      searchField === "orderNo"
+        ? { orderNo: query }
+        : searchField === "item"
+          ? { productName: query }
+          : { supplierName: query };
+    const res = await transactionApi.listBasicPurchaseOrdersPage({
+      pageIndex: page,
+      pageSize: PAGE_SIZE,
+      ...searchParams,
+    });
 
     return {
-      records: mergeRecords([
-        ...(byOrderNo.content ?? []).map(mapPurchaseRecord),
-        ...(bySupplierName.content ?? []).map(mapPurchaseRecord),
-      ]),
-      hasMore:
-        (page + 1) * PAGE_SIZE < (byOrderNo.totalElements ?? 0) ||
-        (page + 1) * PAGE_SIZE < (bySupplierName.totalElements ?? 0),
+      records: (res.content ?? []).map(mapPurchaseRecord),
+      hasMore: (page + 1) * PAGE_SIZE < (res.totalElements ?? 0),
     };
   }
 
@@ -115,30 +110,25 @@ export async function fetchPurchaseRecords(
 export async function fetchSaleRecords(
   page: number,
   keyword = "",
+  searchField: OrderSearchField = "partner",
 ): Promise<{ records: OrderRecord[]; hasMore: boolean }> {
   const query = keyword.trim();
   if (query) {
-    const [byOrderNo, byCustomerName] = await Promise.all([
-      transactionApi.listBasicSaleOrdersPage({
-        pageIndex: page,
-        pageSize: PAGE_SIZE,
-        orderNo: query,
-      }),
-      transactionApi.listBasicSaleOrdersPage({
-        pageIndex: page,
-        pageSize: PAGE_SIZE,
-        customerName: query,
-      }),
-    ]);
+    const searchParams =
+      searchField === "orderNo"
+        ? { orderNo: query }
+        : searchField === "item"
+          ? { inventoryUnitName: query }
+          : { customerName: query };
+    const res = await transactionApi.listBasicSaleOrdersPage({
+      pageIndex: page,
+      pageSize: PAGE_SIZE,
+      ...searchParams,
+    });
 
     return {
-      records: mergeRecords([
-        ...(byOrderNo.content ?? []).map(mapSaleRecord),
-        ...(byCustomerName.content ?? []).map(mapSaleRecord),
-      ]),
-      hasMore:
-        (page + 1) * PAGE_SIZE < (byOrderNo.totalElements ?? 0) ||
-        (page + 1) * PAGE_SIZE < (byCustomerName.totalElements ?? 0),
+      records: (res.content ?? []).map(mapSaleRecord),
+      hasMore: (page + 1) * PAGE_SIZE < (res.totalElements ?? 0),
     };
   }
 

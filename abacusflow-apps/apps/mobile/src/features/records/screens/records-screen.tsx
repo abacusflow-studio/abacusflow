@@ -1,11 +1,9 @@
 import { ActivityIndicator, FlatList, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { MotiView } from "moti";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AnimatedCard } from "@components/ui/animated-card";
-import { CardContent } from "@components/ui/card";
+import { Card, CardContent } from "@components/ui/card";
 import { EmptyState } from "@components/ui/empty-state";
 import { Input } from "@components/ui/input";
 import { PressableScale } from "@components/ui/pressable-scale";
@@ -14,10 +12,20 @@ import { THEME } from "@lib/theme";
 import { cn } from "@lib/utils";
 import { useOrderRecords, type OrderFilter } from "../hooks/use-merged-orders";
 import { OrderRecordCard } from "../components/order-record-card";
+import type { OrderSearchField } from "../types";
 
 const FILTER_TABS: { key: OrderFilter; label: string; icon: string }[] = [
   { key: "sale", label: "出库", icon: "arrow-up-outline" },
   { key: "purchase", label: "入库", icon: "download-outline" },
+];
+
+const SEARCH_FIELDS: {
+  key: OrderSearchField;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { key: "partner", label: "往来方", icon: "people-outline" },
+  { key: "orderNo", label: "单号", icon: "barcode-outline" },
 ];
 
 export default function RecordsScreen() {
@@ -29,8 +37,10 @@ export default function RecordsScreen() {
     filter,
     searchValue,
     searchKeyword,
+    searchField,
     setSearchValue,
     setFilter,
+    setSearchField,
     handleSearch,
     handleClearSearch,
     handleLoadMore,
@@ -42,8 +52,22 @@ export default function RecordsScreen() {
     0,
   );
   const totalAmount = records.reduce((sum, item) => sum + item.totalAmount, 0);
-  const completedCount = records.filter((item) => item.status === "completed").length;
+  const completedCount = records.filter(
+    (item) => item.status === "completed",
+  ).length;
   const filterLabel = filter === "purchase" ? "入库流水" : "出库流水";
+  const placeholder =
+    searchField === "orderNo"
+      ? filter === "purchase"
+        ? "输入入库单号"
+        : "输入出库单号"
+      : searchField === "item"
+        ? filter === "purchase"
+          ? "输入产品名称"
+          : "输入库存单元名称"
+        : filter === "purchase"
+          ? "输入供应商名称"
+          : "输入客户名称";
 
   const openDetail = (item: (typeof records)[number]) => {
     const id = item.id.replace(`${item.type}-`, "");
@@ -139,21 +163,51 @@ export default function RecordsScreen() {
           })}
         </View>
 
-        <View className="flex-row items-center gap-2 rounded-2xl border border-border bg-background px-3">
-          <Ionicons
-            name="search-outline"
-            size={18}
-            color={THEME.light.mutedForeground}
-          />
+        <View className="flex-row items-center gap-2 rounded-2xl border border-border bg-background p-1 pl-2">
+          <View className="flex-row rounded-xl bg-muted p-0.5">
+            {SEARCH_FIELDS.map((field) => {
+              const isActive = searchField === field.key;
+              return (
+                <PressableScale
+                  key={field.key}
+                  haptic="selection"
+                  onPress={() => setSearchField(field.key)}
+                >
+                  <View
+                    className={cn(
+                      "h-8 flex-row items-center justify-center gap-1 rounded-lg px-2",
+                      isActive && "bg-card",
+                    )}
+                  >
+                    <Ionicons
+                      name={field.icon}
+                      size={13}
+                      color={
+                        isActive
+                          ? THEME.light.primary
+                          : THEME.light.mutedForeground
+                      }
+                    />
+                    <Text
+                      className={cn(
+                        "text-[11px]",
+                        isActive
+                          ? "font-semibold text-primary"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {field.label}
+                    </Text>
+                  </View>
+                </PressableScale>
+              );
+            })}
+          </View>
           <Input
             className="h-11 flex-1 border-0 bg-transparent px-0"
             value={searchValue}
             onChangeText={setSearchValue}
-            placeholder={
-              filter === "purchase"
-                ? "搜索供应商 / 入库流水号"
-                : "搜索客户 / 出库流水号"
-            }
+            placeholder={placeholder}
             returnKeyType="search"
             onSubmitEditing={handleSearch}
           />
@@ -186,45 +240,49 @@ export default function RecordsScreen() {
       ) : (
         <FlatList
           data={records}
-          renderItem={({ item, index }) => (
-            <MotiView
-              from={{ opacity: 0, translateY: 10 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: "timing", duration: 220, delay: index * 35 }}
-            >
-              <OrderRecordCard item={item} onPress={() => openDetail(item)} />
-            </MotiView>
+          renderItem={({ item }) => (
+            <OrderRecordCard item={item} onPress={() => openDetail(item)} />
           )}
           keyExtractor={(item) => item.id}
-          contentContainerClassName="gap-3 p-4"
+          contentContainerClassName="p-4"
+          ItemSeparatorComponent={() => <View className="h-3" />}
           onRefresh={handleRefresh}
           refreshing={loading}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.3}
           ListHeaderComponent={
-            <AnimatedCard delay={30}>
-              <CardContent className="gap-4 px-4 py-4">
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-sm text-muted-foreground">
-                      当前筛选
+            <View className="mb-3">
+              <Card className="overflow-hidden py-0">
+                <CardContent className="gap-4 px-4 py-4">
+                  <View className="flex-row items-center justify-between">
+                    <View>
+                      <Text className="text-sm text-muted-foreground">
+                        当前筛选
+                      </Text>
+                      <Text className="mt-1 text-xl font-bold">
+                        {filterLabel}
+                      </Text>
+                    </View>
+                    <Text className="text-sm font-semibold text-primary">
+                      {searchKeyword
+                        ? `匹配 ${records.length} 单`
+                        : `${records.length} 单`}
                     </Text>
-                    <Text className="mt-1 text-xl font-bold">{filterLabel}</Text>
                   </View>
-                  <Text className="text-sm font-semibold text-primary">
-                    {searchKeyword ? `匹配 ${records.length} 单` : `${records.length} 单`}
-                  </Text>
-                </View>
-                <View className="flex-row gap-3">
-                  <RecordMetric label="已完成" value={String(completedCount)} />
-                  <RecordMetric label="总件数" value={String(totalQuantity)} />
-                  <RecordMetric
-                    label="金额"
-                    value={`¥${Math.round(totalAmount).toLocaleString("zh-CN")}`}
-                  />
-                </View>
-              </CardContent>
-            </AnimatedCard>
+                  <View className="flex-row gap-3">
+                    <RecordMetric
+                      label="已完成"
+                      value={String(completedCount)}
+                    />
+                    <RecordMetric label="总件数" value={String(totalQuantity)} />
+                    <RecordMetric
+                      label="金额"
+                      value={`¥${Math.round(totalAmount).toLocaleString("zh-CN")}`}
+                    />
+                  </View>
+                </CardContent>
+              </Card>
+            </View>
           }
           ListFooterComponent={renderFooter}
           ListEmptyComponent={renderEmpty}

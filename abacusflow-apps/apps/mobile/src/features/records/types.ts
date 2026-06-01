@@ -1,6 +1,7 @@
 /** 订单类型 */
 export type OrderType = "purchase" | "sale";
 export type OrderAction = "complete" | "cancel" | "reverse";
+export type OrderSearchField = "orderNo" | "partner" | "item";
 
 /** 统一的订单记录（合并采购+销售） */
 export interface OrderRecord {

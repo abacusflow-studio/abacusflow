@@ -19,7 +19,7 @@ const TYPE_LABELS: Record<DraftType, string> = {
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
   in_progress: { label: "未完成", bg: "#fef9c3", color: "#ca8a04" },
-  pending: { label: "待提交", bg: THEME.light.primary + "20", color: THEME.light.primary },
+  pending: { label: "待提交", bg: "#dcfce7", color: THEME.light.primary },
   failed: { label: "提交失败", bg: "#fee2e2", color: THEME.light.destructive },
 };
 
@@ -96,7 +96,7 @@ export default function DraftsScreen() {
                     <Badge
                       label={TYPE_LABELS[item.type]}
                       color={THEME.light.primary}
-                      bgColor={THEME.light.primary + "20"}
+                      bgColor={"#dcfce7"}
                     />
                     <Badge label={statusCfg.label} color={statusCfg.color} bgColor={statusCfg.bg} />
                     <Text variant="muted" className="text-xs flex-1 text-right">

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
 import { showToast } from "@hooks/use-toast";
-import type { OrderRecord, OrderType } from "../types";
+import type { OrderRecord, OrderSearchField, OrderType } from "../types";
 import { fetchPurchaseRecords, fetchSaleRecords } from "../services/records-service";
 
 export type OrderFilter = OrderType;
@@ -20,6 +20,9 @@ export function useOrderRecords() {
   const [hasMore, setHasMore] = useState(true);
   const [searchValue, setSearchValue] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchField, setSearchField] = useState<OrderSearchField>("partner");
+  const [searchQueryField, setSearchQueryField] =
+    useState<OrderSearchField>("partner");
 
   const fetchFn = filter === "purchase" ? fetchPurchaseRecords : fetchSaleRecords;
 
@@ -29,7 +32,7 @@ export function useOrderRecords() {
       else setLoading(true);
 
       try {
-        const result = await fetchFn(page, keyword);
+        const result = await fetchFn(page, keyword, searchQueryField);
         if (append) {
           setRecords((prev) => [...prev, ...result.records]);
         } else {
@@ -45,7 +48,7 @@ export function useOrderRecords() {
         setLoadingMore(false);
       }
     },
-    [fetchFn],
+    [fetchFn, searchQueryField],
   );
 
   // 切换类型时重置并重新拉取
@@ -64,10 +67,11 @@ export function useOrderRecords() {
   const handleSearch = useCallback(() => {
     const nextKeyword = searchValue.trim();
     setSearchKeyword(nextKeyword);
+    setSearchQueryField(searchField);
     setPageIndex(1);
     setHasMore(true);
     setLoading(true);
-  }, [searchValue]);
+  }, [searchField, searchValue]);
 
   const handleClearSearch = useCallback(() => {
     setSearchValue("");
@@ -104,8 +108,10 @@ export function useOrderRecords() {
     filter,
     searchValue,
     searchKeyword,
+    searchField,
     setSearchValue,
     setFilter: handleFilterChange,
+    setSearchField,
     handleSearch,
     handleClearSearch,
     handleLoadMore,

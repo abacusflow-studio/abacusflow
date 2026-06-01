@@ -1,8 +1,8 @@
 import { FlatList, View } from "react-native";
 import type { BasicSupplier } from "@abacusflow/core";
 import { Text } from "@components/ui/text";
-import { Button } from "@components/ui/button";
 import { Card, CardContent } from "@components/ui/card";
+import { PressableScale } from "@components/ui/pressable-scale";
 import { Badge } from "@components/ui/badge";
 import { EmptyState } from "@components/ui/empty-state";
 import { THEME } from "@lib/theme";
@@ -27,8 +27,8 @@ export function SupplierResults({ data, loading, searched, onRefresh, onPress }:
         searched ? <EmptyState icon="storefront-outline" message="未找到供应商" /> : null
       }
       renderItem={({ item }) => (
-        <Button variant="ghost" onPress={() => onPress(item)} className="p-0">
-          <Card className="w-full">
+        <PressableScale haptic="selection" onPress={() => onPress(item)} scaleTo={0.99}>
+          <Card className="w-full py-0">
             <CardContent className="p-4">
               <View className="flex-row justify-between items-center mb-1">
                 <Text className="text-base font-semibold flex-1">{item.name}</Text>
@@ -36,7 +36,7 @@ export function SupplierResults({ data, loading, searched, onRefresh, onPress }:
                   <Badge
                     label={`${item.totalOrderCount} 单`}
                     color={THEME.light.primary}
-                    bgColor={THEME.light.primary + "20"}
+                    bgColor={"#dcfce7"}
                   />
                 )}
               </View>
@@ -51,7 +51,7 @@ export function SupplierResults({ data, loading, searched, onRefresh, onPress }:
               )}
             </CardContent>
           </Card>
-        </Button>
+        </PressableScale>
       )}
     />
   );

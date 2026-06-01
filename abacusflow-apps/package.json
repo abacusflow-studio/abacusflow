@@ -18,6 +18,13 @@
     "dev:mobile:ios:tunnel": "npm run ios -w abacusflow-mobile -- --tunnel",
     "dev:mobile:web:tunnel": "npm run web -w abacusflow-mobile -- --tunnel",
     "dev:desktop": "npm run start -w abacusflow-desktop",
+    "eas:dev:android": "npm run eas:dev:android -w abacusflow-mobile",
+    "eas:dev:ios": "npm run eas:dev:ios -w abacusflow-mobile",
+    "eas:preview:android": "npm run eas:preview:android -w abacusflow-mobile",
+    "eas:preview:ios": "npm run eas:preview:ios -w abacusflow-mobile",
+    "eas:production:android": "npm run eas:production:android -w abacusflow-mobile",
+    "eas:production:ios": "npm run eas:production:ios -w abacusflow-mobile",
+    "eas:submit": "npm run eas:submit -w abacusflow-mobile",
     "build": "npm run build:web",
     "build:web": "npm run build -w abacusflow-web",
     "build:web:turbopack": "npm run build-turbopack -w abacusflow-web",
@@ -45,8 +52,10 @@
   },
   "version": "1.0.0",
   "dependencies": {
-    "expo": "~54.0.34",
-    "react": "19.1.0",
+    "electron": "42.3.0",
+    "expo": "^56.0.8",
+    "next": "^15.0.0",
+    "react": "19.2.3",
     "react-native": "0.81.5"
   }
 }
