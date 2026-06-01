@@ -1,15 +1,13 @@
 import React from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
-} from "react-native";
+import { ActivityIndicator, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "@abacusflow/utils";
+
+import { Button } from "@components/ui/button";
+import { EmptyState } from "@components/ui/empty-state";
+import { ErrorState } from "@components/ui/error-state";
+import { Input } from "@components/ui/input";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 
 interface ListScreenProps<T> {
   data: T[];
@@ -48,24 +46,19 @@ export function ListScreen<T>({
 }: ListScreenProps<T>) {
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.errorText}>{error}</Text>
-          {onRetry && (
-            <TouchableOpacity style={styles.retryBtn} onPress={onRetry}>
-              <Text style={styles.retryBtnText}>重试</Text>
-            </TouchableOpacity>
-          )}
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 justify-center">
+          <ErrorState message={error} onRetry={onRetry} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.searchBar}>
-        <TextInput
-          style={styles.searchInput}
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-row gap-3 border-b border-border bg-card p-4">
+        <Input
+          className="h-11 flex-1 rounded-lg bg-background"
           value={searchValue}
           onChangeText={onSearchChange}
           placeholder={searchPlaceholder}
@@ -73,34 +66,34 @@ export function ListScreen<T>({
           returnKeyType="search"
         />
         {onAdd && (
-          <TouchableOpacity style={styles.addBtn} onPress={onAdd}>
-            <Text style={styles.addBtnText}>{addLabel ?? "新增"}</Text>
-          </TouchableOpacity>
+          <Button className="h-11 px-4" onPress={onAdd}>
+            <Text>{addLabel ?? "新增"}</Text>
+          </Button>
         )}
       </View>
 
       {loading && data.length === 0 ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={THEME.light.primary} />
         </View>
       ) : (
         <FlatList
           data={data}
           renderItem={({ item }) => renderItem(item)}
           keyExtractor={keyExtractor}
-          contentContainerStyle={styles.list}
+          contentContainerClassName="gap-3 p-4"
           onRefresh={onRefresh}
           refreshing={loading}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>暂无数据</Text>
-            </View>
-          }
+          ListEmptyComponent={<EmptyState message="暂无数据" />}
           ListFooterComponent={
             hasMore ? (
-              <TouchableOpacity style={styles.loadMore} onPress={onLoadMore}>
-                <Text style={styles.loadMoreText}>加载更多</Text>
-              </TouchableOpacity>
+              <Button
+                variant="ghost"
+                className="my-2 h-12"
+                onPress={onLoadMore}
+              >
+                <Text>加载更多</Text>
+              </Button>
             ) : null
           }
         />
@@ -108,48 +101,3 @@ export function ListScreen<T>({
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: {
-    fontSize: 15,
-    color: COLORS.textTertiary,
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  retryBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
-  },
-  retryBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  searchBar: {
-    flexDirection: "row",
-    padding: 16,
-    gap: 12,
-    backgroundColor: "#fff",
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
-  addBtn: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    justifyContent: "center",
-  },
-  addBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  list: { padding: 16, gap: 12 },
-  empty: { paddingVertical: 60, alignItems: "center" },
-  emptyText: { fontSize: 14, color: COLORS.textTertiary },
-  loadMore: { paddingVertical: 16, alignItems: "center" },
-  loadMoreText: { fontSize: 14, color: COLORS.primary },
-});

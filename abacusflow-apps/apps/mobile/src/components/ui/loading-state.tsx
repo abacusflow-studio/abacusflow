@@ -1,5 +1,7 @@
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
-import { COLORS } from "@abacusflow/utils";
+import { ActivityIndicator, View } from "react-native";
+
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 
 interface Props {
   message?: string;
@@ -8,19 +10,9 @@ interface Props {
 /** 加载中展示 */
 export function LoadingState({ message }: Props) {
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color={COLORS.primary} />
-      {message && <Text style={styles.message}>{message}</Text>}
+    <View className="flex-1 items-center justify-center gap-3">
+      <ActivityIndicator size="large" color={THEME.light.primary} />
+      {message && <Text className="text-sm text-muted-foreground">{message}</Text>}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-  },
-  message: { fontSize: 14, color: COLORS.textSecondary, marginTop: 8 },
-});

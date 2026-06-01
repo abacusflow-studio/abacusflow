@@ -1,11 +1,10 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
+
+import { Button } from "@components/ui/button";
+import { Card, CardContent } from "@components/ui/card";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 import type { MenuSection as MenuSectionType } from "../types";
 
 interface Props {
@@ -16,60 +15,37 @@ interface Props {
 /** 菜单分区 */
 export function MenuSection({ section, onItemPress }: Props) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{section.title}</Text>
-      <View style={styles.sectionCard}>
-        {section.items.map((item, idx) => (
-          <TouchableOpacity
-            key={item.label}
-            style={[
-              styles.menuItem,
-              idx < section.items.length - 1 && styles.menuItemBorder,
-            ]}
-            onPress={() => onItemPress(item.route)}
-          >
-            <Ionicons
-              name={item.icon}
-              size={20}
-              color={COLORS.textSecondary}
-            />
-            <Text style={styles.menuLabel}>{item.label}</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={18}
-              color={COLORS.textDisabled}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
+    <View className="gap-2">
+      <Text className="px-1 text-xs font-semibold uppercase text-muted-foreground">
+        {section.title}
+      </Text>
+      <Card className="overflow-hidden py-0">
+        <CardContent className="px-0 py-0">
+          {section.items.map((item, idx) => (
+            <Button
+              key={item.label}
+              variant="ghost"
+              className="h-auto justify-start rounded-none px-4 py-4"
+              onPress={() => onItemPress(item.route)}
+            >
+              <Ionicons
+                name={item.icon}
+                size={20}
+                color={THEME.light.mutedForeground}
+              />
+              <Text className="flex-1 text-base">{item.label}</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={THEME.light.mutedForeground}
+              />
+              {idx < section.items.length - 1 && (
+                <View className="absolute bottom-0 left-12 right-0 h-hairline bg-border" />
+              )}
+            </Button>
+          ))}
+        </CardContent>
+      </Card>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { marginBottom: 24 },
-  sectionTitle: {
-    fontSize: 13,
-    color: COLORS.textTertiary,
-    marginBottom: 8,
-    paddingLeft: 4,
-  },
-  sectionCard: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    gap: 12,
-  },
-  menuItemBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  menuLabel: { flex: 1, fontSize: 15, color: COLORS.text },
-});

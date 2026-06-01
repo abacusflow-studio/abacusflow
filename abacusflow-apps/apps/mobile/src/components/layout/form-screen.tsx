@@ -1,23 +1,25 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Switch,
+  Image as RNImage,
   KeyboardAvoidingView,
   Platform,
-  Image as RNImage,
+  ScrollView,
+  Switch,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { COLORS } from "@abacusflow/utils";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { Button } from "@components/ui/button";
+import { Card, CardContent } from "@components/ui/card";
+import { Input } from "@components/ui/input";
+import { Text } from "@components/ui/text";
+import { cn } from "@lib/utils";
+import { THEME } from "@lib/theme";
 
 interface FieldOption {
   label: string;
@@ -64,7 +66,6 @@ export function FormScreen({
     }
     return initial;
   });
-  // Track raw text for number fields to allow decimal input
   const [textValues, setTextValues] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
     for (const field of fields) {
@@ -127,7 +128,6 @@ export function FormScreen({
   );
 
   const handleSubmit = async () => {
-    // Validate required fields
     for (const field of fields) {
       if (field.type === "image") {
         if (field.required && (imageUris[field.key] || []).length === 0) {
@@ -160,52 +160,64 @@ export function FormScreen({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
+        className="flex-1"
       >
-        <ScrollView contentContainerStyle={styles.content}>
-          {fields.map((field) => (
-            <View key={field.key} style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                {field.label}
-                {field.required && <Text style={styles.required}> *</Text>}
-              </Text>
+        <ScrollView contentContainerClassName="gap-5 p-4 pb-8">
+          {fields.map((field) => {
+            const isTextArea = field.type === "textarea";
 
-              {field.type === "switch" ? (
-                <View style={styles.switchRow}>
-                  <Text style={styles.switchLabel}>
-                    {values[field.key] ? "启用" : "禁用"}
-                  </Text>
-                  <Switch
-                    value={!!values[field.key]}
-                    onValueChange={(v) => setValue(field.key, v)}
-                    trackColor={{ true: COLORS.primary }}
-                  />
-                </View>
-              ) : field.type === "image" ? (
-                <View>
-                  <View style={styles.imageGrid}>
+            return (
+              <View key={field.key} className="gap-2">
+                <Text className="text-sm font-semibold">
+                  {field.label}
+                  {field.required && (
+                    <Text className="text-destructive"> *</Text>
+                  )}
+                </Text>
+
+                {field.type === "switch" ? (
+                  <Card className="py-0">
+                    <CardContent className="flex-row items-center justify-between px-4 py-3">
+                      <Text className="text-sm">
+                        {values[field.key] ? "启用" : "禁用"}
+                      </Text>
+                      <Switch
+                        value={!!values[field.key]}
+                        onValueChange={(v) => setValue(field.key, v)}
+                        trackColor={{ true: THEME.light.primary }}
+                      />
+                    </CardContent>
+                  </Card>
+                ) : field.type === "image" ? (
+                  <View className="flex-row flex-wrap gap-2">
                     {(imageUris[field.key] || []).map((uri, idx) => (
-                      <View key={idx} style={styles.imageItem}>
-                        <RNImage source={{ uri }} style={styles.imageThumb} />
-                        <TouchableOpacity
-                          style={styles.imageRemove}
+                      <View key={uri} className="relative h-20 w-20">
+                        <RNImage
+                          source={{ uri }}
+                          className="h-20 w-20 rounded-lg bg-card"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute -right-3 -top-3 h-8 w-8 rounded-full bg-card"
                           onPress={() => removeImage(field.key, idx)}
                         >
                           <Ionicons
                             name="close-circle"
                             size={20}
-                            color={COLORS.danger}
+                            color={THEME.light.destructive}
                           />
-                        </TouchableOpacity>
+                        </Button>
                       </View>
                     ))}
                     {(imageUris[field.key] || []).length <
                       (field.maxImages || 9) && (
-                      <TouchableOpacity
-                        style={styles.imageAdd}
+                      <Button
+                        variant="outline"
+                        className="h-20 w-20 flex-col gap-1 border-dashed"
                         onPress={() =>
                           pickImage(field.key, field.maxImages || 9)
                         }
@@ -213,172 +225,86 @@ export function FormScreen({
                         <Ionicons
                           name="camera-outline"
                           size={28}
-                          color={COLORS.textTertiary}
+                          color={THEME.light.mutedForeground}
                         />
-                        <Text style={styles.imageAddText}>添加</Text>
-                      </TouchableOpacity>
+                        <Text className="text-xs text-muted-foreground">
+                          添加
+                        </Text>
+                      </Button>
                     )}
                   </View>
-                </View>
-              ) : field.type === "select" ? (
-                <View style={styles.selectGroup}>
-                  {field.options?.map((opt) => (
-                    <TouchableOpacity
-                      key={opt.value}
-                      style={[
-                        styles.selectOption,
-                        values[field.key] === opt.value &&
-                          styles.selectOptionActive,
-                      ]}
-                      onPress={() => setValue(field.key, opt.value)}
-                    >
-                      <Text
-                        style={[
-                          styles.selectOptionText,
-                          values[field.key] === opt.value &&
-                            styles.selectOptionTextActive,
-                        ]}
-                      >
-                        {opt.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ) : (
-                <TextInput
-                  style={[
-                    styles.input,
-                    field.type === "textarea" && styles.textarea,
-                  ]}
-                  value={
-                    field.type === "number"
-                      ? (textValues[field.key] ?? "")
-                      : String(values[field.key] ?? "")
-                  }
-                  onChangeText={(text) => {
-                    if (field.type === "number") {
-                      setTextValues((prev) => ({ ...prev, [field.key]: text }));
-                      const num = Number(text);
-                      setValue(
-                        field.key,
-                        text === ""
-                          ? undefined
-                          : isNaN(num)
-                            ? values[field.key]
-                            : num,
+                ) : field.type === "select" ? (
+                  <View className="flex-row flex-wrap gap-2">
+                    {field.options?.map((opt) => {
+                      const active = values[field.key] === opt.value;
+                      return (
+                        <Button
+                          key={opt.value}
+                          variant={active ? "default" : "outline"}
+                          size="sm"
+                          onPress={() => setValue(field.key, opt.value)}
+                        >
+                          <Text>{opt.label}</Text>
+                        </Button>
                       );
-                    } else {
-                      setValue(field.key, text);
+                    })}
+                  </View>
+                ) : (
+                  <Input
+                    className={cn(
+                      "bg-card",
+                      isTextArea && "min-h-28 py-3 align-top",
+                    )}
+                    value={
+                      field.type === "number"
+                        ? (textValues[field.key] ?? "")
+                        : String(values[field.key] ?? "")
                     }
-                  }}
-                  placeholder={field.placeholder}
-                  keyboardType={field.type === "number" ? "numeric" : "default"}
-                  multiline={field.type === "textarea"}
-                  numberOfLines={field.type === "textarea" ? 4 : 1}
-                />
-              )}
-            </View>
-          ))}
+                    onChangeText={(text) => {
+                      if (field.type === "number") {
+                        setTextValues((prev) => ({
+                          ...prev,
+                          [field.key]: text,
+                        }));
+                        const num = Number(text);
+                        setValue(
+                          field.key,
+                          text === ""
+                            ? undefined
+                            : isNaN(num)
+                              ? values[field.key]
+                              : num,
+                        );
+                      } else {
+                        setValue(field.key, text);
+                      }
+                    }}
+                    placeholder={field.placeholder}
+                    keyboardType={
+                      field.type === "number" ? "numeric" : "default"
+                    }
+                    multiline={isTextArea}
+                    numberOfLines={isTextArea ? 4 : 1}
+                    textAlignVertical={isTextArea ? "top" : "center"}
+                  />
+                )}
+              </View>
+            );
+          })}
 
-          <TouchableOpacity
-            style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
+          <Button
+            className="mt-1 h-12"
             onPress={handleSubmit}
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={THEME.light.primaryForeground} />
             ) : (
-              <Text style={styles.submitBtnText}>{submitLabel}</Text>
+              <Text className="text-base">{submitLabel}</Text>
             )}
-          </TouchableOpacity>
+          </Button>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 16 },
-  fieldGroup: { marginBottom: 20 },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  required: { color: COLORS.danger },
-  input: {
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.borderInput,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: COLORS.text,
-  },
-  textarea: { minHeight: 100, textAlignVertical: "top" },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.borderInput,
-  },
-  switchLabel: { fontSize: 14, color: COLORS.text },
-  selectGroup: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  selectOption: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: COLORS.borderInput,
-    backgroundColor: COLORS.bgCard,
-  },
-  selectOptionActive: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryLight,
-  },
-  selectOptionText: { fontSize: 13, color: COLORS.textSecondary },
-  selectOptionTextActive: { color: COLORS.primary, fontWeight: "600" },
-  submitBtn: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  imageGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  imageItem: { position: "relative", width: 80, height: 80 },
-  imageThumb: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: COLORS.bgCard,
-  },
-  imageRemove: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-  },
-  imageAdd: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.borderInput,
-    borderStyle: "dashed",
-    backgroundColor: COLORS.bgCard,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  imageAddText: { fontSize: 12, color: COLORS.textTertiary, marginTop: 2 },
-});

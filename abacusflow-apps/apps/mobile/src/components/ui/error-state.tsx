@@ -1,6 +1,9 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
+
+import { Button } from "@components/ui/button";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 
 interface Props {
   message: string;
@@ -10,31 +13,18 @@ interface Props {
 /** 错误展示 */
 export function ErrorState({ message, onRetry }: Props) {
   return (
-    <View style={styles.container}>
-      <Ionicons name="alert-circle-outline" size={48} color={COLORS.danger} />
-      <Text style={styles.message}>{message}</Text>
+    <View className="items-center gap-3 px-6 py-16">
+      <Ionicons
+        name="alert-circle-outline"
+        size={48}
+        color={THEME.light.destructive}
+      />
+      <Text className="text-center text-sm text-muted-foreground">{message}</Text>
       {onRetry && (
-        <TouchableOpacity style={styles.retryBtn} onPress={onRetry}>
-          <Text style={styles.retryText}>重试</Text>
-        </TouchableOpacity>
+        <Button className="mt-2 min-w-28" onPress={onRetry}>
+          <Text>重试</Text>
+        </Button>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 60,
-    alignItems: "center",
-    gap: 12,
-  },
-  message: { fontSize: 14, color: COLORS.textTertiary },
-  retryBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
-    marginTop: 8,
-  },
-  retryText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-});

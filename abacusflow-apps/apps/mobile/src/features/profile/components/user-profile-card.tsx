@@ -1,5 +1,7 @@
-import { View, Text, StyleSheet } from "react-native";
-import { COLORS } from "@abacusflow/utils";
+import { View } from "react-native";
+
+import { Card, CardContent } from "@components/ui/card";
+import { Text } from "@components/ui/text";
 
 interface Props {
   displayName: string;
@@ -16,50 +18,24 @@ export function UserProfileCard({
   isAuthenticated,
 }: Props) {
   return (
-    <View style={styles.card}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{avatarLetter}</Text>
-      </View>
-      <View style={styles.info}>
-        <Text style={styles.name}>{displayName}</Text>
-        {displayEmail ? (
-          <Text style={styles.hint}>{displayEmail}</Text>
-        ) : (
-          <Text style={styles.hint}>
-            {isAuthenticated ? "已连接" : "未登录"}
-          </Text>
-        )}
-      </View>
-    </View>
+    <Card className="py-0">
+      <CardContent className="flex-row items-center gap-4 px-5 py-5">
+        <View className="h-[52px] w-[52px] items-center justify-center rounded-full bg-primary/10">
+          <Text className="text-2xl font-bold text-primary">{avatarLetter}</Text>
+        </View>
+        <View className="flex-1">
+          <Text className="text-lg font-bold">{displayName}</Text>
+          {displayEmail ? (
+            <Text className="mt-1 text-sm text-muted-foreground">
+              {displayEmail}
+            </Text>
+          ) : (
+            <Text className="mt-1 text-sm text-muted-foreground">
+              {isAuthenticated ? "已连接" : "未登录"}
+            </Text>
+          )}
+        </View>
+      </CardContent>
+    </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: COLORS.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: COLORS.primary,
-  },
-  info: { flex: 1 },
-  name: { fontSize: 17, fontWeight: "700", color: COLORS.text },
-  hint: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-});

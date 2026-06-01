@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
+
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 
 interface Props {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -15,20 +17,12 @@ export function EmptyState({
   hint,
 }: Props) {
   return (
-    <View style={styles.container}>
-      <Ionicons name={icon} size={48} color={COLORS.textDisabled} />
-      <Text style={styles.message}>{message}</Text>
-      {hint && <Text style={styles.hint}>{hint}</Text>}
+    <View className="items-center gap-2 px-6 py-16">
+      <Ionicons name={icon} size={48} color={THEME.light.mutedForeground} />
+      <Text className="mt-2 text-center text-sm font-medium text-muted-foreground">
+        {message}
+      </Text>
+      {hint && <Text className="text-center text-xs text-muted-foreground">{hint}</Text>}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 60,
-    alignItems: "center",
-    gap: 8,
-  },
-  message: { fontSize: 15, color: COLORS.textTertiary, marginTop: 8 },
-  hint: { fontSize: 13, color: COLORS.textDisabled },
-});

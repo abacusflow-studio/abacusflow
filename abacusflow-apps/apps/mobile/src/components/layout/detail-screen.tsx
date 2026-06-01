@@ -1,15 +1,12 @@
 import React from "react";
-import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  ActivityIndicator,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS, SHADOW } from "@abacusflow/utils";
+
+import { Button } from "@components/ui/button";
+import { Card, CardContent } from "@components/ui/card";
+import { ErrorState } from "@components/ui/error-state";
+import { Text } from "@components/ui/text";
+import { THEME } from "@lib/theme";
 
 export interface InfoField {
   label: string;
@@ -48,7 +45,7 @@ export function DetailScreen<T>({
   onRetry,
 }: DetailScreenProps<T>) {
   const handleDelete = () => {
-    Alert.alert("确认删除", `确定删除？`, [
+    Alert.alert("确认删除", "确定删除？", [
       { text: "取消", style: "cancel" },
       {
         text: "删除",
@@ -60,88 +57,91 @@ export function DetailScreen<T>({
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color={THEME.light.primary} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
-        {onRetry && (
-          <TouchableOpacity style={styles.retryBtn} onPress={onRetry}>
-            <Text style={styles.retryBtnText}>重试</Text>
-          </TouchableOpacity>
-        )}
+      <View className="flex-1 justify-center bg-background">
+        <ErrorState message={error} onRetry={onRetry} />
       </View>
     );
   }
 
   if (!data) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{emptyMessage}</Text>
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-center text-muted-foreground">{emptyMessage}</Text>
       </View>
     );
   }
 
   const badgeInfo = badge?.(data);
-  const infoFields = fields(data);
+  const infoFields = fields(data).filter(
+    (field) => field.value != null && field.value !== "",
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{title(data)}</Text>
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView contentContainerClassName="gap-4 p-4">
+        <View className="flex-row items-center gap-3">
+          <Text variant="h3" className="flex-1 text-left text-2xl">
+            {title(data)}
+          </Text>
           {badgeInfo && (
             <View
-              style={[styles.badge, { backgroundColor: badgeInfo.bgColor }]}
+              className="rounded-md px-3 py-1"
+              style={{ backgroundColor: badgeInfo.bgColor }}
             >
-              <Text style={[styles.badgeText, { color: badgeInfo.color }]}>
+              <Text
+                className="text-xs font-semibold"
+                style={{ color: badgeInfo.color }}
+              >
                 {badgeInfo.text}
               </Text>
             </View>
           )}
         </View>
 
-        <View style={styles.card}>
-          {infoFields.map((field, idx) =>
-            field.value != null && field.value !== "" ? (
+        <Card className="py-0">
+          <CardContent className="px-4 py-2">
+            {infoFields.map((field, idx) => (
               <View
-                key={idx}
-                style={[
-                  styles.infoRow,
-                  idx < infoFields.length - 1 && styles.infoBorder,
-                ]}
+                key={`${field.label}-${idx}`}
+                className="flex-row items-center justify-between gap-4 border-border py-3"
+                style={{
+                  borderBottomWidth: idx < infoFields.length - 1 ? 1 : 0,
+                }}
               >
-                <Text style={styles.infoLabel}>{field.label}</Text>
-                <Text style={styles.infoValue}>{String(field.value)}</Text>
+                <Text className="text-sm text-muted-foreground">{field.label}</Text>
+                <Text className="flex-1 text-right text-sm font-medium">
+                  {String(field.value)}
+                </Text>
               </View>
-            ) : null,
-          )}
-        </View>
+            ))}
+          </CardContent>
+        </Card>
 
         {children}
 
         {(onEdit || onDelete) && (
-          <View style={styles.actions}>
+          <View className="mt-2 flex-row gap-3">
             {onEdit && (
-              <TouchableOpacity
-                style={[styles.actionBtn, styles.editBtn]}
-                onPress={onEdit}
-              >
-                <Text style={styles.editBtnText}>{editLabel}</Text>
-              </TouchableOpacity>
+              <Button className="h-12 flex-1" onPress={onEdit}>
+                <Text>{editLabel}</Text>
+              </Button>
             )}
             {onDelete && (
-              <TouchableOpacity
-                style={[styles.actionBtn, styles.deleteBtn]}
+              <Button
+                variant="destructive"
+                className="h-12 flex-1"
                 onPress={handleDelete}
               >
-                <Text style={styles.deleteBtnText}>{deleteLabel}</Text>
-              </TouchableOpacity>
+                <Text>{deleteLabel}</Text>
+              </Button>
             )}
           </View>
         )}
@@ -149,63 +149,3 @@ export function DetailScreen<T>({
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: {
-    fontSize: 15,
-    color: COLORS.textTertiary,
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  retryBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
-  },
-  retryBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  content: { padding: 16 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 12,
-  },
-  title: { fontSize: 22, fontWeight: "700", color: COLORS.text, flex: 1 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  badgeText: { fontSize: 13, fontWeight: "600" },
-  card: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 12,
-    padding: 16,
-    ...SHADOW.card,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-  },
-  infoBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  infoLabel: { fontSize: 14, color: COLORS.textTertiary },
-  infoValue: { fontSize: 14, color: COLORS.text, fontWeight: "500" },
-  actions: { flexDirection: "row", gap: 12, marginTop: 24 },
-  actionBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  editBtn: { backgroundColor: COLORS.primary },
-  editBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  deleteBtn: {
-    backgroundColor: COLORS.dangerLight,
-    borderWidth: 1,
-    borderColor: "#ffccc7",
-  },
-  deleteBtnText: { color: COLORS.danger, fontSize: 15, fontWeight: "600" },
-});

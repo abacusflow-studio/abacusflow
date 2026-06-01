@@ -1,16 +1,14 @@
-import { useState, useCallback } from "react";
-import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { ScrollView, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
+import { useFocusEffect, useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { Button } from "@components/ui/button";
+import { Card } from "@components/ui/card";
+import { Text } from "@components/ui/text";
 import { listAllDrafts } from "@lib/draft-store";
+import { THEME } from "@lib/theme";
 
 export default function EntryHomeScreen() {
   const router = useRouter();
@@ -32,185 +30,146 @@ export default function EntryHomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Draft banner */}
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView contentContainerClassName="gap-5 p-4 pb-8">
         {draftCount > 0 && (
-          <TouchableOpacity
-            style={styles.draftBanner}
+          <Button
+            variant="secondary"
+            className="h-auto justify-start gap-3 rounded-lg px-4 py-3"
             onPress={() => router.push("/(tabs)/drafts" as any)}
           >
-            <Ionicons name="alert-circle" size={18} color={COLORS.warning} />
-            <Text style={styles.draftBannerText}>
+            <Ionicons
+              name="alert-circle"
+              size={18}
+              color={THEME.light.secondaryForeground}
+            />
+            <Text className="flex-1 text-sm font-semibold text-secondary-foreground">
               有 {draftCount} 条未提交草稿，继续处理
             </Text>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.warning} />
-          </TouchableOpacity>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={THEME.light.secondaryForeground}
+            />
+          </Button>
         )}
 
-        {/* Main entry actions */}
-        <Text style={styles.sectionTitle}>扫码录入</Text>
+        <View className="gap-2">
+          <Text className="text-xs font-semibold uppercase text-muted-foreground">
+            扫码录入
+          </Text>
 
-        <TouchableOpacity
-          style={styles.mainAction}
-          onPress={() => router.push("/entry/purchase" as any)}
-          activeOpacity={0.85}
-        >
-          <View style={styles.mainActionLeft}>
-            <View
-              style={[
-                styles.mainActionIcon,
-                { backgroundColor: COLORS.primaryLight },
-              ]}
-            >
-              <Ionicons
-                name="download-outline"
-                size={28}
-                color={COLORS.primary}
-              />
-            </View>
-            <View>
-              <Text style={styles.mainActionTitle}>扫码入库</Text>
-              <Text style={styles.mainActionDesc}>
-                扫描条码，创建采购入库单
-              </Text>
-            </View>
-          </View>
-          <Ionicons
-            name="chevron-forward"
-            size={22}
-            color={COLORS.textDisabled}
+          <EntryAction
+            title="扫码入库"
+            description="扫描条码，创建采购入库单"
+            icon="download-outline"
+            iconClassName="bg-primary/10"
+            iconColor={THEME.light.primary}
+            onPress={() => router.push("/entry/purchase" as any)}
           />
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.mainAction}
-          onPress={() => router.push("/entry/sale" as any)}
-          activeOpacity={0.85}
-        >
-          <View style={styles.mainActionLeft}>
-            <View
-              style={[
-                styles.mainActionIcon,
-                { backgroundColor: COLORS.successLight },
-              ]}
-            >
-              <Ionicons
-                name="arrow-up-outline"
-                size={28}
-                color={COLORS.success}
-              />
-            </View>
-            <View>
-              <Text style={styles.mainActionTitle}>扫码出库</Text>
-              <Text style={styles.mainActionDesc}>
-                扫描条码，创建销售出库单
-              </Text>
-            </View>
-          </View>
-          <Ionicons
-            name="chevron-forward"
-            size={22}
-            color={COLORS.textDisabled}
+          <EntryAction
+            title="扫码出库"
+            description="扫描条码，创建销售出库单"
+            icon="arrow-up-outline"
+            iconClassName="bg-accent/10"
+            iconColor={THEME.light.accent}
+            onPress={() => router.push("/entry/sale" as any)}
           />
-        </TouchableOpacity>
+        </View>
 
-        {/* Secondary actions */}
-        <Text style={styles.sectionTitle}>其他操作</Text>
-        <View style={styles.secondaryGrid}>
-          <TouchableOpacity
-            style={styles.secondaryCard}
-            onPress={() => router.push("/entry/product" as any)}
-          >
-            <Ionicons
-              name="add-circle-outline"
-              size={24}
-              color={COLORS.primary}
+        <View className="gap-2">
+          <Text className="text-xs font-semibold uppercase text-muted-foreground">
+            其他操作
+          </Text>
+          <View className="flex-row gap-3">
+            <SecondaryAction
+              title="新品建档"
+              icon="add-circle-outline"
+              iconColor={THEME.light.primary}
+              onPress={() => router.push("/entry/product" as any)}
             />
-            <Text style={styles.secondaryTitle}>新品建档</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryCard}
-            onPress={() => router.push("/(tabs)/lookup" as any)}
-          >
-            <Ionicons
-              name="search-outline"
-              size={24}
-              color={COLORS.textSecondary}
+            <SecondaryAction
+              title="扫码查库存"
+              icon="search-outline"
+              iconColor={THEME.light.mutedForeground}
+              onPress={() => router.push("/(tabs)/lookup" as any)}
             />
-            <Text style={styles.secondaryTitle}>扫码查库存</Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 16, paddingBottom: 32 },
-  draftBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: COLORS.warningLight,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  draftBannerText: {
-    flex: 1,
-    fontSize: 14,
-    color: COLORS.warning,
-    fontWeight: "500",
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textTertiary,
-    marginBottom: 10,
-    marginTop: 8,
-  },
-  mainAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  mainActionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  mainActionIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mainActionTitle: { fontSize: 17, fontWeight: "700", color: COLORS.text },
-  mainActionDesc: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  secondaryGrid: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  secondaryCard: {
-    flex: 1,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 12,
-    padding: 18,
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  secondaryTitle: { fontSize: 14, fontWeight: "600", color: COLORS.text },
-});
+interface EntryActionProps {
+  title: string;
+  description: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconClassName: string;
+  iconColor: string;
+  onPress: () => void;
+}
+
+function EntryAction({
+  title,
+  description,
+  icon,
+  iconClassName,
+  iconColor,
+  onPress,
+}: EntryActionProps) {
+  return (
+    <Button
+      variant="outline"
+      className="h-auto justify-between rounded-xl bg-card p-4"
+      onPress={onPress}
+    >
+      <View className="flex-1 flex-row items-center gap-4">
+        <View
+          className={`h-[52px] w-[52px] items-center justify-center rounded-xl ${iconClassName}`}
+        >
+          <Ionicons name={icon} size={28} color={iconColor} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-lg font-bold">{title}</Text>
+          <Text className="mt-1 text-sm text-muted-foreground">
+            {description}
+          </Text>
+        </View>
+      </View>
+      <Ionicons
+        name="chevron-forward"
+        size={22}
+        color={THEME.light.mutedForeground}
+      />
+    </Button>
+  );
+}
+
+interface SecondaryActionProps {
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+  onPress: () => void;
+}
+
+function SecondaryAction({
+  title,
+  icon,
+  iconColor,
+  onPress,
+}: SecondaryActionProps) {
+  return (
+    <Card className="flex-1 py-0">
+      <Button
+        variant="ghost"
+        className="h-auto flex-col gap-2 rounded-xl px-3 py-5"
+        onPress={onPress}
+      >
+        <Ionicons name={icon} size={24} color={iconColor} />
+        <Text className="text-sm font-semibold">{title}</Text>
+      </Button>
+    </Card>
+  );
+}

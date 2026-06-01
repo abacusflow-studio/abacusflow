@@ -1,17 +1,16 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { ThemeProvider } from "@react-navigation/native";
+import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
+import "../../global.css";
 
 import { AuthGate } from "@providers/auth-provider";
 import { useColorScheme } from "@hooks/use-color-scheme";
 import { initMobileAuth } from "@features/auth/services/auth-service";
 import { useToast } from "@hooks/use-toast";
 import { Toast } from "@components/ui/toast";
+import { NAV_THEME } from "@lib/theme";
 
 // Initialize auth on app start
 initMobileAuth();
@@ -23,9 +22,10 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { toast, hideToast } = useToast();
+  const themeName = colorScheme === "dark" ? "dark" : "light";
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={NAV_THEME[themeName]}>
       <AuthGate>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -95,6 +95,7 @@ export default function RootLayout() {
           type={toast.type}
           onHide={hideToast}
         />
+        <PortalHost />
       </AuthGate>
     </ThemeProvider>
   );

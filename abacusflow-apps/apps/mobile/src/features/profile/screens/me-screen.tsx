@@ -1,13 +1,15 @@
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@abacusflow/utils";
-import { CURRENT_VERSION } from "@abacusflow/config";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAuthSnapshot } from "../hooks/use-auth-snapshot";
-import { UserProfileCard } from "../components/user-profile-card";
+import { Button } from "@components/ui/button";
+import { Text } from "@components/ui/text";
+import { CURRENT_VERSION } from "@abacusflow/config";
+import { THEME } from "@lib/theme";
 import { MenuSection } from "../components/menu-section";
+import { UserProfileCard } from "../components/user-profile-card";
+import { useAuthSnapshot } from "../hooks/use-auth-snapshot";
 import type { MenuSection as MenuSectionType } from "../types";
 
 const MENU_SECTIONS: MenuSectionType[] = [
@@ -49,8 +51,8 @@ export default function MeScreen() {
     useAuthSnapshot();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView contentContainerClassName="gap-5 p-4 pb-10">
         <UserProfileCard
           displayName={displayName}
           displayEmail={displayEmail}
@@ -66,36 +68,23 @@ export default function MeScreen() {
           />
         ))}
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
-          <Text style={styles.logoutText}>退出登录</Text>
-        </TouchableOpacity>
+        <Button
+          variant="outline"
+          className="h-12 border-destructive/20 bg-card"
+          onPress={handleLogout}
+        >
+          <Ionicons
+            name="log-out-outline"
+            size={20}
+            color={THEME.light.destructive}
+          />
+          <Text className="font-semibold text-destructive">退出登录</Text>
+        </Button>
 
-        <Text style={styles.version}>v{CURRENT_VERSION}</Text>
+        <Text className="text-center text-xs text-muted-foreground">
+          v{CURRENT_VERSION}
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 16, paddingBottom: 40 },
-  logoutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.dangerLight,
-    backgroundColor: COLORS.bgCard,
-    marginBottom: 16,
-  },
-  logoutText: { fontSize: 15, color: COLORS.danger, fontWeight: "600" },
-  version: {
-    textAlign: "center",
-    fontSize: 12,
-    color: COLORS.textDisabled,
-  },
-});
