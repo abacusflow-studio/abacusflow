@@ -1,22 +1,13 @@
 # Findings
 
-- Mobile has 48 active TypeScript files under `src`.
-- `src/app` contains Expo Router route shells and layout files.
-- `src/components/layout` contains page templates:
-  - `detail-screen.tsx`
-  - `form-screen.tsx`
-  - `list-screen.tsx`
-- `src/components/ui` currently contains one device/UI primitive:
-  - `barcode-scanner.tsx`
-- `src/features/*/screens` contains the business screens. The current names are mostly accurate, but there is no nearby map that explains which screen powers which route or workflow.
-- The existing `README.md` explains top-level folders but does not enumerate each `.tsx` file's role.
-- Low-risk naming mismatches found:
-  - `entry-home-screen.tsx` exported `EntryScreen`.
-  - create/edit screens exported `Add*Screen` or `Edit*Screen` instead of names matching their files.
-  - `depot-list-screen.tsx` exported `DepotsScreen`.
-- Implemented:
-  - Added source-level READMEs under `src`, `src/app`, `src/features`, and `src/components`.
-  - Updated mobile README to link those maps.
-  - Renamed default function symbols to match file names for entry home, depot create/edit/list, customer create/edit, supplier create/edit, and product edit.
-  - Added feature-level `index.ts` public exports.
-  - Updated `src/app` route shells to re-export screens from feature public exports instead of reaching into `screens/*` directly.
+- Current task has five reported issues:
+  - Mobile feedback attachments are not visible in web admin detail.
+  - Feedback status should only expose two terminal choices.
+  - Purchase/sale entry should allow creating suppliers/customers first.
+  - First sale entry sometimes shows no customers until re-entering.
+  - Entry home auxiliary actions collapse into a line after entering and exiting scanner.
+- Feedback upload/detail fields are aligned: mobile submits `imageUrls`, web detail reads `detailItem.imageUrls`, backend TOs and entity persist `imageUrls`.
+- Backend feedback statuses are currently five enum values (`NEW`, `CONFIRMED`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`). The available command actions include `resolve` and `close`, so the web UI can expose only two decisions without a schema/database change.
+- Partner selector currently only searches/selects existing partners. There is no create entry from purchase/sale screens.
+- Purchase/sale selection data is loaded only once on mount. Refetching on focus will refresh after creating a partner and should also address the "first sale entry has no customers until re-entering" symptom.
+- Entry home secondary actions put `flex-1` on the inner Card through `AnimatedCard`, while the row child is the outer `MotiView`; this can collapse row width after scanner navigation/reanimation.

@@ -7,7 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import type { SelectableProduct } from "@abacusflow/core";
 
@@ -53,29 +53,43 @@ export default function PurchaseEntryScreen() {
     useState<SelectableProduct | null>(null);
   const [scanFeedback, setScanFeedback] = useState("已记录，继续扫描");
   const handledScanProductIdRef = useRef<string | undefined>(undefined);
+  const restoredDraftIdRef = useRef<string | undefined>(undefined);
 
   const form = useOrderForm<PurchaseOrderItem>();
   const draft = useDraftPersistence("purchase", params.draftId);
   const { scanning, setScanning } = useBarcodeScanning(products);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await loadPurchaseSelectionData();
-        setPartners(data.partners);
-        setProducts(data.products);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        try {
+          const data = await loadPurchaseSelectionData();
+          if (!active) return;
+          setPartners(data.partners);
+          setProducts(data.products);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          if (active) setLoading(false);
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   useEffect(() => {
-    if (params.draftId && partners.length > 0 && products.length > 0) {
+    if (
+      params.draftId &&
+      restoredDraftIdRef.current !== params.draftId &&
+      partners.length > 0 &&
+      products.length > 0
+    ) {
       draft.restoreDraft(params.draftId).then((payload) => {
         if (!payload) return;
+        restoredDraftIdRef.current = params.draftId;
         setSelectedPartnerId(payload.supplierId as number | undefined);
         form.setOrderDate((payload.orderDate as string) || form.orderDate);
         form.setItems((payload.items as PurchaseOrderItem[]) || []);
@@ -361,6 +375,8 @@ export default function PurchaseEntryScreen() {
                 selectedId={selectedPartnerId}
                 onSelect={(id) => setSelectedPartnerId(id)}
                 label="选择供应商"
+                createLabel="新增供应商"
+                onCreatePress={() => router.push("/partner/supplier/add" as any)}
               />
             </CardContent>
           </AnimatedCard>

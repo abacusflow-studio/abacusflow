@@ -76,8 +76,8 @@ export default function CustomerEditScreen() {
           id: Number(id),
           updateCustomerInput: {
             name: values.name as string,
-            phone: values.phone as string | undefined,
-            address: values.address as string | undefined,
+            phone: (values.phone as string)?.trim() || undefined,
+            address: (values.address as string)?.trim() || undefined,
           },
         });
       }}

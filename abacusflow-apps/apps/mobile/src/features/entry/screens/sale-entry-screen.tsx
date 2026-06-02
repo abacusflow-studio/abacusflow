@@ -7,7 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { translateInventoryUnitType } from "@abacusflow/utils";
 import {
@@ -94,29 +94,42 @@ export default function SaleEntryScreen() {
     useState<SelectableProduct | null>(null);
   const [scanFeedback, setScanFeedback] = useState("已记录，继续扫描");
   const handledScanProductIdRef = useRef<string | undefined>(undefined);
+  const restoredDraftIdRef = useRef<string | undefined>(undefined);
 
   const form = useOrderForm<SaleOrderItem>();
   const draft = useDraftPersistence("sale", params.draftId);
   const { scanning, setScanning } = useBarcodeScanning(products);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await loadSaleSelectionData();
-        setPartners(data.partners);
-        setProducts(data.products);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        try {
+          const data = await loadSaleSelectionData();
+          if (!active) return;
+          setPartners(data.partners);
+          setProducts(data.products);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          if (active) setLoading(false);
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   useEffect(() => {
-    if (params.draftId && partners.length > 0) {
+    if (
+      params.draftId &&
+      restoredDraftIdRef.current !== params.draftId &&
+      partners.length > 0
+    ) {
       draft.restoreDraft(params.draftId).then((payload) => {
         if (!payload) return;
+        restoredDraftIdRef.current = params.draftId;
         setSelectedPartnerId(payload.customerId as number | undefined);
         form.setOrderDate((payload.orderDate as string) || form.orderDate);
         form.setItems((payload.items as SaleOrderItem[]) || []);
@@ -551,6 +564,8 @@ export default function SaleEntryScreen() {
                 selectedId={selectedPartnerId}
                 onSelect={(id) => setSelectedPartnerId(id)}
                 label="选择客户"
+                createLabel="新增客户"
+                onCreatePress={() => router.push("/partner/customer/add" as any)}
               />
             </CardContent>
           </AnimatedCard>

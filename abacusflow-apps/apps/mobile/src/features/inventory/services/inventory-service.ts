@@ -7,7 +7,7 @@ export async function getInventoryById(
 ): Promise<BasicInventory | null> {
   const page = await inventoryApi.listBasicInventoriesPage({
     pageIndex: 1,
-    pageSize: 100,
+    pageSize: 20,
   });
   return page.content.find((item) => item.id === id) ?? null;
 }
@@ -31,7 +31,7 @@ export async function findSellableUnitsForProduct(product: {
 }): Promise<BasicInventoryUnit[]> {
   const res = await inventoryApi.listBasicInventoriesPage({
     pageIndex: 1,
-    pageSize: 100,
+    pageSize: 20,
     productName: product.name,
     productType: product.type as any,
   });

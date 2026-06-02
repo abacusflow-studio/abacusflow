@@ -17,6 +17,8 @@ interface Props {
   selectedId?: number;
   onSelect: (id: number) => void;
   label: string;
+  createLabel?: string;
+  onCreatePress?: () => void;
 }
 
 /** 可搜索的合作伙伴选择器 */
@@ -25,6 +27,8 @@ export function PartnerChipSelector({
   selectedId,
   onSelect,
   label,
+  createLabel,
+  onCreatePress,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,6 +49,13 @@ export function PartnerChipSelector({
     onSelect(id);
     setOpen(false);
     setSearch("");
+  };
+
+  const handleCreatePress = () => {
+    void triggerHaptic("selection");
+    setOpen(false);
+    setSearch("");
+    onCreatePress?.();
   };
 
   return (
@@ -91,16 +102,39 @@ export function PartnerChipSelector({
 
       <Modal visible={open} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView className="flex-1 bg-background">
-          <View className="flex-row items-center justify-between border-b border-border bg-card px-4 py-3">
-            <View>
+          <View className="flex-row items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
+            <View className="min-w-0 flex-1">
               <Text className="text-lg font-bold">{label}</Text>
               <Text className="mt-1 text-xs text-muted-foreground">
                 共 {partners.length} 条，可按名称搜索
               </Text>
             </View>
-            <Button variant="ghost" size="icon" onPress={() => setOpen(false)}>
-              <Ionicons name="close" size={22} color={THEME.light.foreground} />
-            </Button>
+            <View className="flex-row items-center gap-2">
+              {onCreatePress && createLabel && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 px-3"
+                  onPress={handleCreatePress}
+                >
+                  <Ionicons
+                    name="add-circle-outline"
+                    size={15}
+                    color={THEME.light.primary}
+                  />
+                  <Text className="text-xs font-semibold text-primary">
+                    {createLabel}
+                  </Text>
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onPress={() => setOpen(false)}>
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={THEME.light.foreground}
+                />
+              </Button>
+            </View>
           </View>
 
           <View className="gap-3 p-4">

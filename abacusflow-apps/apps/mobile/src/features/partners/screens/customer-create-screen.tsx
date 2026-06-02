@@ -30,8 +30,8 @@ export default function CustomerCreateScreen() {
         await partnerApi.addCustomer({
           createCustomerInput: {
             name: values.name as string,
-            phone: values.phone as string | undefined,
-            address: values.address as string | undefined,
+            phone: (values.phone as string)?.trim() || undefined,
+            address: (values.address as string)?.trim() || undefined,
           },
         });
       }}

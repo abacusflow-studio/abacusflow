@@ -18,6 +18,7 @@ import {
 import { ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "../../../components/admin-page-header";
+import { getConfig } from "@abacusflow/config";
 import {
   feedbackApi,
   type BasicFeedback,
@@ -29,20 +30,25 @@ import {
 import { usePaginatedList } from "../../../hooks/use-paginated-list";
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: "blue",
-  CONFIRMED: "orange",
-  IN_PROGRESS: "processing",
+  NEW: "gold",
+  CONFIRMED: "gold",
+  IN_PROGRESS: "gold",
   RESOLVED: "green",
-  CLOSED: "default",
+  CLOSED: "red",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  NEW: "新问题",
-  CONFIRMED: "已确认",
-  IN_PROGRESS: "处理中",
+  NEW: "待处理",
+  CONFIRMED: "待处理",
+  IN_PROGRESS: "待处理",
   RESOLVED: "已解决",
-  CLOSED: "已关闭",
+  CLOSED: "已拒绝",
 };
+
+const STATUS_FILTER_OPTIONS = [
+  { label: STATUS_LABELS.RESOLVED, value: "RESOLVED" },
+  { label: STATUS_LABELS.CLOSED, value: "CLOSED" },
+];
 
 const CATEGORY_LABELS: Record<string, string> = {
   BUG: "Bug",
@@ -57,15 +63,30 @@ const SOURCE_LABELS: Record<string, string> = {
   MOBILE: "Mobile",
 };
 
+type FeedbackAction = "resolve" | "close";
+
+const getFeedbackImageUrls = (item: Feedback | null): string[] => {
+  if (!Array.isArray(item?.imageUrls)) return [];
+  return item.imageUrls.filter((url): url is string => !!url?.trim());
+};
+
+const resolveFeedbackImageUrl = (url: string) => {
+  const trimmed = url.trim();
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) return trimmed;
+  const baseUrl = getConfig().apiBaseUrl.replace(/\/+$/, "");
+  return `${baseUrl}/${trimmed.replace(/^\/+/, "")}`;
+};
+
 export default function FeedbackPage() {
   const { message } = App.useApp();
   const [showDetail, setShowDetail] = useState(false);
   const [detailItem, setDetailItem] = useState<Feedback | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [showAction, setShowAction] = useState(false);
-  const [actionType, setActionType] = useState<string>("");
+  const [actionType, setActionType] = useState<FeedbackAction>("resolve");
   const [actionForm] = Form.useForm();
   const [actionLoading, setActionLoading] = useState(false);
+  const detailImageUrls = getFeedbackImageUrls(detailItem);
 
   const {
     data,
@@ -110,7 +131,7 @@ export default function FeedbackPage() {
     }
   };
 
-  const openAction = (type: string) => {
+  const openAction = (type: FeedbackAction) => {
     setActionType(type);
     actionForm.resetFields();
     setShowAction(true);
@@ -125,14 +146,8 @@ export default function FeedbackPage() {
       const updated = await feedbackApi.updateFeedback({
         id: detailItem.id,
         updateFeedbackInput: {
-          action: actionType as
-            | "confirm"
-            | "startHandling"
-            | "resolve"
-            | "close"
-            | "reopen",
+          action: actionType,
           resolutionNote: values.resolutionNote,
-          assigneeUserId: values.assigneeUserId,
         },
       });
 
@@ -222,10 +237,7 @@ export default function FeedbackPage() {
             style={{ width: 120 }}
             value={filters.status}
             onChange={(val) => updateFilter("status", val)}
-            options={Object.entries(STATUS_LABELS).map(([k, v]) => ({
-              label: v,
-              value: k,
-            }))}
+            options={STATUS_FILTER_OPTIONS}
           />
           <Select
             placeholder="来源"
@@ -279,29 +291,17 @@ export default function FeedbackPage() {
         footer={
           detailItem && (
             <Space>
-              {detailItem.status === "NEW" && (
-                <Button onClick={() => openAction("confirm")}>确认</Button>
-              )}
-              {(detailItem.status === "NEW" ||
-                detailItem.status === "CONFIRMED") && (
-                <Button onClick={() => openAction("startHandling")}>
-                  开始处理
-                </Button>
-              )}
               {detailItem.status !== "RESOLVED" &&
                 detailItem.status !== "CLOSED" && (
                   <Button type="primary" onClick={() => openAction("resolve")}>
-                    标记解决
+                    已解决
                   </Button>
                 )}
-              {detailItem.status !== "CLOSED" && (
+              {detailItem.status !== "RESOLVED" &&
+                detailItem.status !== "CLOSED" && (
                 <Button danger onClick={() => openAction("close")}>
-                  关闭
+                  已拒绝
                 </Button>
-              )}
-              {(detailItem.status === "RESOLVED" ||
-                detailItem.status === "CLOSED") && (
-                <Button onClick={() => openAction("reopen")}>重新打开</Button>
               )}
             </Space>
           )
@@ -357,26 +357,26 @@ export default function FeedbackPage() {
                 {detailItem.resolutionNote}
               </Descriptions.Item>
             )}
-            {detailItem.imageUrls && detailItem.imageUrls.length > 0 && (
-              <Descriptions.Item label="附件图片">
+            <Descriptions.Item label="附件图片">
+              {detailImageUrls.length > 0 ? (
                 <Image.PreviewGroup>
                   <Space wrap>
-                    {(detailItem.imageUrls as string[]).map(
-                      (url: string, idx: number) => (
-                        <Image
-                          key={idx}
-                          src={url}
-                          width={80}
-                          height={80}
-                          alt={`附件图片 ${idx + 1}`}
-                          style={{ objectFit: "cover", borderRadius: 4 }}
-                        />
-                      ),
-                    )}
+                    {detailImageUrls.map((url: string, idx: number) => (
+                      <Image
+                        key={`${url}-${idx}`}
+                        src={resolveFeedbackImageUrl(url)}
+                        width={80}
+                        height={80}
+                        alt={`附件图片 ${idx + 1}`}
+                        style={{ objectFit: "cover", borderRadius: 4 }}
+                      />
+                    ))}
                   </Space>
                 </Image.PreviewGroup>
-              </Descriptions.Item>
-            )}
+              ) : (
+                "-"
+              )}
+            </Descriptions.Item>
             <Descriptions.Item label="提交时间">
               {new Date(detailItem.createdAt).toLocaleString("zh-CN")}
             </Descriptions.Item>
@@ -386,17 +386,7 @@ export default function FeedbackPage() {
 
       <Modal
         open={showAction}
-        title={
-          actionType === "confirm"
-            ? "确认问题"
-            : actionType === "startHandling"
-              ? "开始处理"
-              : actionType === "resolve"
-                ? "标记解决"
-                : actionType === "close"
-                  ? "关闭反馈"
-                  : "重新打开"
-        }
+        title={actionType === "resolve" ? "标记为已解决" : "标记为已拒绝"}
         onCancel={() => setShowAction(false)}
         onOk={handleAction}
         confirmLoading={actionLoading}
@@ -408,10 +398,10 @@ export default function FeedbackPage() {
               <Input.TextArea rows={3} placeholder="描述如何解决的（可选）" />
             </Form.Item>
           )}
-          {actionType === "assign" && (
-            <Form.Item name="assigneeUserId" label="负责人用户ID">
-              <Input type="number" placeholder="输入用户ID" />
-            </Form.Item>
+          {actionType === "close" && (
+            <p style={{ margin: 0, color: "rgba(0, 0, 0, 0.65)" }}>
+              该反馈会标记为已拒绝，不再进入处理队列。
+            </p>
           )}
         </Form>
       </Modal>

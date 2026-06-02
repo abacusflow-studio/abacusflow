@@ -51,9 +51,11 @@ export function LookupSearchBar({
         returnKeyType="search"
         autoFocus
       />
-      <Button variant="outline" size="icon" onPress={onScan}>
-        <Ionicons name="scan" size={20} color={THEME.light.primary} />
-      </Button>
+      {(mode === "product" || mode === "inventory") && (
+        <Button variant="outline" size="icon" onPress={onScan}>
+          <Ionicons name="scan" size={20} color={THEME.light.primary} />
+        </Button>
+      )}
       <Button size="icon" onPress={onSubmit}>
         <Ionicons
           name="search"

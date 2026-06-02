@@ -30,7 +30,7 @@ export default function DepotCreateScreen() {
         await depotApi.addDepot({
           createDepotInput: {
             name: values.name as string,
-            location: values.location as string | undefined,
+            location: (values.location as string)?.trim() || undefined,
             capacity: values.capacity as number | undefined,
           },
         });

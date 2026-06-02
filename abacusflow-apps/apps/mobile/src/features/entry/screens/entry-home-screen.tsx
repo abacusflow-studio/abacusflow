@@ -248,18 +248,22 @@ function SecondaryAction({
   onPress,
 }: SecondaryActionProps) {
   return (
-    <AnimatedCard className="flex-1" index={index}>
-      <PressableScale haptic="selection" onPress={onPress}>
-        <CardContent className="gap-3 px-4 py-4">
-          <Ionicons name={icon} size={24} color={iconColor} />
-          <View>
-            <Text className="text-sm font-bold">{title}</Text>
-            <Text className="mt-1 text-xs text-muted-foreground">
-              {description}
-            </Text>
-          </View>
-        </CardContent>
-      </PressableScale>
-    </AnimatedCard>
+    <View className="flex-1">
+      <AnimatedCard index={index}>
+        <PressableScale haptic="selection" onPress={onPress}>
+          <CardContent className="min-h-[112px] gap-3 px-4 py-4">
+            <Ionicons name={icon} size={24} color={iconColor} />
+            <View>
+              <Text className="text-sm font-bold" numberOfLines={1}>
+                {title}
+              </Text>
+              <Text className="mt-1 text-xs text-muted-foreground">
+                {description}
+              </Text>
+            </View>
+          </CardContent>
+        </PressableScale>
+      </AnimatedCard>
+    </View>
   );
 }

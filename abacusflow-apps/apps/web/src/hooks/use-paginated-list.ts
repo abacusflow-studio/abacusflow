@@ -39,7 +39,10 @@ export function usePaginatedList<T, F extends object>({
   const [filters, setFilters] = useState<Partial<F>>(defaultFilters);
 
   const fetchFnRef = useRef(fetchFn);
-  fetchFnRef.current = fetchFn;
+
+  useEffect(() => {
+    fetchFnRef.current = fetchFn;
+  }, [fetchFn]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

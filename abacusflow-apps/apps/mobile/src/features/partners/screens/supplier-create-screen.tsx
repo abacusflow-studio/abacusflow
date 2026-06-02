@@ -42,10 +42,10 @@ export default function SupplierCreateScreen() {
         await partnerApi.addSupplier({
           createSupplierInput: {
             name: values.name as string,
-            contactPerson: values.contactPerson as string | undefined,
-            phone: values.phone as string | undefined,
-            email: values.email as string | undefined,
-            address: values.address as string | undefined,
+            contactPerson: (values.contactPerson as string)?.trim() || undefined,
+            phone: (values.phone as string)?.trim() || undefined,
+            email: (values.email as string)?.trim() || undefined,
+            address: (values.address as string)?.trim() || undefined,
           },
         });
       }}

@@ -115,12 +115,12 @@ export default function ProductEditScreen() {
           id: Number(id),
           updateProductInput: {
             name: values.name as string,
-            specification: values.specification as string | undefined,
+            specification: (values.specification as string)?.trim() || undefined,
             type: values.type as any,
             categoryId: values.categoryId as number | undefined,
             barcode: values.barcode as string | undefined,
             unit: values.unit as any,
-            note: values.note as string | undefined,
+            note: (values.note as string)?.trim() || undefined,
           },
         });
       }}

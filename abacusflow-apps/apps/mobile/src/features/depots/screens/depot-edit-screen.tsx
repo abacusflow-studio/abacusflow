@@ -76,7 +76,7 @@ export default function DepotEditScreen() {
           id: Number(id),
           updateDepotInput: {
             name: values.name as string,
-            location: values.location as string | undefined,
+            location: (values.location as string)?.trim() || undefined,
             capacity: values.capacity as number | undefined,
           },
         });

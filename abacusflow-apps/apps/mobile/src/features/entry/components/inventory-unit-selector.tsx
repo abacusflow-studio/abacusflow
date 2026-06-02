@@ -46,7 +46,7 @@ export function InventoryUnitSelector({
       try {
         const res = await inventoryApi.listBasicInventoriesPage({
           pageIndex: 1,
-          pageSize: 100,
+          pageSize: 50,
         });
         const allUnits = res.content.flatMap((inv) =>
           inv.units
