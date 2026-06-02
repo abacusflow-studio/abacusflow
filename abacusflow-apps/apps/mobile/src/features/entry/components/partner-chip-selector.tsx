@@ -118,7 +118,11 @@ export function PartnerChipSelector({
                 autoFocus
               />
               {search.length > 0 && (
-                <Button variant="ghost" size="icon" onPress={() => setSearch("")}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onPress={() => setSearch("")}
+                >
                   <Ionicons
                     name="close-circle"
                     size={18}
@@ -165,7 +169,10 @@ export function PartnerChipSelector({
                       </Text>
                     </View>
                     <View className="flex-1">
-                      <Text className="text-base font-semibold" numberOfLines={1}>
+                      <Text
+                        className="text-base font-semibold"
+                        numberOfLines={1}
+                      >
                         {item.name}
                       </Text>
                       <Text className="mt-1 text-xs text-muted-foreground">

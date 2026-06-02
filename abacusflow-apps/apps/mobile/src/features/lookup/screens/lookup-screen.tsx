@@ -62,7 +62,9 @@ export default function LookupScreen() {
       <BarcodeScanner
         onScan={handleScanResult}
         onClose={() => setScanning(false)}
-        title={mode === "inventory" || mode === "menu" ? "扫码查库存" : "扫码查产品"}
+        title={
+          mode === "inventory" || mode === "menu" ? "扫码查库存" : "扫码查产品"
+        }
       />
     );
   }
@@ -72,13 +74,34 @@ export default function LookupScreen() {
       <SafeAreaView className="flex-1 bg-background">
         <LookupMenu
           onScanPress={handleScanPress}
-          onProductPress={() => { setMode("product"); setSearchValue(""); }}
-          onInventoryPress={() => { setMode("inventory"); setSearchValue(""); }}
-          onPurchaseOrderPress={() => { setMode("purchase-order"); setSearchValue(""); }}
-          onSaleOrderPress={() => { setMode("sale-order"); setSearchValue(""); }}
-          onCustomerPress={() => { setMode("customer"); setSearchValue(""); }}
-          onSupplierPress={() => { setMode("supplier"); setSearchValue(""); }}
-          onDepotPress={() => { setMode("depot"); setSearchValue(""); }}
+          onProductPress={() => {
+            setMode("product");
+            setSearchValue("");
+          }}
+          onInventoryPress={() => {
+            setMode("inventory");
+            setSearchValue("");
+          }}
+          onPurchaseOrderPress={() => {
+            setMode("purchase-order");
+            setSearchValue("");
+          }}
+          onSaleOrderPress={() => {
+            setMode("sale-order");
+            setSearchValue("");
+          }}
+          onCustomerPress={() => {
+            setMode("customer");
+            setSearchValue("");
+          }}
+          onSupplierPress={() => {
+            setMode("supplier");
+            setSearchValue("");
+          }}
+          onDepotPress={() => {
+            setMode("depot");
+            setSearchValue("");
+          }}
         />
       </SafeAreaView>
     );

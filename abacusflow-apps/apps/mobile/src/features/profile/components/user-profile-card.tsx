@@ -21,7 +21,9 @@ export function UserProfileCard({
     <Card className="py-0">
       <CardContent className="flex-row items-center gap-4 px-5 py-5">
         <View className="h-[52px] w-[52px] items-center justify-center rounded-full bg-primary/10">
-          <Text className="text-2xl font-bold text-primary">{avatarLetter}</Text>
+          <Text className="text-2xl font-bold text-primary">
+            {avatarLetter}
+          </Text>
         </View>
         <View className="flex-1">
           <Text className="text-lg font-bold">{displayName}</Text>

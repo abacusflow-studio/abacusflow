@@ -138,10 +138,7 @@ export function BarcodeScanner({
               <Text style={styles.rescanText}>{scannedMessage}</Text>
             </View>
           ) : scanned ? (
-            <TouchableOpacity
-              style={styles.rescanBtn}
-              onPress={resetScanState}
-            >
+            <TouchableOpacity style={styles.rescanBtn} onPress={resetScanState}>
               <Ionicons name="scan" size={20} color="#fff" />
               <Text style={styles.rescanText}>重新扫描</Text>
             </TouchableOpacity>

@@ -375,7 +375,13 @@ export default function ProductsPage() {
         destroyOnHidden
       >
         {formLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "2rem 0",
+            }}
+          >
             <Spin />
           </div>
         ) : (
@@ -446,7 +452,13 @@ export default function ProductsPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "2rem 0",
+            }}
+          >
             <Spin />
           </div>
         ) : detailItem ? (

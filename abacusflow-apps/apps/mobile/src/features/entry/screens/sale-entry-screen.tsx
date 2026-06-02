@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { View, ScrollView, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -231,9 +237,7 @@ export default function SaleEntryScreen() {
         }
         setSnProductContext(product);
         setScanning(true);
-        markScanInfo(
-          `已识别「${product.name}」，请扫描资产 SN`,
-        );
+        markScanInfo(`已识别「${product.name}」，请扫描资产 SN`);
         return false;
       } else {
         setSnProductContext(null);
@@ -580,7 +584,9 @@ export default function SaleEntryScreen() {
                   quantity={item.quantity}
                   unitPrice={item.unitPrice}
                   onQuantityChange={(v) => form.updateItem(idx, "quantity", v)}
-                  onUnitPriceChange={(v) => form.updateItem(idx, "unitPrice", v)}
+                  onUnitPriceChange={(v) =>
+                    form.updateItem(idx, "unitPrice", v)
+                  }
                   onDelete={() => form.removeItem(idx)}
                 />
               ))}
@@ -655,7 +661,9 @@ function EntryHeader() {
         </View>
         <View>
           <Text className="text-base font-bold">销售出库</Text>
-          <Text className="text-xs text-muted-foreground">先选客户，再扫码</Text>
+          <Text className="text-xs text-muted-foreground">
+            先选客户，再扫码
+          </Text>
         </View>
       </View>
     </View>

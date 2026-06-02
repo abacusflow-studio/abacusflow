@@ -39,7 +39,11 @@ export function OrderItemCard({
       <CardContent className="gap-4 px-4 py-4">
         <View className="flex-row items-start gap-3">
           <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-            <Ionicons name="cube-outline" size={20} color={THEME.light.primary} />
+            <Ionicons
+              name="cube-outline"
+              size={20}
+              color={THEME.light.primary}
+            />
           </View>
           <View className="flex-1">
             <Text className="text-base font-bold" numberOfLines={1}>
@@ -82,7 +86,9 @@ export function OrderItemCard({
 
         <View className="flex-row gap-3">
           <View className="flex-1 gap-2">
-            <Text className="text-xs font-medium text-muted-foreground">数量</Text>
+            <Text className="text-xs font-medium text-muted-foreground">
+              数量
+            </Text>
             <Input
               className="h-11 bg-background"
               value={quantity}
@@ -91,7 +97,9 @@ export function OrderItemCard({
             />
           </View>
           <View className="flex-1 gap-2">
-            <Text className="text-xs font-medium text-muted-foreground">单价</Text>
+            <Text className="text-xs font-medium text-muted-foreground">
+              单价
+            </Text>
             <Input
               className="h-11 bg-background"
               value={unitPrice}

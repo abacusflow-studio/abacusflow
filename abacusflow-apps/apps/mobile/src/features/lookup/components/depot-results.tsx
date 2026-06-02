@@ -15,7 +15,13 @@ interface Props {
   onPress: (item: BasicDepot) => void;
 }
 
-export function DepotResults({ data, loading, searched, onRefresh, onPress }: Props) {
+export function DepotResults({
+  data,
+  loading,
+  searched,
+  onRefresh,
+  onPress,
+}: Props) {
   return (
     <FlatList
       data={data}
@@ -24,25 +30,39 @@ export function DepotResults({ data, loading, searched, onRefresh, onPress }: Pr
       onRefresh={onRefresh}
       refreshing={loading}
       ListEmptyComponent={
-        searched ? <EmptyState icon="location-outline" message="未找到储存点" /> : null
+        searched ? (
+          <EmptyState icon="location-outline" message="未找到储存点" />
+        ) : null
       }
       renderItem={({ item }) => (
-        <PressableScale haptic="selection" onPress={() => onPress(item)} scaleTo={0.99}>
+        <PressableScale
+          haptic="selection"
+          onPress={() => onPress(item)}
+          scaleTo={0.99}
+        >
           <Card className="w-full py-0">
             <CardContent className="p-4">
               <View className="flex-row justify-between items-center mb-1">
-                <Text className="text-base font-semibold flex-1">{item.name}</Text>
+                <Text className="text-base font-semibold flex-1">
+                  {item.name}
+                </Text>
                 <Badge
                   label={item.enabled ? "启用" : "禁用"}
-                  color={item.enabled ? THEME.light.primary : THEME.light.destructive}
+                  color={
+                    item.enabled ? THEME.light.primary : THEME.light.destructive
+                  }
                   bgColor={item.enabled ? "#f6ffed" : "#fff1f0"}
                 />
               </View>
               {item.location && (
-                <Text variant="muted" className="text-sm">地址: {item.location}</Text>
+                <Text variant="muted" className="text-sm">
+                  地址: {item.location}
+                </Text>
               )}
               {item.capacity != null && (
-                <Text variant="muted" className="text-sm">容量: {item.capacity}</Text>
+                <Text variant="muted" className="text-sm">
+                  容量: {item.capacity}
+                </Text>
               )}
             </CardContent>
           </Card>

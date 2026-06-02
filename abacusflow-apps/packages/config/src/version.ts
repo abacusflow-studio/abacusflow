@@ -5,9 +5,7 @@ export const DEFAULT_APP_VERSION = appVersion.version;
 type RuntimeEnv = Record<string, string | undefined>;
 
 function getRuntimeEnv(): RuntimeEnv {
-  return (
-    (globalThis as { process?: { env?: RuntimeEnv } }).process?.env ?? {}
-  );
+  return (globalThis as { process?: { env?: RuntimeEnv } }).process?.env ?? {};
 }
 
 export function resolveAppVersion(version?: string): string {

@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { View, ScrollView, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -146,8 +152,7 @@ export default function PurchaseEntryScreen() {
 
       setSnProductContext(null);
       const existingIndex = form.items.findIndex(
-        (item) =>
-          item.productType !== "asset" && item.productId === product.id,
+        (item) => item.productType !== "asset" && item.productId === product.id,
       );
       if (existingIndex >= 0) {
         const currentQuantity = Number(form.items[existingIndex].quantity) || 0;
@@ -277,7 +282,10 @@ export default function PurchaseEntryScreen() {
     for (const item of form.items) {
       if (item.productType === "asset" && !item.serialNumber?.trim()) {
         void triggerHaptic("error");
-        Alert.alert("提示", `「${item.productName}」是资产产品，必须填写序列号`);
+        Alert.alert(
+          "提示",
+          `「${item.productName}」是资产产品，必须填写序列号`,
+        );
         return;
       }
     }
@@ -389,7 +397,9 @@ export default function PurchaseEntryScreen() {
                   isAsset={item.productType === "asset"}
                   serialNumber={item.serialNumber}
                   onQuantityChange={(v) => form.updateItem(idx, "quantity", v)}
-                  onUnitPriceChange={(v) => form.updateItem(idx, "unitPrice", v)}
+                  onUnitPriceChange={(v) =>
+                    form.updateItem(idx, "unitPrice", v)
+                  }
                   onSerialNumberChange={
                     item.productType === "asset"
                       ? (v) => form.updateItem(idx, "serialNumber", v)
@@ -456,7 +466,9 @@ function EntryHeader() {
         </View>
         <View>
           <Text className="text-base font-bold">采购入库</Text>
-          <Text className="text-xs text-muted-foreground">先选供应商，再扫码</Text>
+          <Text className="text-xs text-muted-foreground">
+            先选供应商，再扫码
+          </Text>
         </View>
       </View>
     </View>

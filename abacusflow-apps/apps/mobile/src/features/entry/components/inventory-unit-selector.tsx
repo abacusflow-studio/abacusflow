@@ -165,7 +165,9 @@ export function InventoryUnitSelector({
                           >
                             {code}
                           </Text>
-                          <Badge label={translateInventoryUnitType(item.type)} />
+                          <Badge
+                            label={translateInventoryUnitType(item.type)}
+                          />
                         </View>
                         <Text
                           variant="muted"

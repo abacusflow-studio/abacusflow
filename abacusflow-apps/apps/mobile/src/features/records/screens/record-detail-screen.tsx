@@ -13,7 +13,10 @@ import { formatCurrency, translateOrderStatus } from "@abacusflow/utils";
 import { triggerHaptic } from "@lib/haptics";
 import { THEME } from "@lib/theme";
 import type { OrderAction, OrderDetail } from "../types";
-import { fetchOrderDetail, performOrderAction } from "../services/records-service";
+import {
+  fetchOrderDetail,
+  performOrderAction,
+} from "../services/records-service";
 
 const ACTION_META: Record<
   OrderAction,
@@ -156,7 +159,11 @@ export default function RecordDetailScreen() {
             <View className="flex-row items-start gap-4">
               <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                 <Ionicons
-                  name={detail.type === "purchase" ? "download-outline" : "arrow-up-outline"}
+                  name={
+                    detail.type === "purchase"
+                      ? "download-outline"
+                      : "arrow-up-outline"
+                  }
                   size={24}
                   color={
                     detail.type === "purchase"
@@ -185,7 +192,10 @@ export default function RecordDetailScreen() {
             <View className="flex-row gap-3">
               <Summary label="明细项" value={`${detail.items.length}`} />
               <Summary label="数量" value={`${detail.totalQuantity}`} />
-              <Summary label="金额" value={formatCurrency(detail.totalAmount)} />
+              <Summary
+                label="金额"
+                value={formatCurrency(detail.totalAmount)}
+              />
             </View>
           </CardContent>
         </AnimatedCard>
@@ -276,7 +286,10 @@ export default function RecordDetailScreen() {
                 </View>
                 <View className="flex-row gap-3">
                   <MiniMetric label="数量" value={`${item.quantity}`} />
-                  <MiniMetric label="单价" value={formatCurrency(item.unitPrice)} />
+                  <MiniMetric
+                    label="单价"
+                    value={formatCurrency(item.unitPrice)}
+                  />
                   {item.discountedPrice != null ? (
                     <MiniMetric
                       label="折后"
@@ -306,7 +319,13 @@ function StatusBadge({ status }: { status: string }) {
 function TypeBadge({ type }: { type: OrderDetail["type"] }) {
   const isPurchase = type === "purchase";
   return (
-    <View className={isPurchase ? "rounded bg-primary/10 px-2 py-1" : "rounded bg-accent/10 px-2 py-1"}>
+    <View
+      className={
+        isPurchase
+          ? "rounded bg-primary/10 px-2 py-1"
+          : "rounded bg-accent/10 px-2 py-1"
+      }
+    >
       <Text
         className={
           isPurchase

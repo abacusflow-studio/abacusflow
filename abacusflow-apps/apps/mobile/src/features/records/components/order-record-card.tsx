@@ -25,7 +25,10 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const TYPE_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+const TYPE_CONFIG: Record<
+  string,
+  { label: string; bg: string; color: string }
+> = {
   purchase: { label: "入库", bg: "#dcfce7", color: "#16a34a" },
   sale: { label: "出库", bg: "#ecfeff", color: "#0891b2" },
 };
@@ -85,7 +88,9 @@ export function OrderRecordCard({ item, onPress }: Props) {
             </View>
           </View>
 
-          <Text className="text-xs text-muted-foreground">{item.orderDate}</Text>
+          <Text className="text-xs text-muted-foreground">
+            {item.orderDate}
+          </Text>
         </CardContent>
       </Card>
     </PressableScale>

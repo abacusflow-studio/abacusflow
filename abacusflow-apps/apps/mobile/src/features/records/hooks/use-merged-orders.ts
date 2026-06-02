@@ -2,7 +2,10 @@ import { useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
 import { showToast } from "@hooks/use-toast";
 import type { OrderRecord, OrderSearchField, OrderType } from "../types";
-import { fetchPurchaseRecords, fetchSaleRecords } from "../services/records-service";
+import {
+  fetchPurchaseRecords,
+  fetchSaleRecords,
+} from "../services/records-service";
 
 export type OrderFilter = OrderType;
 
@@ -24,7 +27,8 @@ export function useOrderRecords() {
   const [searchQueryField, setSearchQueryField] =
     useState<OrderSearchField>("partner");
 
-  const fetchFn = filter === "purchase" ? fetchPurchaseRecords : fetchSaleRecords;
+  const fetchFn =
+    filter === "purchase" ? fetchPurchaseRecords : fetchSaleRecords;
 
   const fetchRecords = useCallback(
     async (page: number, append: boolean, keyword: string) => {

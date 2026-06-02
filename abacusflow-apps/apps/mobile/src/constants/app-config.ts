@@ -26,10 +26,8 @@ export const mobileConfigIssues = isMobileDevAuthDisabled
   : ([
       !process.env.EXPO_PUBLIC_API_BASE_URL && "EXPO_PUBLIC_API_BASE_URL",
       !process.env.EXPO_PUBLIC_AUTH0_DOMAIN && "EXPO_PUBLIC_AUTH0_DOMAIN",
-      !process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID &&
-        "EXPO_PUBLIC_AUTH0_CLIENT_ID",
-      !process.env.EXPO_PUBLIC_AUTH0_AUDIENCE &&
-        "EXPO_PUBLIC_AUTH0_AUDIENCE",
+      !process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID && "EXPO_PUBLIC_AUTH0_CLIENT_ID",
+      !process.env.EXPO_PUBLIC_AUTH0_AUDIENCE && "EXPO_PUBLIC_AUTH0_AUDIENCE",
     ].filter(Boolean) as string[]);
 
 export function apiUrl(path: string): string {

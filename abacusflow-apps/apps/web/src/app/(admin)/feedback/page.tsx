@@ -310,7 +310,9 @@ export default function FeedbackPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+          <div
+            style={{ display: "flex", justifyContent: "center", padding: 40 }}
+          >
             <Spin />
           </div>
         ) : detailItem ? (

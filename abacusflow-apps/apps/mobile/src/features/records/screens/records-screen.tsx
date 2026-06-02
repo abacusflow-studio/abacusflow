@@ -274,7 +274,10 @@ export default function RecordsScreen() {
                       label="已完成"
                       value={String(completedCount)}
                     />
-                    <RecordMetric label="总件数" value={String(totalQuantity)} />
+                    <RecordMetric
+                      label="总件数"
+                      value={String(totalQuantity)}
+                    />
                     <RecordMetric
                       label="金额"
                       value={`¥${Math.round(totalAmount).toLocaleString("zh-CN")}`}

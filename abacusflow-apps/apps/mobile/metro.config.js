@@ -9,7 +9,7 @@ const config = getDefaultConfig(projectRoot);
 
 // monorepo 场景建议保留
 config.watchFolders = Array.from(
-  new Set([...(config.watchFolders ?? []), workspaceRoot])
+  new Set([...(config.watchFolders ?? []), workspaceRoot]),
 );
 
 config.resolver.nodeModulesPaths = [

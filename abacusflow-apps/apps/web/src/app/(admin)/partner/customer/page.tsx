@@ -295,7 +295,13 @@ export default function CustomersPage() {
         destroyOnHidden
       >
         {detailLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "2rem 0",
+            }}
+          >
             <Spin />
           </div>
         ) : detailItem ? (

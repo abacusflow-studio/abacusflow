@@ -74,7 +74,9 @@ export function DetailScreen<T>({
   if (!data) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
-        <Text className="text-center text-muted-foreground">{emptyMessage}</Text>
+        <Text className="text-center text-muted-foreground">
+          {emptyMessage}
+        </Text>
       </View>
     );
   }
@@ -116,7 +118,9 @@ export function DetailScreen<T>({
                   borderBottomWidth: idx < infoFields.length - 1 ? 1 : 0,
                 }}
               >
-                <Text className="text-sm text-muted-foreground">{field.label}</Text>
+                <Text className="text-sm text-muted-foreground">
+                  {field.label}
+                </Text>
                 <Text className="flex-1 text-right text-sm font-medium">
                   {String(field.value)}
                 </Text>

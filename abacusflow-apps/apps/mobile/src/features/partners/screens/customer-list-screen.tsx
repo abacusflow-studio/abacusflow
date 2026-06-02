@@ -33,10 +33,21 @@ export default function CustomerListScreen() {
           />
         )}
       </View>
-      {item.phone && <Text variant="muted" className="text-sm mt-0.5">电话: {item.phone}</Text>}
-      {item.address && <Text variant="muted" className="text-sm mt-0.5">地址: {item.address}</Text>}
+      {item.phone && (
+        <Text variant="muted" className="text-sm mt-0.5">
+          电话: {item.phone}
+        </Text>
+      )}
+      {item.address && (
+        <Text variant="muted" className="text-sm mt-0.5">
+          地址: {item.address}
+        </Text>
+      )}
       {item.totalOrderAmount != null && item.totalOrderAmount > 0 && (
-        <Text className="text-sm font-semibold mt-2" style={{ color: THEME.light.primary }}>
+        <Text
+          className="text-sm font-semibold mt-2"
+          style={{ color: THEME.light.primary }}
+        >
           累计: ¥{item.totalOrderAmount.toLocaleString("zh-CN")}
         </Text>
       )}

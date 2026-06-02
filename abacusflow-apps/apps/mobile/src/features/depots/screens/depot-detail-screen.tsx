@@ -30,7 +30,7 @@ export default function DepotDetailScreen() {
   }, [loadData]);
 
   return (
-      <DetailScreen
+    <DetailScreen
       loading={loading}
       data={data}
       emptyMessage="存储点不存在"

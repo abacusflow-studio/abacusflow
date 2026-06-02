@@ -38,8 +38,7 @@ export function ProductSelector({
     const q = search.trim().toLowerCase();
     return products.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.barcode.toLowerCase().includes(q),
+        p.name.toLowerCase().includes(q) || p.barcode.toLowerCase().includes(q),
     );
   }, [products, search]);
 

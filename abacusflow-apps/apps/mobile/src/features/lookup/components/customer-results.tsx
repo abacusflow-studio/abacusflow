@@ -15,7 +15,13 @@ interface Props {
   onPress: (item: BasicCustomer) => void;
 }
 
-export function CustomerResults({ data, loading, searched, onRefresh, onPress }: Props) {
+export function CustomerResults({
+  data,
+  loading,
+  searched,
+  onRefresh,
+  onPress,
+}: Props) {
   return (
     <FlatList
       data={data}
@@ -24,14 +30,22 @@ export function CustomerResults({ data, loading, searched, onRefresh, onPress }:
       onRefresh={onRefresh}
       refreshing={loading}
       ListEmptyComponent={
-        searched ? <EmptyState icon="person-outline" message="未找到客户" /> : null
+        searched ? (
+          <EmptyState icon="person-outline" message="未找到客户" />
+        ) : null
       }
       renderItem={({ item }) => (
-        <PressableScale haptic="selection" onPress={() => onPress(item)} scaleTo={0.99}>
+        <PressableScale
+          haptic="selection"
+          onPress={() => onPress(item)}
+          scaleTo={0.99}
+        >
           <Card className="w-full py-0">
             <CardContent className="p-4">
               <View className="flex-row justify-between items-center mb-1">
-                <Text className="text-base font-semibold flex-1">{item.name}</Text>
+                <Text className="text-base font-semibold flex-1">
+                  {item.name}
+                </Text>
                 {item.totalOrderCount > 0 && (
                   <Badge
                     label={`${item.totalOrderCount} 单`}
@@ -41,13 +55,20 @@ export function CustomerResults({ data, loading, searched, onRefresh, onPress }:
                 )}
               </View>
               {item.phone && (
-                <Text variant="muted" className="text-sm">电话: {item.phone}</Text>
+                <Text variant="muted" className="text-sm">
+                  电话: {item.phone}
+                </Text>
               )}
               {item.address && (
-                <Text variant="muted" className="text-sm">地址: {item.address}</Text>
+                <Text variant="muted" className="text-sm">
+                  地址: {item.address}
+                </Text>
               )}
               {item.totalOrderAmount > 0 && (
-                <Text className="text-sm font-semibold mt-2" style={{ color: THEME.light.primary }}>
+                <Text
+                  className="text-sm font-semibold mt-2"
+                  style={{ color: THEME.light.primary }}
+                >
                   累计: ¥{item.totalOrderAmount.toLocaleString("zh-CN")}
                 </Text>
               )}

@@ -19,7 +19,9 @@ export function ErrorState({ message, onRetry }: Props) {
         size={48}
         color={THEME.light.destructive}
       />
-      <Text className="text-center text-sm text-muted-foreground">{message}</Text>
+      <Text className="text-center text-sm text-muted-foreground">
+        {message}
+      </Text>
       {onRetry && (
         <Button className="mt-2 min-w-28" onPress={onRetry}>
           <Text>重试</Text>

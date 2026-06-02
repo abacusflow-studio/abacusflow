@@ -48,7 +48,10 @@ export default function ScanScreen() {
     if (result?.product) {
       router.replace({
         pathname: "/entry/purchase",
-        params: { scanProductId: String(result.product.id), scanBarcode: result.barcode },
+        params: {
+          scanProductId: String(result.product.id),
+          scanBarcode: result.barcode,
+        },
       } as any);
     }
   };
@@ -57,7 +60,10 @@ export default function ScanScreen() {
     if (result?.product) {
       router.replace({
         pathname: "/entry/sale",
-        params: { scanProductId: String(result.product.id), scanBarcode: result.barcode },
+        params: {
+          scanProductId: String(result.product.id),
+          scanBarcode: result.barcode,
+        },
       } as any);
     }
   };
@@ -90,7 +96,11 @@ export default function ScanScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-border bg-card">
         <Button variant="ghost" size="icon" onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={THEME.light.foreground} />
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={THEME.light.foreground}
+          />
         </Button>
         <Text className="text-lg font-semibold">扫描结果</Text>
         <View style={{ width: 44 }} />
@@ -109,7 +119,10 @@ export default function ScanScreen() {
       <View className="p-4">
         <Button variant="outline" onPress={handleRescan}>
           <Ionicons name="scan" size={18} color={THEME.light.primary} />
-          <Text className="text-base font-semibold" style={{ color: THEME.light.primary }}>
+          <Text
+            className="text-base font-semibold"
+            style={{ color: THEME.light.primary }}
+          >
             重新扫描
           </Text>
         </Button>

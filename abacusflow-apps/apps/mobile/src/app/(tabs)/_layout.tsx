@@ -35,7 +35,11 @@ export default function TabLayout() {
         options={{
           title: "交易",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="swap-horizontal-outline" size={size} color={color} />
+            <Ionicons
+              name="swap-horizontal-outline"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

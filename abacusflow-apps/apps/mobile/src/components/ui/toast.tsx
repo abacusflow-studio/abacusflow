@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   Animated,
   Text,
@@ -34,24 +34,26 @@ const BG_MAP = {
   info: "#EFF6FF",
 } as const;
 
+const USE_NATIVE_DRIVER = Platform.OS !== "web";
+
 /** 全局 Toast 组件 */
 export function Toast({ visible, message, type, onHide }: ToastProps) {
-  const translateY = useRef(new Animated.Value(-100)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const [translateY] = useState(() => new Animated.Value(-100));
+  const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
         Animated.spring(translateY, {
           toValue: 0,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
           tension: 65,
           friction: 9,
         }),
         Animated.timing(opacity, {
           toValue: 1,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]).start();
     } else {
@@ -59,12 +61,12 @@ export function Toast({ visible, message, type, onHide }: ToastProps) {
         Animated.timing(translateY, {
           toValue: -100,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(opacity, {
           toValue: 0,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]).start();
     }
@@ -76,6 +78,7 @@ export function Toast({ visible, message, type, onHide }: ToastProps) {
     <Animated.View
       style={[
         styles.container,
+        styles.shadow,
         {
           transform: [{ translateY }],
           opacity,
@@ -111,13 +114,20 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     borderLeftWidth: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
     zIndex: 9999,
   },
+  shadow:
+    Platform.OS === "web"
+      ? {
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        }
+      : {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
+        },
   icon: { marginRight: 10 },
   message: {
     flex: 1,

@@ -31,8 +31,16 @@ export default function DepotListScreen() {
           bgColor={item.enabled ? "#dcfce7" : "#fee2e2"}
         />
       </View>
-      {item.location && <Text variant="muted" className="text-sm mt-0.5">地址: {item.location}</Text>}
-      {item.capacity != null && <Text variant="muted" className="text-sm mt-0.5">容量: {item.capacity}</Text>}
+      {item.location && (
+        <Text variant="muted" className="text-sm mt-0.5">
+          地址: {item.location}
+        </Text>
+      )}
+      {item.capacity != null && (
+        <Text variant="muted" className="text-sm mt-0.5">
+          容量: {item.capacity}
+        </Text>
+      )}
     </View>
   );
 

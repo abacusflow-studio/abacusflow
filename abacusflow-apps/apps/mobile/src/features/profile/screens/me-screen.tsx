@@ -27,8 +27,13 @@ const MENU_SECTIONS: MenuSectionType[] = [
 
 export default function MeScreen() {
   const router = useRouter();
-  const { authSnapshot, displayName, displayEmail, avatarLetter, handleLogout } =
-    useAuthSnapshot();
+  const {
+    authSnapshot,
+    displayName,
+    displayEmail,
+    avatarLetter,
+    handleLogout,
+  } = useAuthSnapshot();
 
   return (
     <SafeAreaView className="flex-1 bg-background">

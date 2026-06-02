@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -193,7 +200,11 @@ export default function ProductEntryScreen() {
 
           <AnimatedCard index={0}>
             <CardContent className="gap-4 px-4 py-4">
-              <StepTitle step="01" title="产品身份" desc="条码是现场流转的关键索引" />
+              <StepTitle
+                step="01"
+                title="产品身份"
+                desc="条码是现场流转的关键索引"
+              />
               <View className="flex-row gap-3">
                 <Input
                   className="h-12 flex-1 bg-background"
@@ -201,7 +212,10 @@ export default function ProductEntryScreen() {
                   onChangeText={setBarcode}
                   placeholder="扫描或手动输入"
                 />
-                <PressableScale haptic="medium" onPress={() => setScanning(true)}>
+                <PressableScale
+                  haptic="medium"
+                  onPress={() => setScanning(true)}
+                >
                   <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary">
                     <Ionicons
                       name="scan"
@@ -216,7 +230,11 @@ export default function ProductEntryScreen() {
 
           <AnimatedCard index={1}>
             <CardContent className="gap-4 px-4 py-4">
-              <StepTitle step="02" title="基础资料" desc="名称、类型、单位和分类" />
+              <StepTitle
+                step="02"
+                title="基础资料"
+                desc="名称、类型、单位和分类"
+              />
               <View className="gap-2">
                 <Text className="text-xs font-medium text-muted-foreground">
                   产品名称
@@ -374,8 +392,16 @@ function ChoiceGroup({
   return (
     <View className="gap-2">
       <Text className="text-xs font-medium text-muted-foreground">{label}</Text>
-      <ScrollView horizontal={horizontal} showsHorizontalScrollIndicator={false}>
-        <View className={cn("flex-row flex-wrap gap-2", horizontal && "flex-nowrap")}>
+      <ScrollView
+        horizontal={horizontal}
+        showsHorizontalScrollIndicator={false}
+      >
+        <View
+          className={cn(
+            "flex-row flex-wrap gap-2",
+            horizontal && "flex-nowrap",
+          )}
+        >
           {options.map((option) => {
             const active = value === option.value;
             return (

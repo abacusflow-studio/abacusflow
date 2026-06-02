@@ -123,7 +123,7 @@ export default function EntryHomeScreen() {
             />
           </View>
         </View>
-{/*
+        {/*
         <View className="gap-3">
           <SectionTitle title="资料维护" subtitle="现场需要时快速补全基础资料" />
           <View className="flex-row gap-3">
@@ -161,7 +161,13 @@ export default function EntryHomeScreen() {
   );
 }
 
-function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
+function SectionTitle({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
   return (
     <View>
       <Text className="text-base font-bold">{title}</Text>
@@ -189,7 +195,8 @@ function EntryAction({
   tint,
   onPress,
 }: EntryActionProps) {
-  const iconColor = tint === "primary" ? THEME.light.primary : THEME.light.accent;
+  const iconColor =
+    tint === "primary" ? THEME.light.primary : THEME.light.accent;
   const iconClassName = tint === "primary" ? "bg-primary/10" : "bg-accent/10";
 
   return (

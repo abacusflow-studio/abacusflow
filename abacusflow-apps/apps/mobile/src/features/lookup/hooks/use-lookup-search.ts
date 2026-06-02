@@ -26,7 +26,9 @@ export function useLookupSearch() {
   const [searchValue, setSearchValue] = useState("");
   const [products, setProducts] = useState<BasicProduct[]>([]);
   const [inventories, setInventories] = useState<BasicInventory[]>([]);
-  const [purchaseOrders, setPurchaseOrders] = useState<BasicPurchaseOrder[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<BasicPurchaseOrder[]>(
+    [],
+  );
   const [saleOrders, setSaleOrders] = useState<BasicSaleOrder[]>([]);
   const [customers, setCustomers] = useState<BasicCustomer[]>([]);
   const [suppliers, setSuppliers] = useState<BasicSupplier[]>([]);
@@ -82,7 +84,10 @@ export function useLookupSearch() {
         setPurchaseOrders(await searchPurchaseOrders(query));
       } catch (err) {
         console.error(err);
-        showToast(err instanceof Error ? err.message : "搜索采购单失败", "error");
+        showToast(
+          err instanceof Error ? err.message : "搜索采购单失败",
+          "error",
+        );
       } finally {
         setLoading(false);
       }
@@ -100,7 +105,10 @@ export function useLookupSearch() {
         setSaleOrders(await searchSaleOrders(query));
       } catch (err) {
         console.error(err);
-        showToast(err instanceof Error ? err.message : "搜索销售单失败", "error");
+        showToast(
+          err instanceof Error ? err.message : "搜索销售单失败",
+          "error",
+        );
       } finally {
         setLoading(false);
       }
@@ -136,7 +144,10 @@ export function useLookupSearch() {
         setSuppliers(await searchSuppliers(query));
       } catch (err) {
         console.error(err);
-        showToast(err instanceof Error ? err.message : "搜索供应商失败", "error");
+        showToast(
+          err instanceof Error ? err.message : "搜索供应商失败",
+          "error",
+        );
       } finally {
         setLoading(false);
       }
@@ -154,7 +165,10 @@ export function useLookupSearch() {
         setDepots(await searchDepots(query));
       } catch (err) {
         console.error(err);
-        showToast(err instanceof Error ? err.message : "搜索储存点失败", "error");
+        showToast(
+          err instanceof Error ? err.message : "搜索储存点失败",
+          "error",
+        );
       } finally {
         setLoading(false);
       }
@@ -173,7 +187,10 @@ export function useLookupSearch() {
           setInventories(await findInventoriesByBarcode(barcode));
         } catch (err) {
           console.error(err);
-          showToast(err instanceof Error ? err.message : "扫码查询失败", "error");
+          showToast(
+            err instanceof Error ? err.message : "扫码查询失败",
+            "error",
+          );
         } finally {
           setLoading(false);
         }
@@ -209,7 +226,16 @@ export function useLookupSearch() {
         void handleDepotSearch();
         break;
     }
-  }, [mode, handleProductSearch, handleInventorySearch, handlePurchaseOrderSearch, handleSaleOrderSearch, handleCustomerSearch, handleSupplierSearch, handleDepotSearch]);
+  }, [
+    mode,
+    handleProductSearch,
+    handleInventorySearch,
+    handlePurchaseOrderSearch,
+    handleSaleOrderSearch,
+    handleCustomerSearch,
+    handleSupplierSearch,
+    handleDepotSearch,
+  ]);
 
   const goBack = useCallback(() => {
     setMode("menu");

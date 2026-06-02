@@ -23,7 +23,9 @@ export function OrderBottomBar({
   return (
     <View className="flex-row items-center gap-4 border-t border-border bg-card px-4 py-3">
       <View className="flex-1">
-        <Text className="text-xs text-muted-foreground">{itemCount} 项明细</Text>
+        <Text className="text-xs text-muted-foreground">
+          {itemCount} 项明细
+        </Text>
         <Text className="mt-1 text-2xl font-bold">
           ¥{totalAmount.toLocaleString("zh-CN")}
         </Text>

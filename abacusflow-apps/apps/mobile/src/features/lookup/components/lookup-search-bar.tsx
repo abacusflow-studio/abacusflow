@@ -13,7 +13,14 @@ interface Props {
   onBack: () => void;
 }
 
-export function LookupSearchBar({ mode, value, onChange, onSubmit, onScan, onBack }: Props) {
+export function LookupSearchBar({
+  mode,
+  value,
+  onChange,
+  onSubmit,
+  onScan,
+  onBack,
+}: Props) {
   const placeholder =
     mode === "product"
       ? "搜索产品名称 / 条码"
@@ -48,7 +55,11 @@ export function LookupSearchBar({ mode, value, onChange, onSubmit, onScan, onBac
         <Ionicons name="scan" size={20} color={THEME.light.primary} />
       </Button>
       <Button size="icon" onPress={onSubmit}>
-        <Ionicons name="search" size={20} color={THEME.light.primaryForeground} />
+        <Ionicons
+          name="search"
+          size={20}
+          color={THEME.light.primaryForeground}
+        />
       </Button>
     </View>
   );

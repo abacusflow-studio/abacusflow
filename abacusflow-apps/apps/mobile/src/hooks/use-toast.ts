@@ -6,7 +6,9 @@ interface ToastState {
   type: "error" | "success" | "info";
 }
 
-let globalShowToast: ((message: string, type?: ToastState["type"]) => void) | null = null;
+let globalShowToast:
+  | ((message: string, type?: ToastState["type"]) => void)
+  | null = null;
 
 /**
  * 全局 Toast hook
@@ -43,7 +45,10 @@ export function useToast() {
 }
 
 /** 全局调用 Toast（可在任何地方使用） */
-export function showToast(message: string, type: "error" | "success" | "info" = "error") {
+export function showToast(
+  message: string,
+  type: "error" | "success" | "info" = "error",
+) {
   if (globalShowToast) {
     globalShowToast(message, type);
   } else {

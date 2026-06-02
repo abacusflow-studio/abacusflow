@@ -6,7 +6,9 @@ import { dateToFormattedString } from "@abacusflow/utils";
  * 通用订单表单 hook
  * 封装订单项目管理、金额计算、校验、提交、重置
  */
-export function useOrderForm<T extends { quantity: string; unitPrice: string }>() {
+export function useOrderForm<
+  T extends { quantity: string; unitPrice: string },
+>() {
   const [items, setItems] = useState<T[]>([]);
   const [orderDate, setOrderDate] = useState(
     dateToFormattedString(new Date().toISOString()),

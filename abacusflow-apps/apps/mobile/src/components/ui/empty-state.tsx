@@ -22,7 +22,11 @@ export function EmptyState({
       <Text className="mt-2 text-center text-sm font-medium text-muted-foreground">
         {message}
       </Text>
-      {hint && <Text className="text-center text-xs text-muted-foreground">{hint}</Text>}
+      {hint && (
+        <Text className="text-center text-xs text-muted-foreground">
+          {hint}
+        </Text>
+      )}
     </View>
   );
 }

@@ -64,18 +64,28 @@ export function WarningLineEditor({
                 />
               </View>
               <Button onPress={onSave} className="mt-1">
-                <Text className="text-sm font-semibold text-primary-foreground">保存</Text>
+                <Text className="text-sm font-semibold text-primary-foreground">
+                  保存
+                </Text>
               </Button>
             </View>
           ) : (
             <>
               <View className="flex-row justify-between py-3 border-b border-border">
-                <Text variant="muted" className="text-sm">安全库存</Text>
-                <Text className="text-sm font-medium">{displaySafetyStock ?? "-"}</Text>
+                <Text variant="muted" className="text-sm">
+                  安全库存
+                </Text>
+                <Text className="text-sm font-medium">
+                  {displaySafetyStock ?? "-"}
+                </Text>
               </View>
               <View className="flex-row justify-between py-3">
-                <Text variant="muted" className="text-sm">最大库存</Text>
-                <Text className="text-sm font-medium">{displayMaxStock ?? "-"}</Text>
+                <Text variant="muted" className="text-sm">
+                  最大库存
+                </Text>
+                <Text className="text-sm font-medium">
+                  {displayMaxStock ?? "-"}
+                </Text>
               </View>
             </>
           )}

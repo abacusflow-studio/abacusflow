@@ -1,4 +1,9 @@
-import { TouchableOpacity, Text, StyleSheet, type ViewStyle } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  type ViewStyle,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@abacusflow/utils";
 

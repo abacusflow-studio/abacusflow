@@ -12,4 +12,3 @@ export const ROUTES = {
   depots: "/(tabs)/depots",
   feedback: "/feedback",
 } as const;
-

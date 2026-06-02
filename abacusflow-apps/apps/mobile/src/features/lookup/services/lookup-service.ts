@@ -64,9 +64,7 @@ export async function findInventoriesForProduct(
 }
 
 /** 搜索产品（按名称 + 条码） */
-export async function searchProducts(
-  query: string,
-): Promise<BasicProduct[]> {
+export async function searchProducts(query: string): Promise<BasicProduct[]> {
   const [nameRes, barcodeProduct] = await Promise.all([
     productApi.listBasicProductsPage({
       pageIndex: 1,
@@ -171,9 +169,7 @@ export async function findInventoriesByBarcode(
 }
 
 /** 搜索客户（按名称） */
-export async function searchCustomers(
-  query: string,
-): Promise<BasicCustomer[]> {
+export async function searchCustomers(query: string): Promise<BasicCustomer[]> {
   const res = await partnerApi.listBasicCustomersPage({
     pageIndex: 1,
     pageSize: PAGE_SIZE,
@@ -183,9 +179,7 @@ export async function searchCustomers(
 }
 
 /** 搜索供应商（按名称） */
-export async function searchSuppliers(
-  query: string,
-): Promise<BasicSupplier[]> {
+export async function searchSuppliers(query: string): Promise<BasicSupplier[]> {
   const res = await partnerApi.listBasicSuppliersPage({
     pageIndex: 1,
     pageSize: PAGE_SIZE,

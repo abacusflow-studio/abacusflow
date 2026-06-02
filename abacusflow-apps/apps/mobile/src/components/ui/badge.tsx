@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, type ViewStyle, type TextStyle } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  type ViewStyle,
+  type TextStyle,
+} from "react-native";
 import { COLORS } from "@abacusflow/utils";
 
 interface BadgeProps {

@@ -16,9 +16,7 @@ export function useWarningLineEditor(
   const [safetyStock, setSafetyStock] = useState(
     data?.safetyStock?.toString() ?? "",
   );
-  const [maxStock, setMaxStock] = useState(
-    data?.maxStock?.toString() ?? "",
-  );
+  const [maxStock, setMaxStock] = useState(data?.maxStock?.toString() ?? "");
 
   /** 当 data 变化时同步初始值 */
   const syncFromData = useCallback((item: BasicInventory | null) => {

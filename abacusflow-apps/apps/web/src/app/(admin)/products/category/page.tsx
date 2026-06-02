@@ -275,7 +275,13 @@ export default function ProductCategoriesPage() {
         destroyOnHidden
       >
         {formLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "2rem 0",
+            }}
+          >
             <Spin />
           </div>
         ) : (

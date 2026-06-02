@@ -583,11 +583,7 @@ export default function InventoryPage() {
         confirmLoading={submitting}
         destroyOnHidden
       >
-        <Form
-          form={warningForm}
-          layout="vertical"
-          style={{ marginTop: 16 }}
-        >
+        <Form form={warningForm} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
             name="safetyStock"
             label="安全库存"

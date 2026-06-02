@@ -13,7 +13,13 @@ interface Props {
   onPress: (item: BasicInventory) => void;
 }
 
-export function InventoryResults({ data, loading, searched, onRefresh, onPress }: Props) {
+export function InventoryResults({
+  data,
+  loading,
+  searched,
+  onRefresh,
+  onPress,
+}: Props) {
   return (
     <FlatList
       data={data}
@@ -22,21 +28,31 @@ export function InventoryResults({ data, loading, searched, onRefresh, onPress }
       onRefresh={onRefresh}
       refreshing={loading}
       ListEmptyComponent={
-        searched ? <EmptyState icon="file-tray-outline" message="未找到库存" /> : null
+        searched ? (
+          <EmptyState icon="file-tray-outline" message="未找到库存" />
+        ) : null
       }
       renderItem={({ item }) => (
-        <PressableScale haptic="selection" onPress={() => onPress(item)} scaleTo={0.99}>
+        <PressableScale
+          haptic="selection"
+          onPress={() => onPress(item)}
+          scaleTo={0.99}
+        >
           <Card className="w-full py-0">
             <CardContent className="p-4">
               <View className="flex-row justify-between items-center mb-1">
-                <Text className="text-base font-semibold flex-1">{item.productName}</Text>
+                <Text className="text-base font-semibold flex-1">
+                  {item.productName}
+                </Text>
                 <Text variant="muted" className="text-xs">
                   {item.productType === "asset" ? "资产" : "物料"}
                 </Text>
               </View>
               <Text variant="muted" className="text-sm">
                 库存: {item.quantity}
-                {item.depotNames?.length ? ` · ${item.depotNames.join(", ")}` : ""}
+                {item.depotNames?.length
+                  ? ` · ${item.depotNames.join(", ")}`
+                  : ""}
               </Text>
             </CardContent>
           </Card>
