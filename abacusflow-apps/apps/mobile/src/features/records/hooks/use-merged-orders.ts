@@ -88,7 +88,7 @@ export function useOrderRecords() {
     }, [fetchRecords, searchKeyword]),
   );
 
-  /** 加载更多 */
+  /** 触底加载下一页 */
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
       fetchRecords(pageIndex + 1, true, searchKeyword);

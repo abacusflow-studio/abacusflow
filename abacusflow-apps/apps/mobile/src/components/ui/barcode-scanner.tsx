@@ -1,27 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
 
 interface BarcodeScannerProps {
-  onScan: (barcode: string) => void;
+  onScan: (barcode: string) => void | Promise<void>;
   onClose: () => void;
   title?: string;
+  hint?: string;
+  continuous?: boolean;
+  scanCooldownMs?: number;
+  scannedMessage?: string;
 }
 
 export function BarcodeScanner({
   onScan,
   onClose,
   title,
+  hint = "将条码/二维码放入框内",
+  continuous = false,
+  scanCooldownMs = 900,
+  scannedMessage = "已记录，继续扫描",
 }: BarcodeScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const scanningLockRef = useRef(false);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!permission?.granted) {
       requestPermission();
     }
   }, [permission, requestPermission]);
+
+  useEffect(
+    () => () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    },
+    [],
+  );
 
   if (!permission) {
     return (
@@ -46,16 +65,35 @@ export function BarcodeScanner({
     );
   }
 
-  const handleBarcodeScanned = ({ data }: { data: string }) => {
-    if (scanned) return;
+  const resetScanState = () => {
+    scanningLockRef.current = false;
+    setScanned(false);
+  };
+
+  const handleBarcodeScanned = async ({ data }: { data: string }) => {
+    if (scanningLockRef.current) return;
+    scanningLockRef.current = true;
     setScanned(true);
-    onScan(data);
+    try {
+      await onScan(data);
+    } catch (err) {
+      console.error("Barcode scan handler failed", err);
+    } finally {
+      if (continuous) {
+        if (resetTimerRef.current) {
+          clearTimeout(resetTimerRef.current);
+        }
+        resetTimerRef.current = setTimeout(resetScanState, scanCooldownMs);
+      } else {
+        scanningLockRef.current = false;
+      }
+    }
   };
 
   return (
     <View style={styles.container}>
       <CameraView
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
         barcodeScannerSettings={{
           barcodeTypes: [
@@ -89,20 +127,25 @@ export function BarcodeScanner({
             <View style={[styles.corner, styles.cornerBL]} />
             <View style={[styles.corner, styles.cornerBR]} />
           </View>
-          <Text style={styles.hint}>将条码/二维码放入框内</Text>
+          <Text style={styles.hint}>{hint}</Text>
         </View>
 
         {/* Bottom */}
         <View style={styles.bottom}>
-          {scanned && (
+          {scanned && continuous ? (
+            <View style={styles.scanStatus}>
+              <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              <Text style={styles.rescanText}>{scannedMessage}</Text>
+            </View>
+          ) : scanned ? (
             <TouchableOpacity
               style={styles.rescanBtn}
-              onPress={() => setScanned(false)}
+              onPress={resetScanState}
             >
               <Ionicons name="scan" size={20} color="#fff" />
               <Text style={styles.rescanText}>重新扫描</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
       </View>
     </View>
@@ -133,7 +176,7 @@ const styles = StyleSheet.create({
   cancelBtn: { paddingVertical: 8 },
   cancelText: { color: "#999", fontSize: 14 },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: "space-between",
   },
   topBar: {
@@ -198,6 +241,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     backgroundColor: "rgba(22,119,255,0.9)",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  scanStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(22,163,74,0.9)",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,

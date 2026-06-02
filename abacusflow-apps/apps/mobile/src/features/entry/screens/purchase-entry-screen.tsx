@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { View, ScrollView, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import type { SelectableProduct } from "@abacusflow/core";
 
 import { AnimatedCard } from "@components/ui/animated-card";
 import { BarcodeScanner } from "@components/ui/barcode-scanner";
@@ -42,10 +43,14 @@ export default function PurchaseEntryScreen() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<
     number | undefined
   >();
+  const [snProductContext, setSnProductContext] =
+    useState<SelectableProduct | null>(null);
+  const [scanFeedback, setScanFeedback] = useState("已记录，继续扫描");
+  const handledScanProductIdRef = useRef<string | undefined>(undefined);
 
   const form = useOrderForm<PurchaseOrderItem>();
   const draft = useDraftPersistence("purchase", params.draftId);
-  const { scanning, setScanning, handleScan } = useBarcodeScanning(products);
+  const { scanning, setScanning } = useBarcodeScanning(products);
 
   useEffect(() => {
     (async () => {
@@ -74,16 +79,6 @@ export default function PurchaseEntryScreen() {
   }, [params.draftId, partners, products]);
 
   useEffect(() => {
-    if (params.scanProductId && products.length > 0) {
-      const pid = Number(params.scanProductId);
-      const product = products.find((p) => p.id === pid);
-      if (product && !form.items.some((i) => i.productId === pid)) {
-        addItem(product);
-      }
-    }
-  }, [params.scanProductId, products]);
-
-  useEffect(() => {
     if (form.items.length > 0) {
       draft.autoSave(
         {
@@ -97,9 +92,69 @@ export default function PurchaseEntryScreen() {
     }
   }, [form.items, selectedPartnerId, form.note]);
 
+  const markScanCompleted = useCallback((message = "已记录，继续扫描") => {
+    setScanFeedback(message);
+    void triggerHaptic("success");
+  }, []);
+
+  const markScanInfo = useCallback((message: string) => {
+    setScanFeedback(message);
+    void triggerHaptic("selection");
+  }, []);
+
+  const markScanError = useCallback((message: string) => {
+    setScanFeedback(message);
+    void triggerHaptic("error");
+  }, []);
+
   const addItem = useCallback(
-    (product: (typeof products)[number]) => {
-      void triggerHaptic("selection");
+    (product: (typeof products)[number], serialNumber?: string): boolean => {
+      if (product.type === "asset") {
+        const sn = serialNumber?.trim();
+        if (!sn) {
+          setSnProductContext(product);
+          markScanInfo(`已识别「${product.name}」，请扫描资产 SN`);
+          return false;
+        }
+
+        const duplicated = form.items.some(
+          (item) =>
+            item.productType === "asset" &&
+            item.productId === product.id &&
+            item.serialNumber === sn,
+        );
+        if (duplicated) {
+          markScanError("SN 已在明细中，请继续扫描");
+          Alert.alert("提示", `SN「${sn}」已在明细中`);
+          return false;
+        }
+
+        form.setItems((prev) => [
+          ...prev,
+          {
+            productId: product.id,
+            productName: product.name,
+            productType: product.type,
+            barcode: product.barcode,
+            quantity: "1",
+            unitPrice: "",
+            serialNumber: sn,
+          },
+        ]);
+        return true;
+      }
+
+      setSnProductContext(null);
+      const existingIndex = form.items.findIndex(
+        (item) =>
+          item.productType !== "asset" && item.productId === product.id,
+      );
+      if (existingIndex >= 0) {
+        const currentQuantity = Number(form.items[existingIndex].quantity) || 0;
+        form.updateItem(existingIndex, "quantity", String(currentQuantity + 1));
+        return true;
+      }
+
       form.setItems((prev) => [
         ...prev,
         {
@@ -112,15 +167,98 @@ export default function PurchaseEntryScreen() {
           serialNumber: undefined,
         },
       ]);
+      return true;
     },
-    [form],
+    [form, markScanError, markScanInfo],
   );
+
+  const handleScannedProduct = useCallback(
+    (product: SelectableProduct): boolean => addItem(product),
+    [addItem],
+  );
+
+  const handleManualSelectProduct = useCallback(
+    (product: SelectableProduct) => {
+      setSnProductContext(null);
+      if (product.type === "asset") {
+        form.setItems((prev) => [
+          ...prev,
+          {
+            productId: product.id,
+            productName: product.name,
+            productType: product.type,
+            barcode: product.barcode,
+            quantity: "1",
+            unitPrice: "",
+            serialNumber: undefined,
+          },
+        ]);
+        return;
+      }
+      addItem(product);
+    },
+    [addItem, form],
+  );
+
+  useEffect(() => {
+    if (!params.scanProductId || products.length === 0) return;
+    if (handledScanProductIdRef.current === params.scanProductId) return;
+    const pid = Number(params.scanProductId);
+    const product = products.find((p) => p.id === pid);
+    if (product) {
+      handledScanProductIdRef.current = params.scanProductId;
+      const timer = setTimeout(() => {
+        if (handleScannedProduct(product)) {
+          markScanCompleted();
+        }
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [params.scanProductId, products, handleScannedProduct, markScanCompleted]);
 
   const onScan = useCallback(
     (barcode: string) => {
-      handleScan(barcode, addItem, "purchase");
+      const product = products.find((p) => p.barcode === barcode);
+      if (product) {
+        if (handleScannedProduct(product)) {
+          markScanCompleted();
+        }
+        return;
+      }
+
+      if (snProductContext) {
+        if (addItem(snProductContext, barcode)) {
+          setSnProductContext(null);
+          markScanCompleted("资产已记录，继续扫描产品");
+        }
+        return;
+      }
+
+      markScanError("未找到条码，继续扫描");
+      Alert.alert("条码未录入", "该产品不存在，是否先建档？", [
+        { text: "取消", style: "cancel" },
+        {
+          text: "建档",
+          onPress: () => {
+            setScanning(false);
+            router.push({
+              pathname: "/entry/product",
+              params: { barcode, returnTo: "purchase" },
+            } as any);
+          },
+        },
+      ]);
     },
-    [handleScan, addItem],
+    [
+      addItem,
+      handleScannedProduct,
+      markScanCompleted,
+      markScanError,
+      products,
+      router,
+      setScanning,
+      snProductContext,
+    ],
   );
 
   const handleSubmit = async () => {
@@ -183,7 +321,14 @@ export default function PurchaseEntryScreen() {
       <BarcodeScanner
         onScan={onScan}
         onClose={() => setScanning(false)}
-        title="入库扫码"
+        title={snProductContext ? "扫描资产 SN" : "入库扫码"}
+        hint={
+          snProductContext
+            ? `已识别「${snProductContext.name}」，请扫描资产 SN`
+            : "扫描产品条码；资产需再扫描 SN"
+        }
+        scannedMessage={scanFeedback}
+        continuous
       />
     );
   }
@@ -217,7 +362,7 @@ export default function PurchaseEntryScreen() {
               <StepTitle
                 step="02"
                 title="添加产品"
-                desc="扫码优先，找不到时可手动选择"
+                desc="普通商品扫码计数，资产需扫码产品和 SN"
               />
               <ScanButton
                 label="扫码添加产品"
@@ -236,7 +381,7 @@ export default function PurchaseEntryScreen() {
               />
               {form.items.map((item, idx) => (
                 <OrderItemCard
-                  key={item.productId}
+                  key={`${item.productId}-${item.serialNumber ?? "item"}-${idx}`}
                   title={item.productName}
                   subtitle={item.barcode}
                   quantity={item.quantity}
@@ -291,7 +436,7 @@ export default function PurchaseEntryScreen() {
         visible={showProductSelector}
         products={products}
         selectedIds={form.items.map((i) => i.productId)}
-        onSelect={(product) => addItem(product)}
+        onSelect={handleManualSelectProduct}
         onClose={() => setShowProductSelector(false)}
       />
     </SafeAreaView>

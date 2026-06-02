@@ -15,8 +15,8 @@ import { OrderRecordCard } from "../components/order-record-card";
 import type { OrderSearchField } from "../types";
 
 const FILTER_TABS: { key: OrderFilter; label: string; icon: string }[] = [
-  { key: "sale", label: "出库", icon: "arrow-up-outline" },
   { key: "purchase", label: "入库", icon: "download-outline" },
+  { key: "sale", label: "出库", icon: "arrow-up-outline" },
 ];
 
 const SEARCH_FIELDS: {

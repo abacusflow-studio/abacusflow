@@ -1,48 +1,25 @@
-import { useEffect, useState, useCallback } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import { partnerApi, type BasicCustomer } from "@abacusflow/core";
+import type { BasicCustomer } from "@abacusflow/core";
 import { Text } from "@components/ui/text";
 import { Badge } from "@components/ui/badge";
 import { THEME } from "@lib/theme";
 import { ListScreen } from "@components/layout/list-screen";
+import { useCustomers } from "../hooks/use-partners";
 
 export default function CustomerListScreen() {
   const router = useRouter();
-  const [data, setData] = useState<BasicCustomer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchName, setSearchName] = useState("");
-  const [pageIndex, setPageIndex] = useState(1);
-  const [total, setTotal] = useState(0);
-
-  const loadData = useCallback(
-    async (page = pageIndex) => {
-      setLoading(true);
-      try {
-        const res = await partnerApi.listBasicCustomersPage({
-          pageIndex: page,
-          pageSize: 20,
-          name: searchName || undefined,
-        });
-        setData(res.content);
-        setTotal(res.totalElements);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [pageIndex, searchName],
-  );
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleSearch = () => {
-    setPageIndex(1);
-    loadData(1);
-  };
+  const {
+    data,
+    loading,
+    loadingMore,
+    searchName,
+    setSearchName,
+    handleSearch,
+    handleRefresh,
+    handleLoadMore,
+    hasMore,
+  } = useCustomers();
 
   const renderItem = (item: BasicCustomer) => (
     <View className="py-1.5">
@@ -74,12 +51,10 @@ export default function CustomerListScreen() {
       searchValue={searchName}
       onSearchChange={setSearchName}
       onSearch={handleSearch}
-      onRefresh={() => {
-        setPageIndex(1);
-        loadData(1);
-      }}
-      onLoadMore={() => setPageIndex((p) => p + 1)}
-      hasMore={total > pageIndex * 20}
+      onRefresh={handleRefresh}
+      onLoadMore={handleLoadMore}
+      loadingMore={loadingMore}
+      hasMore={hasMore}
       renderItem={renderItem}
       addLabel="新增"
       onAdd={() => router.push("/partner/customer/add" as any)}

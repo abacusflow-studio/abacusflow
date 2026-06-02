@@ -13,7 +13,7 @@ import {
   type BasicDepot,
 } from "@abacusflow/core";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
 
 /** 合并多个数组并按 id 去重 */
 function mergeById<T extends { id: number }>(

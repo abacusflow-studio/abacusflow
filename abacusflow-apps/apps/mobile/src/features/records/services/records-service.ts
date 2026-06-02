@@ -92,7 +92,7 @@ export async function fetchPurchaseRecords(
 
     return {
       records: (res.content ?? []).map(mapPurchaseRecord),
-      hasMore: (page + 1) * PAGE_SIZE < (res.totalElements ?? 0),
+      hasMore: page * PAGE_SIZE < (res.totalElements ?? 0),
     };
   }
 
@@ -102,7 +102,7 @@ export async function fetchPurchaseRecords(
   });
   return {
     records: (res.content ?? []).map(mapPurchaseRecord),
-    hasMore: (page + 1) * PAGE_SIZE < (res.totalElements ?? 0),
+    hasMore: page * PAGE_SIZE < (res.totalElements ?? 0),
   };
 }
 
@@ -128,7 +128,7 @@ export async function fetchSaleRecords(
 
     return {
       records: (res.content ?? []).map(mapSaleRecord),
-      hasMore: (page + 1) * PAGE_SIZE < (res.totalElements ?? 0),
+      hasMore: page * PAGE_SIZE < (res.totalElements ?? 0),
     };
   }
 
@@ -138,7 +138,7 @@ export async function fetchSaleRecords(
   });
   return {
     records: (res.content ?? []).map(mapSaleRecord),
-    hasMore: (page + 1) * PAGE_SIZE < (res.totalElements ?? 0),
+    hasMore: page * PAGE_SIZE < (res.totalElements ?? 0),
   };
 }
 

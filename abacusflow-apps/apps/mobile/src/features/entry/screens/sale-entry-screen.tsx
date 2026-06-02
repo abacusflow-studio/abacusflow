@@ -4,7 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { translateInventoryUnitType } from "@abacusflow/utils";
-import type { SelectableProduct, BasicInventoryUnit } from "@abacusflow/core";
+import {
+  inventoryApi,
+  type SelectableProduct,
+  type BasicInventoryUnit,
+} from "@abacusflow/core";
 
 import { AnimatedCard } from "@components/ui/animated-card";
 import { BarcodeScanner } from "@components/ui/barcode-scanner";
@@ -44,6 +48,25 @@ const formatUnitOption = (unit: BasicInventoryUnit) => {
   return `${code} · 可用 ${unit.remainingQuantity}${depot}`;
 };
 
+const isSellableUnit = (unit: BasicInventoryUnit) =>
+  (unit.status === "normal" || unit.status === "reversed") &&
+  unit.remainingQuantity > 0;
+
+async function findSellableUnitsByCode(
+  code: string,
+): Promise<BasicInventoryUnit[]> {
+  const res = await inventoryApi.listBasicInventoriesPage({
+    pageIndex: 1,
+    pageSize: 20,
+    inventoryUnitCode: code,
+  });
+  return res.content.flatMap((inventory) =>
+    inventory.units.filter(
+      (unit) => isSellableUnit(unit) && matchesUnitCode(unit, code),
+    ),
+  );
+}
+
 export default function SaleEntryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -54,7 +77,6 @@ export default function SaleEntryScreen() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [scanningSN, setScanningSN] = useState(false);
   const [showProductSelector, setShowProductSelector] = useState(false);
   const [partners, setPartners] = useState<PartnerOption[]>([]);
   const [products, setProducts] = useState<SelectableProduct[]>([]);
@@ -64,6 +86,7 @@ export default function SaleEntryScreen() {
   const [discountFactor, setDiscountFactor] = useState("");
   const [snProductContext, setSnProductContext] =
     useState<SelectableProduct | null>(null);
+  const [scanFeedback, setScanFeedback] = useState("已记录，继续扫描");
   const handledScanProductIdRef = useRef<string | undefined>(undefined);
 
   const form = useOrderForm<SaleOrderItem>();
@@ -119,13 +142,42 @@ export default function SaleEntryScreen() {
   );
 
   const addUnitToItems = useCallback(
-    (unit: BasicInventoryUnit) => {
-      if (isUnitAlreadySelected(unit)) {
-        void triggerHaptic("error");
-        Alert.alert("提示", `「${unit.title}」已在明细中`);
-        return;
+    (unit: BasicInventoryUnit): boolean => {
+      const existingIndex = form.items.findIndex(
+        (item) => item.inventoryUnitId === unit.id,
+      );
+      if (existingIndex >= 0) {
+        if (unit.type === "instance") {
+          void triggerHaptic("error");
+          Alert.alert("提示", `「${unit.title}」已在明细中`);
+          return false;
+        }
+
+        const existing = form.items[existingIndex];
+        const currentQuantity = Number(existing.quantity) || 0;
+        const nextQuantity = currentQuantity + 1;
+        if (
+          unit.remainingQuantity != null &&
+          nextQuantity > unit.remainingQuantity
+        ) {
+          void triggerHaptic("error");
+          Alert.alert(
+            "提示",
+            `「${unit.title}」可用库存只有 ${unit.remainingQuantity}`,
+          );
+          return false;
+        }
+
+        form.updateItem(existingIndex, "quantity", String(nextQuantity));
+        return true;
       }
-      void triggerHaptic("selection");
+
+      if (unit.type === "batch" && unit.remainingQuantity <= 0) {
+        void triggerHaptic("error");
+        Alert.alert("提示", `「${unit.title}」没有可用库存`);
+        return false;
+      }
+
       form.setItems((prev) => [
         ...prev,
         {
@@ -136,71 +188,169 @@ export default function SaleEntryScreen() {
           remainingQuantity: unit.remainingQuantity,
         },
       ]);
+      return true;
     },
-    [isUnitAlreadySelected, form],
+    [form],
   );
 
+  const markScanCompleted = useCallback((message = "已记录，继续扫描") => {
+    setScanFeedback(message);
+    void triggerHaptic("success");
+  }, []);
+
+  const markScanInfo = useCallback((message: string) => {
+    setScanFeedback(message);
+    void triggerHaptic("selection");
+  }, []);
+
+  const markScanError = useCallback((message: string) => {
+    setScanFeedback(message);
+    void triggerHaptic("error");
+  }, []);
+
   const handleScannedProduct = useCallback(
-    async (product: SelectableProduct) => {
-      let available: BasicInventoryUnit[];
+    async (product: SelectableProduct): Promise<boolean> => {
+      let allUnits: BasicInventoryUnit[];
       try {
-        const allUnits = await findSellableUnitsForProduct(product);
-        available = allUnits.filter((u) => !isUnitAlreadySelected(u));
+        allUnits = await findSellableUnitsForProduct(product);
       } catch (err) {
         console.error(err);
-        void triggerHaptic("error");
+        markScanError("库存查询失败，继续扫描");
         Alert.alert("查询失败", "库存单元查询失败，请稍后重试");
-        return;
+        return false;
       }
 
       if (product.type === "asset") {
-        const matching = available.filter((u) => u.type === "instance");
-        if (matching.length === 0) {
-          void triggerHaptic("error");
-          Alert.alert("提示", `「${product.name}」没有可用的资产库存`);
-          return;
-        }
-        Alert.alert(
-          "选择资产",
-          "请确认SN或扫描SN条码",
-          matching
-            .slice(0, 8)
-            .map((u) => ({
-              text: formatUnitOption(u),
-              onPress: () => addUnitToItems(u),
-            }))
-            .concat([
-              {
-                text: "扫描SN",
-                onPress: () => {
-                  setSnProductContext(product);
-                  setScanningSN(true);
-                },
-              },
-              { text: "取消", onPress: () => {} },
-            ]),
+        const matching = allUnits.filter(
+          (u) => u.type === "instance" && !isUnitAlreadySelected(u),
         );
-      } else {
-        const matching = available.filter((u) => u.type === "batch");
         if (matching.length === 0) {
-          void triggerHaptic("error");
-          Alert.alert("提示", `「${product.name}」没有可用库存`);
-          return;
+          markScanError("没有可用资产，继续扫描");
+          Alert.alert("提示", `「${product.name}」没有可用的资产库存`);
+          return false;
         }
+        setSnProductContext(product);
+        setScanning(true);
+        markScanInfo(
+          `已识别「${product.name}」，请扫描资产 SN`,
+        );
+        return false;
+      } else {
+        setSnProductContext(null);
+        const matching = allUnits.filter((u) => u.type === "batch");
+        if (matching.length === 0) {
+          markScanError("没有可用库存，继续扫描");
+          Alert.alert("提示", `「${product.name}」没有可用库存`);
+          return false;
+        }
+
+        const incrementableSelected = matching.find((unit) => {
+          const existing = form.items.find(
+            (item) => item.inventoryUnitId === unit.id,
+          );
+          if (!existing) return false;
+          return (Number(existing.quantity) || 0) < unit.remainingQuantity;
+        });
+        if (incrementableSelected) {
+          return addUnitToItems(incrementableSelected);
+        }
+
+        const unselected = matching.filter((u) => !isUnitAlreadySelected(u));
+        if (unselected.length === 0) {
+          markScanError("库存已达上限，继续扫描");
+          Alert.alert("提示", `「${product.name}」已达到可用库存数量`);
+          return false;
+        }
+        if (unselected.length === 1) {
+          return addUnitToItems(unselected[0]);
+        }
+
         Alert.alert(
           "确认库存单元",
           `为「${product.name}」选择库存单元`,
-          matching
+          unselected
             .slice(0, 8)
             .map((u) => ({
               text: `${formatUnitOption(u)} (${translateInventoryUnitType(u.type)})`,
-              onPress: () => addUnitToItems(u),
+              onPress: () => {
+                if (addUnitToItems(u)) {
+                  markScanCompleted();
+                }
+              },
             }))
             .concat([{ text: "取消", onPress: () => {} }]),
         );
+        return false;
       }
     },
-    [addUnitToItems, isUnitAlreadySelected],
+    [
+      addUnitToItems,
+      form.items,
+      isUnitAlreadySelected,
+      markScanCompleted,
+      markScanError,
+      markScanInfo,
+      setScanning,
+    ],
+  );
+
+  const handleScannedUnitCode = useCallback(
+    async (barcode: string): Promise<boolean> => {
+      let matching: BasicInventoryUnit[];
+      try {
+        matching = await findSellableUnitsByCode(barcode);
+      } catch (err) {
+        console.error(err);
+        markScanError("库存查询失败，继续扫描");
+        Alert.alert("查询失败", "库存单元查询失败，请稍后重试");
+        return false;
+      }
+
+      if (matching.length === 0) return false;
+      if (matching.length === 1) {
+        return addUnitToItems(matching[0]);
+      }
+
+      Alert.alert(
+        "确认库存单元",
+        "找到多个匹配库存，请选择本次出库项",
+        matching
+          .slice(0, 8)
+          .map((unit) => ({
+            text: `${formatUnitOption(unit)} (${translateInventoryUnitType(unit.type)})`,
+            onPress: () => {
+              if (addUnitToItems(unit)) {
+                markScanCompleted();
+              }
+            },
+          }))
+          .concat([{ text: "取消", onPress: () => {} }]),
+      );
+      return false;
+    },
+    [addUnitToItems, markScanCompleted, markScanError],
+  );
+
+  const handleAssetSNScan = useCallback(
+    async (product: SelectableProduct, sn: string): Promise<boolean> => {
+      try {
+        const allUnits = await findSellableUnitsForProduct(product);
+        const available = allUnits.filter(
+          (unit) =>
+            unit.type === "instance" &&
+            !isUnitAlreadySelected(unit) &&
+            matchesUnitCode(unit, sn),
+        );
+        if (available.length === 0) return false;
+        return addUnitToItems(available[0]);
+      } catch (err) {
+        console.error(err);
+        markScanError("库存查询失败，继续扫描");
+        Alert.alert("查询失败", "库存单元查询失败，请稍后重试");
+        return false;
+      }
+    },
+    [addUnitToItems, isUnitAlreadySelected, markScanError],
   );
 
   useEffect(() => {
@@ -210,66 +360,71 @@ export default function SaleEntryScreen() {
     const product = products.find((p) => p.id === productId);
     if (product) {
       handledScanProductIdRef.current = params.scanProductId;
-      void handleScannedProduct(product);
+      const timer = setTimeout(() => {
+        void handleScannedProduct(product).then((completed) => {
+          if (completed) markScanCompleted();
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [params.scanProductId, products, handleScannedProduct]);
+  }, [params.scanProductId, products, handleScannedProduct, markScanCompleted]);
 
   const onScan = useCallback(
-    (barcode: string) => {
-      setScanning(false);
+    async (barcode: string) => {
       const product = products.find((p) => p.barcode === barcode);
-      if (!product) {
-        void triggerHaptic("error");
-        Alert.alert("条码未录入", "该产品不存在", [
-          { text: "确定", onPress: () => {} },
-          {
-            text: "建档",
-            onPress: () =>
-              router.push({
-                pathname: "/entry/product",
-                params: { barcode, returnTo: "sale" },
-              } as any),
-          },
-        ]);
-        return;
-      }
-      void handleScannedProduct(product);
-    },
-    [handleScannedProduct, products, router, setScanning],
-  );
-
-  const handleSNScan = useCallback(
-    async (sn: string) => {
-      setScanningSN(false);
-      const product = snProductContext;
-      setSnProductContext(null);
-      if (!product) {
-        void triggerHaptic("error");
-        Alert.alert("提示", "请先扫描商品，再扫描SN");
+      if (product) {
+        const completed = await handleScannedProduct(product);
+        if (completed) markScanCompleted();
         return;
       }
 
-      try {
-        const allUnits = await findSellableUnitsForProduct(product);
-        const available = allUnits.filter(
-          (u) => u.type === "instance" && matchesUnitCode(u, sn),
-        );
-        if (available.length > 0) {
-          addUnitToItems(available[0]);
+      if (snProductContext) {
+        const completed = await handleAssetSNScan(snProductContext, barcode);
+        if (completed) {
+          setSnProductContext(null);
+          markScanCompleted("资产已记录，继续扫描产品");
         } else {
-          void triggerHaptic("error");
+          markScanError("SN 未匹配，请重新扫描");
           Alert.alert(
             "未找到",
-            `「${product.name}」下未找到SN为「${sn}」的可用库存单元`,
+            `「${snProductContext.name}」下未找到 SN 为「${barcode}」的可用库存单元`,
           );
         }
-      } catch (err) {
-        console.error(err);
-        void triggerHaptic("error");
-        Alert.alert("查询失败", "库存单元查询失败，请稍后重试");
+        return;
       }
+
+      const completed = await handleScannedUnitCode(barcode);
+      if (completed) {
+        markScanCompleted();
+        return;
+      }
+
+      markScanError("未找到条码，继续扫描");
+      Alert.alert("条码未录入", "该产品不存在", [
+        { text: "确定", onPress: () => {} },
+        {
+          text: "建档",
+          onPress: () => {
+            setScanning(false);
+            router.push({
+              pathname: "/entry/product",
+              params: { barcode, returnTo: "sale" },
+            } as any);
+          },
+        },
+      ]);
     },
-    [addUnitToItems, snProductContext],
+    [
+      handleAssetSNScan,
+      handleScannedProduct,
+      handleScannedUnitCode,
+      markScanCompleted,
+      markScanError,
+      products,
+      router,
+      setScanning,
+      snProductContext,
+    ],
   );
 
   const handleSubmit = async () => {
@@ -360,17 +515,14 @@ export default function SaleEntryScreen() {
       <BarcodeScanner
         onScan={onScan}
         onClose={() => setScanning(false)}
-        title="出库扫码"
-      />
-    );
-  }
-
-  if (scanningSN) {
-    return (
-      <BarcodeScanner
-        onScan={handleSNScan}
-        onClose={() => setScanningSN(false)}
-        title="扫描资产SN"
+        title={snProductContext ? "扫描资产 SN" : "出库扫码"}
+        hint={
+          snProductContext
+            ? `已识别「${snProductContext.name}」，请扫描资产 SN`
+            : "扫描产品条码；资产需再扫描 SN"
+        }
+        scannedMessage={scanFeedback}
+        continuous
       />
     );
   }

@@ -6,6 +6,10 @@ type AndroidConfig = NonNullable<ExpoConfig["android"]> & {
   predictiveBackGestureEnabled: boolean;
 };
 
+type ExpoConfigWithNewArch = ExpoConfig & {
+  newArchEnabled: boolean;
+};
+
 const productVersion =
   process.env.EXPO_PUBLIC_APP_VERSION ??
   process.env.APP_VERSION ??
@@ -16,7 +20,7 @@ function parseVersionCode(value: string | undefined): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
+export default ({ config }: ConfigContext): ExpoConfigWithNewArch => ({
   ...config,
   name: "abacusflow-mobile",
   slug: "abacusflow-mobile",

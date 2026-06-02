@@ -12,6 +12,7 @@ import { THEME } from "@lib/theme";
 interface ListScreenProps<T> {
   data: T[];
   loading: boolean;
+  loadingMore?: boolean;
   searchPlaceholder?: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
@@ -30,6 +31,7 @@ interface ListScreenProps<T> {
 export function ListScreen<T>({
   data,
   loading,
+  loadingMore = false,
   searchPlaceholder = "搜索",
   searchValue,
   onSearchChange,
@@ -44,6 +46,21 @@ export function ListScreen<T>({
   onRetry,
   keyExtractor,
 }: ListScreenProps<T>) {
+  const handleEndReached = () => {
+    if (!loading && !loadingMore && hasMore && onLoadMore) {
+      onLoadMore();
+    }
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View className="items-center py-4">
+        <ActivityIndicator size="small" color={THEME.light.primary} />
+      </View>
+    );
+  };
+
   if (error) {
     return (
       <SafeAreaView className="flex-1 bg-background">
@@ -84,18 +101,10 @@ export function ListScreen<T>({
           contentContainerClassName="gap-3 p-4"
           onRefresh={onRefresh}
           refreshing={loading}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.3}
           ListEmptyComponent={<EmptyState message="暂无数据" />}
-          ListFooterComponent={
-            hasMore ? (
-              <Button
-                variant="ghost"
-                className="my-2 h-12"
-                onPress={onLoadMore}
-              >
-                <Text>加载更多</Text>
-              </Button>
-            ) : null
-          }
+          ListFooterComponent={renderFooter}
         />
       )}
     </SafeAreaView>
