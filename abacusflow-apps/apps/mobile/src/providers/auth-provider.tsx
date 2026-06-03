@@ -81,10 +81,11 @@ export function AuthGate({ children }: AuthGateProps) {
             style={({ pressed }) => [
               styles.primaryButton,
               (pressed || auth.signingIn) && styles.pressedButton,
+              auth.signingIn && styles.disabledButton,
             ]}
           >
             {auth.signingIn ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={COLORS.white} />
             ) : (
               <Text style={styles.primaryButtonText}>登录</Text>
             )}
@@ -165,16 +166,25 @@ const styles = StyleSheet.create({
     color: COLORS.textTertiary,
   },
   primaryButton: {
+    width: "100%",
     minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#16a34a",
+    borderWidth: 1,
+    borderColor: "#15803d",
     paddingHorizontal: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 2,
   },
   pressedButton: { opacity: 0.7 },
+  disabledButton: { backgroundColor: "#15803d" },
   primaryButtonText: {
-    color: "#fff",
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: "700",
   },

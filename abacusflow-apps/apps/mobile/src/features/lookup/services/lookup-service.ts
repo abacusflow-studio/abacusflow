@@ -103,16 +103,11 @@ export async function searchInventories(
   );
 }
 
-/** 搜索采购单（按单号/供应商/产品名） */
+/** 搜索采购单（按供应商/产品名） */
 export async function searchPurchaseOrders(
   query: string,
 ): Promise<BasicPurchaseOrder[]> {
-  const [byNo, bySupplier, byProduct] = await Promise.all([
-    transactionApi.listBasicPurchaseOrdersPage({
-      pageIndex: 1,
-      pageSize: PAGE_SIZE,
-      orderNo: query,
-    }),
+  const [bySupplier, byProduct] = await Promise.all([
     transactionApi.listBasicPurchaseOrdersPage({
       pageIndex: 1,
       pageSize: PAGE_SIZE,
@@ -124,19 +119,14 @@ export async function searchPurchaseOrders(
       productName: query,
     }),
   ]);
-  return mergeById(byNo.content, bySupplier.content, byProduct.content);
+  return mergeById(bySupplier.content, byProduct.content);
 }
 
-/** 搜索销售单（按单号/客户/库存单元名） */
+/** 搜索销售单（按客户/库存单元名） */
 export async function searchSaleOrders(
   query: string,
 ): Promise<BasicSaleOrder[]> {
-  const [byNo, byCustomer, byInventoryUnit] = await Promise.all([
-    transactionApi.listBasicSaleOrdersPage({
-      pageIndex: 1,
-      pageSize: PAGE_SIZE,
-      orderNo: query,
-    }),
+  const [byCustomer, byInventoryUnit] = await Promise.all([
     transactionApi.listBasicSaleOrdersPage({
       pageIndex: 1,
       pageSize: PAGE_SIZE,
@@ -148,7 +138,7 @@ export async function searchSaleOrders(
       inventoryUnitName: query,
     }),
   ]);
-  return mergeById(byNo.content, byCustomer.content, byInventoryUnit.content);
+  return mergeById(byCustomer.content, byInventoryUnit.content);
 }
 
 /** 通过条码查库存（扫码入口用） */
