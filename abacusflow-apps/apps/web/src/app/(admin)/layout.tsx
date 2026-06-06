@@ -8,6 +8,7 @@ import { Layout, Menu } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
+  AreaChartOutlined,
   BankOutlined,
   DashboardOutlined,
   ExclamationCircleOutlined,
@@ -25,7 +26,7 @@ import {
   TransactionOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { getAuthClient } from "@abacusflow/core";
+import { getAuthClient, userApi } from "@abacusflow/core";
 import { useTheme } from "../../components/providers";
 import { FeedbackModal } from "../../components/feedback-modal";
 
@@ -106,6 +107,11 @@ const NAV_ITEMS: MenuItemType[] = [
     icon: <HomeOutlined />,
   },
   {
+    key: "/analytics",
+    label: <Link href="/analytics">数据刻画</Link>,
+    icon: <AreaChartOutlined />,
+  },
+  {
     key: "/feedback",
     label: <Link href="/feedback">问题反馈</Link>,
     icon: <ExclamationCircleOutlined />,
@@ -143,6 +149,7 @@ const ROUTE_META = [
   },
   { key: "/partner/supplier", title: "供应商管理", subtitle: "供应侧伙伴资料" },
   { key: "/depots", title: "储存点管理", subtitle: "仓点位置与容量" },
+  { key: "/analytics", title: "数据刻画", subtitle: "业务趋势与指标洞察" },
   { key: "/feedback", title: "问题反馈", subtitle: "用户反馈查看与处理" },
 ];
 
@@ -168,6 +175,7 @@ export default function AdminLayout({
   const [collapsed, setCollapsed] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
   const [showFeedback, setShowFeedback] = useState(false);
+  const [displayName, setDisplayName] = useState<string>("");
   const { themeMode, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -179,6 +187,11 @@ export default function AdminLayout({
         if (await auth.isAuthenticated()) {
           if (!cancelled) {
             setAuthStatus("authenticated");
+            userApi.getCurrentUser().then((user) => {
+              if (!cancelled) {
+                setDisplayName(user.displayName ?? user.username);
+              }
+            }).catch(() => { /* non-critical */ });
           }
           return;
         }
@@ -328,8 +341,10 @@ export default function AdminLayout({
             </button>
             <div className="af-status-chip">实时同步</div>
             <div className="af-user-chip">
-              <span className="af-user-avatar">管</span>
-              <span>超级管理员</span>
+              <span className="af-user-avatar">
+                {displayName ? displayName.charAt(0).toUpperCase() : "?"}
+              </span>
+              <span>{displayName || "加载中..."}</span>
             </div>
           </div>
         </Header>

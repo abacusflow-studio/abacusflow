@@ -14,6 +14,14 @@ cubes:
         type: number
         primary_key: true
 
+      - name: safety_stock
+        sql: safety_stock
+        type: number
+
+      - name: max_stock
+        sql: max_stock
+        type: number
+
       - name: created_at
         sql: created_at
         type: time
@@ -26,7 +34,16 @@ cubes:
       - name: count
         type: count
 
+      - name: low_stock_count
+        type: count
+        description: 当前库存量低于安全库存的品目数
+        filters:
+          - sql: >
+              {CUBE}.safety_stock > COALESCE(
+                (SELECT SUM(iu.quantity) FROM public.inventory_unit iu WHERE iu.inventory_id = {CUBE}.id),
+                0
+              )
+
     pre_aggregations:
       # Pre-aggregation definitions go here.
       # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
