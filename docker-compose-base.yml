@@ -53,7 +53,7 @@ services:
     expose:
       - 4000
     volumes:
-      - ./config/cube:/cube/conf
+      - ./abacusflow-infra/abacusflow-cube:/cube/conf
 
 #  cubestore:
 #    container_name: cubestore

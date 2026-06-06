@@ -5,6 +5,7 @@ build/
 !**/src/test/**/build/
 
 ### cube ###
+abacusflow-infra/abacusflow-cube/.cubestore/
 config/cube/.cubestore/
 
 ### IntelliJ IDEA ###

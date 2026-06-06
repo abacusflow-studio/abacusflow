@@ -11,6 +11,7 @@ val infraModules =
         "abacusflow-db",
         "abacusflow-commons",
         "abacusflow-storage",
+        "abacusflow-cube",
     )
 infraModules.forEach {
     include(

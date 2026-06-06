@@ -4,6 +4,9 @@ import appVersion from "../../app-version.json";
 const apiProxyTarget = (
   process.env.API_PROXY_TARGET ?? "http://localhost:8080"
 ).replace(/\/$/, "");
+const cubeProxyTarget = (
+  process.env.CUBE_PROXY_TARGET ?? "http://localhost:4000"
+).replace(/\/$/, "");
 const productVersion =
   process.env.NEXT_PUBLIC_APP_VERSION ??
   process.env.APP_VERSION ??
@@ -28,6 +31,10 @@ const nextConfig: NextConfig = {
             {
               source: "/api/:path*",
               destination: `${apiProxyTarget}/:path*`,
+            },
+            {
+              source: "/cubejs-api/:path*",
+              destination: `${cubeProxyTarget}/:path*`,
             },
           ];
         },

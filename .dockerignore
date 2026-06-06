@@ -1,0 +1,13 @@
+.git
+.github
+.gradle
+.idea
+**/.cubestore
+**/.env
+**/.env.*
+**/.next
+**/.expo
+**/build
+**/node_modules
+**/out
+**/*.tsbuildinfo
