@@ -17,6 +17,7 @@ import {
   Descriptions,
   Card,
   Spin,
+  Divider,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -128,6 +129,17 @@ export function OrderListPage({
   const [showDetail, setShowDetail] = useState(false);
   const [detailItem, setDetailItem] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [newCustomerForm, setNewCustomerForm] = useState({
+    name: "",
+    phone: "",
+    address: "",
+  });
+  const [newCustomerErrors, setNewCustomerErrors] = useState<
+    Record<string, string>
+  >({});
+  const [newCustomerSubmitting, setNewCustomerSubmitting] = useState(false);
 
   const defaultFilters: Partial<AnyParams> =
     orderType === "purchase"
@@ -263,6 +275,37 @@ export function OrderListPage({
       ...prev,
       items: prev.items.filter((_, itemIndex) => itemIndex !== index),
     }));
+  };
+
+  const handleAddCustomer = async () => {
+    const errs: Record<string, string> = {};
+    if (!newCustomerForm.name.trim()) errs.name = "请输入客户名称";
+    setNewCustomerErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setNewCustomerSubmitting(true);
+    try {
+      const created = await partnerApi.addCustomer({
+        createCustomerInput: {
+          name: newCustomerForm.name.trim(),
+          phone: newCustomerForm.phone.trim() || undefined,
+          address: newCustomerForm.address.trim() || undefined,
+        },
+      });
+      const newOption = {
+        label: created.name,
+        value: String(created.id),
+      };
+      setPartnerOptions((prev) => [...prev, newOption]);
+      setForm((prev) => ({ ...prev, partnerId: String(created.id) }));
+      setShowNewCustomer(false);
+      setNewCustomerForm({ name: "", phone: "", address: "" });
+      message.success("新增客户成功");
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "新增客户失败");
+    } finally {
+      setNewCustomerSubmitting(false);
+    }
   };
 
   const validate = (): boolean => {
@@ -685,7 +728,41 @@ export function OrderListPage({
                 onChange={(val) => setForm({ ...form, partnerId: String(val) })}
                 placeholder={`请选择${partnerLabel}`}
                 options={partnerOptions}
+                showSearch
+                filterOption={(input, option) =>
+                  String(option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
                 {...(errors.partnerId ? { status: "error" as const } : {})}
+                {...(orderType === "sale"
+                  ? {
+                      dropdownRender: (menu) => (
+                        <>
+                          {menu}
+                          <Divider style={{ margin: "4px 0" }} />
+                          <div style={{ padding: "4px 8px" }}>
+                            <Button
+                              type="link"
+                              icon={<PlusOutlined />}
+                              size="small"
+                              onClick={() => {
+                                setNewCustomerForm({
+                                  name: "",
+                                  phone: "",
+                                  address: "",
+                                });
+                                setNewCustomerErrors({});
+                                setShowNewCustomer(true);
+                              }}
+                            >
+                              新增客户
+                            </Button>
+                          </div>
+                        </>
+                      ),
+                    }
+                  : {})}
               />
               {errors.partnerId && (
                 <div style={{ color: "#ff4d4f", fontSize: 12 }}>
@@ -767,6 +844,12 @@ export function OrderListPage({
                       }
                       placeholder={`请选择${itemLabel}`}
                       options={itemOptions}
+                      showSearch
+                      filterOption={(input, option) =>
+                        String(option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
                       {...(errors[`item-${index}`]
                         ? { status: "error" as const }
                         : {})}
@@ -969,6 +1052,63 @@ export function OrderListPage({
             </div>
           </Space>
         ) : null}
+      </Modal>
+
+      <Modal
+        open={showNewCustomer}
+        title="新增客户"
+        onCancel={() => setShowNewCustomer(false)}
+        onOk={handleAddCustomer}
+        confirmLoading={newCustomerSubmitting}
+        width={480}
+        destroyOnHidden
+      >
+        <div style={{ marginTop: 16 }}>
+          <Form.Item label="客户名称" required style={{ marginBottom: 12 }}>
+            <Input
+              value={newCustomerForm.name}
+              onChange={(e) =>
+                setNewCustomerForm((prev) => ({
+                  ...prev,
+                  name: e.target.value,
+                }))
+              }
+              placeholder="请输入客户名称"
+              {...(newCustomerErrors.name
+                ? { status: "error" as const }
+                : {})}
+            />
+            {newCustomerErrors.name && (
+              <div style={{ color: "#ff4d4f", fontSize: 12 }}>
+                {newCustomerErrors.name}
+              </div>
+            )}
+          </Form.Item>
+          <Form.Item label="联系电话" style={{ marginBottom: 12 }}>
+            <Input
+              value={newCustomerForm.phone}
+              onChange={(e) =>
+                setNewCustomerForm((prev) => ({
+                  ...prev,
+                  phone: e.target.value,
+                }))
+              }
+              placeholder="请输入联系电话（可选）"
+            />
+          </Form.Item>
+          <Form.Item label="地址" style={{ marginBottom: 0 }}>
+            <Input
+              value={newCustomerForm.address}
+              onChange={(e) =>
+                setNewCustomerForm((prev) => ({
+                  ...prev,
+                  address: e.target.value,
+                }))
+              }
+              placeholder="请输入地址（可选）"
+            />
+          </Form.Item>
+        </div>
       </Modal>
     </div>
   );
