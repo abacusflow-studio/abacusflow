@@ -1,42 +1,49 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Segmented } from "antd";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts-for-react/lib/types";
 import { useCubeQuery } from "../../../../hooks/use-cube-query";
 import { ChartCard } from "./chart-card";
-import { COLORS, fmtMonth } from "./shared";
-
-type CostRow = {
-  "purchase_order.order_date.month": string;
-  "purchase_order_item.cost": string;
-  "purchase_order_item.quantity": string;
-};
-
-const QUERY = {
-  measures: ["purchase_order_item.cost", "purchase_order_item.quantity"],
-  timeDimensions: [
-    {
-      dimension: "purchase_order.order_date",
-      granularity: "month" as const,
-      dateRange: "Last 12 months",
-    },
-  ],
-  order: { "purchase_order.order_date": "asc" as const },
-};
+import {
+  COLORS,
+  fmtDate,
+  GRANULARITY_DATE_RANGE,
+  GRANULARITY_OPTIONS,
+  type GranularityValue,
+} from "./shared";
 
 export function PurchaseCostChart() {
-  const { data, loading, error } = useCubeQuery<CostRow>(QUERY);
+  const [granularity, setGranularity] = useState<GranularityValue>("month");
+
+  const query = useMemo(
+    () => ({
+      measures: ["purchase_order_item.cost", "purchase_order_item.quantity"],
+      timeDimensions: [
+        {
+          dimension: "purchase_order.order_date",
+          granularity,
+          dateRange: GRANULARITY_DATE_RANGE[granularity],
+        },
+      ],
+      order: { "purchase_order.order_date": "asc" as const },
+    }),
+    [granularity],
+  );
+
+  const { data, loading, error } = useCubeQuery(query);
 
   const option = useMemo((): EChartsOption => {
-    const months = data.map((r) => fmtMonth(r["purchase_order.order_date.month"]));
+    const dateKey = `purchase_order.order_date.${granularity}`;
+    const dates = data.map((r) => fmtDate(String(r[dateKey] ?? ""), granularity));
     const costs = data.map((r) => Number(r["purchase_order_item.cost"]));
     const quantities = data.map((r) => Number(r["purchase_order_item.quantity"]));
     return {
       tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
       legend: { data: ["采购成本", "采购数量"], top: 0 },
       grid: { top: 36, right: 56, bottom: 24, left: 56, containLabel: false },
-      xAxis: { type: "category", data: months, axisLabel: { fontSize: 11 } },
+      xAxis: { type: "category", data: dates, axisLabel: { fontSize: 11 } },
       yAxis: [
         {
           type: "value",
@@ -74,10 +81,22 @@ export function PurchaseCostChart() {
         },
       ],
     };
-  }, [data]);
+  }, [data, granularity]);
 
   return (
-    <ChartCard title="月度采购成本与数量" loading={loading} error={error}>
+    <ChartCard
+      title="采购成本与数量"
+      loading={loading}
+      error={error}
+      extra={
+        <Segmented
+          size="small"
+          options={GRANULARITY_OPTIONS}
+          value={granularity}
+          onChange={(v) => setGranularity(v as GranularityValue)}
+        />
+      }
+    >
       <ReactECharts option={option} style={{ height: "100%" }} />
     </ChartCard>
   );

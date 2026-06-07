@@ -45,9 +45,10 @@ export function useCubeQuery<T = Record<string, string | number | null>>(
     })
       .then((res) => {
         if (!res.ok) throw new Error(`Cube.js 请求失败 (${res.status})`);
-        return res.json() as Promise<{ data: T[] }>;
+        return res.json() as Promise<{ data: T[]; error?: string }>;
       })
       .then((json) => {
+        if (json.error) throw new Error(json.error);
         if (!cancelled) {
           setData(json.data ?? []);
           setLoading(false);

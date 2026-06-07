@@ -10,17 +10,20 @@ export function ChartCard({
   loading,
   error,
   height = 260,
+  extra,
   children,
 }: {
   title: string;
   loading: boolean;
   error: string | null;
   height?: number;
+  extra?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <Card
       title={<span style={{ fontSize: 14, fontWeight: 600 }}>{title}</span>}
+      extra={extra}
       size="small"
       style={{ flex: 1, minWidth: 0 }}
     >

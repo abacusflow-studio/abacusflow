@@ -5,31 +5,29 @@ import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts-for-react/lib/types";
 import { useCubeQuery } from "../../../../hooks/use-cube-query";
 import { ChartCard } from "./chart-card";
-import { PIE_PALETTE, PRODUCT_TYPE_LABELS } from "./shared";
+import { PIE_PALETTE } from "./shared";
 
-type ProductTypeRow = {
-  "product.type": string;
+type ProductCategoryRow = {
+  "product_category.name": string;
   "product.count": string;
 };
 
 const QUERY = {
-  dimensions: ["product.type"],
+  dimensions: ["product_category.name"],
   measures: ["product.count"],
   order: { "product.count": "desc" as const },
 };
 
 export function ProductTypeChart() {
-  const { data, loading, error } = useCubeQuery<ProductTypeRow>(QUERY);
+  const { data, loading, error } = useCubeQuery<ProductCategoryRow>(QUERY);
 
   const option = useMemo((): EChartsOption => {
-    const types = data.map(
-      (r) => PRODUCT_TYPE_LABELS[r["product.type"]] ?? r["product.type"],
-    );
+    const names = data.map((r) => r["product_category.name"] ?? "未分类");
     const counts = data.map((r) => Number(r["product.count"]));
     return {
       tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
       grid: { top: 16, right: 16, bottom: 24, left: 48, containLabel: false },
-      xAxis: { type: "category", data: types, axisLabel: { fontSize: 12 } },
+      xAxis: { type: "category", data: names, axisLabel: { fontSize: 12 } },
       yAxis: { type: "value", axisLabel: { fontSize: 11 }, minInterval: 1 },
       series: [
         {
@@ -48,7 +46,7 @@ export function ProductTypeChart() {
   }, [data]);
 
   return (
-    <ChartCard title="产品类型分布" loading={loading} error={error} height={260}>
+    <ChartCard title="产品分类分布" loading={loading} error={error} height={260}>
       <ReactECharts option={option} style={{ height: "100%" }} />
     </ChartCard>
   );
