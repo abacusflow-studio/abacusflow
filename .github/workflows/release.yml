@@ -167,6 +167,31 @@ jobs:
         id: parse-git-tag
         uses: ./.github/actions/parse-git-tag
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: abacusflow-apps/package-lock.json
+
+      - name: Setup Java (for openapi-generator-cli)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+        working-directory: abacusflow-apps
+
+      - name: Generate OpenAPI client
+        run: npm run generate --workspace=@abacusflow/core
+        working-directory: abacusflow-apps
+
+      - name: Build web app
+        run: npm exec --workspace=abacusflow-web -- next build
+        working-directory: abacusflow-apps
+
       - name: Install cosign
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
         with:
@@ -194,7 +219,7 @@ jobs:
         id: build-and-push-web
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
-          context: .
+          context: ./abacusflow-apps
           file: ./abacusflow-apps/apps/web/Dockerfile
           push: true
           tags: ${{ steps.meta-web.outputs.tags }}
@@ -215,7 +240,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [android, ios]
+        platform: [android] # 需要 Apple Developer 账号时改为 [android, ios]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
