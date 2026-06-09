@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation(project(":abacusflow-usecase"))
     implementation(project(":abacusflow-portal:abacusflow-portal-web"))
+    implementation(libs.spring.boot.starter.actuator)
 }
 
 tasks.withType<BootJar> {

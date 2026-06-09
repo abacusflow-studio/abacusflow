@@ -12,6 +12,15 @@ spring:
       max-file-size: 10MB
       max-request-size: 50MB
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 abacusflow:
   cors:
     allowed-origin-patterns: ${ABACUSFLOW_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,https://abacusflow-web.vercel.app,https://abacusflow-web-*.vercel.app}

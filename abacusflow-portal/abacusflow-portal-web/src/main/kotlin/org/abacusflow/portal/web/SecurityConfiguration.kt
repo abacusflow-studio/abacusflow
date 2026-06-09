@@ -39,6 +39,7 @@ class SecurityConfiguration {
                 authorize("/login", permitAll)
                 authorize("/oauth2/**", permitAll)
                 authorize("/error", permitAll)
+                authorize("/actuator/health", permitAll)
                 authorize(anyRequest, authenticated)
             }
             oauth2ResourceServer {
