@@ -2,7 +2,7 @@ FROM node:22-alpine AS builder
 
 WORKDIR /workspace
 
-COPY abacusflow-apps/package.json abacusflow-apps/package-lock.json ./abacusflow-apps/
+COPY abacusflow-apps/package.json abacusflow-apps/package-lock.json abacusflow-apps/app-version.json ./abacusflow-apps/
 COPY abacusflow-apps/apps ./abacusflow-apps/apps
 COPY abacusflow-apps/packages ./abacusflow-apps/packages
 
