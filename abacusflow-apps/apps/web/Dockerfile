@@ -9,7 +9,10 @@ RUN rm -f /etc/nginx/conf.d/default.conf
 
 COPY apps/web/out /usr/share/nginx/html
 COPY apps/web/docker/nginx-templates/default.conf.template /etc/nginx/templates/default.conf.template
+COPY apps/web/docker/custom-entrypoint.sh /custom-entrypoint.sh
+RUN chmod +x /custom-entrypoint.sh
 
 EXPOSE 80
 
+ENTRYPOINT ["/custom-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

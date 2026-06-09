@@ -269,7 +269,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Build ${{ matrix.platform }} production app via EAS
-        run: eas build --platform "${{ matrix.platform }}" --profile production --non-interactive --wait
+        run: eas build --platform "${{ matrix.platform }}" --profile preview --non-interactive --wait # 上架商店时改为 production
         working-directory: abacusflow-apps/apps/mobile
         env:
           APP_VERSION: ${{ steps.version.outputs.version }}
