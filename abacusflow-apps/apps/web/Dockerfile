@@ -5,10 +5,12 @@ WORKDIR /workspace
 COPY abacusflow-apps/package.json abacusflow-apps/package-lock.json abacusflow-apps/app-version.json ./abacusflow-apps/
 COPY abacusflow-apps/apps ./abacusflow-apps/apps
 COPY abacusflow-apps/packages ./abacusflow-apps/packages
+COPY abacusflow-portal/abacusflow-portal-web/src/main/resources/static/openapi.yaml ./abacusflow-portal/abacusflow-portal-web/src/main/resources/static/openapi.yaml
 
 WORKDIR /workspace/abacusflow-apps
 
 RUN npm ci --ignore-scripts
+RUN npm run generate --workspace=@abacusflow/core
 RUN npm exec --workspace=abacusflow-web -- next build
 
 FROM nginx:1.27-alpine
