@@ -35,7 +35,7 @@ services:
     container_name: cube
     image: cubejs/cube:${CUBE_VERSION}
     environment:
-      - CUBEJS_API_SECRET=123ABCdef*1qaz2wsx3edc4rfv5tgb6yhn7ujm
+      - CUBEJS_API_SECRET=123ABCdef*1qaz2wsx3edc4rfv5tgb6yhn7ujm # 仅本地开发用，生产环境改用 Auth0 JWKS（CUBEJS_JWT_URL）验证，无需此项
       - CUBEJS_DEV_MODE=true
       - CUBEJS_DB_TYPE=postgres
       - CUBEJS_DB_HOST=postgres

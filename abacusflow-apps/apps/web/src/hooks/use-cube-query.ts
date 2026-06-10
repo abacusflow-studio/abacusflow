@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getConfig } from "@abacusflow/config";
+import { getAuthClient } from "@abacusflow/core";
 
 export interface CubeTimeDimension {
   dimension: string;
@@ -38,15 +39,18 @@ export function useCubeQuery<T = Record<string, string | number | null>>(
 
     const endpoint = `${getConfig().cubeEndpoint}/v1/load`;
 
-    const token = getConfig().cubeToken;
-    fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ query }),
-    })
+    getAuthClient()
+      .getAccessToken()
+      .then((token) =>
+        fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ query }),
+        })
+      )
       .then((res) => {
         if (!res.ok) throw new Error(`Cube.js 请求失败 (${res.status})`);
         return res.json() as Promise<{ data: T[]; error?: string }>;

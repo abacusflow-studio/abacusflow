@@ -3,8 +3,7 @@ FROM cubejs/cube:${CUBE_VERSION}
 
 ENV CUBEJS_DEV_MODE=true \
     CUBEJS_CUBESTORE_HOST=cubestore \
-    CUBEJS_CUBESTORE_PORT=3030 \
-    CUBEJS_API_SECRET=""
+    CUBEJS_CUBESTORE_PORT=3030
 
 COPY cube.js /cube/conf/cube.js
 COPY model /cube/conf/model

@@ -12,7 +12,6 @@ export interface AppConfig {
   apiBaseUrl: string;
   auth0: Auth0Config;
   cubeEndpoint: string;
-  cubeToken: string;
   version: string;
 }
 
@@ -25,7 +24,6 @@ export interface AppConfigInput {
     redirectUri?: string;
   };
   cubeEndpoint?: string;
-  cubeToken?: string;
   version?: string;
 }
 
@@ -41,7 +39,6 @@ const DEFAULT_CONFIG: AppConfig = {
     audience: "https://admin.abacusflow.cn",
   },
   cubeEndpoint: "/cubejs-api",
-  cubeToken: "",
   version: DEFAULT_APP_VERSION,
 };
 
@@ -74,7 +71,6 @@ export function defineAppConfig(
       redirectUri: input.auth0?.redirectUri,
     },
     cubeEndpoint: input.cubeEndpoint ?? DEFAULT_CONFIG.cubeEndpoint,
-    cubeToken: input.cubeToken ?? DEFAULT_CONFIG.cubeToken,
     version: resolveAppVersion(input.version),
   };
 }
