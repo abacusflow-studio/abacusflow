@@ -15,6 +15,7 @@ import {
   Typography,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { formatCurrency } from "@abacusflow/utils";
 import type { OrderForm, OrderItemForm, SelectOption } from "./order-list-types";
 
 interface OrderCreateModalProps {
@@ -278,24 +279,38 @@ function OrderItemRow({
           )}
         </Form.Item>
       ) : (
-        <Form.Item label="折扣率" style={{ marginBottom: 8 }}>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            step="1"
-            value={item.discountFactor}
-            onChange={(e) => onUpdate({ discountFactor: e.target.value })}
-            placeholder="例如 90 表示九折"
-            status={errors[`discountFactor-${index}`] ? "error" : undefined}
-          />
-          {errors[`discountFactor-${index}`] && (
-            <FieldError>{errors[`discountFactor-${index}`]}</FieldError>
-          )}
-        </Form.Item>
+        <Flex gap={12}>
+          <Form.Item label="折扣率" style={{ flex: 1, marginBottom: 8 }}>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step="1"
+              value={item.discountFactor}
+              onChange={(e) => onUpdate({ discountFactor: e.target.value })}
+              placeholder="例如 90 表示九折"
+              status={errors[`discountFactor-${index}`] ? "error" : undefined}
+            />
+            {errors[`discountFactor-${index}`] && (
+              <FieldError>{errors[`discountFactor-${index}`]}</FieldError>
+            )}
+          </Form.Item>
+          <Form.Item label="折后单价" style={{ flex: 1, marginBottom: 8 }}>
+            <Input value={discountedUnitPriceText(item)} readOnly disabled />
+          </Form.Item>
+        </Flex>
       )}
     </Card>
   );
+}
+
+function discountedUnitPriceText(item: OrderItemForm): string {
+  const unitPrice = Number(item.unitPrice);
+  if (!item.unitPrice || Number.isNaN(unitPrice)) return "";
+  // 与提交逻辑一致:折扣率留空视为 100(不打折)
+  const discount = item.discountFactor ? Number(item.discountFactor) : 100;
+  if (Number.isNaN(discount) || discount < 0 || discount > 100) return "";
+  return formatCurrency(unitPrice * (discount / 100));
 }
 
 function FieldError({ children }: { children: React.ReactNode }) {
