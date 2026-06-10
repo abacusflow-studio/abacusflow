@@ -295,8 +295,8 @@ function OrderItemRow({
               <FieldError>{errors[`discountFactor-${index}`]}</FieldError>
             )}
           </Form.Item>
-          <Form.Item label="折后单价" style={{ flex: 1, marginBottom: 8 }}>
-            <Input value={discountedUnitPriceText(item)} readOnly disabled />
+          <Form.Item label="折后总价" style={{ flex: 1, marginBottom: 8 }}>
+            <Typography.Text strong>{discountedTotalPriceText(item)}</Typography.Text>
           </Form.Item>
         </Flex>
       )}
@@ -304,13 +304,15 @@ function OrderItemRow({
   );
 }
 
-function discountedUnitPriceText(item: OrderItemForm): string {
+function discountedTotalPriceText(item: OrderItemForm): string {
   const unitPrice = Number(item.unitPrice);
-  if (!item.unitPrice || Number.isNaN(unitPrice)) return "";
+  const quantity = Number(item.quantity);
+  if (!item.unitPrice || Number.isNaN(unitPrice)) return "—";
+  if (!item.quantity || Number.isNaN(quantity)) return "—";
   // 与提交逻辑一致:折扣率留空视为 100(不打折)
   const discount = item.discountFactor ? Number(item.discountFactor) : 100;
-  if (Number.isNaN(discount) || discount < 0 || discount > 100) return "";
-  return formatCurrency(unitPrice * (discount / 100));
+  if (Number.isNaN(discount) || discount < 0 || discount > 100) return "—";
+  return formatCurrency(unitPrice * quantity * (discount / 100));
 }
 
 function FieldError({ children }: { children: React.ReactNode }) {
