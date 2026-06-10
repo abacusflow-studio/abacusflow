@@ -30,6 +30,7 @@ export const appConfig = defineAppConfig(
       redirectUri: runtimeEnv("NEXT_PUBLIC_AUTH0_REDIRECT_URI", process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI),
     },
     cubeEndpoint: runtimeEnv("NEXT_PUBLIC_CUBE_ENDPOINT", process.env.NEXT_PUBLIC_CUBE_ENDPOINT),
+    cubeToken: runtimeEnv("NEXT_PUBLIC_CUBE_TOKEN", process.env.NEXT_PUBLIC_CUBE_TOKEN),
     version: process.env.NEXT_PUBLIC_APP_VERSION,
   },
   { requireAuth0: isBrowser }, // build 时跳过校验，浏览器运行时才校验
