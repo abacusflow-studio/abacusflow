@@ -2,6 +2,9 @@ name: 'Parse Git Tag Info'
 description: 'Parses the Git tag from the current ref and determines the release type: "latest", "pre", or "none".'
 
 outputs:
+  version:
+    description: 'The app version derived from the tag, without the leading "v".'
+    value: ${{ steps.parse_git_tag.outputs.version }}
   release_type:
     description: 'The release type derived from the tag. One of: "latest", "pre", or "none".'
     value: ${{ steps.parse_git_tag.outputs.release_type }}
@@ -26,6 +29,7 @@ runs:
 
         # 判断 Release 类型
         RELEASE_TYPE="none"
+        APP_VERSION="${RELEASE_TAG#v}"
 
         if [[ "$RELEASE_TAG" =~ "-" ]]; then
           # 示例：v1.0.0-beta、v2.0.0-rc → 预发布
@@ -35,4 +39,5 @@ runs:
           RELEASE_TYPE="latest"
         fi
 
+        echo "version=$APP_VERSION" >> "$GITHUB_OUTPUT"
         echo "release_type=$RELEASE_TYPE" >> "$GITHUB_OUTPUT"
