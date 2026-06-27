@@ -2,10 +2,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { COLORS } from "@abacusflow/utils";
@@ -66,14 +68,51 @@ export function AuthGate({ children }: AuthGateProps) {
 
   if (!auth.authenticated) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <View style={styles.panel}>
-          <Text style={styles.appName}>小算盘</Text>
-          <Text style={styles.title}>登录后继续</Text>
-          <Text style={styles.description}>
-            使用 Auth0 账号登录后，应用会同步后端用户资料并连接真实服务。
-          </Text>
-          {auth.error && <Text style={styles.errorText}>{auth.error}</Text>}
+      <SafeAreaView style={styles.loginScreen}>
+        <View pointerEvents="none" style={styles.backgroundSheet} />
+        <View pointerEvents="none" style={styles.backgroundRail} />
+        <View pointerEvents="none" style={styles.backgroundAccent} />
+
+        <ScrollView
+          bounces={false}
+          contentContainerStyle={styles.loginContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.brandCluster}>
+            <View style={styles.logoMark}>
+              <Text style={styles.logoText}>小</Text>
+            </View>
+            <Text style={styles.appName}>小算盘</Text>
+            <Text style={styles.tagline}>库存流转，心里有数</Text>
+          </View>
+
+          <View style={styles.authPanel}>
+            <View style={styles.panelTopLine} />
+            <Text style={styles.eyebrow}>ABACUSFLOW MOBILE</Text>
+            <Text style={styles.title}>登录后继续</Text>
+            <Text style={styles.description}>
+              使用 Auth0 账号登录后，应用会同步后端用户资料并连接真实服务。
+            </Text>
+            <View style={styles.featureRow}>
+              <View style={styles.featurePill}>
+                <Ionicons name="person-circle-outline" size={17} color="#0f766e" />
+                <Text style={styles.featureText}>同步资料</Text>
+              </View>
+              <View style={styles.featurePill}>
+                <Ionicons name="server-outline" size={16} color="#0f766e" />
+                <Text style={styles.featureText}>连接服务</Text>
+              </View>
+            </View>
+            {auth.error && (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
+                <Text style={styles.errorText}>{auth.error}</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        <View style={styles.loginFooter}>
           <Pressable
             accessibilityRole="button"
             disabled={auth.signingIn}
@@ -87,9 +126,13 @@ export function AuthGate({ children }: AuthGateProps) {
             {auth.signingIn ? (
               <ActivityIndicator color={COLORS.white} />
             ) : (
-              <Text style={styles.primaryButtonText}>登录</Text>
+              <>
+                <Ionicons name="log-in-outline" size={20} color={COLORS.white} />
+                <Text style={styles.primaryButtonText}>登录</Text>
+              </>
             )}
           </Pressable>
+          <Text style={styles.secureText}>Auth0 安全登录</Text>
         </View>
       </SafeAreaView>
     );
@@ -118,6 +161,72 @@ const styles = StyleSheet.create({
   },
   appShell: { flex: 1, backgroundColor: COLORS.bg },
   center: { alignItems: "center", gap: 12 },
+  loginScreen: {
+    flex: 1,
+    backgroundColor: "#f6f8f5",
+  },
+  backgroundSheet: {
+    position: "absolute",
+    top: -70,
+    left: -28,
+    right: -28,
+    height: 270,
+    backgroundColor: "#ebf8f2",
+    transform: [{ rotate: "-5deg" }],
+    borderBottomLeftRadius: 34,
+    borderBottomRightRadius: 34,
+  },
+  backgroundRail: {
+    position: "absolute",
+    top: 96,
+    right: -48,
+    width: 156,
+    height: 420,
+    borderLeftWidth: 1,
+    borderColor: "#c7ead8",
+    backgroundColor: "rgba(255, 255, 255, 0.42)",
+    transform: [{ rotate: "10deg" }],
+  },
+  backgroundAccent: {
+    position: "absolute",
+    top: 190,
+    left: 28,
+    width: 86,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#f59e0b",
+  },
+  loginContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 132,
+  },
+  brandCluster: {
+    gap: 10,
+    marginBottom: 28,
+  },
+  logoMark: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    backgroundColor: "#0f172a",
+    borderWidth: 1,
+    borderColor: "rgba(15, 23, 42, 0.08)",
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 5,
+  },
+  logoText: {
+    color: COLORS.white,
+    fontSize: 28,
+    fontWeight: "800",
+  },
   panel: {
     margin: 24,
     padding: 24,
@@ -126,30 +235,97 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+  authPanel: {
+    overflow: "hidden",
+    padding: 24,
+    borderRadius: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.96)",
+    borderWidth: 1,
+    borderColor: "#d9e4dc",
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.1,
+    shadowRadius: 28,
+    elevation: 4,
+  },
+  panelTopLine: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: COLORS.primary,
+  },
+  eyebrow: {
+    color: "#0f766e",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0,
+    marginBottom: 14,
+  },
   appName: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 40,
+    fontWeight: "800",
     color: COLORS.text,
-    marginBottom: 18,
+    letterSpacing: 0,
+  },
+  tagline: {
+    color: COLORS.textSecondary,
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: "600",
   },
   title: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 26,
+    fontWeight: "800",
     color: COLORS.text,
-    marginBottom: 10,
+    lineHeight: 34,
+    marginBottom: 12,
   },
   description: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 25,
     color: COLORS.textSecondary,
-    marginBottom: 18,
+    marginBottom: 20,
   },
   mutedText: { fontSize: 14, color: COLORS.textTertiary },
+  featureRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  featurePill: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#ecfdf5",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+  },
+  featureText: {
+    color: "#0f766e",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  errorBox: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-start",
+    marginTop: 18,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.dangerLight,
+    borderWidth: 1,
+    borderColor: "#fecdd3",
+  },
   errorText: {
+    flex: 1,
     color: COLORS.danger,
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 16,
   },
   codeLine: {
     fontSize: 13,
@@ -165,9 +341,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textTertiary,
   },
+  loginFooter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 20,
+    backgroundColor: "rgba(246, 248, 245, 0.96)",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(203, 213, 225, 0.55)",
+  },
   primaryButton: {
     width: "100%",
-    minHeight: 48,
+    minHeight: 54,
+    flexDirection: "row",
+    gap: 8,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
@@ -186,7 +376,14 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
+  },
+  secureText: {
+    marginTop: 10,
+    textAlign: "center",
+    color: COLORS.textTertiary,
+    fontSize: 12,
+    fontWeight: "600",
   },
   banner: {
     flexDirection: "row",
