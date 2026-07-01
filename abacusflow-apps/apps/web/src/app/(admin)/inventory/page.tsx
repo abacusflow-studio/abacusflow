@@ -13,11 +13,17 @@ import {
   Space,
   Typography,
   Form,
+  Checkbox,
+  Popover,
+  Statistic,
+  Progress,
+  Tooltip,
 } from "antd";
 import {
   DownloadOutlined,
   FileTextOutlined,
   PrinterOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "../../../components/admin-page-header";
@@ -90,6 +96,21 @@ export default function InventoryPage() {
   const [showUnitsModal, setShowUnitsModal] = useState(false);
   const [depots, setDepots] = useState<BasicDepot[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const unitColumnOptions = [
+    { label: "类型", value: "type" },
+    { label: "状态", value: "status" },
+    { label: "库存进度", value: "stockProgress" },
+    { label: "单价", value: "unitPrice" },
+    { label: "入库时间", value: "receivedAt" },
+    { label: "采购单号", value: "purchaseOrderNo" },
+    { label: "销售单号", value: "saleOrderNos" },
+    { label: "储存点", value: "depotName" },
+    { label: "操作", value: "action" },
+  ];
+  const [visibleUnitKeys, setVisibleUnitKeys] = useState<string[]>(
+    unitColumnOptions.map((o) => o.value),
+  );
 
   const pageSize = 10;
 
@@ -318,37 +339,119 @@ export default function InventoryPage() {
   ];
 
   const unitColumns: ColumnsType<BasicInventoryUnit> = [
-    { title: "库存单元名", dataIndex: "title", key: "title", ellipsis: true },
+    {
+      title: "库存单元名",
+      dataIndex: "title",
+      key: "title",
+      width: 360,
+      render: (value: string) => (
+        <span style={{ fontSize: 16, fontWeight: 600 }}>{value}</span>
+      ),
+    },
     {
       title: "类型",
       key: "type",
+      width: 90,
       render: (_, record) => translateInventoryUnitType(record.type),
     },
     {
       title: "状态",
       key: "status",
+      width: 80,
       render: (_, record) => translateInventoryUnitStatus(record.status),
     },
     {
-      title: "可用库存",
-      dataIndex: "remainingQuantity",
-      key: "remainingQuantity",
+      title: "库存进度",
+      key: "stockProgress",
+      width: 180,
+      render: (_, record) => {
+        const remaining = record.remainingQuantity ?? 0;
+        const quantity = record.quantity ?? 0;
+        const initial = record.initialQuantity ?? 0;
+        const percent =
+          initial > 0 ? Math.round((remaining / initial) * 100) : 0;
+        const strokeColor =
+          percent >= 50 ? "#52c41a" : percent >= 20 ? "#faad14" : "#cf1322";
+        const reserved = quantity - remaining;
+        return (
+          <Tooltip
+            title={
+              <div style={{ lineHeight: 1.8 }}>
+                <div>可用库存：{remaining}</div>
+                <div>当前实际库存：{quantity}</div>
+                <div>初始库存：{initial}</div>
+                {reserved > 0 && (
+                  <div style={{ marginTop: 4, opacity: 0.85 }}>
+                    已预留：{reserved}
+                  </div>
+                )}
+              </div>
+            }
+          >
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 16, fontWeight: 600, color: strokeColor }}>
+                  {remaining}
+                </span>
+                <span style={{ color: "rgba(0,0,0,0.45)" }}>
+                  {" / "}
+                  {initial}
+                </span>
+              </div>
+              <Progress
+                percent={percent}
+                showInfo={false}
+                size="small"
+                strokeColor={strokeColor}
+              />
+            </div>
+          </Tooltip>
+        );
+      },
     },
-    { title: "库存数量", dataIndex: "quantity", key: "quantity" },
-    { title: "初始库存", dataIndex: "initialQuantity", key: "initialQuantity" },
     {
       title: "单价",
       key: "unitPrice",
-      render: (_, record) => record.unitPrice?.toLocaleString("zh-CN") ?? "-",
+      width: 130,
+      align: "right",
+      render: (_, record) =>
+        record.unitPrice != null ? (
+          <Statistic
+            value={record.unitPrice}
+            prefix="¥"
+            precision={2}
+            valueStyle={{
+              fontSize: 16,
+              fontWeight: 600,
+              color: "#cf1322",
+              whiteSpace: "nowrap",
+            }}
+          />
+        ) : (
+          "-"
+        ),
     },
     {
       title: "入库时间",
       key: "receivedAt",
-      render: (_, record) => formatDateTime(record.receivedAt),
+      width: 110,
+      render: (_, record) => {
+        const text = formatDateTime(record.receivedAt);
+        if (!text) return "-";
+        const [date, ...rest] = text.split(" ");
+        const time = rest.join(" ");
+        return (
+          <div style={{ lineHeight: 1.3 }}>
+            <div>{date}</div>
+            {time && <div style={{ color: "rgba(0,0,0,0.45)" }}>{time}</div>}
+          </div>
+        );
+      },
     },
     {
       title: "采购单号",
       key: "purchaseOrderNo",
+      width: 130,
       ellipsis: true,
       render: (_, record) =>
         record.purchaseOrderId ? (
@@ -368,26 +471,41 @@ export default function InventoryPage() {
     {
       title: "销售单号",
       key: "saleOrderNos",
+      width: 130,
+      ellipsis: true,
       render: (_, record) => {
-        if (!record.saleOrderIds?.length)
-          return record.saleOrderNos?.join(", ") || "-";
-        return record.saleOrderNos?.map((no: string, idx: number) => (
-          <span key={no}>
-            {idx > 0 && ", "}
-            <Typography.Link
-              onClick={() =>
-                router.push(
-                  `/transaction/sale-order?id=${record.saleOrderIds![idx]}`,
-                )
-              }
-            >
-              {no}
-            </Typography.Link>
+        const content = !record.saleOrderIds?.length
+          ? record.saleOrderNos?.join(", ") || "-"
+          : record.saleOrderNos?.map((no: string, idx: number) => (
+              <span key={no}>
+                {idx > 0 && ", "}
+                <Typography.Link
+                  onClick={() =>
+                    router.push(
+                      `/transaction/sale-order?id=${record.saleOrderIds![idx]}`,
+                    )
+                  }
+                >
+                  {no}
+                </Typography.Link>
+              </span>
+            ));
+        return (
+          <span
+            title={record.saleOrderNos?.join(", ")}
+            style={{
+              display: "block",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {content}
           </span>
-        ));
+        );
       },
     },
-    { title: "储存点", dataIndex: "depotName", key: "depotName" },
+    { title: "储存点", dataIndex: "depotName", key: "depotName", width: 100, ellipsis: true },
     {
       title: "操作",
       key: "action",
@@ -510,10 +628,32 @@ export default function InventoryPage() {
             </div>
           </div>
           <div className="card af-table-card">
-            <div className="mb-3">
+            <div className="mb-3" style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Button type="primary" size="small" onClick={switchViewMode}>
                 {viewMode === "inventories" ? "显示普通表格" : "显示内嵌表格"}
               </Button>
+              {viewMode === "units" && (
+                <Popover
+                  trigger="click"
+                  placement="bottomRight"
+                  title="显示列"
+                  content={
+                    <Checkbox.Group
+                      value={visibleUnitKeys}
+                      onChange={(vals) => setVisibleUnitKeys(vals as string[])}
+                      style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                    >
+                      {unitColumnOptions.map((opt) => (
+                        <Checkbox key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </Checkbox>
+                      ))}
+                    </Checkbox.Group>
+                  }
+                >
+                  <Button size="small" icon={<SettingOutlined />}>列设置</Button>
+                </Popover>
+              )}
             </div>
             {viewMode === "inventories" ? (
               <Table<BasicInventory>
@@ -522,6 +662,7 @@ export default function InventoryPage() {
                 rowKey="id"
                 loading={loading}
                 size="middle"
+                scroll={{ x: 1200 }}
                 pagination={{
                   current: pageIndex,
                   pageSize,
@@ -533,11 +674,14 @@ export default function InventoryPage() {
               />
             ) : (
               <Table<BasicInventoryUnit>
-                columns={unitColumns}
+                columns={unitColumns.filter(
+                  (col) => col.key === "title" || visibleUnitKeys.includes(col.key as string),
+                )}
                 dataSource={inventoryUnits}
                 rowKey="id"
                 loading={loading}
                 size="middle"
+                scroll={{ x: 1500 }}
                 pagination={{
                   current: pageIndex,
                   pageSize,
