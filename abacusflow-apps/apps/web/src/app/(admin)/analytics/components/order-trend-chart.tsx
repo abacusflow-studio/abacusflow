@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Segmented } from "antd";
+import { Segmented, Space } from "antd";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts-for-react/lib/types";
 import { useCubeQuery } from "../../../../hooks/use-cube-query";
@@ -9,13 +9,17 @@ import { ChartCard } from "./chart-card";
 import {
   COLORS,
   fmtDate,
-  GRANULARITY_DATE_RANGE,
+  getDateRangeForGranularity,
+  getTimeSeriesDataZoom,
   GRANULARITY_OPTIONS,
+  MONTH_RANGE_OPTIONS,
   type GranularityValue,
+  type MonthRangeValue,
 } from "./shared";
 
 export function OrderTrendChart() {
   const [granularity, setGranularity] = useState<GranularityValue>("month");
+  const [monthRange, setMonthRange] = useState<MonthRangeValue>("12");
 
   const purchaseQuery = useMemo(
     () => ({
@@ -24,12 +28,12 @@ export function OrderTrendChart() {
         {
           dimension: "purchase_order.order_date",
           granularity,
-          dateRange: GRANULARITY_DATE_RANGE[granularity],
+          dateRange: getDateRangeForGranularity(granularity, monthRange),
         },
       ],
       order: { "purchase_order.order_date": "asc" as const },
     }),
-    [granularity],
+    [granularity, monthRange],
   );
 
   const saleQuery = useMemo(
@@ -39,12 +43,12 @@ export function OrderTrendChart() {
         {
           dimension: "sale_order.order_date",
           granularity,
-          dateRange: GRANULARITY_DATE_RANGE[granularity],
+          dateRange: getDateRangeForGranularity(granularity, monthRange),
         },
       ],
       order: { "sale_order.order_date": "asc" as const },
     }),
-    [granularity],
+    [granularity, monthRange],
   );
 
   const { data: purchaseData, loading: l1, error: e1 } = useCubeQuery(purchaseQuery);
@@ -71,13 +75,15 @@ export function OrderTrendChart() {
     );
 
     const dates = [...new Set([...purchaseMap.keys(), ...saleMap.keys()])].sort();
+    const dataZoom = getTimeSeriesDataZoom(dates.length);
 
     return {
       tooltip: { trigger: "axis" },
       legend: { data: ["采购单", "销售单"], top: 0 },
-      grid: { top: 36, right: 16, bottom: 24, left: 48, containLabel: false },
+      grid: { top: 36, right: 16, bottom: dataZoom ? 48 : 24, left: 48, containLabel: false },
       xAxis: { type: "category", data: dates, axisLabel: { fontSize: 11 } },
       yAxis: { type: "value", axisLabel: { fontSize: 11 }, minInterval: 1 },
+      dataZoom,
       series: [
         {
           name: "采购单",
@@ -109,12 +115,22 @@ export function OrderTrendChart() {
       loading={loading}
       error={error}
       extra={
-        <Segmented
-          size="small"
-          options={GRANULARITY_OPTIONS}
-          value={granularity}
-          onChange={(v) => setGranularity(v as GranularityValue)}
-        />
+        <Space size={8} wrap>
+          {granularity === "month" ? (
+            <Segmented
+              size="small"
+              options={MONTH_RANGE_OPTIONS}
+              value={monthRange}
+              onChange={(v) => setMonthRange(v as MonthRangeValue)}
+            />
+          ) : null}
+          <Segmented
+            size="small"
+            options={GRANULARITY_OPTIONS}
+            value={granularity}
+            onChange={(v) => setGranularity(v as GranularityValue)}
+          />
+        </Space>
       }
     >
       <ReactECharts option={option} style={{ height: "100%" }} />

@@ -26,6 +26,7 @@ export const STATUS_LABELS: Record<string, string> = {
 // ─── Granularity ─────────────────────────────────────────────────────────────
 
 export type GranularityValue = "day" | "week" | "month" | "quarter" | "year";
+export type MonthRangeValue = "12" | "24" | "36" | "all";
 
 export const GRANULARITY_OPTIONS: { label: string; value: GranularityValue }[] = [
   { label: "日", value: "day" },
@@ -42,6 +43,42 @@ export const GRANULARITY_DATE_RANGE: Record<GranularityValue, string> = {
   quarter: "Last 8 quarters",
   year: "Last 5 years",
 };
+
+export const MONTH_RANGE_OPTIONS: { label: string; value: MonthRangeValue }[] = [
+  { label: "近12月", value: "12" },
+  { label: "近24月", value: "24" },
+  { label: "近36月", value: "36" },
+  { label: "全部", value: "all" },
+];
+
+export function getDateRangeForGranularity(
+  granularity: GranularityValue,
+  monthRange: MonthRangeValue,
+): string | undefined {
+  if (granularity !== "month") return GRANULARITY_DATE_RANGE[granularity];
+  if (monthRange === "all") return undefined;
+  return `Last ${monthRange} months`;
+}
+
+export function getTimeSeriesDataZoom(pointCount: number, visiblePoints = 12) {
+  if (pointCount <= visiblePoints) return undefined;
+
+  return [
+    {
+      type: "inside" as const,
+      throttle: 50,
+      start: Math.max(0, 100 - (visiblePoints / pointCount) * 100),
+      end: 100,
+    },
+    {
+      type: "slider" as const,
+      height: 16,
+      bottom: 4,
+      brushSelect: false,
+      showDetail: false,
+    },
+  ];
+}
 
 export function fmtDate(raw: string, granularity: GranularityValue): string {
   if (!raw) return "";
