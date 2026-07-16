@@ -9,7 +9,7 @@ spring:
     username: ${POSTGRES_USER:abacusflow}
     password: ${POSTGRES_PASSWORD:123ABCdef*}
     hikari:
-      transaction-isolation: TRANSACTION_REPEATABLE_READ
+      transaction-isolation: TRANSACTION_READ_COMMITTED
   jpa:
     hibernate:
       ddl-auto: validate
