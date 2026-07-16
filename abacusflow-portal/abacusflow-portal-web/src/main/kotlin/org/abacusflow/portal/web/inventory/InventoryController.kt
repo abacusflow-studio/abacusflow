@@ -14,7 +14,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 
@@ -24,7 +23,6 @@ class InventoryController(
     private val inventoryQueryService: InventoryQueryService,
     private val inventoryReportService: InventoryReportService,
 ) : InventoriesApi {
-    @PreAuthorize("hasAuthority('inventory:read')")
     override fun listBasicInventoriesPage(
         pageIndex: Int,
         pageSize: Int,
@@ -57,7 +55,6 @@ class InventoryController(
         return ResponseEntity.ok(pageVO)
     }
 
-    @PreAuthorize("hasAuthority('inventory:read')")
     override fun getInventory(id: Long): ResponseEntity<InventoryVO> {
         val inventory = inventoryQueryService.getInventory(id)
         return ResponseEntity.ok(
@@ -65,7 +62,6 @@ class InventoryController(
         )
     }
 
-    @PreAuthorize("hasAuthority('inventory:update')")
     override fun adjustWarningLine(
         id: Long,
         adjustWarningLineRequestVO: AdjustWarningLineRequestVO,
@@ -78,7 +74,6 @@ class InventoryController(
         return ResponseEntity.ok().build()
     }
 
-    @PreAuthorize("hasAuthority('inventory:read')")
     override fun exportInventory(
         format: String,
         productCategoryId: Long?,

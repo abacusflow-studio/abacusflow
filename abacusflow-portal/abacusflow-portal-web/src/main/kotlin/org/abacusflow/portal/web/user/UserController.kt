@@ -11,7 +11,6 @@ import org.abacusflow.usecase.user.UpdateUserInputTO
 import org.abacusflow.usecase.user.service.UserCommandService
 import org.abacusflow.usecase.user.service.UserQueryService
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -19,7 +18,6 @@ class UserController(
     private val userCommandService: UserCommandService,
     private val userQueryService: UserQueryService,
 ) : UsersApi {
-    @PreAuthorize("hasAuthority('user:read')")
     override fun listBasicUsers(): ResponseEntity<List<BasicUserVO>> {
         val userVOS =
             userQueryService.listBasicUsers().map { user ->
@@ -28,7 +26,6 @@ class UserController(
         return ResponseEntity.ok(userVOS)
     }
 
-    @PreAuthorize("hasAuthority('user:read')")
     override fun getUser(id: Long): ResponseEntity<UserVO> {
         val user = userQueryService.getUser(id) ?: throw NotFoundException("User with id $id not found")
         return ResponseEntity.ok(
@@ -36,7 +33,6 @@ class UserController(
         )
     }
 
-    @PreAuthorize("hasAuthority('user:manage')")
     override fun addUser(createUserInputVO: CreateUserInputVO): ResponseEntity<UserVO> {
         val user =
             userCommandService.createUser(
@@ -52,7 +48,6 @@ class UserController(
         )
     }
 
-    @PreAuthorize("hasAuthority('user:manage')")
     override fun updateUser(
         id: Long,
         updateUserInputVO: UpdateUserInputVO,
@@ -71,7 +66,6 @@ class UserController(
         )
     }
 
-    @PreAuthorize("hasAuthority('user:manage')")
     override fun deleteUser(id: Long): ResponseEntity<Unit> {
         userCommandService.deleteUser(id)
         return ResponseEntity.ok().build()

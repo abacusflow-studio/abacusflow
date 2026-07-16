@@ -9,7 +9,6 @@ import org.abacusflow.usecase.transaction.service.SaleOrderCommandService
 import org.abacusflow.usecase.transaction.service.SaleOrderQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import java.util.UUID
@@ -19,7 +18,6 @@ class SaleOrderController(
     private val saleOrderCommandService: SaleOrderCommandService,
     private val saleOrderQueryService: SaleOrderQueryService,
 ) : SaleOrdersApi {
-    @PreAuthorize("hasAuthority('sale-order:read')")
     override fun listBasicSaleOrdersPage(
         pageIndex: Int,
         pageSize: Int,
@@ -52,7 +50,6 @@ class SaleOrderController(
         return ResponseEntity.ok(pageVO)
     }
 
-    @PreAuthorize("hasAuthority('sale-order:read')")
     override fun getSaleOrder(id: Long): ResponseEntity<SaleOrderVO> {
         val order = saleOrderQueryService.getSaleOrder(id)
         return ResponseEntity.ok(
@@ -60,7 +57,6 @@ class SaleOrderController(
         )
     }
 
-    @PreAuthorize("hasAuthority('sale-order:create')")
     override fun addSaleOrder(createSaleOrderInputVO: CreateSaleOrderInputVO): ResponseEntity<SaleOrderVO> {
         val order =
             saleOrderCommandService.createSaleOrder(
@@ -76,19 +72,16 @@ class SaleOrderController(
         )
     }
 
-    @PreAuthorize("hasAuthority('sale-order:approve')")
     override fun completeSaleOrder(id: Long): ResponseEntity<Unit> {
         saleOrderCommandService.completeOrder(id)
         return ResponseEntity.ok().build()
     }
 
-    @PreAuthorize("hasAuthority('sale-order:approve')")
     override fun cancelSaleOrder(id: Long): ResponseEntity<Unit> {
         saleOrderCommandService.cancelOrder(id)
         return ResponseEntity.ok().build()
     }
 
-    @PreAuthorize("hasAuthority('sale-order:approve')")
     override fun reverseSaleOrder(id: Long): ResponseEntity<Unit> {
         saleOrderCommandService.reverseOrder(id)
         return ResponseEntity.ok().build()

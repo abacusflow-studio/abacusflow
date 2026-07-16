@@ -16,7 +16,6 @@ import org.abacusflow.usecase.product.service.ProductCommandService
 import org.abacusflow.usecase.product.service.ProductQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -24,7 +23,6 @@ class ProductController(
     private val productCommandService: ProductCommandService,
     private val productQueryService: ProductQueryService,
 ) : ProductsApi {
-    @PreAuthorize("hasAuthority('product:read')")
     override fun listBasicProductsPage(
         pageIndex: Int,
         pageSize: Int,
@@ -55,7 +53,6 @@ class ProductController(
         return ResponseEntity.ok(pageVO)
     }
 
-    @PreAuthorize("hasAuthority('product:read')")
     override fun getProduct(id: Long): ResponseEntity<ProductVO> {
         val product = productQueryService.getProduct(id)
         return ResponseEntity.ok(
@@ -63,7 +60,6 @@ class ProductController(
         )
     }
 
-    @PreAuthorize("hasAuthority('product:create')")
     override fun addProduct(createProductInputVO: CreateProductInputVO): ResponseEntity<ProductVO> {
         val product =
             productCommandService.createProduct(
@@ -82,7 +78,6 @@ class ProductController(
         )
     }
 
-    @PreAuthorize("hasAuthority('product:update')")
     override fun updateProduct(
         id: Long,
         updateProductInputVO: UpdateProductInputVO,
@@ -105,13 +100,11 @@ class ProductController(
         )
     }
 
-    @PreAuthorize("hasAuthority('product:delete')")
     override fun deleteProduct(id: Long): ResponseEntity<Unit> {
         productCommandService.deleteProduct(id)
         return ResponseEntity.ok().build()
     }
 
-    @PreAuthorize("hasAuthority('product:read')")
     override fun listSelectableProducts(): ResponseEntity<List<SelectableProductVO>> {
         val productVOs =
             productQueryService.listProducts().map {

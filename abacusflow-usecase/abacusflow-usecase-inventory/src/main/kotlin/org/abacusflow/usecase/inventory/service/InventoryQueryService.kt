@@ -4,8 +4,10 @@ import org.abacusflow.usecase.inventory.BasicInventoryTO
 import org.abacusflow.usecase.inventory.InventoryTO
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.security.access.prepost.PreAuthorize
 
 interface InventoryQueryService {
+    @PreAuthorize("hasAuthority('inventory:read')")
     fun listBasicInventoriesPage(
         pageable: Pageable,
         productCategoryId: Long?,
@@ -15,5 +17,6 @@ interface InventoryQueryService {
         depotName: String?,
     ): Page<BasicInventoryTO>
 
+    @PreAuthorize("hasAuthority('inventory:read')")
     fun getInventory(id: Long): InventoryTO
 }

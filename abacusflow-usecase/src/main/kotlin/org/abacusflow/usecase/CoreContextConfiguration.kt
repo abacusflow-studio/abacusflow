@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.PropertySource
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 
 @Configuration
 @EnableAutoConfiguration
@@ -22,6 +23,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 )
 @EnableCaching
 @EnableScheduling
+@EnableMethodSecurity
 @EnableJpaRepositories(
     basePackages = [
         "org.abacusflow.db",

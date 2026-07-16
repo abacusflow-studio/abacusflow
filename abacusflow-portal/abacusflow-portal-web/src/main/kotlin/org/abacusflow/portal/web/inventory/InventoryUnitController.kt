@@ -12,7 +12,6 @@ import org.abacusflow.usecase.inventory.service.InventoryUnitCommandService
 import org.abacusflow.usecase.inventory.service.InventoryUnitQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -20,7 +19,6 @@ class InventoryUnitController(
     private val inventoryUnitQueryService: InventoryUnitQueryService,
     private val inventoryUnitCommandService: InventoryUnitCommandService,
 ) : InventoryUnitsApi {
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
     override fun listBasicInventoryUnitsPage(
         pageIndex: Int,
         pageSize: Int,
@@ -53,7 +51,6 @@ class InventoryUnitController(
         return ResponseEntity.ok(pageVO)
     }
 
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
     override fun listSelectableInventoryUnits(statuses: List<InventoryUnitStatusVO>?): ResponseEntity<List<SelectableInventoryUnitVO>> {
         val unitVOS =
             inventoryUnitQueryService.listInventoryUnitsWithTitle(
@@ -69,7 +66,6 @@ class InventoryUnitController(
         return ResponseEntity.ok(unitVOS)
     }
 
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
     override fun getInventoryUnit(id: Long): ResponseEntity<InventoryUnitVO> {
         val inventory =
             inventoryUnitQueryService.getInventoryUnit(id)
@@ -79,7 +75,6 @@ class InventoryUnitController(
         )
     }
 
-    @PreAuthorize("hasAuthority('inventory-unit:update')")
     override fun assignInventoryUnitDepot(
         id: Long,
         assignInventoryUnitDepotRequestVO: AssignInventoryUnitDepotRequestVO,

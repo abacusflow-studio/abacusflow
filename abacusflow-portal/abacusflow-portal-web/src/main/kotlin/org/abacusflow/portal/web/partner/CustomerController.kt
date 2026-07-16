@@ -12,7 +12,6 @@ import org.abacusflow.usecase.partner.service.CustomerCommandService
 import org.abacusflow.usecase.partner.service.CustomerQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -20,7 +19,6 @@ class CustomerController(
     private val customerCommandService: CustomerCommandService,
     private val customerQueryService: CustomerQueryService,
 ) : CustomersApi {
-    @PreAuthorize("hasAuthority('customer:read')")
     override fun listBasicCustomersPage(
         pageIndex: Int,
         pageSize: Int,
@@ -49,7 +47,6 @@ class CustomerController(
         return ResponseEntity.ok(pageVO)
     }
 
-    @PreAuthorize("hasAuthority('customer:read')")
     override fun getCustomer(id: Long): ResponseEntity<CustomerVO> {
         val customer = customerQueryService.getCustomer(id)
         return ResponseEntity.ok(
@@ -57,7 +54,6 @@ class CustomerController(
         )
     }
 
-    @PreAuthorize("hasAuthority('customer:create')")
     override fun addCustomer(createCustomerInputVO: CreateCustomerInputVO): ResponseEntity<CustomerVO> {
         val customer =
             customerCommandService.createCustomer(
@@ -72,7 +68,6 @@ class CustomerController(
         )
     }
 
-    @PreAuthorize("hasAuthority('customer:update')")
     override fun updateCustomer(
         id: Long,
         updateCustomerInputVO: UpdateCustomerInputVO,
@@ -91,13 +86,11 @@ class CustomerController(
         )
     }
 
-    @PreAuthorize("hasAuthority('customer:delete')")
     override fun deleteCustomer(id: Long): ResponseEntity<Unit> {
         customerCommandService.deleteCustomer(id)
         return ResponseEntity.ok().build()
     }
 
-    @PreAuthorize("hasAuthority('customer:read')")
     override fun listSelectableCustomers(): ResponseEntity<List<SelectableCustomerVO>> {
         val productVOs =
             customerQueryService.listCustomers().map {

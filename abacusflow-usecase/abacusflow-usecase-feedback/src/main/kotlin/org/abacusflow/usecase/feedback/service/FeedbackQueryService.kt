@@ -4,8 +4,10 @@ import org.abacusflow.usecase.feedback.BasicFeedbackTO
 import org.abacusflow.usecase.feedback.FeedbackTO
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.security.access.prepost.PreAuthorize
 
 interface FeedbackQueryService {
+    @PreAuthorize("hasAuthority('feedback:read')")
     fun listFeedbacksPage(
         pageable: Pageable,
         status: String?,
@@ -13,5 +15,6 @@ interface FeedbackQueryService {
         category: String?,
     ): Page<BasicFeedbackTO>
 
+    @PreAuthorize("hasAuthority('feedback:read')")
     fun getFeedback(id: Long): FeedbackTO
 }

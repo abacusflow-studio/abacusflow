@@ -4,7 +4,6 @@ import org.abacusflow.commons.file.FileStorageService
 import org.abacusflow.portal.web.api.FilesApi
 import org.abacusflow.portal.web.model.FileUploadResultVO
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 
@@ -12,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile
 class FileController(
     private val fileStorageService: FileStorageService,
 ) : FilesApi {
-    @PreAuthorize("isAuthenticated()")
     override fun uploadFile(file: MultipartFile): ResponseEntity<FileUploadResultVO> {
         val url =
             fileStorageService.upload(

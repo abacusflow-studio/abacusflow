@@ -10,7 +10,6 @@ import org.abacusflow.usecase.depot.UpdateDepotInputTO
 import org.abacusflow.usecase.depot.service.DepotCommandService
 import org.abacusflow.usecase.depot.service.DepotQueryService
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -18,7 +17,6 @@ class DepotController(
     private val depotCommandService: DepotCommandService,
     private val depotQueryService: DepotQueryService,
 ) : DepotsApi {
-    @PreAuthorize("hasAuthority('depot:read')")
     override fun listBasicDepots(): ResponseEntity<List<BasicDepotVO>> {
         val depotVOs =
             depotQueryService.listBasicDepots().map { depot ->
@@ -27,7 +25,6 @@ class DepotController(
         return ResponseEntity.ok(depotVOs)
     }
 
-    @PreAuthorize("hasAuthority('depot:read')")
     override fun getDepot(id: Long): ResponseEntity<DepotVO> {
         val depot = depotQueryService.getDepot(id)
         return ResponseEntity.ok(
@@ -35,7 +32,6 @@ class DepotController(
         )
     }
 
-    @PreAuthorize("hasAuthority('depot:create')")
     override fun addDepot(createDepotInputVO: CreateDepotInputVO): ResponseEntity<DepotVO> {
         val depot =
             depotCommandService.createDepot(
@@ -50,7 +46,6 @@ class DepotController(
         )
     }
 
-    @PreAuthorize("hasAuthority('depot:update')")
     override fun updateDepot(
         id: Long,
         updateDepotInputVO: UpdateDepotInputVO,
@@ -69,7 +64,6 @@ class DepotController(
         )
     }
 
-    @PreAuthorize("hasAuthority('depot:delete')")
     override fun deleteDepot(id: Long): ResponseEntity<Unit> {
         depotCommandService.deleteDepot(id)
         return ResponseEntity.ok().build()

@@ -12,7 +12,6 @@ import org.abacusflow.usecase.partner.service.SupplierCommandService
 import org.abacusflow.usecase.partner.service.SupplierQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -20,7 +19,6 @@ class SupplierController(
     private val supplierCommandService: SupplierCommandService,
     private val supplierQueryService: SupplierQueryService,
 ) : SuppliersApi {
-    @PreAuthorize("hasAuthority('supplier:read')")
     override fun listBasicSuppliersPage(
         pageIndex: Int,
         pageSize: Int,
@@ -51,7 +49,6 @@ class SupplierController(
         return ResponseEntity.ok(pageVO)
     }
 
-    @PreAuthorize("hasAuthority('supplier:read')")
     override fun getSupplier(id: Long): ResponseEntity<SupplierVO> {
         val supplier = supplierQueryService.getSupplier(id)
         return ResponseEntity.ok(
@@ -59,7 +56,6 @@ class SupplierController(
         )
     }
 
-    @PreAuthorize("hasAuthority('supplier:create')")
     override fun addSupplier(createSupplierInputVO: CreateSupplierInputVO): ResponseEntity<SupplierVO> {
         val supplier =
             supplierCommandService.createSupplier(
@@ -75,7 +71,6 @@ class SupplierController(
         )
     }
 
-    @PreAuthorize("hasAuthority('supplier:update')")
     override fun updateSupplier(
         id: Long,
         updateSupplierInputVO: UpdateSupplierInputVO,
@@ -95,13 +90,11 @@ class SupplierController(
         )
     }
 
-    @PreAuthorize("hasAuthority('supplier:delete')")
     override fun deleteSupplier(id: Long): ResponseEntity<Unit> {
         supplierCommandService.deleteSupplier(id)
         return ResponseEntity.ok().build()
     }
 
-    @PreAuthorize("hasAuthority('supplier:read')")
     override fun listSelectableSuppliers(): ResponseEntity<List<SelectableSupplierVO>> {
         val productVOs =
             supplierQueryService.listSuppliers().map {

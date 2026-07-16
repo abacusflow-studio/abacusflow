@@ -16,7 +16,6 @@ import org.abacusflow.usecase.feedback.service.FeedbackCommandService
 import org.abacusflow.usecase.feedback.service.FeedbackQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -24,7 +23,6 @@ class FeedbackController(
     private val feedbackCommandService: FeedbackCommandService,
     private val feedbackQueryService: FeedbackQueryService,
 ) : FeedbackApi {
-    @PreAuthorize("hasAuthority('feedback:create')")
     override fun createFeedback(createFeedbackInputVO: CreateFeedbackInputVO): ResponseEntity<FeedbackVO> {
         val feedback =
             feedbackCommandService.createFeedback(
@@ -47,7 +45,6 @@ class FeedbackController(
         return ResponseEntity.ok(feedback.toVO())
     }
 
-    @PreAuthorize("hasAuthority('feedback:read')")
     override fun listFeedbackPage(
         pageIndex: Int,
         pageSize: Int,
@@ -76,13 +73,11 @@ class FeedbackController(
         return ResponseEntity.ok(pageVO)
     }
 
-    @PreAuthorize("hasAuthority('feedback:read')")
     override fun getFeedback(id: Long): ResponseEntity<FeedbackVO> {
         val feedback = feedbackQueryService.getFeedback(id)
         return ResponseEntity.ok(feedback.toVO())
     }
 
-    @PreAuthorize("hasAuthority('feedback:update')")
     override fun updateFeedback(
         id: Long,
         updateFeedbackInputVO: UpdateFeedbackInputVO,
