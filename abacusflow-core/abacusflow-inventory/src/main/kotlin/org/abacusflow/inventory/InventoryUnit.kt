@@ -22,10 +22,8 @@ import org.abacusflow.commons.tenant.TenantContextHolder
 import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.Filter
-import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.dialect.PostgreSQLEnumJdbcType
 import org.hibernate.type.SqlTypes
@@ -40,7 +38,6 @@ import java.util.UUID
     name = "inventory_unit",
     uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "serial_number"])],
 )
-@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 abstract class InventoryUnit(
     @ManyToOne

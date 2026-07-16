@@ -15,15 +15,12 @@ import jakarta.validation.constraints.PositiveOrZero
 import org.abacusflow.commons.tenant.TenantContextHolder
 import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.Filter
-import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
-import org.hibernate.annotations.ParamDef
 import org.hibernate.dialect.PostgreSQLEnumJdbcType
 import java.math.BigDecimal
 
 @Entity
 @Table(name = "sale_order_item")
-@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class SaleOrderItem(
     val inventoryUnitId: Long,

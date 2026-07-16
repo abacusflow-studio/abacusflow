@@ -17,8 +17,6 @@ import jakarta.validation.constraints.Size
 import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.Filter
-import org.hibernate.annotations.FilterDef
-import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
@@ -30,7 +28,6 @@ import java.time.Instant
         UniqueConstraint(columnNames = ["tenant_id", "name"]),
     ],
 )
-@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class Role(
     @field:NotBlank(message = "Role name is required and cannot be blank")

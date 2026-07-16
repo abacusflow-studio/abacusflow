@@ -12,8 +12,6 @@ import org.abacusflow.commons.tenant.TenantContextHolder
 import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.Filter
-import org.hibernate.annotations.FilterDef
-import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
@@ -23,7 +21,6 @@ import java.time.Instant
     name = "inventory",
     uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "product_id"])],
 )
-@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class Inventory(
     @Column(name = "product_id", nullable = false)

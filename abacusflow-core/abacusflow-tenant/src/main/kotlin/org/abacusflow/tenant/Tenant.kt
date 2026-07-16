@@ -12,7 +12,9 @@ import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
+import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.dialect.PostgreSQLEnumJdbcType
 import org.springframework.data.domain.AbstractAggregateRoot
@@ -33,6 +35,7 @@ import java.time.Instant
         UniqueConstraint(columnNames = ["name"]),
     ],
 )
+@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
 class Tenant(
     /** 租户唯一标识名，用于系统内部引用（不可重复，创建后不可修改） */
     @field:NotBlank

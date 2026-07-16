@@ -18,9 +18,7 @@ import org.abacusflow.commons.tenant.TenantContextHolder
 import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.Filter
-import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
-import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.dialect.PostgreSQLEnumJdbcType
 import org.springframework.data.domain.AbstractAggregateRoot
@@ -35,7 +33,6 @@ import java.util.UUID
     name = "sale_order",
     uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "no"])],
 )
-@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class SaleOrder(
     val customerId: Long,

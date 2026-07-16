@@ -1,4 +1,9 @@
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${ABACUSFLOW_OIDC_ISSUER_URI:https://wls1964302791.us.auth0.com/}
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:abacusflow}
     username: ${POSTGRES_USER:abacusflow}

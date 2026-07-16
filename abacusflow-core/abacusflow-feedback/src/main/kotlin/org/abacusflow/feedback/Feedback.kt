@@ -18,10 +18,8 @@ import org.abacusflow.commons.tenant.TenantContextHolder
 import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.Filter
-import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.dialect.PostgreSQLEnumJdbcType
 import org.hibernate.type.SqlTypes
@@ -30,7 +28,6 @@ import java.time.Instant
 
 @Entity
 @Table(name = "feedback")
-@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class Feedback(
     category: FeedbackCategory,
