@@ -3,7 +3,10 @@ package org.abacusflow.portal.web.tenant
 import org.abacusflow.portal.web.api.TenantsApi
 import org.abacusflow.portal.web.authentication.AbacusFlowAuthenticationDetails
 import org.abacusflow.portal.web.model.CreateTenantInputVO
+import org.abacusflow.portal.web.model.TenantDetailVO
 import org.abacusflow.portal.web.model.TenantSummaryVO
+import org.abacusflow.portal.web.model.UpdateTenantInputVO
+import org.abacusflow.portal.web.user.toDetailVO
 import org.abacusflow.portal.web.user.toVO
 import org.abacusflow.usecase.tenant.CreateTenantInputTO
 import org.abacusflow.usecase.tenant.service.TenantCommandService
@@ -35,6 +38,34 @@ class TenantsController(
         val newTenantSummary = tenantSummaries.first { it.name == createTenantInputVO.name }
 
         return ResponseEntity.status(201).body(newTenantSummary.toVO())
+    }
+
+    override fun getTenant(tenantId: Long): ResponseEntity<TenantDetailVO> {
+        val userId = currentUserId()
+
+        // Verify the user is a member of this tenant
+        val memberships = tenantQueryService.listTenantsForUser(userId)
+        val membership = memberships.find { it.tenantId == tenantId }
+            ?: return ResponseEntity.status(403).build()
+
+        val tenant = tenantQueryService.getTenant(tenantId)
+        return ResponseEntity.ok(tenant.toDetailVO(membership.roleNames, membership.permissionNames))
+    }
+
+    override fun updateTenant(tenantId: Long, updateTenantInputVO: UpdateTenantInputVO): ResponseEntity<TenantDetailVO> {
+        val userId = currentUserId()
+
+        // Verify the user is a member and has admin role
+        val memberships = tenantQueryService.listTenantsForUser(userId)
+        val membership = memberships.find { it.tenantId == tenantId }
+            ?: return ResponseEntity.status(403).build()
+
+        if ("admin" !in membership.roleNames) {
+            return ResponseEntity.status(403).build()
+        }
+
+        val updated = tenantCommandService.updateTenant(tenantId, updateTenantInputVO.displayName)
+        return ResponseEntity.ok(updated.toDetailVO(membership.roleNames, membership.permissionNames))
     }
 
     override fun listTenants(): ResponseEntity<List<TenantSummaryVO>> {

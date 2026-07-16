@@ -11,6 +11,8 @@ fun Tenant.toTO() = TenantTO(
     name = name,
     displayName = displayName,
     status = status.name,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
 )
 
 fun TenantMembership.toTO() = TenantMembershipTO(

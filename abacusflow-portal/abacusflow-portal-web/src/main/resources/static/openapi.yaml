@@ -108,6 +108,63 @@ paths:
                 items:
                   $ref: "#/components/schemas/TenantSummary"
 
+  /tenants/{tenantId}:
+    get:
+      operationId: getTenant
+      tags:
+        - tenant
+      summary: Get tenant detail
+      description: 返回指定租户的详细信息，仅限该租户的成员可查看
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Tenant detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantDetail"
+        "403":
+          description: 无权限
+        "404":
+          description: 租户不存在
+
+    put:
+      operationId: updateTenant
+      tags:
+        - tenant
+      summary: Update tenant
+      description: 更新租户的显示名称，仅限该租户的管理员可操作
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenantInput"
+      responses:
+        "200":
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantDetail"
+        "403":
+          description: 无权限
+        "404":
+          description: 租户不存在
+
   /me:
     get:
       operationId: getCurrentUser
@@ -1767,6 +1824,63 @@ components:
           items:
             type: string
           description: 该租户下的权限列表
+
+    TenantDetail:
+      type: object
+      required:
+        - tenantId
+        - name
+        - status
+        - roleNames
+        - permissionNames
+        - createdAt
+        - updatedAt
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+          description: 租户 ID
+        name:
+          type: string
+          description: 租户名称（不可修改）
+        displayName:
+          type: string
+          nullable: true
+          description: 租户显示名称
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - SUSPENDED
+            - DEPROVISIONED
+          description: 租户状态
+        roleNames:
+          type: array
+          items:
+            type: string
+          description: 当前用户在该租户下的角色列表
+        permissionNames:
+          type: array
+          items:
+            type: string
+          description: 当前用户在该租户下的权限列表
+        createdAt:
+          type: integer
+          format: int64
+          description: 创建时间戳（毫秒）
+        updatedAt:
+          type: integer
+          format: int64
+          description: 更新时间戳（毫秒）
+
+    UpdateTenantInput:
+      type: object
+      properties:
+        displayName:
+          type: string
+          nullable: true
+          description: 租户显示名称
+          maxLength: 200
 
     CurrentUser:
       type: object

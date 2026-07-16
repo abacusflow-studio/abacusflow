@@ -10,6 +10,7 @@ interface TenantContextType {
   currentTenant: TenantInfo | null;
   selectTenant: (tenantId: number) => void;
   setBootstrapData: (status: string, tenants: TenantInfo[], autoSelectId?: number | null) => void;
+  updateTenantInList: (tenantId: number, updates: Partial<TenantInfo>) => void;
   clearTenant: () => void;
 }
 
@@ -20,6 +21,7 @@ const TenantContext = createContext<TenantContextType>({
   currentTenant: null,
   selectTenant: () => {},
   setBootstrapData: () => {},
+  updateTenantInList: () => {},
   clearTenant: () => {},
 });
 
@@ -59,6 +61,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     clearTenantContext();
   }, []);
 
+  const updateTenantInList = useCallback((tenantId: number, updates: Partial<TenantInfo>) => {
+    setTenants((prev) =>
+      prev.map((t) => (t.tenantId === tenantId ? { ...t, ...updates } : t))
+    );
+  }, []);
+
   const currentTenant = tenants.find(t => t.tenantId === currentTenantId) || null;
 
   return (
@@ -69,6 +77,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       currentTenant,
       selectTenant,
       setBootstrapData,
+      updateTenantInList,
       clearTenant,
     }}>
       {children}

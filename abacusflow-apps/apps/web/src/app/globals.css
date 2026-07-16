@@ -1182,7 +1182,8 @@ a:hover {
 }
 
 .af-status-chip,
-.af-user-chip {
+.af-user-chip,
+.af-tenant-badge {
   display: inline-flex;
   min-height: 38px;
   align-items: center;
@@ -2020,7 +2021,9 @@ a:hover {
   }
 
   .af-route-title span,
-  .af-user-chip span {
+  .af-user-chip span,
+  .af-tenant-badge span,
+  .af-tenant-switcher span {
     display: none;
   }
 

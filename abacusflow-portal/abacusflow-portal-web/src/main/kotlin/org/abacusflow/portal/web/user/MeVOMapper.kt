@@ -2,8 +2,10 @@ package org.abacusflow.portal.web.user
 
 import org.abacusflow.portal.web.model.BootstrapResultVO
 import org.abacusflow.portal.web.model.CurrentUserVO
+import org.abacusflow.portal.web.model.TenantDetailVO
 import org.abacusflow.portal.web.model.TenantSummaryVO
 import org.abacusflow.usecase.tenant.TenantSummaryTO
+import org.abacusflow.usecase.tenant.TenantTO
 import org.abacusflow.usecase.user.BootstrapResultTO
 import org.abacusflow.usecase.user.CurrentUserTO
 
@@ -30,6 +32,18 @@ fun TenantSummaryTO.toVO() =
         displayName = displayName,
         roleNames = roleNames,
         permissionNames = permissionNames,
+    )
+
+fun TenantTO.toDetailVO(roleNames: List<String>, permissionNames: List<String>) =
+    TenantDetailVO(
+        tenantId = id,
+        name = name,
+        displayName = displayName,
+        status = TenantDetailVO.Status.forValue(status),
+        roleNames = roleNames,
+        permissionNames = permissionNames,
+        createdAt = createdAt.toEpochMilli(),
+        updatedAt = updatedAt.toEpochMilli(),
     )
 
 fun CurrentUserTO.toVO() =

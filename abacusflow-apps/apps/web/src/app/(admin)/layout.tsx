@@ -14,10 +14,12 @@ import {
   ExclamationCircleOutlined,
   HomeOutlined,
   InboxOutlined,
+  LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MoonOutlined,
   QuestionCircleOutlined,
+  SettingOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
@@ -119,6 +121,11 @@ const NAV_ITEMS: MenuItemType[] = [
     label: <Link href="/feedback">问题反馈</Link>,
     icon: <ExclamationCircleOutlined />,
   },
+  {
+    key: "/tenant",
+    label: <Link href="/tenant">租户管理</Link>,
+    icon: <SettingOutlined />,
+  },
 ];
 
 const ROUTE_META = [
@@ -154,6 +161,7 @@ const ROUTE_META = [
   { key: "/depots", title: "储存点管理", subtitle: "仓点位置与容量" },
   { key: "/analytics", title: "数据刻画", subtitle: "业务趋势与指标洞察" },
   { key: "/feedback", title: "问题反馈", subtitle: "用户反馈查看与处理" },
+  { key: "/tenant", title: "租户管理", subtitle: "租户信息与切换" },
 ];
 
 const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
@@ -186,7 +194,7 @@ export default function AdminLayout({
   const [showFeedback, setShowFeedback] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
   const { themeMode, toggleTheme } = useTheme();
-  const { tenantStatus, tenants, currentTenantId, currentTenant, selectTenant, setBootstrapData } = useTenant();
+  const { tenantStatus, tenants, currentTenantId, currentTenant, selectTenant, setBootstrapData, clearTenant } = useTenant();
 
   useEffect(() => {
     let cancelled = false;
@@ -342,29 +350,50 @@ export default function AdminLayout({
           </div>
 
           <div className="af-header-right">
-            {tenantStatus === "MULTI_TENANT" && tenants.length > 1 && currentTenant && (
-              <Dropdown
-                menu={{
-                  items: tenants.map((t) => ({
-                    key: t.tenantId.toString(),
-                    label: t.displayName || t.name,
-                    icon: t.tenantId === currentTenantId ? <ShopOutlined /> : undefined,
-                  })),
-                  selectedKeys: currentTenantId ? [currentTenantId.toString()] : [],
-                  onClick: ({ key }) => {
-                    const id = parseInt(key, 10);
-                    if (!isNaN(id)) {
-                      selectTenant(id);
-                      router.refresh();
-                    }
-                  },
-                }}
-                trigger={["click"]}
-              >
-                <button
-                  type="button"
-                  className="af-tenant-switcher"
-                  aria-label="切换租户"
+            {currentTenant && (
+              tenantStatus === "MULTI_TENANT" && tenants.length > 1 ? (
+                <Dropdown
+                  menu={{
+                    items: tenants.map((t) => ({
+                      key: t.tenantId.toString(),
+                      label: t.displayName || t.name,
+                      icon: t.tenantId === currentTenantId ? <ShopOutlined /> : undefined,
+                    })),
+                    selectedKeys: currentTenantId ? [currentTenantId.toString()] : [],
+                    onClick: ({ key }) => {
+                      const id = parseInt(key, 10);
+                      if (!isNaN(id)) {
+                        selectTenant(id);
+                        router.refresh();
+                      }
+                    },
+                  }}
+                  trigger={["click"]}
+                >
+                  <button
+                    type="button"
+                    className="af-tenant-switcher"
+                    aria-label="切换租户"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 12px",
+                      borderRadius: 6,
+                      border: "1px solid var(--border-color, #d9d9d9)",
+                      background: "transparent",
+                      cursor: "pointer",
+                      fontSize: 13,
+                      color: "inherit",
+                    }}
+                  >
+                    <SwapOutlined />
+                    <span>{currentTenant.displayName || currentTenant.name}</span>
+                  </button>
+                </Dropdown>
+              ) : (
+                <div
+                  className="af-tenant-badge"
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -373,15 +402,14 @@ export default function AdminLayout({
                     borderRadius: 6,
                     border: "1px solid var(--border-color, #d9d9d9)",
                     background: "transparent",
-                    cursor: "pointer",
                     fontSize: 13,
                     color: "inherit",
                   }}
                 >
-                  <SwapOutlined />
+                  <ShopOutlined />
                   <span>{currentTenant.displayName || currentTenant.name}</span>
-                </button>
-              </Dropdown>
+                </div>
+              )
             )}
             <button
               type="button"
@@ -415,12 +443,37 @@ export default function AdminLayout({
               {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
             </button>
             <div className="af-status-chip">实时同步</div>
-            <div className="af-user-chip">
-              <span className="af-user-avatar">
-                {displayName ? displayName.charAt(0).toUpperCase() : "?"}
-              </span>
-              <span>{displayName || "加载中..."}</span>
-            </div>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: "tenant-management",
+                    label: <Link href="/tenant">租户管理</Link>,
+                    icon: <ShopOutlined />,
+                  },
+                  { type: "divider" },
+                  {
+                    key: "logout",
+                    label: "退出登录",
+                    icon: <LogoutOutlined />,
+                    danger: true,
+                    onClick: async () => {
+                      const auth = getAuthClient();
+                      clearTenant();
+                      await auth.logout();
+                    },
+                  },
+                ],
+              }}
+              trigger={["click"]}
+            >
+              <div className="af-user-chip" style={{ cursor: "pointer" }}>
+                <span className="af-user-avatar">
+                  {displayName ? displayName.charAt(0).toUpperCase() : "?"}
+                </span>
+                <span>{displayName || "加载中..."}</span>
+              </div>
+            </Dropdown>
           </div>
         </Header>
 
