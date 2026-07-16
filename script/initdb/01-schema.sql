@@ -1,1 +1,0 @@
--- Migrated to Flyway. See abacusflow-infra/abacusflow-db/src/main/resources/db/migration/

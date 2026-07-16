@@ -1,20 +1,28 @@
 -- ============================================================
--- 02-seed-authz.sql  授权相关默认数据（角色、权限、角色-权限绑定）
+-- V002__init_data.sql  初始化数据（角色、权限、用户、默认租户）
 -- ============================================================
 
--- 默认角色
-INSERT INTO role (name, label, created_at, updated_at)
-VALUES ('admin', '超级管理员', '2025-06-12 15:35:07.223000 +00:00', '2025-06-12 15:35:16.941000 +00:00')
+-- ✅ 默认租户
+INSERT INTO tenant (id, name, display_name, status)
+VALUES (1, 'default', '默认租户', 'ACTIVE')
 ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, label, created_at, updated_at)
-VALUES ('reader', '只读用户', now(), now())
-ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, label, created_at, updated_at)
-VALUES ('operator', '操作员', now(), now())
-ON CONFLICT (name) DO NOTHING;
-ALTER SEQUENCE role_id_seq RESTART WITH 100;
 
--- 默认权限
+INSERT INTO tenant_placement (tenant_id, cell_id, storage_mode)
+VALUES (1, 'cell-default-01', 'SHARED_CELL')
+ON CONFLICT DO NOTHING;
+
+-- ✅ 默认角色
+INSERT INTO role (name, label, tenant_id, created_at, updated_at)
+VALUES ('admin', '超级管理员', 1, '2025-06-12 15:35:07.223000 +00:00', '2025-06-12 15:35:16.941000 +00:00')
+ON CONFLICT (tenant_id, name) DO NOTHING;
+INSERT INTO role (name, label, tenant_id, created_at, updated_at)
+VALUES ('reader', '只读用户', 1, NOW(), NOW())
+ON CONFLICT (tenant_id, name) DO NOTHING;
+INSERT INTO role (name, label, tenant_id, created_at, updated_at)
+VALUES ('operator', '操作员', 1, NOW(), NOW())
+ON CONFLICT (tenant_id, name) DO NOTHING;
+
+-- ✅ 默认权限
 INSERT INTO permission (name, label, description)
 VALUES
     ('user:read', '查看用户', '允许查看用户列表和详情'),
@@ -55,20 +63,20 @@ VALUES
     ('feedback:read', '查看反馈', '允许查看反馈列表和详情'),
     ('feedback:update', '更新反馈', '允许更新反馈状态和负责人')
 ON CONFLICT DO NOTHING;
-ALTER SEQUENCE permission_id_seq RESTART WITH 100;
 
+-- ✅ 角色权限绑定
 -- admin 角色绑定所有权限
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
-WHERE r.name = 'admin'
+WHERE r.name = 'admin' AND r.tenant_id = 1
 ON CONFLICT DO NOTHING;
 
 -- reader 角色绑定只读权限
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
-WHERE r.name = 'reader'
+WHERE r.name = 'reader' AND r.tenant_id = 1
   AND p.name LIKE '%:read'
 ON CONFLICT DO NOTHING;
 
@@ -76,6 +84,43 @@ ON CONFLICT DO NOTHING;
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
-WHERE r.name = 'operator'
+WHERE r.name = 'operator' AND r.tenant_id = 1
   AND p.name NOT IN ('user:read', 'role:read', 'user:manage', 'role:manage')
 ON CONFLICT DO NOTHING;
+
+-- ✅ 管理员账号
+INSERT INTO user_account (age, created_at, enabled, locked, name, nick, password, sex, updated_at)
+VALUES (18, '2025-06-12 15:33:17.384000 +00:00', TRUE, FALSE, 'admin', '超级管理员',
+        '$2a$10$w6HLBTQcJhIFQcS6kOtgaOrJG3gm8GgmIGMfp3wiMwGW6OCA1Jd1S', 'M',
+        '2025-06-12 15:34:18.513000 +00:00')
+ON CONFLICT (name) DO NOTHING;
+
+-- ✅ 管理员租户成员与角色绑定
+INSERT INTO tenant_membership (tenant_id, user_id, status)
+SELECT 1, ua.id, 'ACTIVE'
+FROM user_account ua
+WHERE ua.name = 'admin'
+ON CONFLICT (tenant_id, user_id) DO NOTHING;
+
+INSERT INTO tenant_membership_role (membership_id, role_id)
+SELECT tm.id, r.id
+FROM tenant_membership tm
+JOIN user_account ua ON ua.id = tm.user_id AND ua.name = 'admin'
+JOIN role r ON r.name = 'admin' AND r.tenant_id = 1
+WHERE tm.tenant_id = 1
+ON CONFLICT DO NOTHING;
+
+-- ✅ 产品分类根节点
+INSERT INTO product_category (id, created_at, description, name, updated_at, parent_id, tenant_id)
+VALUES (1, '2025-06-15 22:06:19.472000 +00:00', NULL, '根节点', '2025-06-15 22:06:19.472000 +00:00', NULL, 1)
+ON CONFLICT (id) DO NOTHING;
+
+-- ✅ 序列重置
+ALTER SEQUENCE user_account_id_seq RESTART WITH 100;
+ALTER SEQUENCE role_id_seq RESTART WITH 100;
+ALTER SEQUENCE permission_id_seq RESTART WITH 100;
+ALTER SEQUENCE product_category_id_seq RESTART WITH 100;
+ALTER SEQUENCE tenant_id_seq RESTART WITH 100;
+ALTER SEQUENCE tenant_membership_id_seq RESTART WITH 100;
+ALTER SEQUENCE tenant_invitation_id_seq RESTART WITH 100;
+ALTER SEQUENCE tenant_placement_id_seq RESTART WITH 100;
