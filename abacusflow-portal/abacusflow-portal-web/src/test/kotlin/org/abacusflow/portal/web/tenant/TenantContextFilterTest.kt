@@ -3,7 +3,7 @@ package org.abacusflow.portal.web.tenant
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.abacusflow.usecase.commons.tenant.CurrentTenantProvider
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.portal.web.authentication.AbacusFlowAuthenticationDetails
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.junit.jupiter.api.AfterEach
@@ -58,7 +58,7 @@ class TenantContextFilterTest {
 
         filter.doFilter(request, response, filterChain)
 
-        verify(response).sendError(400, "Invalid X-Tenant-Id header")
+        verify(response).sendError(400, "Invalid tenant ID: not-a-number")
         verify(filterChain, never()).doFilter(request, response)
         assertNull(currentTenantProvider.getCurrentTenantId())
     }

@@ -16,6 +16,8 @@ import org.springframework.scheduling.annotation.EnableScheduling
     basePackages = [
         "org.abacusflow.usecase",
         "org.abacusflow.storage",
+        "org.abacusflow.commons",
+        "org.abacusflow.db",
     ],
 )
 @EnableCaching

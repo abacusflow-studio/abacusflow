@@ -4,15 +4,17 @@ import org.abacusflow.db.tenant.TenantMembershipRepository
 import org.abacusflow.db.tenant.TenantRepository
 import org.abacusflow.db.user.ExternalIdentityRepository
 import org.abacusflow.tenant.MembershipStatus
-import org.abacusflow.usecase.commons.tenant.CurrentTenantProvider
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.usecase.tenant.TenantSelectionStatus
 import org.abacusflow.usecase.tenant.TenantSummaryTO
 import org.abacusflow.usecase.user.BootstrapResultTO
 import org.abacusflow.usecase.user.CurrentUserTO
+import org.abacusflow.usecase.user.service.OidcUserProfileFetcher
 import org.abacusflow.usecase.user.service.UserAuthenticationService
 import org.abacusflow.user.ExternalIdentity
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 
 @Service
 @Transactional
@@ -21,14 +23,18 @@ class UserAuthenticationServiceImpl(
     private val tenantMembershipRepository: TenantMembershipRepository,
     private val tenantRepository: TenantRepository,
     private val currentTenantProvider: CurrentTenantProvider,
+    private val profileFetcher: OidcUserProfileFetcher,
 ) : UserAuthenticationService {
+
+    companion object {
+        /** Profile sync threshold: 24 hours */
+        private const val PROFILE_SYNC_THRESHOLD_SECONDS = 24 * 60 * 60L
+    }
+
     override fun bootstrap(
         issuer: String,
         subject: String,
-        email: String?,
-        emailVerified: Boolean?,
-        displayName: String?,
-        pictureUrl: String?,
+        accessToken: String,
     ): BootstrapResultTO {
         val externalIdentity =
             externalIdentityRepository.findByIssuerAndSubject(issuer, subject)
@@ -39,12 +45,22 @@ class UserAuthenticationServiceImpl(
 
         val user = externalIdentity.user
 
-        externalIdentity.syncProfile(email, emailVerified, displayName, pictureUrl)
+        // Sync profile from OIDC provider if stale (>24h since last sync)
+        val shouldSync = externalIdentity.profileSyncedAt == null ||
+            externalIdentity.profileSyncedAt!!.isBefore(
+                Instant.now().minusSeconds(PROFILE_SYNC_THRESHOLD_SECONDS),
+            )
+        if (shouldSync) {
+            val profile = profileFetcher.fetchProfile(accessToken)
+            if (profile != null) {
+                externalIdentity.syncProfile(profile.email, profile.emailVerified, profile.displayName, profile.pictureUrl)
+                val nick = profile.displayName ?: profile.email ?: user.name
+                user.updateProfile(newSex = null, newAge = null, newNick = nick)
+            }
+        }
+
         externalIdentity.recordLogin()
         externalIdentityRepository.save(externalIdentity)
-
-        val nick = displayName ?: email ?: user.name
-        user.updateProfile(newSex = null, newAge = null, newNick = nick)
 
         if (user.locked) {
             return buildResult(user, externalIdentity, BootstrapResultTO.UserStatus.LOCKED)

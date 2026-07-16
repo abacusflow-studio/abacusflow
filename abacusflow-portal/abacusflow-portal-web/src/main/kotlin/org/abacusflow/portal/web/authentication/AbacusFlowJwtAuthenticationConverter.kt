@@ -21,6 +21,7 @@ class AbacusFlowJwtAuthenticationConverter(
             externalIdentityAuthenticationService.resolveAuthorizedUser(
                 issuer = issuer,
                 subject = subject,
+                accessToken = jwt.tokenValue,
             )
                 ?: throw userNotAuthorized()
 

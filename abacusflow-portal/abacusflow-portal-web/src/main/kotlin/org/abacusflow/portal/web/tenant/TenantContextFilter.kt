@@ -3,7 +3,7 @@ package org.abacusflow.portal.web.tenant
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.abacusflow.usecase.commons.tenant.CurrentTenantProvider
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.portal.web.authentication.AbacusFlowAuthenticationDetails
 import org.abacusflow.portal.web.authentication.TenantAuthorityBuilder
 import org.slf4j.LoggerFactory
@@ -29,16 +29,16 @@ class TenantContextFilter(
             val authentication = SecurityContextHolder.getContext().authentication as? JwtAuthenticationToken
             val details = authentication?.details as? AbacusFlowAuthenticationDetails
 
-            val tenantIdHeader = request.getHeader("X-Tenant-Id")
-            if (tenantIdHeader != null) {
-                val tenantId = tenantIdHeader.toLongOrNull()
+            // Support both X-Tenant-Id header and ?tenantId= query parameter
+            val tenantIdValue = request.getHeader("X-Tenant-Id") ?: request.getParameter("tenantId")
+            if (tenantIdValue != null) {
+                val tenantId = tenantIdValue.toLongOrNull()
                 if (tenantId == null) {
-                    response.sendError(400, "Invalid X-Tenant-Id header")
+                    response.sendError(400, "Invalid tenant ID: $tenantIdValue")
                     return
                 }
 
-                // 验证租户访问权：直接从 JWT claims 中的 tenantMemberships 验证
-                // JWT 不可篡改，比查数据库更安全且更快
+                // Validate tenant access against JWT claims (tamper-proof)
                 if (details == null) {
                     log.error("No authentication details found — rejecting tenant selection")
                     response.sendError(403, "User does not have access to tenant $tenantId")
@@ -54,14 +54,13 @@ class TenantContextFilter(
 
                 currentTenantProvider.setTenantId(tenantId)
 
-                // Update Spring Security authorities based on the selected tenant's roles/permissions
                 val authorities = TenantAuthorityBuilder.buildAuthorities(
                     selectedMembership.roleNames,
                     selectedMembership.permissionNames,
                 )
-                replaceAuthorities(authentication, authorities)
+                replaceAuthorities(authentication, authorities, tenantId)
             } else {
-                // No X-Tenant-Id header: if user has a single tenant, auto-set it
+                // No tenant ID specified: if user has a single tenant, auto-set it
                 autoSelectSingleTenant(authentication, details)
             }
             filterChain.doFilter(request, response)
@@ -81,30 +80,31 @@ class TenantContextFilter(
             val membership = memberships[0]
             currentTenantProvider.setTenantId(membership.tenantId)
 
-            // If the current authorities are empty (multi-tenant user got empty at JWT level),
-            // update them with the single tenant's roles/permissions
             if (authentication.authorities.isEmpty()) {
                 val authorities = TenantAuthorityBuilder.buildAuthorities(
                     membership.roleNames,
                     membership.permissionNames,
                 )
-                replaceAuthorities(authentication, authorities)
+                replaceAuthorities(authentication, authorities, membership.tenantId)
             }
         } else if (memberships.size > 1) {
-            log.debug("User ${details.userId} has ${memberships.size} tenants but no X-Tenant-Id header — no tenant selected")
+            log.debug("User ${details.userId} has ${memberships.size} tenants but no tenant selected — no tenant context set")
         }
     }
 
     private fun replaceAuthorities(
         authentication: JwtAuthenticationToken,
         authorities: Set<GrantedAuthority>,
+        tenantId: Long,
     ) {
+        val originalDetails = authentication.details as? AbacusFlowAuthenticationDetails
+        val updatedDetails = originalDetails?.copy(selectedTenantId = tenantId)
         val newAuthentication = JwtAuthenticationToken(
             authentication.token,
             authorities,
             authentication.name,
         ).apply {
-            setDetails(authentication.details)
+            setDetails(updatedDetails ?: authentication.details)
         }
         SecurityContextHolder.getContext().authentication = newAuthentication
     }

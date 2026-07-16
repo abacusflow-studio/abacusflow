@@ -1,12 +1,12 @@
-package org.abacusflow.db.tenant
+package org.abacusflow.db
 
+import jakarta.persistence.EntityManager
 import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
 import org.hibernate.Session
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
-import jakarta.persistence.EntityManager
 
 /**
  * 租户上下文自动设置切面。

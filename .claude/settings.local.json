@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew build *)",
+      "Bash(./gradlew :abacusflow-usecase:abacusflow-usecase-commons:dependencies --configuration jooqCodegen)"
+    ]
+  }
+}

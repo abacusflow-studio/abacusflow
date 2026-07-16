@@ -3,7 +3,7 @@ package org.abacusflow.portal.web
 import jakarta.servlet.http.Cookie
 import org.abacusflow.portal.web.authentication.AbacusFlowJwtAuthenticationConverter
 import org.abacusflow.portal.web.tenant.TenantContextFilter
-import org.abacusflow.usecase.commons.tenant.CurrentTenantProvider
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.hamcrest.Matchers.containsString
@@ -157,6 +157,7 @@ class SecurityConfigurationTest(
                 override fun resolveAuthorizedUser(
                     issuer: String,
                     subject: String,
+                    accessToken: String?,
                 ): AuthenticatedUserTO? {
                     if (issuer != TEST_ISSUER) {
                         return null

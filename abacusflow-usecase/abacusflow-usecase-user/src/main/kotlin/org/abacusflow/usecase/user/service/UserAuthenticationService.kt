@@ -7,10 +7,7 @@ interface UserAuthenticationService {
     fun bootstrap(
         issuer: String,
         subject: String,
-        email: String?,
-        emailVerified: Boolean?,
-        displayName: String?,
-        pictureUrl: String?,
+        accessToken: String,
     ): BootstrapResultTO
 
     fun getCurrentUser(

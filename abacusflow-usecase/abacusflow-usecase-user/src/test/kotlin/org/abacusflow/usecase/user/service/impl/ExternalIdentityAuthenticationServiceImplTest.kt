@@ -7,6 +7,7 @@ import org.abacusflow.db.user.UserRepository
 import org.abacusflow.tenant.MembershipStatus
 import org.abacusflow.tenant.Tenant
 import org.abacusflow.tenant.TenantMembership
+import org.abacusflow.usecase.user.service.OidcUserProfileFetcher
 import org.abacusflow.user.ExternalIdentity
 import org.abacusflow.user.Role
 import org.abacusflow.user.User
@@ -27,6 +28,7 @@ class ExternalIdentityAuthenticationServiceImplTest {
     private val userRepository = mock(UserRepository::class.java)
     private val tenantMembershipRepository = mock(TenantMembershipRepository::class.java)
     private val tenantRepository = mock(TenantRepository::class.java)
+    private val profileFetcher = mock(OidcUserProfileFetcher::class.java)
 
     private val service =
         ExternalIdentityAuthenticationServiceImpl(
@@ -34,6 +36,7 @@ class ExternalIdentityAuthenticationServiceImplTest {
             userRepository,
             tenantMembershipRepository,
             tenantRepository,
+            profileFetcher,
         )
 
     @Test
