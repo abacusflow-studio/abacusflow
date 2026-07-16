@@ -1,25 +1,39 @@
 package org.abacusflow.partner
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import org.abacusflow.commons.tenant.TenantContextHolder
+import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.FilterDef
+import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
 
 @Entity
-@Table(name = "customer")
+@Table(
+    name = "customer",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "name"])],
+)
+@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class Customer(
     name: String,
     phone: String?,
     address: String?,
-) : AbstractAggregateRoot<Customer>() {
+    @Column(name = "tenant_id", nullable = false)
+    override val tenantId: Long = TenantContextHolder.currentTenantId(),
+) : AbstractAggregateRoot<Customer>(), TenantScopedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0
@@ -62,7 +76,7 @@ class Customer(
             phone = it
         }
         updatedAt = Instant.now()
-        registerEvent(CustomerUpdatedEvent(id))
+        registerEvent(CustomerUpdatedEvent(id, tenantId))
     }
 
     fun enable() {

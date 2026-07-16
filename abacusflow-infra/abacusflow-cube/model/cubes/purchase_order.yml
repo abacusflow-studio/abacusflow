@@ -14,6 +14,10 @@ cubes:
         type: number
         primary_key: true
 
+      - name: tenant_id
+        sql: tenant_id
+        type: number
+
       - name: status
         sql: status
         type: string

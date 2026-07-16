@@ -1,6 +1,5 @@
 package org.abacusflow.usecase.product.service.impl
 
-import org.abacusflow.db.inventory.InventoryRepository
 import org.abacusflow.db.inventory.InventoryUnitRepository
 import org.abacusflow.db.transaction.PurchaseOrderItemRepository
 import org.abacusflow.db.transaction.SaleOrderItemRepository
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class ProductDeletionCheckerImpl(
-    private val inventoryRepository: InventoryRepository,
     private val inventoryUnitRepository: InventoryUnitRepository,
     private val saleOrderItemRepository: SaleOrderItemRepository,
     private val purchaseOrderItemRepository: PurchaseOrderItemRepository,
@@ -22,12 +20,12 @@ class ProductDeletionCheckerImpl(
         val relatedInventoryUnits = inventoryUnitRepository.findByInventoryProductId(productId)
         val relatedInventoryUnitIds = relatedInventoryUnits.map { it.id }
 
-        val noPurchaseOrder = purchaseOrderItemRepository.countPurchaseOrderItemByProductId(productId) == 0L
+        val noPurchaseOrder = purchaseOrderItemRepository.countByProductId(productId) == 0L
         val noSaleOrder =
             if (relatedInventoryUnitIds.isEmpty()) {
                 true // 没有库存单位就说明没有入库更是没有销售绑定
             } else {
-                saleOrderItemRepository.countSaleOrderItemByInventoryUnitIdIn(relatedInventoryUnitIds) == 0L
+                saleOrderItemRepository.countByInventoryUnitIdIn(relatedInventoryUnitIds) == 0L
             }
 
         return noPurchaseOrder && noSaleOrder

@@ -25,11 +25,13 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
 @Service
+@Transactional(readOnly = true)
 class InventoryQueryServiceImpl(
     private val inventoryRepository: InventoryRepository,
     private val jooqDsl: DSLContext,
@@ -197,8 +199,8 @@ class InventoryQueryServiceImpl(
     override fun getInventory(id: Long): InventoryTO {
         return inventoryRepository
             .findById(id)
+            .map { it.toTO() }
             .orElseThrow { NoSuchElementException("Inventory not found with id: $id") }
-            .toTO()
     }
 
     fun ProductTypeDbEnum.toCoreProductType(): Product.ProductType =

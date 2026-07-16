@@ -22,10 +22,15 @@ class ProductCommandServiceImpl(
     private val productDeletionChecker: ProductDeletionChecker,
 ) : ProductCommandService {
     override fun createProduct(input: CreateProductInputTO): ProductTO {
-        val newProductCategory =
-            productCategoryRepository.findById(input.categoryId).orElseThrow {
-                NoSuchElementException("ProductCategory not found with id: ${input.categoryId}")
+        input.barcode?.let { barcode ->
+            require(!productRepository.existsByBarcode(barcode)) {
+                "Product with barcode '$barcode' already exists in this tenant"
             }
+        }
+
+        val newProductCategory =
+            productCategoryRepository.findById(input.categoryId)
+                .orElseThrow { NoSuchElementException("ProductCategory not found with id: ${input.categoryId}") }
 
         val newProduct =
             Product(
@@ -60,9 +65,8 @@ class ProductCommandServiceImpl(
 
             input.categoryId?.let { categoryId ->
                 val newProductCategory =
-                    productCategoryRepository.findById(categoryId).orElseThrow {
-                        NoSuchElementException("Product not found with id: $categoryId")
-                    }
+                    productCategoryRepository.findById(categoryId)
+                        .orElseThrow { NoSuchElementException("ProductCategory not found with id: $categoryId") }
 
                 changeCategory(newProductCategory)
             }

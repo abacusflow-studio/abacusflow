@@ -1,26 +1,40 @@
 package org.abacusflow.partner
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import org.abacusflow.commons.tenant.TenantContextHolder
+import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.FilterDef
+import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
 
 @Entity
-@Table(name = "supplier")
+@Table(
+    name = "supplier",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "name"])],
+)
+@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class Supplier(
     name: String,
     phone: String?,
     contactPerson: String?,
     address: String?,
-) : AbstractAggregateRoot<Supplier>() {
+    @Column(name = "tenant_id", nullable = false)
+    override val tenantId: Long = TenantContextHolder.currentTenantId(),
+) : AbstractAggregateRoot<Supplier>(), TenantScopedEntity {
     @field:NotBlank
     @field:Size(max = 100)
     var name: String = name
@@ -71,7 +85,7 @@ class Supplier(
             address = it
         }
         updatedAt = Instant.now()
-        registerEvent(SupplierUpdatedEvent(id))
+        registerEvent(SupplierUpdatedEvent(id, tenantId))
     }
 
     fun enable() {

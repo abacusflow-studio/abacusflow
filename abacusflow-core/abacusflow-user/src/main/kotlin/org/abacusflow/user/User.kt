@@ -6,9 +6,6 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.NotBlank
@@ -53,16 +50,6 @@ class User(
 
     var nick: String = name
 
-    @ManyToMany
-    @JoinTable(
-        name = "user_role",
-        joinColumns = [JoinColumn(name = "user_id")],
-        inverseJoinColumns = [JoinColumn(name = "role_id")],
-    )
-    private val rolesMutable: MutableSet<Role> = mutableSetOf()
-    val roles: List<Role>
-        get() = rolesMutable.toList()
-
     @field:NotNull(message = "Password is required and cannot be blank")
     var password: String = ""
         private set
@@ -84,16 +71,6 @@ class User(
 
     fun initPassword(password: String) {
         this.password = password
-    }
-
-    fun addRole(role: Role) {
-        rolesMutable.add(role)
-        updatedAt = Instant.now()
-    }
-
-    fun removeRole(role: Role) {
-        rolesMutable.remove(role)
-        updatedAt = Instant.now()
     }
 
     fun lock() {

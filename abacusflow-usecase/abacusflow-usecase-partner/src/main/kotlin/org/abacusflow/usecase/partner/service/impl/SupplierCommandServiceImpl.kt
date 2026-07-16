@@ -16,6 +16,10 @@ class SupplierCommandServiceImpl(
     private val supplierRepository: SupplierRepository,
 ) : SupplierCommandService {
     override fun createSupplier(supplier: CreateSupplierInputTO): SupplierTO {
+        require(!supplierRepository.existsByName(supplier.name)) {
+            "Supplier with name '${supplier.name}' already exists"
+        }
+
         val newSupplier =
             Supplier(
                 name = supplier.name,
@@ -33,7 +37,16 @@ class SupplierCommandServiceImpl(
         val supplier =
             supplierRepository
                 .findById(id)
-                .orElseThrow { NoSuchElementException("Supplier not found") }
+                .orElseThrow { NoSuchElementException("Supplier not found with id: $id") }
+
+        supplierTO.name?.let { newName ->
+            if (newName != supplier.name) {
+                require(!supplierRepository.existsByName(newName)) {
+                    "Supplier with name '$newName' already exists"
+                }
+            }
+        }
+
         supplier.updateContactInfo(
             newName = supplierTO.name,
             newContactPerson = supplierTO.contactPerson,
@@ -47,7 +60,7 @@ class SupplierCommandServiceImpl(
         val supplier =
             supplierRepository
                 .findById(id)
-                .orElseThrow { NoSuchElementException("Supplier not found") }
+                .orElseThrow { NoSuchElementException("Supplier not found with id: $id") }
         supplierRepository.delete(supplier)
         return supplier.toTO()
     }

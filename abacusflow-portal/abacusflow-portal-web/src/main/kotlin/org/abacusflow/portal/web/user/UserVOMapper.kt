@@ -14,7 +14,6 @@ fun UserTO.toVO(): UserVO =
         name = name,
         age = age,
         nick = nick,
-        roleIds = roleIds,
         enabled = enabled,
         locked = locked,
         createdAt = createdAt.toEpochMilli(),

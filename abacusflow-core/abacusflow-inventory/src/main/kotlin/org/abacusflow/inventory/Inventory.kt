@@ -8,7 +8,12 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.PositiveOrZero
+import org.abacusflow.commons.tenant.TenantContextHolder
+import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.FilterDef
+import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
@@ -16,12 +21,16 @@ import java.time.Instant
 @Entity
 @Table(
     name = "inventory",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["product_id"])],
+    uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "product_id"])],
 )
+@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class Inventory(
     @Column(name = "product_id", nullable = false)
     val productId: Long, // 通过ID关联产品
-) : AbstractAggregateRoot<Inventory>() {
+    @Column(name = "tenant_id", nullable = false)
+    override val tenantId: Long = TenantContextHolder.currentTenantId(),
+) : AbstractAggregateRoot<Inventory>(), TenantScopedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0

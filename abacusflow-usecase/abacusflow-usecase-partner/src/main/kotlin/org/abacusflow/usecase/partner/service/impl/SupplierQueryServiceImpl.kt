@@ -16,25 +16,29 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
 
 @Service
+@Transactional(readOnly = true)
 class SupplierQueryServiceImpl(
     private val supplierRepository: SupplierRepository,
     private val jooqDsl: DSLContext,
 ) : SupplierQueryService {
-    override fun getSupplier(id: Long): SupplierTO =
-        supplierRepository
+    override fun getSupplier(id: Long): SupplierTO {
+        return supplierRepository
             .findById(id)
-            .orElseThrow { NoSuchElementException("Supplier not found") }
+            .orElseThrow { NoSuchElementException("Supplier not found with id: $id") }
             .toTO()
+    }
 
-    override fun getSupplier(name: String): SupplierTO =
-        supplierRepository
+    override fun getSupplier(name: String): SupplierTO {
+        return supplierRepository
             .findByName(name)
             ?.toTO()
             ?: throw NoSuchElementException("Supplier not found")
+    }
 
     override fun listBasicSuppliersPage(
         pageable: Pageable,
@@ -121,6 +125,7 @@ class SupplierQueryServiceImpl(
     override fun listSuppliers(): List<SupplierTO> {
         return jooqDsl
             .selectFrom(SUPPLIER)
+            .where(DSL.noCondition())
             .orderBy(SUPPLIER.CREATED_AT.desc())
             .fetch()
             .map {

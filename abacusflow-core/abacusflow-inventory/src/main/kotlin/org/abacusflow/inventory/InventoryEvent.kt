@@ -5,6 +5,7 @@ class InventoryIncreasedEvent(
     val productId: Long,
     val depotId: Long,
     val amount: Int,
+    val tenantId: Long,
 )
 
 class InventoryDecreasedEvent(
@@ -12,6 +13,7 @@ class InventoryDecreasedEvent(
     val productId: Long,
     val depotId: Long,
     val amount: Int,
+    val tenantId: Long,
 )
 
 class InventoryReservedEvent(
@@ -19,6 +21,7 @@ class InventoryReservedEvent(
     val productId: Long,
     val depotId: Long,
     val amount: Int,
+    val tenantId: Long,
 )
 
 class LowStockWarningEvent(
@@ -26,4 +29,5 @@ class LowStockWarningEvent(
     val productId: Long,
     val currentQuantity: Int,
     val safetyStock: Int,
+    val tenantId: Long,
 )

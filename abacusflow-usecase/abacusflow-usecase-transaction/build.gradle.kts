@@ -8,4 +8,6 @@ dependencies {
     implementation(project(":abacusflow-core:abacusflow-partner"))
     implementation(project(":abacusflow-core:abacusflow-product"))
     implementation(project(":abacusflow-core:abacusflow-inventory"))
+    implementation(project(":abacusflow-core:abacusflow-tenant"))
+    implementation(project(":abacusflow-infra:abacusflow-db"))
 }

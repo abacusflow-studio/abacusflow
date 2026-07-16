@@ -17,6 +17,7 @@ import {
   initializeMobileAuthSession,
   loginMobileAuth,
   logoutMobileAuth,
+  selectMobileTenant,
   subscribeMobileAuth,
   type MobileAuthSnapshot,
 } from "@features/auth/services/auth-service";
@@ -133,6 +134,66 @@ export function AuthGate({ children }: AuthGateProps) {
             )}
           </Pressable>
           <Text style={styles.secureText}>Auth0 安全登录</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Tenant selection: show picker if multi-tenant with no tenant selected
+  if (auth.authenticated && auth.tenantStatus === "MULTI_TENANT" && auth.currentTenantId === null && auth.tenants.length > 0) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <View style={styles.tenantPanel}>
+          <Ionicons name="business-outline" size={48} color={COLORS.primary} />
+          <Text style={styles.tenantTitle}>选择租户</Text>
+          <Text style={styles.tenantDesc}>您属于多个租户，请选择要进入的租户</Text>
+          <ScrollView style={styles.tenantList} contentContainerStyle={{ gap: 10 }}>
+            {auth.tenants.map((t) => (
+              <Pressable
+                key={t.tenantId}
+                style={({ pressed }) => [
+                  styles.tenantItem,
+                  pressed && styles.tenantItemPressed,
+                ]}
+                onPress={() => selectMobileTenant(t.tenantId)}
+              >
+                <View style={styles.tenantAvatar}>
+                  <Text style={styles.tenantAvatarText}>
+                    {(t.displayName || t.name).charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.tenantItemName}>{t.displayName || t.name}</Text>
+                  {t.roleNames.length > 0 && (
+                    <Text style={styles.tenantItemRoles}>{t.roleNames.join(", ")}</Text>
+                  )}
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Tenant onboarding: show message for NEEDS_ONBOARDING
+  if (auth.authenticated && auth.tenantStatus === "NEEDS_ONBOARDING") {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <View style={styles.center}>
+          <Ionicons name="business-outline" size={48} color={COLORS.primary} />
+          <Text style={styles.tenantTitle}>需要创建租户</Text>
+          <Text style={styles.tenantDesc}>
+            请在网页端创建您的第一个租户后，再使用移动端应用。
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={logoutMobileAuth}
+            style={[styles.primaryButton, { marginTop: 24, minWidth: 200 }]}
+          >
+            <Text style={styles.primaryButtonText}>退出登录</Text>
+          </Pressable>
         </View>
       </SafeAreaView>
     );
@@ -403,5 +464,64 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 13,
     fontWeight: "700",
+  },
+  tenantPanel: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    gap: 16,
+  },
+  tenantTitle: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: COLORS.text,
+    lineHeight: 34,
+  },
+  tenantDesc: {
+    fontSize: 16,
+    lineHeight: 25,
+    color: COLORS.textSecondary,
+    textAlign: "center",
+  },
+  tenantList: {
+    width: "100%",
+    maxHeight: 320,
+  },
+  tenantItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: COLORS.bgCard,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  tenantItemPressed: {
+    opacity: 0.7,
+  },
+  tenantAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: "rgba(22, 163, 74, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tenantAvatarText: {
+    color: "#16a34a",
+    fontWeight: "700",
+    fontSize: 18,
+  },
+  tenantItemName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  tenantItemRoles: {
+    fontSize: 13,
+    color: COLORS.textTertiary,
+    marginTop: 2,
   },
 });

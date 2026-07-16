@@ -16,23 +16,28 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional(readOnly = true)
 class ProductQueryServiceImpl(
     private val productRepository: ProductRepository,
     private val jooqDsl: DSLContext,
 ) : ProductQueryService {
-    override fun getProduct(id: Long): ProductTO =
-        productRepository
+    override fun getProduct(id: Long): ProductTO {
+        return productRepository
             .findById(id)
+            .map { it.toTO() }
             .orElseThrow { NoSuchElementException("Product not found with id: $id") }
-            .toTO()
+    }
 
-    override fun getProduct(name: String): ProductTO =
-        productRepository
+    override fun getProduct(name: String): ProductTO {
+        return productRepository
             .findByName(name)
+            .firstOrNull()
             ?.toTO()
             ?: throw NoSuchElementException("Product not found")
+    }
 
     override fun listBasicProductsPage(
         pageable: Pageable,
@@ -122,6 +127,7 @@ class ProductQueryServiceImpl(
     override fun listProducts(): List<ProductTO> {
         return jooqDsl
             .selectFrom(PRODUCT)
+            .where(DSL.noCondition())
             .orderBy(PRODUCT.CREATED_AT.desc())
             .fetch()
             .map { it.toTO() }

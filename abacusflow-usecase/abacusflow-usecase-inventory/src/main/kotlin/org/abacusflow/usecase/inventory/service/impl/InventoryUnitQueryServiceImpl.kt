@@ -24,11 +24,13 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
 @Service
+@Transactional(readOnly = true)
 class InventoryUnitQueryServiceImpl(
     private val inventoryUnitRepository: InventoryUnitRepository,
     private val jooqDsl: DSLContext,
@@ -304,8 +306,8 @@ class InventoryUnitQueryServiceImpl(
 
     override fun getInventoryUnit(id: Long): InventoryUnitTO? {
         return inventoryUnitRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Inventory not found with id: $id") }
-            .toTO()
+            .map { it.toTO() }
+            .orElseThrow { NoSuchElementException("Inventory unit not found with id: $id") }
     }
 
     fun Record.toBasicInventoryUnitTO(): BasicInventoryUnitTO? {

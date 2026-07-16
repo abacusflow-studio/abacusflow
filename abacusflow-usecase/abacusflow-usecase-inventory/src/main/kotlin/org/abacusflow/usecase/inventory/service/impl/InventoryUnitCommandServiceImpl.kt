@@ -16,7 +16,7 @@ class InventoryUnitCommandServiceImpl(
     ) {
         val inventoryUnit =
             inventoryUnitRepository.findById(id)
-                .orElseThrow { NoSuchElementException("Inventory  unit not found") }
+                .orElseThrow { NoSuchElementException("Inventory unit not found") }
 
         inventoryUnit.assignDepot(newDepotId)
 

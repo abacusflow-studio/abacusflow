@@ -17,11 +17,13 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
 @Service
+@Transactional(readOnly = true)
 class PurchaseOrderQueryServiceImpl(
     private val purchaseOrderRepository: PurchaseOrderRepository,
     private val jooqDsl: DSLContext,
@@ -171,7 +173,9 @@ class PurchaseOrderQueryServiceImpl(
                 )
                 .from(PURCHASE_ORDER_ITEM)
                 .leftJoin(PRODUCT).on(PURCHASE_ORDER_ITEM.PRODUCT_ID.eq(PRODUCT.ID))
-                .where(PURCHASE_ORDER_ITEM.ORDER_ID.eq(id))
+                .where(
+                    PURCHASE_ORDER_ITEM.ORDER_ID.eq(id),
+                )
                 .fetch()
                 .map {
                     PurchaseOrderTO.PurchaseOrderItemTO(

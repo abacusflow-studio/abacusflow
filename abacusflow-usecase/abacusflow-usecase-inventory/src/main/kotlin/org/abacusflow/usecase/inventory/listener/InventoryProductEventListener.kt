@@ -20,6 +20,7 @@ class InventoryProductEventListener(
         inventoryRepository.save(
             Inventory(
                 productId = event.product.id,
+                tenantId = event.product.tenantId,
             ),
         )
     }

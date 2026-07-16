@@ -2,10 +2,16 @@ package org.abacusflow.portal.web
 
 import jakarta.servlet.http.Cookie
 import org.abacusflow.portal.web.authentication.AbacusFlowJwtAuthenticationConverter
+import org.abacusflow.portal.web.tenant.TenantContextFilter
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
+import org.abacusflow.usecase.tenant.service.TenantAccessService
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
@@ -179,7 +185,7 @@ class SecurityConfigurationTest(
                             AuthenticatedUserTO(
                                 id = 3,
                                 name = "auto-created-user",
-                                roleNames = setOf("viewer"),
+                                roleNames = emptySet(),
                                 permissionNames = emptySet(),
                             )
                         else -> null
@@ -193,6 +199,20 @@ class SecurityConfigurationTest(
         ): AbacusFlowJwtAuthenticationConverter {
             return AbacusFlowJwtAuthenticationConverter(externalIdentityAuthenticationService)
         }
+
+        @Bean
+        fun currentTenantProvider(): CurrentTenantProvider = CurrentTenantProvider()
+
+        @Bean
+        fun tenantAccessService(): TenantAccessService = mock(TenantAccessService::class.java).also {
+            `when`(it.userHasAccessToTenant(anyLong(), anyLong())).thenReturn(true)
+        }
+
+        @Bean
+        fun tenantContextFilter(
+            currentTenantProvider: CurrentTenantProvider,
+            tenantAccessService: TenantAccessService,
+        ): TenantContextFilter = TenantContextFilter(currentTenantProvider, tenantAccessService)
 
         private fun validAccessToken(
             token: String,

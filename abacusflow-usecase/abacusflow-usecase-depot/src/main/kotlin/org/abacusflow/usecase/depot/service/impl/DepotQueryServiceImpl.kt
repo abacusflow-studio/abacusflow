@@ -12,11 +12,14 @@ import org.springframework.stereotype.Service
 class DepotQueryServiceImpl(
     private val depotRepository: DepotRepository,
 ) : DepotQueryService {
-    override fun listBasicDepots(): List<BasicDepotTO> = depotRepository.findAll().map { it.toBasicTO() }
+    override fun listBasicDepots(): List<BasicDepotTO> {
+        return depotRepository.findAll().map { it.toBasicTO() }
+    }
 
-    override fun getDepot(id: Long): DepotTO =
-        depotRepository
+    override fun getDepot(id: Long): DepotTO {
+        return depotRepository
             .findById(id)
+            .map { it.toTO() }
             .orElseThrow { NoSuchElementException("Depot not found with id: $id") }
-            .toTO()
+    }
 }

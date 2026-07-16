@@ -1,6 +1,7 @@
 package org.abacusflow.storage
 
 import org.abacusflow.commons.file.FileStorageService
+import org.abacusflow.commons.tenant.TenantContextHolder
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
@@ -17,12 +18,13 @@ class S3FileStorageService(
         originalFilename: String,
         contentType: String,
     ): String {
+        val tenantId = TenantContextHolder.currentTenantId()
         val extension = originalFilename.substringAfterLast('.', "")
         val key =
             if (extension.isNotEmpty()) {
-                "feedback/${UUID.randomUUID()}.$extension"
+                "tenants/$tenantId/feedback/${UUID.randomUUID()}.$extension"
             } else {
-                "feedback/${UUID.randomUUID()}"
+                "tenants/$tenantId/feedback/${UUID.randomUUID()}"
             }
 
         val putRequest =

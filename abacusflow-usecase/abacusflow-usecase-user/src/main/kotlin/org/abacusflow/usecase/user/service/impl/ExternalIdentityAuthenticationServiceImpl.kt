@@ -1,15 +1,14 @@
 package org.abacusflow.usecase.user.service.impl
 
-import jakarta.annotation.PostConstruct
+import org.abacusflow.db.tenant.TenantMembershipRepository
+import org.abacusflow.db.tenant.TenantRepository
 import org.abacusflow.db.user.ExternalIdentityRepository
-import org.abacusflow.db.user.RoleRepository
 import org.abacusflow.db.user.UserRepository
+import org.abacusflow.tenant.MembershipStatus
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.abacusflow.user.ExternalIdentity
-import org.abacusflow.user.Role
 import org.abacusflow.user.User
-import org.abacusflow.user.WellKnownRole
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.MessageDigest
@@ -19,21 +18,9 @@ import java.security.MessageDigest
 class ExternalIdentityAuthenticationServiceImpl(
     private val externalIdentityRepository: ExternalIdentityRepository,
     private val userRepository: UserRepository,
-    private val roleRepository: RoleRepository,
+    private val tenantMembershipRepository: TenantMembershipRepository,
+    private val tenantRepository: TenantRepository,
 ) : ExternalIdentityAuthenticationService {
-    private lateinit var defaultUserRole: Role
-
-    @PostConstruct
-    fun init() {
-        initDefaultUserRole()
-    }
-
-    private fun initDefaultUserRole() {
-        defaultUserRole = roleRepository.findByNameWithPermissions(WellKnownRole.OPERATOR.name.lowercase())
-            ?: throw IllegalStateException(
-                "Default role '${WellKnownRole.OPERATOR.name.lowercase()}' not found. Ensure seed data has run.",
-            )
-    }
 
     override fun resolveAuthorizedUser(
         issuer: String,
@@ -55,15 +42,45 @@ class ExternalIdentityAuthenticationServiceImpl(
             return null
         }
 
+        val memberships = tenantMembershipRepository.findByUserIdAndStatus(user.id, MembershipStatus.ACTIVE)
+        val membershipInfos = memberships.map { membership ->
+            val tenant = tenantRepository.findById(membership.tenantId).orElse(null)
+            AuthenticatedUserTO.TenantMembershipInfo(
+                tenantId = membership.tenantId,
+                tenantName = tenant?.name ?: "",
+                tenantDisplayName = tenant?.displayName,
+                roleNames = membership.roles.map { it.name }.toSet(),
+                permissionNames = membership.roles.flatMap { it.permissions }.map { it.name }.toSet(),
+            )
+        }
+
+        // Resolve roles/permissions from tenant memberships:
+        // - If user has exactly one active membership, use that membership's roles/permissions
+        // - If user has multiple, use the first membership's roles (tenant context will be resolved by TenantContextFilter)
+        // - If user has no memberships (new user), return empty roles/permissions (needs onboarding)
+        val resolvedRoles: Set<String>
+        val resolvedPermissions: Set<String>
+
+        if (membershipInfos.size == 1) {
+            resolvedRoles = membershipInfos[0].roleNames
+            resolvedPermissions = membershipInfos[0].permissionNames
+        } else if (membershipInfos.size > 1) {
+            // For multi-tenant users, use empty roles at JWT level.
+            // The TenantContextFilter will set the tenant, and the actual
+            // role/permission checks will happen per-request based on the selected tenant.
+            resolvedRoles = emptySet()
+            resolvedPermissions = emptySet()
+        } else {
+            resolvedRoles = emptySet()
+            resolvedPermissions = emptySet()
+        }
+
         return AuthenticatedUserTO(
             id = user.id,
             name = user.name,
-            roleNames = user.roles.map { it.name }.toSet(),
-            permissionNames =
-                user.roles
-                    .flatMap { it.permissions }
-                    .map { it.name }
-                    .toSet(),
+            roleNames = resolvedRoles,
+            permissionNames = resolvedPermissions,
+            tenantMemberships = membershipInfos,
         )
     }
 
@@ -74,8 +91,7 @@ class ExternalIdentityAuthenticationServiceImpl(
         val user = User(name = generateLocalUserName(issuer, subject))
         user.enable()
 
-        user.addRole(defaultUserRole)
-
+        // New user gets no roles — they will need to create/join a tenant (onboarding)
         val savedUser = userRepository.save(user)
 
         val externalIdentity =
@@ -90,12 +106,9 @@ class ExternalIdentityAuthenticationServiceImpl(
         return AuthenticatedUserTO(
             id = savedUser.id,
             name = savedUser.name,
-            roleNames = savedUser.roles.map { it.name }.toSet(),
-            permissionNames =
-                savedUser.roles
-                    .flatMap { it.permissions }
-                    .map { it.name }
-                    .toSet(),
+            roleNames = emptySet(),
+            permissionNames = emptySet(),
+            tenantMemberships = emptyList(),
         )
     }
 

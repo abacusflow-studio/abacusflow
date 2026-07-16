@@ -16,6 +16,10 @@ class DepotCommandServiceImpl(
     private val depotRepository: DepotRepository,
 ) : DepotCommandService {
     override fun createDepot(input: CreateDepotInputTO): DepotTO {
+        require(!depotRepository.existsByName(input.name)) {
+            "Depot with name '${input.name}' already exists"
+        }
+
         val newDepot =
             Depot(
                 name = input.name,
@@ -34,6 +38,14 @@ class DepotCommandServiceImpl(
             depotRepository
                 .findById(id)
                 .orElseThrow { NoSuchElementException("Depot not found with id: $id") }
+
+        input.name?.let { newName ->
+            if (newName != depot.name) {
+                require(!depotRepository.existsByName(newName)) {
+                    "Depot with name '$newName' already exists"
+                }
+            }
+        }
 
         depot.updateDepotInfo(
             newName = input.name,

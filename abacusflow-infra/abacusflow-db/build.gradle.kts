@@ -12,5 +12,9 @@ dependencies {
     implementation(project(":abacusflow-core:abacusflow-partner"))
     implementation(project(":abacusflow-core:abacusflow-depot"))
     implementation(project(":abacusflow-core:abacusflow-feedback"))
+    implementation(project(":abacusflow-core:abacusflow-tenant"))
     api(libs.spring.data.jpa)
+    implementation(libs.spring.boot.starter.aop)
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
 }

@@ -14,11 +14,18 @@ import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import jakarta.persistence.Version
 import jakarta.validation.constraints.PositiveOrZero
+import org.abacusflow.commons.tenant.TenantContextHolder
+import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
 import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.dialect.PostgreSQLEnumJdbcType
 import org.hibernate.type.SqlTypes
@@ -29,6 +36,12 @@ import java.util.UUID
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE) // 或 JOINED
 @DiscriminatorColumn(name = "unit_type", discriminatorType = DiscriminatorType.STRING)
+@Table(
+    name = "inventory_unit",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "serial_number"])],
+)
+@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 abstract class InventoryUnit(
     @ManyToOne
     @JoinColumn(name = "inventory_id", nullable = false)
@@ -40,7 +53,8 @@ abstract class InventoryUnit(
     // 冗余字段
     open val unitPrice: BigDecimal,
     depotId: Long?,
-) {
+    @Column(name = "tenant_id", nullable = false) override val tenantId: Long = TenantContextHolder.currentTenantId(),
+) : TenantScopedEntity {
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "sale_order_ids", columnDefinition = "bigint[]")
     private val saleOrderIdsMutable: MutableSet<Long> = mutableSetOf()
@@ -154,14 +168,16 @@ abstract class InventoryUnit(
         depotId: Long?,
         unitPrice: BigDecimal,
         serialNumber: String,
+        tenantId: Long = TenantContextHolder.currentTenantId(),
     ) : InventoryUnit(
             inventory = inventory,
             purchaseOrderId = purchaseOrderId,
             initialQuantity = 1,
             depotId = depotId,
             unitPrice = unitPrice,
+            tenantId = tenantId,
         ) {
-        @Column(unique = true)
+        @Column
         val serialNumber: String = serialNumber.uppercase()
 
         val inStock: Boolean
@@ -188,12 +204,14 @@ abstract class InventoryUnit(
         depotId: Long?,
         unitPrice: BigDecimal,
         val batchCode: UUID,
+        tenantId: Long = TenantContextHolder.currentTenantId(),
     ) : InventoryUnit(
             inventory = inventory,
             purchaseOrderId = purchaseOrderId,
             initialQuantity = initialQuantity,
             unitPrice = unitPrice,
             depotId = depotId,
+            tenantId = tenantId,
         )
 
     enum class UnitType {

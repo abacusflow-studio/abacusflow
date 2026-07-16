@@ -7,7 +7,11 @@ import {
   type AuthClient,
   type UserProfile,
   userApi,
+  setMemoryTenantId,
+  clearTenantContext,
 } from "@abacusflow/core";
+
+import type { TenantInfo } from "@abacusflow/core";
 
 import {
   appConfig,
@@ -21,6 +25,7 @@ import {
 WebBrowser.maybeCompleteAuthSession();
 
 const TOKEN_STORE_KEY = "abacusflow.mobile.auth.token";
+const TENANT_STORE_KEY = "abacusflow.mobile.tenant.id";
 const AUTH_SCOPES = ["openid", "profile", "email", "offline_access"];
 
 export interface MobileAuthSnapshot {
@@ -30,6 +35,9 @@ export interface MobileAuthSnapshot {
   user?: UserProfile;
   error?: string;
   configIssues: string[];
+  tenantStatus: "NEEDS_ONBOARDING" | "SINGLE_TENANT" | "MULTI_TENANT" | "LOADING";
+  tenants: TenantInfo[];
+  currentTenantId: number | null;
 }
 
 type Listener = (snapshot: MobileAuthSnapshot) => void;
@@ -51,6 +59,9 @@ const DEV_AUTH_SNAPSHOT: MobileAuthSnapshot = {
   signingIn: false,
   user: DEV_AUTH_USER,
   configIssues: [],
+  tenantStatus: "SINGLE_TENANT",
+  tenants: [],
+  currentTenantId: null,
 };
 
 let authInitialized = false;
@@ -69,6 +80,9 @@ let snapshot: MobileAuthSnapshot = isMobileDevAuthDisabled
       authenticated: false,
       signingIn: false,
       configIssues: mobileConfigIssues,
+      tenantStatus: "LOADING",
+      tenants: [],
+      currentTenantId: null,
     };
 
 function publish(patch: Partial<MobileAuthSnapshot>): void {
@@ -133,7 +147,9 @@ async function loadToken(): Promise<AuthSession.TokenResponse | null> {
 async function clearToken(): Promise<void> {
   currentToken = null;
   currentUser = undefined;
+  clearTenantContext();
   await SecureStore.deleteItemAsync(TOKEN_STORE_KEY);
+  await SecureStore.deleteItemAsync(TENANT_STORE_KEY);
 }
 
 async function refreshTokenIfNeeded(): Promise<AuthSession.TokenResponse | null> {
@@ -195,6 +211,20 @@ async function syncAuthenticatedSession(): Promise<void> {
   const profile = (await fetchAuth0User(token)) ?? {};
   try {
     const bootstrap = await userApi.bootstrap();
+    const bootstrapTenants = (bootstrap.tenants ?? []) as TenantInfo[];
+
+    // Auto-select tenant for SINGLE_TENANT, or load stored tenant ID
+    let selectedTenantId: number | null = null;
+    if (bootstrap.tenantStatus === "SINGLE_TENANT" && bootstrapTenants.length > 0) {
+      selectedTenantId = bootstrapTenants[0].tenantId;
+    } else if (bootstrap.tenantStatus === "MULTI_TENANT") {
+      const storedRaw = await SecureStore.getItemAsync(TENANT_STORE_KEY);
+      selectedTenantId = storedRaw ? parseInt(storedRaw, 10) : null;
+    }
+
+    // Set in-memory tenant ID for API header injection
+    setMemoryTenantId(selectedTenantId);
+
     currentUser = {
       ...profile,
       userId: bootstrap.userId,
@@ -211,6 +241,9 @@ async function syncAuthenticatedSession(): Promise<void> {
       authenticated: true,
       user: currentUser,
       error: undefined,
+      tenantStatus: bootstrap.tenantStatus as MobileAuthSnapshot["tenantStatus"],
+      tenants: bootstrapTenants,
+      currentTenantId: selectedTenantId,
     });
   } catch (error) {
     currentUser = profile;
@@ -434,4 +467,17 @@ export function subscribeMobileAuth(listener: Listener): () => void {
   return () => {
     listeners.delete(listener);
   };
+}
+
+/**
+ * Select a tenant on mobile. Persists to SecureStore and updates in-memory cache
+ * so the X-Tenant-Id header is sent on subsequent API calls.
+ */
+export async function selectMobileTenant(tenantId: number): Promise<void> {
+  setMemoryTenantId(tenantId);
+  await SecureStore.setItemAsync(TENANT_STORE_KEY, tenantId.toString());
+  publish({
+    ...snapshot,
+    currentTenantId: tenantId,
+  });
 }

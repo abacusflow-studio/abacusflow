@@ -71,6 +71,7 @@ class InventoryPurchaseOrderEventListener(
                 unitPrice = simpleItem.unitPrice,
                 batchCode = batchCode,
                 depotId = null,
+                tenantId = inventory.tenantId,
             )
         }
     }
@@ -101,6 +102,7 @@ class InventoryPurchaseOrderEventListener(
                     unitPrice = item.unitPrice,
                     serialNumber = serialNumber,
                     depotId = null,
+                    tenantId = inventory.tenantId,
                 )
             }
         }

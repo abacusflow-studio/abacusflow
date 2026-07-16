@@ -1,6 +1,7 @@
 package org.abacusflow.portal.web
 
 import org.abacusflow.portal.web.authentication.AbacusFlowJwtAuthenticationConverter
+import org.abacusflow.portal.web.tenant.TenantContextFilter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
@@ -24,6 +26,7 @@ class SecurityConfiguration {
     fun securityFilterChain(
         http: HttpSecurity,
         appJwtAuthenticationConverter: AbacusFlowJwtAuthenticationConverter,
+        tenantContextFilter: TenantContextFilter,
     ): SecurityFilterChain {
         http {
             csrf { disable() }
@@ -45,6 +48,7 @@ class SecurityConfiguration {
             oauth2ResourceServer {
                 jwt { jwtAuthenticationConverter = appJwtAuthenticationConverter }
             }
+            addFilterAfter<BearerTokenAuthenticationFilter>(tenantContextFilter)
         }
         return http.build()
     }
@@ -68,7 +72,7 @@ class SecurityConfiguration {
                 this.allowedOriginPatterns = origins
                 allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 allowedHeaders = listOf(CorsConfiguration.ALL)
-                exposedHeaders = listOf(HttpHeaders.LOCATION, HttpHeaders.CONTENT_DISPOSITION)
+                exposedHeaders = listOf(HttpHeaders.LOCATION, HttpHeaders.CONTENT_DISPOSITION, "X-Tenant-Id")
                 allowCredentials = false
                 maxAge = 3600
             }

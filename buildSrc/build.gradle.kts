@@ -23,6 +23,10 @@ dependencies {
     implementation("org.jooq:jooq-codegen:${libs.versions.jooq.get()}")
     implementation(libs.testcontainers.postgresql)
 
+    // Flyway for jOOQ codegen: run migrations against Testcontainer
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
+
     testImplementation(kotlin("test"))
 }
 

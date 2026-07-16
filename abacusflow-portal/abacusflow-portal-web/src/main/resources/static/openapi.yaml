@@ -20,6 +20,8 @@ tags:
     description: 管理物理储存点及其内部存储空间，包括库位分配、容量规划和储存点布局设计。
   - name: feedback
     description: 收集和管理用户反馈，支持问题提交、状态流转、负责人分配和内部备注。
+  - name: tenant
+    description: 管理租户的创建和查询，支持多租户环境下的租户选择与切换。
   - name: file
     description: 文件上传管理
 
@@ -62,6 +64,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BootstrapResult"
+
+  /tenants:
+    post:
+      operationId: createTenant
+      tags:
+        - tenant
+      summary: Create a new tenant
+      description: |
+        创建一个新租户。当前用户将自动成为该租户的管理员。
+        仅在用户 tenantStatus 为 NEEDS_ONBOARDING 时可调用。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenantInput"
+      responses:
+        "201":
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantSummary"
+        "400":
+          description: 参数错误
+        "403":
+          description: 无权限
+
+    get:
+      operationId: listTenants
+      tags:
+        - tenant
+      summary: List user's tenants
+      description: 返回当前用户所属的所有租户列表
+      responses:
+        "200":
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TenantSummary"
 
   /me:
     get:
@@ -1620,6 +1665,8 @@ components:
         - locked
         - roles
         - permissions
+        - tenantStatus
+        - tenants
       properties:
         userId:
           type: integer
@@ -1659,6 +1706,67 @@ components:
           type: string
           nullable: true
           description: 头像 URL
+        tenantStatus:
+          type: string
+          enum:
+            - NEEDS_ONBOARDING
+            - SINGLE_TENANT
+            - MULTI_TENANT
+          description: 租户选择状态
+        tenants:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantSummary"
+          description: 用户所属租户列表
+        currentTenantId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 当前选中的租户 ID
+
+    CreateTenantInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: 租户名称
+          maxLength: 50
+        displayName:
+          type: string
+          nullable: true
+          description: 租户显示名称
+
+    TenantSummary:
+      type: object
+      required:
+        - tenantId
+        - name
+        - roleNames
+        - permissionNames
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+          description: 租户 ID
+        name:
+          type: string
+          description: 租户名称
+        displayName:
+          type: string
+          nullable: true
+          description: 租户显示名称
+        roleNames:
+          type: array
+          items:
+            type: string
+          description: 该租户下的角色列表
+        permissionNames:
+          type: array
+          items:
+            type: string
+          description: 该租户下的权限列表
 
     CurrentUser:
       type: object
@@ -1669,6 +1777,8 @@ components:
         - locked
         - roles
         - permissions
+        - tenantStatus
+        - tenants
       properties:
         userId:
           type: integer
@@ -1705,6 +1815,23 @@ components:
           items:
             type: string
           description: 权限列表
+        tenantStatus:
+          type: string
+          enum:
+            - NEEDS_ONBOARDING
+            - SINGLE_TENANT
+            - MULTI_TENANT
+          description: 租户选择状态
+        tenants:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantSummary"
+          description: 用户所属租户列表
+        currentTenantId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 当前选中的租户 ID
 
     # ============= User schemas =============
     User:
@@ -1714,7 +1841,6 @@ components:
         - name
         - age
         - nick
-        - roleIds
         - enabled
         - locked
         - createdAt
@@ -1735,12 +1861,6 @@ components:
         nick:
           type: string
           description: 昵称
-        roleIds:
-          type: array
-          items:
-            type: integer
-            format: int64
-          description: 用户角色列表
         enabled:
           type: boolean
           description: 账户是否启用

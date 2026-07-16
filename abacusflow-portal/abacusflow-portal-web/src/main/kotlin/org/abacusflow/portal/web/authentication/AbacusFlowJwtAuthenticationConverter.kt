@@ -4,7 +4,6 @@ import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.jwt.Jwt
@@ -27,16 +26,17 @@ class AbacusFlowJwtAuthenticationConverter(
 
         return JwtAuthenticationToken(
             jwt,
-            user.toAuthorities(),
+            TenantAuthorityBuilder.buildAuthorities(user.roleNames, user.permissionNames),
             user.name,
-        )
+        ).apply {
+            setDetails(
+                AbacusFlowAuthenticationDetails(
+                    userId = user.id,
+                    tenantMemberships = user.tenantMemberships,
+                ),
+            )
+        }
     }
-
-    private fun AuthenticatedUserTO.toAuthorities(): Set<SimpleGrantedAuthority> =
-        // Role authorities with ROLE_ prefix (for hasRole())
-        roleNames.map { SimpleGrantedAuthority("ROLE_$it") }.toSet() +
-            // Permission authorities as-is (for hasAuthority('product:read'))
-            permissionNames.map { SimpleGrantedAuthority(it) }
 
     private fun invalidExternalIdentity(): OAuth2AuthenticationException =
         OAuth2AuthenticationException(

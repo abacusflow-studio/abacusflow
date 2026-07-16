@@ -18,6 +18,10 @@ class ProductCategoryCommandServiceImpl(
     private val productRepository: ProductRepository,
 ) : ProductCategoryCommandService {
     override fun createProductCategory(input: CreateProductCategoryInputTO): ProductCategoryTO {
+        require(!productCategoryRepository.existsByName(input.name)) {
+            "Product category with name '${input.name}' already exists in this tenant"
+        }
+
         val parentCategoryFromInput =
             productCategoryRepository
                 .findById(input.parentId)

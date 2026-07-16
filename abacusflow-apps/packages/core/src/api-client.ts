@@ -1,6 +1,7 @@
 import { getConfig } from "@abacusflow/config";
 import { getAuthClient } from "./auth";
 import { redirect } from "./platform";
+import { getCurrentTenantId } from "./tenant";
 import {
   Configuration,
   type ConfigurationParameters,
@@ -148,6 +149,15 @@ function createApiConfig(): Configuration {
     },
     middleware: [
       {
+        pre: async (ctx: { url: string; init: RequestInit }) => {
+          const tenantId = getCurrentTenantId();
+          if (tenantId !== null) {
+            const headers = new Headers(ctx.init.headers);
+            headers.set("X-Tenant-Id", tenantId.toString());
+            ctx.init.headers = headers;
+          }
+          return ctx;
+        },
         post: async (ctx: { response: Response }) => {
           const { response } = ctx;
 

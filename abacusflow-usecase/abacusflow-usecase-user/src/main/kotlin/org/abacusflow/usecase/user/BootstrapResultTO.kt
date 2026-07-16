@@ -1,5 +1,8 @@
 package org.abacusflow.usecase.user
 
+import org.abacusflow.usecase.tenant.TenantSelectionStatus
+import org.abacusflow.usecase.tenant.TenantSummaryTO
+
 data class BootstrapResultTO(
     val userId: Long,
     val status: UserStatus,
@@ -10,6 +13,9 @@ data class BootstrapResultTO(
     val email: String?,
     val displayName: String?,
     val pictureUrl: String?,
+    val tenantStatus: TenantSelectionStatus,
+    val tenants: List<TenantSummaryTO>,
+    val currentTenantId: Long?,
 ) {
     enum class UserStatus {
         ACTIVE,

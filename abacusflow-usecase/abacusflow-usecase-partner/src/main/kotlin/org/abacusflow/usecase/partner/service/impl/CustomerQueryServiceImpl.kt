@@ -17,26 +17,30 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.jvm.java
 
 @Service
+@Transactional(readOnly = true)
 class CustomerQueryServiceImpl(
     private val customerRepository: CustomerRepository,
     private val jooqDsl: DSLContext,
 ) : CustomerQueryService {
-    override fun getCustomer(id: Long): CustomerTO =
-        customerRepository
+    override fun getCustomer(id: Long): CustomerTO {
+        return customerRepository
             .findById(id)
-            .orElseThrow { NoSuchElementException("Customer not found") }
+            .orElseThrow { NoSuchElementException("Customer not found with id: $id") }
             .toTO()
+    }
 
-    override fun getCustomer(name: String): CustomerTO =
-        customerRepository
+    override fun getCustomer(name: String): CustomerTO {
+        return customerRepository
             .findByName(name)
             ?.toTO()
             ?: throw NoSuchElementException("Customer not found")
+    }
 
     override fun listBasicCustomersPage(
         pageable: Pageable,
@@ -119,6 +123,7 @@ class CustomerQueryServiceImpl(
     override fun listCustomers(): List<CustomerTO> {
         return jooqDsl
             .selectFrom(CUSTOMER)
+            .where(DSL.noCondition())
             .orderBy(CUSTOMER.CREATED_AT.desc())
             .fetch()
             .map { it.toTO() }

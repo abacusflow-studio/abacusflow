@@ -1,5 +1,6 @@
 package org.abacusflow.user
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -13,7 +14,11 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.FilterDef
+import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
@@ -22,9 +27,11 @@ import java.time.Instant
 @Table(
     name = "role",
     uniqueConstraints = [
-        UniqueConstraint(columnNames = ["name"]),
+        UniqueConstraint(columnNames = ["tenant_id", "name"]),
     ],
 )
+@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class Role(
     @field:NotBlank(message = "Role name is required and cannot be blank")
     @field:Pattern(
@@ -33,7 +40,9 @@ class Role(
     )
     @field:Size(min = 1, max = 50, message = "Name must be between 1 and 50 characters")
     val name: String,
-) : AbstractAggregateRoot<Role>() {
+    @Column(name = "tenant_id", nullable = false)
+    override val tenantId: Long,
+) : AbstractAggregateRoot<Role>(), TenantScopedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0

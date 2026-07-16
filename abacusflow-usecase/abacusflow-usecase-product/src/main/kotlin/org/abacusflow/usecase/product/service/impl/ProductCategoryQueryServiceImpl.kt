@@ -12,15 +12,20 @@ import org.springframework.stereotype.Service
 class ProductCategoryQueryServiceImpl(
     private val productCategoryRepository: ProductCategoryRepository,
 ) : ProductCategoryQueryService {
-    override fun getProductCategory(id: Long): ProductCategoryTO =
-        productCategoryRepository
+    override fun getProductCategory(id: Long): ProductCategoryTO {
+        return productCategoryRepository
             .findById(id)
+            .map { it.toTO() }
             .orElseThrow { NoSuchElementException("Product category not found with id: $id") }
-            .toTO()
+    }
 
-    override fun listBasicProductCategories(): List<BasicProductCategoryTO> = productCategoryRepository.findAll().map { it.toBasicTO() }
+    override fun listBasicProductCategories(): List<BasicProductCategoryTO> {
+        return productCategoryRepository.findAll()
+            .map { it.toBasicTO() }
+    }
 
     override fun listProductCategories(): List<ProductCategoryTO> {
-        return productCategoryRepository.findAll().map { it.toTO() }
+        return productCategoryRepository.findAll()
+            .map { it.toTO() }
     }
 }

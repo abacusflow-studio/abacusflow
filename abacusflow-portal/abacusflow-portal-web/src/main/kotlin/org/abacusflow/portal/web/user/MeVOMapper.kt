@@ -2,6 +2,8 @@ package org.abacusflow.portal.web.user
 
 import org.abacusflow.portal.web.model.BootstrapResultVO
 import org.abacusflow.portal.web.model.CurrentUserVO
+import org.abacusflow.portal.web.model.TenantSummaryVO
+import org.abacusflow.usecase.tenant.TenantSummaryTO
 import org.abacusflow.usecase.user.BootstrapResultTO
 import org.abacusflow.usecase.user.CurrentUserTO
 
@@ -16,6 +18,18 @@ fun BootstrapResultTO.toVO() =
         email = email,
         displayName = displayName,
         pictureUrl = pictureUrl,
+        tenantStatus = BootstrapResultVO.TenantStatus.forValue(tenantStatus.name),
+        tenants = tenants.map { it.toVO() },
+        currentTenantId = currentTenantId,
+    )
+
+fun TenantSummaryTO.toVO() =
+    TenantSummaryVO(
+        tenantId = tenantId,
+        name = name,
+        displayName = displayName,
+        roleNames = roleNames,
+        permissionNames = permissionNames,
     )
 
 fun CurrentUserTO.toVO() =
@@ -29,4 +43,7 @@ fun CurrentUserTO.toVO() =
         locked = locked,
         roles = roles,
         permissions = permissions,
+        tenantStatus = CurrentUserVO.TenantStatus.forValue(tenantStatus.name),
+        tenants = tenants.map { it.toVO() },
+        currentTenantId = currentTenantId,
     )

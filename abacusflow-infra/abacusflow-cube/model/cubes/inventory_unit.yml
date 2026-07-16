@@ -22,6 +22,10 @@ cubes:
         type: number
         primary_key: true
 
+      - name: tenant_id
+        sql: tenant_id
+        type: number
+
       - name: unit_type
         sql: unit_type
         type: string

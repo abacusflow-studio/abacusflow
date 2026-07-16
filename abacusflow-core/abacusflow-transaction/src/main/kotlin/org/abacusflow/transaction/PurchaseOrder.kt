@@ -12,9 +12,15 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.PrePersist
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.NotNull
+import org.abacusflow.commons.tenant.TenantContextHolder
+import org.abacusflow.commons.tenant.TenantScopedEntity
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
+import org.hibernate.annotations.ParamDef
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.dialect.PostgreSQLEnumJdbcType
 import org.springframework.data.domain.AbstractAggregateRoot
@@ -26,7 +32,12 @@ import java.util.UUID
 import kotlin.collections.filter
 
 @Entity
-@Table(name = "purchase_order")
+@Table(
+    name = "purchase_order",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "no"])],
+)
+@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class PurchaseOrder(
     val supplierId: Long,
     val orderDate: LocalDate = LocalDate.now(),
@@ -34,13 +45,14 @@ class PurchaseOrder(
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "order_id")
     val items: List<PurchaseOrderItem>,
-) : AbstractAggregateRoot<PurchaseOrder>() {
+    @Column(name = "tenant_id", nullable = false)
+    override val tenantId: Long = TenantContextHolder.currentTenantId(),
+) : AbstractAggregateRoot<PurchaseOrder>(), TenantScopedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0
 
     @field:NotNull
-    @Column(unique = true)
     val no: UUID = UUID.randomUUID()
 
     @Enumerated(EnumType.STRING)

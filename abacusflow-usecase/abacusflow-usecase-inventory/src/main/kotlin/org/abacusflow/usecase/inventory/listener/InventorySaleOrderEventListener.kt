@@ -91,7 +91,7 @@ class InventorySaleOrderEventListener(
         println("SaleOrder Reversed orderNo: ${order.no}")
 
         // 查询该订单产生的库存单元
-        val units = inventoryUnitRepository.findAllBySaleOrderId(order.id)
+        val units = inventoryUnitRepository.findAllBySaleOrderIdAndTenantId(order.id, order.tenantId)
 
         if (units.isEmpty()) {
             println("No InventoryUnits found for PurchaseOrder ${order.no}, skipping reversal")

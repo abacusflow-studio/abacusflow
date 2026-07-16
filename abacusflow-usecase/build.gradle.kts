@@ -11,6 +11,9 @@ dependencies {
     api(project("abacusflow-usecase-user"))
     api(project("abacusflow-usecase-depot"))
     api(project("abacusflow-usecase-feedback"))
+    api(project("abacusflow-usecase-tenant"))
     implementation(libs.postgresql)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
 }

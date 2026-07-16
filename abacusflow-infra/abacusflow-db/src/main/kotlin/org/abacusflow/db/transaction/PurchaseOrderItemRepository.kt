@@ -4,19 +4,13 @@ import org.abacusflow.transaction.PurchaseOrderItem
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
+/**
+ * 采购单明细 Repository。
+ *
+ * 租户隔离由 Hibernate Filter（tenantFilter）自动处理。
+ */
 @Repository
 interface PurchaseOrderItemRepository : JpaRepository<PurchaseOrderItem, Long> {
-    fun findByProductId(productId: Long): List<PurchaseOrderItem>
-
-    fun countPurchaseOrderItemByProductId(productId: Long): Long
-    // TODO 应该是在PurchaseOrder作为切入点统计呢？还是在PurchaseOrderItem加上orderId 在这统计呢？
-//    @Query(
-//        """
-//    SELECT SUM(p.quantity)
-//    FROM PurchaseOrderItem p
-//    JOIN PurchaseOrder o ON p.orderId = o.id
-//    WHERE p.productId = :productId AND o.status = 'COMPLETED'
-//    """
-//    )
-//    fun findTotalQuantityByProductId(@Param("productId") productId: Long): Long?
+    /** 按 productId 统计采购单明细数量（Filter 自动追加 tenant_id 条件） */
+    fun countByProductId(productId: Long): Long
 }

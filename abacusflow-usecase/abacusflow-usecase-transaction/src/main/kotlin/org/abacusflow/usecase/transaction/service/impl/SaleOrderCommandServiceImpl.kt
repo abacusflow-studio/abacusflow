@@ -24,12 +24,18 @@ class SaleOrderCommandServiceImpl(
     private val inventoryUnitRepository: InventoryUnitRepository,
 ) : SaleOrderCommandService {
     override fun createSaleOrder(input: CreateSaleOrderInputTO): SaleOrderTO {
+        // Verify customer belongs to the same tenant
+        customerRepository.findById(input.customerId)
+            .orElseThrow { NoSuchElementException("Customer not found with id: ${input.customerId}") }
+
         val inventoryUnits =
             inventoryUnitRepository.findAllById(
                 input.orderItems
                     .map { it.inventoryUnitId }
                     .distinct(),
             )
+
+        // Hibernate Filter 自动保证只查询到当前租户的库存单元，无需手动校验 tenantId
         val inventoryUnitMapById = inventoryUnits.associateBy { it.id }
 
         val orderItems =
@@ -50,27 +56,24 @@ class SaleOrderCommandServiceImpl(
 
     override fun completeOrder(id: Long): SaleOrderTO {
         val saleOrder =
-            saleOrderRepository
-                .findById(id)
-                .orElseThrow { NoSuchElementException("SaleOrder not found") }
+            saleOrderRepository.findById(id)
+                .orElseThrow { NoSuchElementException("SaleOrder not found with id: $id") }
         saleOrder.completeOrder()
         return saleOrderRepository.save(saleOrder).toTO()
     }
 
     override fun cancelOrder(id: Long): SaleOrderTO {
         val saleOrder =
-            saleOrderRepository
-                .findById(id)
-                .orElseThrow { NoSuchElementException("SaleOrder not found") }
+            saleOrderRepository.findById(id)
+                .orElseThrow { NoSuchElementException("SaleOrder not found with id: $id") }
         saleOrder.cancelOrder()
         return saleOrderRepository.save(saleOrder).toTO()
     }
 
     override fun reverseOrder(id: Long): SaleOrderTO {
         val saleOrder =
-            saleOrderRepository
-                .findById(id)
-                .orElseThrow { NoSuchElementException("SaleOrder not found") }
+            saleOrderRepository.findById(id)
+                .orElseThrow { NoSuchElementException("SaleOrder not found with id: $id") }
         saleOrder.reverseOrder()
         return saleOrderRepository.save(saleOrder).toTO()
     }

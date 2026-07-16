@@ -8,7 +8,6 @@ data class BasicUserTO(
     val nick: String,
     val sex: String?,
     val age: Int,
-    val roleNames: List<String>,
     val enabled: Boolean,
     val locked: Boolean,
     val createdAt: Instant,

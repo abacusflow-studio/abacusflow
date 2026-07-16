@@ -16,6 +16,10 @@ class CustomerCommandServiceImpl(
     private val customerRepository: CustomerRepository,
 ) : CustomerCommandService {
     override fun createCustomer(input: CreateCustomerInputTO): CustomerTO {
+        require(!customerRepository.existsByName(input.name)) {
+            "Customer with name '${input.name}' already exists"
+        }
+
         val newCustomer =
             Customer(
                 name = input.name,
@@ -32,7 +36,16 @@ class CustomerCommandServiceImpl(
         val customer =
             customerRepository
                 .findById(id)
-                .orElseThrow { NoSuchElementException("Customer not found") }
+                .orElseThrow { NoSuchElementException("Customer not found with id: $id") }
+
+        input.name?.let { newName ->
+            if (newName != customer.name) {
+                require(!customerRepository.existsByName(newName)) {
+                    "Customer with name '$newName' already exists"
+                }
+            }
+        }
+
         customer.updateContactInfo(
             newName = input.name,
             newAddress = input.address,
@@ -45,7 +58,7 @@ class CustomerCommandServiceImpl(
         val customer =
             customerRepository
                 .findById(id)
-                .orElseThrow { NoSuchElementException("Customer not found") }
+                .orElseThrow { NoSuchElementException("Customer not found with id: $id") }
         customerRepository.delete(customer)
         return customer.toTO()
     }

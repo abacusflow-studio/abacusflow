@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
@@ -22,12 +22,15 @@ import {
   ShoppingCartOutlined,
   ShoppingOutlined,
   SunOutlined,
+  SwapOutlined,
   TeamOutlined,
   TransactionOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { getAuthClient, userApi } from "@abacusflow/core";
+import type { TenantInfo } from "@abacusflow/core";
 import { useTheme } from "../../components/providers";
+import { useTenant } from "../../components/tenant-provider";
 import { FeedbackModal } from "../../components/feedback-modal";
 
 const { Sider, Header, Content, Footer } = Layout;
@@ -155,7 +158,7 @@ const ROUTE_META = [
 
 const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
 
-type AuthStatus = "checking" | "authenticated" | "redirecting";
+type AuthStatus = "checking" | "authenticated" | "redirecting" | "tenant_redirect";
 
 function getCurrentBrowserPath() {
   if (typeof window === "undefined") {
@@ -163,6 +166,12 @@ function getCurrentBrowserPath() {
   }
   const { pathname, search, hash } = window.location;
   return `${pathname}${search}${hash}` || "/dashboard";
+}
+
+function getStoredTenantIdLocal(): number | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("abacusflow_current_tenant_id");
+  return stored ? parseInt(stored, 10) : null;
 }
 
 export default function AdminLayout({
@@ -177,6 +186,7 @@ export default function AdminLayout({
   const [showFeedback, setShowFeedback] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
   const { themeMode, toggleTheme } = useTheme();
+  const { tenantStatus, tenants, currentTenantId, currentTenant, selectTenant, setBootstrapData } = useTenant();
 
   useEffect(() => {
     let cancelled = false;
@@ -186,12 +196,36 @@ export default function AdminLayout({
         const auth = getAuthClient();
         if (await auth.isAuthenticated()) {
           if (!cancelled) {
-            setAuthStatus("authenticated");
-            userApi.getCurrentUser().then((user) => {
+            // Fetch user info and bootstrap tenant data
+            try {
+              const bootstrap = await userApi.bootstrap();
               if (!cancelled) {
-                setDisplayName(user.displayName ?? user.username);
+                setDisplayName(bootstrap.displayName ?? "");
+                setBootstrapData(
+                  bootstrap.tenantStatus,
+                  (bootstrap.tenants ?? []) as TenantInfo[],
+                  bootstrap.tenantStatus === "SINGLE_TENANT" && (bootstrap.tenants?.length ?? 0) > 0
+                    ? bootstrap.tenants![0].tenantId
+                    : null,
+                );
+
+                // Handle tenant redirects
+                if (bootstrap.tenantStatus === "NEEDS_ONBOARDING") {
+                  setAuthStatus("tenant_redirect");
+                  router.replace("/onboarding");
+                  return;
+                }
+                if (bootstrap.tenantStatus === "MULTI_TENANT" && !getStoredTenantIdLocal()) {
+                  setAuthStatus("tenant_redirect");
+                  router.replace("/tenant/select");
+                  return;
+                }
               }
-            }).catch(() => { /* non-critical */ });
+            } catch {
+              // Bootstrap failed — non-critical, continue with auth
+            }
+
+            setAuthStatus("authenticated");
           }
           return;
         }
@@ -214,7 +248,7 @@ export default function AdminLayout({
     return () => {
       cancelled = true;
     };
-  }, [pathname, router]);
+  }, [pathname, router, setBootstrapData]);
 
   const selectedKeys = useMemo(() => {
     const match = ALL_ROUTE_KEYS.filter(
@@ -308,6 +342,47 @@ export default function AdminLayout({
           </div>
 
           <div className="af-header-right">
+            {tenantStatus === "MULTI_TENANT" && tenants.length > 1 && currentTenant && (
+              <Dropdown
+                menu={{
+                  items: tenants.map((t) => ({
+                    key: t.tenantId.toString(),
+                    label: t.displayName || t.name,
+                    icon: t.tenantId === currentTenantId ? <ShopOutlined /> : undefined,
+                  })),
+                  selectedKeys: currentTenantId ? [currentTenantId.toString()] : [],
+                  onClick: ({ key }) => {
+                    const id = parseInt(key, 10);
+                    if (!isNaN(id)) {
+                      selectTenant(id);
+                      router.refresh();
+                    }
+                  },
+                }}
+                trigger={["click"]}
+              >
+                <button
+                  type="button"
+                  className="af-tenant-switcher"
+                  aria-label="切换租户"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--border-color, #d9d9d9)",
+                    background: "transparent",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    color: "inherit",
+                  }}
+                >
+                  <SwapOutlined />
+                  <span>{currentTenant.displayName || currentTenant.name}</span>
+                </button>
+              </Dropdown>
+            )}
             <button
               type="button"
               className="af-feedback-btn"
@@ -359,7 +434,9 @@ export default function AdminLayout({
                 <span className="af-loader-text">
                   {authStatus === "redirecting"
                     ? "正在前往身份认证..."
-                    : "正在检查登录状态..."}
+                    : authStatus === "tenant_redirect"
+                      ? "正在准备租户环境..."
+                      : "正在检查登录状态..."}
                 </span>
               </div>
             </div>
