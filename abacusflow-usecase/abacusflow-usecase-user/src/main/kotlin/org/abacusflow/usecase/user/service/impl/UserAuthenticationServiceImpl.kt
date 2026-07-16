@@ -4,7 +4,7 @@ import org.abacusflow.db.tenant.TenantMembershipRepository
 import org.abacusflow.db.tenant.TenantRepository
 import org.abacusflow.db.user.ExternalIdentityRepository
 import org.abacusflow.tenant.MembershipStatus
-import org.abacusflow.commons.tenant.CurrentTenantProvider
+import org.abacusflow.usecase.commons.tenant.CurrentTenantProvider
 import org.abacusflow.usecase.tenant.TenantSelectionStatus
 import org.abacusflow.usecase.tenant.TenantSummaryTO
 import org.abacusflow.usecase.user.BootstrapResultTO

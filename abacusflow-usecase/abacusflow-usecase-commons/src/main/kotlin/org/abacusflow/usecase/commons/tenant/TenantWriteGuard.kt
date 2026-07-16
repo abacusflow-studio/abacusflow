@@ -1,4 +1,4 @@
-package org.abacusflow.usecase.tenant
+package org.abacusflow.usecase.commons.tenant
 
 import org.springframework.stereotype.Component
 

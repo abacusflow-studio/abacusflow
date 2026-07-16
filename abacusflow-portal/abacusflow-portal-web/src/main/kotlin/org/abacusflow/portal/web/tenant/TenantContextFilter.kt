@@ -3,10 +3,9 @@ package org.abacusflow.portal.web.tenant
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.abacusflow.commons.tenant.CurrentTenantProvider
+import org.abacusflow.usecase.commons.tenant.CurrentTenantProvider
 import org.abacusflow.portal.web.authentication.AbacusFlowAuthenticationDetails
 import org.abacusflow.portal.web.authentication.TenantAuthorityBuilder
-import org.abacusflow.usecase.tenant.service.TenantAccessService
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -17,7 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class TenantContextFilter(
     private val currentTenantProvider: CurrentTenantProvider,
-    private val tenantAccessService: TenantAccessService,
 ) : OncePerRequestFilter() {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -39,8 +37,17 @@ class TenantContextFilter(
                     return
                 }
 
-                val userId = details?.userId
-                if (userId != null && !tenantAccessService.userHasAccessToTenant(userId, tenantId)) {
+                // 验证租户访问权：直接从 JWT claims 中的 tenantMemberships 验证
+                // JWT 不可篡改，比查数据库更安全且更快
+                if (details == null) {
+                    log.error("No authentication details found — rejecting tenant selection")
+                    response.sendError(403, "User does not have access to tenant $tenantId")
+                    return
+                }
+
+                val selectedMembership = details.tenantMemberships.find { it.tenantId == tenantId }
+                if (selectedMembership == null) {
+                    log.warn("User ${details.userId} attempted to access tenant $tenantId which is not in their memberships")
                     response.sendError(403, "User does not have access to tenant $tenantId")
                     return
                 }
@@ -48,7 +55,11 @@ class TenantContextFilter(
                 currentTenantProvider.setTenantId(tenantId)
 
                 // Update Spring Security authorities based on the selected tenant's roles/permissions
-                updateAuthoritiesForTenant(authentication, details, tenantId)
+                val authorities = TenantAuthorityBuilder.buildAuthorities(
+                    selectedMembership.roleNames,
+                    selectedMembership.permissionNames,
+                )
+                replaceAuthorities(authentication, authorities)
             } else {
                 // No X-Tenant-Id header: if user has a single tenant, auto-set it
                 autoSelectSingleTenant(authentication, details)
@@ -57,29 +68,6 @@ class TenantContextFilter(
         } finally {
             currentTenantProvider.clear()
         }
-    }
-
-    private fun updateAuthoritiesForTenant(
-        authentication: JwtAuthenticationToken?,
-        details: AbacusFlowAuthenticationDetails?,
-        tenantId: Long,
-    ) {
-        if (authentication == null || details == null) {
-            log.warn("Cannot update authorities: no authenticated user details available for tenant $tenantId")
-            return
-        }
-
-        val selectedMembership = details.tenantMemberships.find { it.tenantId == tenantId }
-        if (selectedMembership == null) {
-            log.warn("User ${details.userId} has no membership for tenant $tenantId — authorities not updated")
-            return
-        }
-
-        val authorities = TenantAuthorityBuilder.buildAuthorities(
-            selectedMembership.roleNames,
-            selectedMembership.permissionNames,
-        )
-        replaceAuthorities(authentication, authorities)
     }
 
     private fun autoSelectSingleTenant(

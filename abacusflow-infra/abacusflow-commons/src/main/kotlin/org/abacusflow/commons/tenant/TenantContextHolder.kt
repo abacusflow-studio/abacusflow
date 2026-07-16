@@ -4,7 +4,7 @@ package org.abacusflow.commons.tenant
  * 纯 JVM ThreadLocal 持有者，存储当前请求的租户 ID。
  *
  * 无 Spring 依赖，可被 core 层实体（如 Product、Customer）在构造器默认参数中引用。
- * Spring 层的 [CurrentTenantProvider] 委托给此对象，二者共享同一个 ThreadLocal。
+ * Spring 层的 [org.abacusflow.usecase.commons.tenant.CurrentTenantProvider] 委托给此对象，二者共享同一个 ThreadLocal。
  *
  * 典型用法：
  * ```kotlin
