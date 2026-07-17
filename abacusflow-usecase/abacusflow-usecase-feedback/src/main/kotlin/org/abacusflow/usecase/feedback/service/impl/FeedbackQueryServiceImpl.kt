@@ -2,6 +2,7 @@ package org.abacusflow.usecase.feedback.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.feedback.FeedbackRepository
 import org.abacusflow.generated.jooq.Tables.FEEDBACK
 import org.abacusflow.generated.jooq.enums.FeedbackCategoryDbEnum
@@ -25,6 +26,7 @@ class FeedbackQueryServiceImpl(
     private val feedbackRepository: FeedbackRepository,
     private val jooqDsl: DSLContext,
     private val objectMapper: ObjectMapper,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : FeedbackQueryService {
     override fun listFeedbacksPage(
         pageable: Pageable,
@@ -32,8 +34,11 @@ class FeedbackQueryServiceImpl(
         source: String?,
         category: String?,
     ): Page<BasicFeedbackTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val conditions =
             mutableListOf<Condition>().apply {
+                add(FEEDBACK.TENANT_ID.eq(tenantId))
+
                 status?.let { add(FEEDBACK.STATUS.eq(FeedbackStatusDbEnum.valueOf(it))) }
                 source?.let { add(FEEDBACK.SOURCE.eq(FeedbackSourceDbEnum.valueOf(it))) }
                 category?.let { add(FEEDBACK.CATEGORY.eq(FeedbackCategoryDbEnum.valueOf(it))) }

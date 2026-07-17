@@ -1,15 +1,21 @@
 package org.abacusflow.portal.web.tenant
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.portal.web.api.TenantsApi
 import org.abacusflow.portal.web.authentication.AbacusFlowAuthenticationDetails
+import org.abacusflow.portal.web.model.AddTenantMemberInputVO
 import org.abacusflow.portal.web.model.CreateTenantInputVO
 import org.abacusflow.portal.web.model.TenantDetailVO
+import org.abacusflow.portal.web.model.TenantMemberVO
 import org.abacusflow.portal.web.model.TenantSummaryVO
+import org.abacusflow.portal.web.model.UpdateMemberRolesInputVO
 import org.abacusflow.portal.web.model.UpdateTenantInputVO
 import org.abacusflow.portal.web.user.toDetailVO
+import org.abacusflow.portal.web.user.toMemberVO
 import org.abacusflow.portal.web.user.toVO
 import org.abacusflow.usecase.tenant.CreateTenantInputTO
 import org.abacusflow.usecase.tenant.service.TenantCommandService
+import org.abacusflow.usecase.tenant.service.TenantMembershipService
 import org.abacusflow.usecase.tenant.service.TenantQueryService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
@@ -20,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController
 class TenantsController(
     private val tenantCommandService: TenantCommandService,
     private val tenantQueryService: TenantQueryService,
+    private val tenantMembershipService: TenantMembershipService,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : TenantsApi {
 
     override fun createTenant(createTenantInputVO: CreateTenantInputVO): ResponseEntity<TenantSummaryVO> {
@@ -55,12 +63,12 @@ class TenantsController(
     override fun updateTenant(tenantId: Long, updateTenantInputVO: UpdateTenantInputVO): ResponseEntity<TenantDetailVO> {
         val userId = currentUserId()
 
-        // Verify the user is a member and has admin role
+        // Verify the user is a member and has role:manage authority
         val memberships = tenantQueryService.listTenantsForUser(userId)
         val membership = memberships.find { it.tenantId == tenantId }
             ?: return ResponseEntity.status(403).build()
 
-        if ("admin" !in membership.roleNames) {
+        if (!hasAuthority("role:manage")) {
             return ResponseEntity.status(403).build()
         }
 
@@ -74,9 +82,57 @@ class TenantsController(
         return ResponseEntity.ok(tenantSummaries.map { it.toVO() })
     }
 
+    override fun listTenantMembers(): ResponseEntity<List<TenantMemberVO>> {
+        val tenantId = currentTenantProvider.requireTenantId()
+        val members = tenantMembershipService.listMembers(tenantId)
+        return ResponseEntity.ok(members.map { it.toMemberVO() })
+    }
+
+    override fun addTenantMember(addTenantMemberInputVO: AddTenantMemberInputVO): ResponseEntity<TenantMemberVO> {
+        if (!hasAuthority("role:manage")) {
+            return ResponseEntity.status(403).build()
+        }
+        val tenantId = currentTenantProvider.requireTenantId()
+        val member = tenantMembershipService.addMember(
+            tenantId = tenantId,
+            userId = addTenantMemberInputVO.userId,
+            roleIds = addTenantMemberInputVO.roleIds ?: emptyList(),
+        )
+        return ResponseEntity.status(201).body(member.toMemberVO())
+    }
+
+    override fun removeTenantMember(membershipId: Long): ResponseEntity<Unit> {
+        if (!hasAuthority("role:manage")) {
+            return ResponseEntity.status(403).build()
+        }
+        val tenantId = currentTenantProvider.requireTenantId()
+        // Find the membership to get the userId
+        val members = tenantMembershipService.listMembers(tenantId)
+        val membership = members.find { it.id == membershipId }
+            ?: return ResponseEntity.status(404).build()
+        tenantMembershipService.removeMember(tenantId = tenantId, userId = membership.userId)
+        return ResponseEntity.ok().build()
+    }
+
+    override fun updateMemberRoles(
+        membershipId: Long,
+        updateMemberRolesInputVO: UpdateMemberRolesInputVO,
+    ): ResponseEntity<TenantMemberVO> {
+        if (!hasAuthority("role:manage")) {
+            return ResponseEntity.status(403).build()
+        }
+        val updated = tenantMembershipService.updateMemberRoles(membershipId, updateMemberRolesInputVO.roleIds)
+        return ResponseEntity.ok(updated.toMemberVO())
+    }
+
     private fun currentUserId(): Long {
         val authentication = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val details = authentication.details as AbacusFlowAuthenticationDetails
         return details.userId
+    }
+
+    private fun hasAuthority(authority: String): Boolean {
+        val authentication = SecurityContextHolder.getContext().authentication
+        return authentication?.authorities?.any { it.authority == authority } == true
     }
 }

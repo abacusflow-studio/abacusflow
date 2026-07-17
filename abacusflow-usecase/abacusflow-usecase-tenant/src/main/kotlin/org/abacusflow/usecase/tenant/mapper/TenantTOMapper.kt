@@ -15,10 +15,11 @@ fun Tenant.toTO() = TenantTO(
     updatedAt = updatedAt,
 )
 
-fun TenantMembership.toTO() = TenantMembershipTO(
+fun TenantMembership.toTO(userName: String = "Unknown User") = TenantMembershipTO(
     id = id,
     tenantId = tenantId,
     userId = userId,
+    userName = userName,
     status = status.name,
     roleNames = roles.map { it.name },
 )

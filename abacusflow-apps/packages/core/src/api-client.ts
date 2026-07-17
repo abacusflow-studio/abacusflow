@@ -15,6 +15,8 @@ import {
   TransactionApi,
   UserApi,
   FeedbackApi,
+  RoleApi,
+  TenantApi,
 } from "./openapi/apis/index";
 
 // Re-export all generated model types
@@ -79,6 +81,20 @@ export type {
   FeedbackSource,
   CreateFeedbackInput,
   UpdateFeedbackInput,
+  // Tenant & Role types
+  TenantSummary,
+  TenantDetail,
+  CreateTenantInput,
+  UpdateTenantInput,
+  TenantMember,
+  UpdateMemberRolesInput,
+  AddTenantMemberInput,
+  Role,
+  CreateRoleInput,
+  UpdateRoleInput,
+  Permission,
+  CreatePermissionInput,
+  UpdatePermissionInput,
 } from "./openapi/models/index";
 
 // Re-export generated API request interfaces
@@ -99,6 +115,17 @@ export type {
   UpdateUserRequest as UpdateUserApiRequest,
   ListFeedbackPageRequest,
   UpdateFeedbackRequest,
+  // Tenant & Role request types
+  CreateTenantRequest,
+  GetTenantRequest,
+  UpdateTenantRequest,
+  UpdateMemberRolesRequest,
+  AddTenantMemberRequest,
+  RemoveTenantMemberRequest,
+  // Permission request types
+  CreatePermissionRequest,
+  UpdatePermissionRequest,
+  DeletePermissionRequest,
 } from "./openapi/apis/index";
 
 // ---- Custom utility types ----
@@ -215,3 +242,5 @@ export const partnerApi = new PartnerApi(getApiConfig());
 export const transactionApi = new TransactionApi(getApiConfig());
 export const userApi = new UserApi(getApiConfig());
 export const feedbackApi = new FeedbackApi(getApiConfig());
+export const roleApi = new RoleApi(getApiConfig());
+export const tenantApi = new TenantApi(getApiConfig());

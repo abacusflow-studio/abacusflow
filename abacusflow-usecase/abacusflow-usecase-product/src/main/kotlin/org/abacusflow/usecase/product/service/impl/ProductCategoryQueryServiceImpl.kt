@@ -7,8 +7,10 @@ import org.abacusflow.usecase.product.mapper.toBasicTO
 import org.abacusflow.usecase.product.mapper.toTO
 import org.abacusflow.usecase.product.service.ProductCategoryQueryService
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional(readOnly = true)
 class ProductCategoryQueryServiceImpl(
     private val productCategoryRepository: ProductCategoryRepository,
 ) : ProductCategoryQueryService {
@@ -20,12 +22,12 @@ class ProductCategoryQueryServiceImpl(
     }
 
     override fun listBasicProductCategories(): List<BasicProductCategoryTO> {
-        return productCategoryRepository.findAll()
+        return productCategoryRepository.findAllWithParent()
             .map { it.toBasicTO() }
     }
 
     override fun listProductCategories(): List<ProductCategoryTO> {
-        return productCategoryRepository.findAll()
+        return productCategoryRepository.findAllWithParent()
             .map { it.toTO() }
     }
 }

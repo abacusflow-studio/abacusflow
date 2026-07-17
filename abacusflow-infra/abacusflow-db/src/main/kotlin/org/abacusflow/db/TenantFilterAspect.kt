@@ -26,7 +26,11 @@ class TenantFilterAspect(
     private val entityManager: EntityManager,
     private val jdbcTemplate: JdbcTemplate,
 ) {
-    @Before("@annotation(org.springframework.transaction.annotation.Transactional)")
+    @Before(
+        "@within(org.springframework.transaction.annotation.Transactional) || " +
+                "@annotation(org.springframework.transaction.annotation.Transactional)"
+    )
+//    @Before("@within(org.springframework.transaction.annotation.Transactional)")
     fun setupTenantContext() {
         val tenantId = currentTenantProvider.getCurrentTenantId()
         if (tenantId != null) {

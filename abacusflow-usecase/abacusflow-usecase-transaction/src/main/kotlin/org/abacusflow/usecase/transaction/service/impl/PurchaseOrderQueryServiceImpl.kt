@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.transaction.service.impl
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.transaction.PurchaseOrderRepository
 import org.abacusflow.generated.jooq.Tables.PRODUCT
 import org.abacusflow.generated.jooq.Tables.PURCHASE_ORDER
@@ -27,6 +28,7 @@ import java.util.UUID
 class PurchaseOrderQueryServiceImpl(
     private val purchaseOrderRepository: PurchaseOrderRepository,
     private val jooqDsl: DSLContext,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : PurchaseOrderQueryService {
     override fun listBasicPurchaseOrdersPage(
         pageable: Pageable,
@@ -37,8 +39,11 @@ class PurchaseOrderQueryServiceImpl(
         serialNumber: String?,
         orderDate: LocalDate?,
     ): Page<BasicPurchaseOrderTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val conditions =
             mutableListOf<Condition>().apply {
+                add(PURCHASE_ORDER.TENANT_ID.eq(tenantId))
+
                 orderNo?.let {
                     add(PURCHASE_ORDER.NO.eq(it))
                 }
@@ -144,6 +149,7 @@ class PurchaseOrderQueryServiceImpl(
     }
 
     override fun getPurchaseOrder(id: Long): PurchaseOrderTO {
+        val tenantId = currentTenantProvider.requireTenantId()
         val order =
             jooqDsl
                 .select(
@@ -157,7 +163,7 @@ class PurchaseOrderQueryServiceImpl(
                     PURCHASE_ORDER.UPDATED_AT,
                 )
                 .from(PURCHASE_ORDER)
-                .where(PURCHASE_ORDER.ID.eq(id))
+                .where(PURCHASE_ORDER.ID.eq(id).and(PURCHASE_ORDER.TENANT_ID.eq(tenantId)))
                 .fetchOne()
                 ?: throw NoSuchElementException("PurchaseOrder not found with id: $id")
 
@@ -174,7 +180,8 @@ class PurchaseOrderQueryServiceImpl(
                 .from(PURCHASE_ORDER_ITEM)
                 .leftJoin(PRODUCT).on(PURCHASE_ORDER_ITEM.PRODUCT_ID.eq(PRODUCT.ID))
                 .where(
-                    PURCHASE_ORDER_ITEM.ORDER_ID.eq(id),
+                    PURCHASE_ORDER_ITEM.ORDER_ID.eq(id)
+                        .and(PURCHASE_ORDER_ITEM.TENANT_ID.eq(tenantId)),
                 )
                 .fetch()
                 .map {

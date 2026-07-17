@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.transaction.service.impl
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.transaction.SaleOrderRepository
 import org.abacusflow.generated.jooq.Tables.CUSTOMER
 import org.abacusflow.generated.jooq.Tables.INVENTORY
@@ -29,6 +30,7 @@ import java.util.UUID
 class SaleOrderQueryServiceImpl(
     private val saleOrderRepository: SaleOrderRepository,
     private val jooqDsl: DSLContext,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : SaleOrderQueryService {
     override fun listBasicSaleOrdersPage(
         pageable: Pageable,
@@ -38,8 +40,11 @@ class SaleOrderQueryServiceImpl(
         inventoryUnitName: String?,
         orderDate: LocalDate?,
     ): Page<BasicSaleOrderTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val conditions =
             mutableListOf<Condition>().apply {
+                add(SALE_ORDER.TENANT_ID.eq(tenantId))
+
                 orderNo?.let {
                     add(SALE_ORDER.NO.eq(it))
                 }
@@ -148,6 +153,7 @@ class SaleOrderQueryServiceImpl(
     }
 
     override fun getSaleOrder(id: Long): SaleOrderTO {
+        val tenantId = currentTenantProvider.requireTenantId()
         val order =
             jooqDsl
                 .select(
@@ -161,7 +167,7 @@ class SaleOrderQueryServiceImpl(
                     SALE_ORDER.UPDATED_AT,
                 )
                 .from(SALE_ORDER)
-                .where(SALE_ORDER.ID.eq(id))
+                .where(SALE_ORDER.ID.eq(id).and(SALE_ORDER.TENANT_ID.eq(tenantId)))
                 .fetchOne()
                 ?: throw NoSuchElementException("SaleOrder not found with id: $id")
 
@@ -184,7 +190,8 @@ class SaleOrderQueryServiceImpl(
                 .leftJoin(INVENTORY).on(INVENTORY_UNIT.INVENTORY_ID.eq(INVENTORY.ID))
                 .leftJoin(PRODUCT).on(INVENTORY.PRODUCT_ID.eq(PRODUCT.ID))
                 .where(
-                    SALE_ORDER_ITEM.ORDER_ID.eq(id),
+                    SALE_ORDER_ITEM.ORDER_ID.eq(id)
+                        .and(SALE_ORDER_ITEM.TENANT_ID.eq(tenantId)),
                 )
                 .fetch()
                 .map {

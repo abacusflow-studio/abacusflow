@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.partner.service.impl
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.partner.SupplierRepository
 import org.abacusflow.generated.jooq.Tables.PURCHASE_ORDER
 import org.abacusflow.generated.jooq.Tables.PURCHASE_ORDER_ITEM
@@ -25,6 +26,7 @@ import java.time.LocalDate
 class SupplierQueryServiceImpl(
     private val supplierRepository: SupplierRepository,
     private val jooqDsl: DSLContext,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : SupplierQueryService {
     override fun getSupplier(id: Long): SupplierTO {
         return supplierRepository
@@ -47,8 +49,11 @@ class SupplierQueryServiceImpl(
         phone: String?,
         address: String?,
     ): Page<BasicSupplierTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val conditions =
             buildList<Condition> {
+                add(SUPPLIER.TENANT_ID.eq(tenantId))
+
                 name?.takeIf { it.isNotBlank() }?.let {
                     add(SUPPLIER.NAME.containsIgnoreCase(it))
                 }
@@ -123,9 +128,10 @@ class SupplierQueryServiceImpl(
     }
 
     override fun listSuppliers(): List<SupplierTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         return jooqDsl
             .selectFrom(SUPPLIER)
-            .where(DSL.noCondition())
+            .where(SUPPLIER.TENANT_ID.eq(tenantId))
             .orderBy(SUPPLIER.CREATED_AT.desc())
             .fetch()
             .map {

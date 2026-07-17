@@ -21,4 +21,8 @@ interface RoleRepository : JpaRepository<Role, Long> {
     fun findByNameWithPermissions(name: String): Role?
 
     fun existsByName(name: String): Boolean
+
+    fun findByTenantId(tenantId: Long): List<Role>
+
+    fun findByNameAndTenantId(name: String, tenantId: Long): Role?
 }

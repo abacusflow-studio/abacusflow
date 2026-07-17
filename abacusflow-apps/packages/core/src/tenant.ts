@@ -5,7 +5,7 @@ const TENANT_STORAGE_KEY = 'abacusflow_current_tenant_id';
 export interface TenantInfo {
   tenantId: number;
   name: string;
-  displayName?: string;
+  displayName?: string | null;
   roleNames: string[];
   permissionNames: string[];
 }

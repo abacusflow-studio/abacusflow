@@ -13,17 +13,14 @@ import {
   Descriptions,
   Spin,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, SwapOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { useTenant } from "@/components/tenant-provider";
 import {
-  createTenant,
-  getTenant,
-  listTenants,
-  updateTenant,
+  tenantApi,
   type TenantDetail,
-  type TenantInfo,
+  type TenantSummary,
   type UpdateTenantInput,
 } from "@abacusflow/core";
 
@@ -49,8 +46,13 @@ function formatTimestamp(ts?: number | null): string {
 export default function TenantManagementPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
-  const { tenants, currentTenantId, selectTenant, updateTenantInList, setBootstrapData } =
-    useTenant();
+  const {
+    tenants,
+    currentTenantId,
+    selectTenant,
+    updateTenantInList,
+    setBootstrapData,
+  } = useTenant();
 
   const [editItem, setEditItem] = useState<TenantDetail | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
@@ -63,7 +65,7 @@ export default function TenantManagementPage() {
 
   const refreshTenantList = async () => {
     try {
-      const updatedTenants = await listTenants();
+      const updatedTenants = await tenantApi.listTenants();
       setBootstrapData(
         updatedTenants.length > 1 ? "MULTI_TENANT" : "SINGLE_TENANT",
         updatedTenants,
@@ -80,12 +82,12 @@ export default function TenantManagementPage() {
     setShowForm(true);
   };
 
-  const openEdit = async (record: TenantInfo) => {
+  const openEdit = async (record: TenantSummary) => {
     setIsCreateMode(false);
     setShowForm(true);
     setSubmitting(true);
     try {
-      const detail = await getTenant(record.tenantId);
+      const detail = await tenantApi.getTenant({ tenantId: record.tenantId });
       setEditItem(detail);
       form.setFieldsValue({
         displayName: detail.displayName ?? "",
@@ -102,7 +104,7 @@ export default function TenantManagementPage() {
     setShowDetail(true);
     setDetailLoading(true);
     try {
-      const item = await getTenant(tenantId);
+      const item = await tenantApi.getTenant({ tenantId });
       setDetailItem(item);
     } catch (err) {
       message.error(err instanceof Error ? err.message : "加载失败");
@@ -118,9 +120,11 @@ export default function TenantManagementPage() {
       setSubmitting(true);
 
       if (isCreateMode) {
-        await createTenant({
-          name: values.name,
-          displayName: values.displayName || undefined,
+        await tenantApi.createTenant({
+          createTenantInput: {
+            name: values.name,
+            displayName: values.displayName || undefined,
+          },
         });
         message.success("创建成功");
         setShowForm(false);
@@ -129,7 +133,10 @@ export default function TenantManagementPage() {
         const payload: UpdateTenantInput = {
           displayName: values.displayName || null,
         };
-        const updated = await updateTenant(editItem.tenantId, payload);
+        const updated = await tenantApi.updateTenant({
+          tenantId: editItem.tenantId,
+          updateTenantInput: payload,
+        });
         message.success("更新成功");
         setShowForm(false);
         updateTenantInList(editItem.tenantId, {
@@ -145,11 +152,7 @@ export default function TenantManagementPage() {
     }
   };
 
-  const handleSwitchTenant = (tenantId: number) => {
-    selectTenant(tenantId);
-  };
-
-  const columns: ColumnsType<TenantInfo> = [
+  const columns: ColumnsType<TenantSummary> = [
     {
       title: "租户名称",
       dataIndex: "name",
@@ -181,6 +184,19 @@ export default function TenantManagementPage() {
       key: "action",
       render: (_, record) => (
         <Space size="small">
+          {record.tenantId !== currentTenantId && (
+            <Button
+              type="link"
+              size="small"
+              icon={<SwapOutlined />}
+              onClick={() => {
+                selectTenant(record.tenantId);
+                window.location.reload();
+              }}
+            >
+              切换
+            </Button>
+          )}
           <Button
             type="link"
             size="small"
@@ -195,15 +211,6 @@ export default function TenantManagementPage() {
           >
             编辑
           </Button>
-          {record.tenantId !== currentTenantId && (
-            <Button
-              type="link"
-              size="small"
-              onClick={() => handleSwitchTenant(record.tenantId)}
-            >
-              切换
-            </Button>
-          )}
         </Space>
       ),
     },
@@ -224,7 +231,7 @@ export default function TenantManagementPage() {
       />
 
       <div className="card af-table-card">
-        <Table<TenantInfo>
+        <Table<TenantSummary>
           columns={columns}
           dataSource={tenants}
           rowKey="tenantId"

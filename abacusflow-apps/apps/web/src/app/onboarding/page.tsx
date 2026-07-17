@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Form, Input, Card, Typography, message } from 'antd';
 import { ShopOutlined } from '@ant-design/icons';
-import { createTenant } from '@abacusflow/core';
+import { tenantApi } from '@abacusflow/core';
 import { useTenant } from '../../components/tenant-provider';
 
 const { Title, Text } = Typography;
@@ -18,9 +18,11 @@ export default function OnboardingPage() {
   const handleSubmit = async (values: { name: string; displayName?: string }) => {
     setLoading(true);
     try {
-      const tenant = await createTenant({
-        name: values.name,
-        displayName: values.displayName || undefined,
+      const tenant = await tenantApi.createTenant({
+        createTenantInput: {
+          name: values.name,
+          displayName: values.displayName || undefined,
+        },
       });
       setBootstrapData('SINGLE_TENANT', [tenant], tenant.tenantId);
       message.success('租户创建成功');

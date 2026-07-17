@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Layout, Menu, Dropdown } from "antd";
+import { Layout, Menu, Dropdown, Modal, Tag } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
@@ -44,11 +44,6 @@ const NAV_ITEMS: MenuItemType[] = [
     key: "/dashboard",
     label: <Link href="/dashboard">仪表盘</Link>,
     icon: <DashboardOutlined />,
-  },
-  {
-    key: "/user",
-    label: <Link href="/user">用户管理</Link>,
-    icon: <UserOutlined />,
   },
   {
     key: "/inventory",
@@ -122,15 +117,48 @@ const NAV_ITEMS: MenuItemType[] = [
     icon: <ExclamationCircleOutlined />,
   },
   {
-    key: "/tenant",
-    label: <Link href="/tenant">租户管理</Link>,
+    key: "/platform",
+    label: "平台管理",
     icon: <SettingOutlined />,
+    children: [
+      {
+        key: "/platform/users",
+        label: <Link href="/platform/users">用户管理</Link>,
+        icon: <UserOutlined />,
+      },
+      {
+        key: "/platform/permissions",
+        label: <Link href="/platform/permissions">权限管理</Link>,
+        icon: <SettingOutlined />,
+      },
+    ],
+  },
+  {
+    key: "/tenant",
+    label: "租户管理",
+    icon: <ShopOutlined />,
+    children: [
+      {
+        key: "/tenant",
+        label: <Link href="/tenant">租户信息</Link>,
+        icon: <ShopOutlined />,
+      },
+      {
+        key: "/tenant/members",
+        label: <Link href="/tenant/members">成员管理</Link>,
+        icon: <UserOutlined />,
+      },
+      {
+        key: "/tenant/roles",
+        label: <Link href="/tenant/roles">角色管理</Link>,
+        icon: <TeamOutlined />,
+      },
+    ],
   },
 ];
 
 const ROUTE_META = [
   { key: "/dashboard", title: "业务仪表盘", subtitle: "全链路库存与订单信号" },
-  { key: "/user", title: "用户管理", subtitle: "团队身份与权限入口" },
   {
     key: "/inventory",
     title: "库存管理",
@@ -161,7 +189,11 @@ const ROUTE_META = [
   { key: "/depots", title: "储存点管理", subtitle: "仓点位置与容量" },
   { key: "/analytics", title: "数据刻画", subtitle: "业务趋势与指标洞察" },
   { key: "/feedback", title: "问题反馈", subtitle: "用户反馈查看与处理" },
-  { key: "/tenant", title: "租户管理", subtitle: "租户信息与切换" },
+  { key: "/platform/users", title: "用户管理", subtitle: "系统用户账号管理" },
+  { key: "/platform/permissions", title: "权限管理", subtitle: "权限定义与配置" },
+  { key: "/tenant", title: "租户信息", subtitle: "租户信息与切换" },
+  { key: "/tenant/members", title: "成员管理", subtitle: "成员管理与角色分配" },
+  { key: "/tenant/roles", title: "角色管理", subtitle: "角色与权限配置" },
 ];
 
 const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
@@ -192,6 +224,7 @@ export default function AdminLayout({
   const [collapsed, setCollapsed] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showTenantModal, setShowTenantModal] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
   const { themeMode, toggleTheme } = useTheme();
   const { tenantStatus, tenants, currentTenantId, currentTenant, selectTenant, setBootstrapData, clearTenant } = useTenant();
@@ -270,6 +303,8 @@ export default function AdminLayout({
     if (selectedKeys[0]?.startsWith("/transaction")) keys.push("/transaction");
     if (selectedKeys[0]?.startsWith("/products")) keys.push("/products-group");
     if (selectedKeys[0]?.startsWith("/partner")) keys.push("/partner");
+    if (selectedKeys[0]?.startsWith("/platform")) keys.push("/platform");
+    if (selectedKeys[0]?.startsWith("/tenant")) keys.push("/tenant");
     return keys;
   }, [selectedKeys]);
 
@@ -287,6 +322,7 @@ export default function AdminLayout({
     if (pathname.startsWith("/transaction")) return "#6366f1";
     if (pathname.startsWith("/products")) return "#06b6d4";
     if (pathname.startsWith("/partner")) return "#f59e0b";
+    if (pathname.startsWith("/platform")) return "#8b5cf6";
     return "#22c55e";
   }, [pathname]);
 
@@ -351,65 +387,28 @@ export default function AdminLayout({
 
           <div className="af-header-right">
             {currentTenant && (
-              tenantStatus === "MULTI_TENANT" && tenants.length > 1 ? (
-                <Dropdown
-                  menu={{
-                    items: tenants.map((t) => ({
-                      key: t.tenantId.toString(),
-                      label: t.displayName || t.name,
-                      icon: t.tenantId === currentTenantId ? <ShopOutlined /> : undefined,
-                    })),
-                    selectedKeys: currentTenantId ? [currentTenantId.toString()] : [],
-                    onClick: ({ key }) => {
-                      const id = parseInt(key, 10);
-                      if (!isNaN(id)) {
-                        selectTenant(id);
-                        router.refresh();
-                      }
-                    },
-                  }}
-                  trigger={["click"]}
-                >
-                  <button
-                    type="button"
-                    className="af-tenant-switcher"
-                    aria-label="切换租户"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      padding: "4px 12px",
-                      borderRadius: 6,
-                      border: "1px solid var(--border-color, #d9d9d9)",
-                      background: "transparent",
-                      cursor: "pointer",
-                      fontSize: 13,
-                      color: "inherit",
-                    }}
-                  >
-                    <SwapOutlined />
-                    <span>{currentTenant.displayName || currentTenant.name}</span>
-                  </button>
-                </Dropdown>
-              ) : (
-                <div
-                  className="af-tenant-badge"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "4px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--border-color, #d9d9d9)",
-                    background: "transparent",
-                    fontSize: 13,
-                    color: "inherit",
-                  }}
-                >
-                  <ShopOutlined />
-                  <span>{currentTenant.displayName || currentTenant.name}</span>
-                </div>
-              )
+              <button
+                type="button"
+                className="af-tenant-switcher"
+                aria-label="切换租户"
+                onClick={() => setShowTenantModal(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 12px",
+                  borderRadius: 6,
+                  border: "1px solid var(--border-color, #d9d9d9)",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  color: "inherit",
+                  fontWeight: 500,
+                }}
+              >
+                <SwapOutlined style={{ color: "var(--colorPrimary, #16a34a)" }} />
+                <span>{currentTenant.displayName || currentTenant.name}</span>
+              </button>
             )}
             <button
               type="button"
@@ -446,12 +445,6 @@ export default function AdminLayout({
             <Dropdown
               menu={{
                 items: [
-                  {
-                    key: "tenant-management",
-                    label: <Link href="/tenant">租户管理</Link>,
-                    icon: <ShopOutlined />,
-                  },
-                  { type: "divider" },
                   {
                     key: "logout",
                     label: "退出登录",
@@ -503,6 +496,91 @@ export default function AdminLayout({
         open={showFeedback}
         onClose={() => setShowFeedback(false)}
       />
+
+      <Modal
+        open={showTenantModal}
+        title="切换租户"
+        onCancel={() => setShowTenantModal(false)}
+        footer={null}
+        width={420}
+        destroyOnClose
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+          {tenants.map((t) => {
+            const isCurrent = t.tenantId === currentTenantId;
+            return (
+              <button
+                key={t.tenantId}
+                type="button"
+                onClick={() => {
+                  if (!isCurrent) {
+                    selectTenant(t.tenantId);
+                    window.location.reload();
+                  }
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: 10,
+                  border: isCurrent
+                    ? "1.5px solid var(--colorPrimary, #16a34a)"
+                    : "1px solid var(--border-color, #d9d9d9)",
+                  background: isCurrent
+                    ? "rgba(22, 163, 74, 0.06)"
+                    : "transparent",
+                  cursor: isCurrent ? "default" : "pointer",
+                  textAlign: "left",
+                  fontSize: 14,
+                  color: "inherit",
+                  transition: "border-color 0.2s, background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isCurrent) {
+                    e.currentTarget.style.borderColor = "var(--colorPrimary, #16a34a)";
+                    e.currentTarget.style.background = "rgba(22, 163, 74, 0.04)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isCurrent) {
+                    e.currentTarget.style.borderColor = "var(--border-color, #d9d9d9)";
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
+                    background: "rgba(22, 163, 74, 0.12)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#16a34a",
+                    fontWeight: 700,
+                    fontSize: 16,
+                    flexShrink: 0,
+                  }}
+                >
+                  {(t.displayName || t.name).charAt(0).toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600 }}>{t.displayName || t.name}</div>
+                  {t.roleNames.length > 0 && (
+                    <div style={{ fontSize: 12, color: "var(--colorTextSecondary, #666)", marginTop: 2 }}>
+                      {t.roleNames.join(", ")}
+                    </div>
+                  )}
+                </div>
+                {isCurrent && <Tag color="success">当前</Tag>}
+              </button>
+            );
+          })}
+        </div>
+      </Modal>
     </Layout>
   );
 }

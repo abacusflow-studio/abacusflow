@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.product.service.impl
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.product.ProductRepository
 import org.abacusflow.generated.jooq.Tables.PRODUCT
 import org.abacusflow.generated.jooq.Tables.PRODUCT_CATEGORY
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional
 class ProductQueryServiceImpl(
     private val productRepository: ProductRepository,
     private val jooqDsl: DSLContext,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : ProductQueryService {
     override fun getProduct(id: Long): ProductTO {
         return productRepository
@@ -46,8 +48,11 @@ class ProductQueryServiceImpl(
         enabled: Boolean?,
         categoryId: Long?,
     ): Page<BasicProductTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val conditions =
             buildList<Condition> {
+                add(PRODUCT.TENANT_ID.eq(tenantId))
+
                 name?.takeIf { it.isNotBlank() }?.let {
                     add(PRODUCT.NAME.containsIgnoreCase(it))
                 }
@@ -125,9 +130,10 @@ class ProductQueryServiceImpl(
     }
 
     override fun listProducts(): List<ProductTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         return jooqDsl
             .selectFrom(PRODUCT)
-            .where(DSL.noCondition())
+            .where(PRODUCT.TENANT_ID.eq(tenantId))
             .orderBy(PRODUCT.CREATED_AT.desc())
             .fetch()
             .map { it.toTO() }
@@ -150,6 +156,7 @@ class ProductQueryServiceImpl(
     }
 
     private fun findAllChildrenCategories(categoryId: Long): List<Long> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val result = mutableSetOf<Long>()
         val queue = mutableListOf(categoryId)
 
@@ -163,6 +170,7 @@ class ProductQueryServiceImpl(
                     .select(PRODUCT_CATEGORY.ID)
                     .from(PRODUCT_CATEGORY)
                     .where(PRODUCT_CATEGORY.PARENT_ID.eq(currentId))
+                    .and(PRODUCT_CATEGORY.TENANT_ID.eq(tenantId))
                     .fetch()
                     .map { it.value1() }
 

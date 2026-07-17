@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.partner.service.impl
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.partner.CustomerRepository
 import org.abacusflow.generated.jooq.Tables.CUSTOMER
 import org.abacusflow.generated.jooq.Tables.SALE_ORDER
@@ -27,6 +28,7 @@ import kotlin.jvm.java
 class CustomerQueryServiceImpl(
     private val customerRepository: CustomerRepository,
     private val jooqDsl: DSLContext,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : CustomerQueryService {
     override fun getCustomer(id: Long): CustomerTO {
         return customerRepository
@@ -48,8 +50,11 @@ class CustomerQueryServiceImpl(
         phone: String?,
         address: String?,
     ): Page<BasicCustomerTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val conditions =
             mutableListOf<Condition>().apply {
+                add(CUSTOMER.TENANT_ID.eq(tenantId))
+
                 name?.takeIf { it.isNotBlank() }?.let {
                     add(CUSTOMER.NAME.containsIgnoreCase(it))
                 }
@@ -121,9 +126,10 @@ class CustomerQueryServiceImpl(
     }
 
     override fun listCustomers(): List<CustomerTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         return jooqDsl
             .selectFrom(CUSTOMER)
-            .where(DSL.noCondition())
+            .where(CUSTOMER.TENANT_ID.eq(tenantId))
             .orderBy(CUSTOMER.CREATED_AT.desc())
             .fetch()
             .map { it.toTO() }

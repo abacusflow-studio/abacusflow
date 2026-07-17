@@ -1,7 +1,9 @@
 package org.abacusflow.db.product
 
 import org.abacusflow.product.ProductCategory
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 /**
@@ -12,4 +14,8 @@ import org.springframework.stereotype.Repository
 @Repository
 interface ProductCategoryRepository : JpaRepository<ProductCategory, Long> {
     fun existsByName(name: String): Boolean
+
+    @EntityGraph(attributePaths = ["parent"])
+    @Query("select p from ProductCategory p")
+    fun findAllWithParent(): List<ProductCategory>
 }

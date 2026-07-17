@@ -11,10 +11,15 @@ import org.springframework.data.domain.AbstractAggregateRoot
 @Table(name = "permission")
 class Permission(
     val name: String,
-    val label: String,
-    val description: String,
+    var label: String,
+    var description: String,
 ) : AbstractAggregateRoot<Permission>() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0
+
+    fun updateProfile(label: String? = null, description: String? = null) {
+        label?.let { this.label = it }
+        description?.let { this.description = it }
+    }
 }

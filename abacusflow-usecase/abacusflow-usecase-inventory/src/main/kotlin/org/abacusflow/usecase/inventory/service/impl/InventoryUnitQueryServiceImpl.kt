@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.inventory.service.impl
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.inventory.InventoryUnitRepository
 import org.abacusflow.generated.jooq.Tables.DEPOT
 import org.abacusflow.generated.jooq.Tables.INVENTORY
@@ -34,6 +35,7 @@ import java.util.UUID
 class InventoryUnitQueryServiceImpl(
     private val inventoryUnitRepository: InventoryUnitRepository,
     private val jooqDsl: DSLContext,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : InventoryUnitQueryService {
     override fun listBasicInventoryUnits(
         pageable: Pageable,
@@ -43,8 +45,11 @@ class InventoryUnitQueryServiceImpl(
         inventoryUnitCode: String?,
         depotName: String?,
     ): Page<BasicInventoryUnitTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val condition =
             buildList<Condition> {
+                add(INVENTORY_UNIT.TENANT_ID.eq(tenantId))
+
                 productCategoryId?.let { catId ->
                     val categoryIds = findAllChildrenCategories(catId)
                     if (categoryIds.isNotEmpty()) {
@@ -167,6 +172,7 @@ class InventoryUnitQueryServiceImpl(
     }
 
     override fun listInventoryUnits(): List<InventoryUnitTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val inventoryUnits =
             jooqDsl
                 .select(
@@ -188,6 +194,7 @@ class InventoryUnitQueryServiceImpl(
                     INVENTORY_UNIT.BATCH_CODE,
                 )
                 .from(INVENTORY_UNIT)
+                .where(INVENTORY_UNIT.TENANT_ID.eq(tenantId))
                 .orderBy(INVENTORY_UNIT.CREATED_AT.desc())
                 .fetch()
 
@@ -197,8 +204,10 @@ class InventoryUnitQueryServiceImpl(
     }
 
     override fun listInventoryUnitsForExport(productCategoryId: Long?): List<InventoryUnitForExportTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val condition =
             buildList {
+                add(INVENTORY_UNIT.TENANT_ID.eq(tenantId))
                 add(INVENTORY_UNIT.QUANTITY.gt(0))
 
                 productCategoryId?.let { catId ->
@@ -272,8 +281,11 @@ class InventoryUnitQueryServiceImpl(
     }
 
     override fun listInventoryUnitsWithTitle(statusList: List<String>?): List<InventoryUnitWithTitleTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val condition =
             buildList<Condition> {
+                add(INVENTORY_UNIT.TENANT_ID.eq(tenantId))
+
                 statusList?.let {
                     val upperCaseStatuses = statusList.map { it.uppercase() }
                     add(INVENTORY_UNIT.STATUS.`in`(upperCaseStatuses))
@@ -431,6 +443,7 @@ class InventoryUnitQueryServiceImpl(
     }
 
     private fun findAllChildrenCategories(categoryId: Long): List<Long> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val result = mutableSetOf<Long>()
         val queue = mutableListOf(categoryId)
 
@@ -444,6 +457,7 @@ class InventoryUnitQueryServiceImpl(
                     .select(PRODUCT_CATEGORY.ID)
                     .from(PRODUCT_CATEGORY)
                     .where(PRODUCT_CATEGORY.PARENT_ID.eq(currentId))
+                    .and(PRODUCT_CATEGORY.TENANT_ID.eq(tenantId))
                     .fetch()
                     .map { it.value1() }
 

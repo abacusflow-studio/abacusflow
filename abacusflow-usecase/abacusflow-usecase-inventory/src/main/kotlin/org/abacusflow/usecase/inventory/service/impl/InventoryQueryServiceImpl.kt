@@ -1,6 +1,7 @@
 package org.abacusflow.usecase.inventory.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.inventory.InventoryRepository
 import org.abacusflow.generated.jooq.Tables.DEPOT
 import org.abacusflow.generated.jooq.Tables.INVENTORY
@@ -36,6 +37,7 @@ class InventoryQueryServiceImpl(
     private val inventoryRepository: InventoryRepository,
     private val jooqDsl: DSLContext,
     private val objectMapper: ObjectMapper,
+    private val currentTenantProvider: CurrentTenantProvider,
 ) : InventoryQueryService {
     // TODO: 这是最佳实践吗这种kt代码group，不应该sqlgroup才是马
     override fun listBasicInventoriesPage(
@@ -46,8 +48,11 @@ class InventoryQueryServiceImpl(
         inventoryUnitCode: String?,
         depotName: String?,
     ): Page<BasicInventoryTO> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val condition =
             buildList<Condition> {
+                add(INVENTORY.TENANT_ID.eq(tenantId))
+
                 productCategoryId?.let { catId ->
                     val categoryIds = findAllChildrenCategories(catId)
                     if (categoryIds.isNotEmpty()) {
@@ -210,6 +215,7 @@ class InventoryQueryServiceImpl(
         }
 
     private fun findAllChildrenCategories(categoryId: Long): List<Long> {
+        val tenantId = currentTenantProvider.requireTenantId()
         val result = mutableSetOf<Long>()
         val queue = mutableListOf(categoryId)
 
@@ -223,6 +229,7 @@ class InventoryQueryServiceImpl(
                     .select(PRODUCT_CATEGORY.ID)
                     .from(PRODUCT_CATEGORY)
                     .where(PRODUCT_CATEGORY.PARENT_ID.eq(currentId))
+                    .and(PRODUCT_CATEGORY.TENANT_ID.eq(tenantId))
                     .fetch()
                     .map { it.value1() }
 
