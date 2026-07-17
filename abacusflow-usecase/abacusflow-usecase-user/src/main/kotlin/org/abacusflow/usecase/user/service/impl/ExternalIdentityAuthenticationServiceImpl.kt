@@ -107,7 +107,7 @@ class ExternalIdentityAuthenticationServiceImpl(
     ): AuthenticatedUserTO? {
         // Try to fetch profile from OIDC provider for a better user name
         val profile = accessToken?.let { profileFetcher.fetchProfile(it) }
-        val userName = generateLocalUserName(issuer, subject, profile)
+        val userName = generateUniqueUserName(issuer, subject, profile)
 
         val user = User(name = userName)
         user.enable()
@@ -145,23 +145,52 @@ class ExternalIdentityAuthenticationServiceImpl(
     }
 
     /**
-     * Generate a local user name that satisfies the constraint: ^[a-zA-Z0-9_]*$, 5-50 chars.
-     * If profile data is available, prefer email local part or displayName (sanitized).
-     * Fall back to SHA-256 hash of issuer|subject.
+     * Generate a unique local user name by checking against existing names.
+     * If the preferred name is taken, appends a numeric suffix.
+     */
+    private fun generateUniqueUserName(
+        issuer: String,
+        subject: String,
+        profile: OidcUserProfileFetcher.Profile?,
+    ): String {
+        val preferred = generateLocalUserName(issuer, subject, profile)
+        if (!userRepository.existsByName(preferred)) {
+            return preferred
+        }
+
+        // Preferred name is taken — fall back to hash-based name first
+        val hashed = generateHashedUserName(issuer, subject)
+        if (!userRepository.existsByName(hashed)) {
+            return hashed
+        }
+
+        // Both taken (very unlikely) — append numeric suffix
+        var suffix = 2
+        while (true) {
+            val candidate = "${hashed}_${suffix}"
+            if (!userRepository.existsByName(candidate)) {
+                return candidate
+            }
+            suffix++
+        }
+    }
+
+    /**
+     * Generate a local user name. Prefer full email, then displayName, then hash.
+     * Name allows letters, numbers, underscores, dots, at-signs and hyphens (5-50 chars).
      */
     private fun generateLocalUserName(
         issuer: String,
         subject: String,
         profile: OidcUserProfileFetcher.Profile?,
     ): String {
-        // Try email local part (before @)
-        val emailLocal = profile?.email?.substringBefore('@')?.trim()
-        if (!emailLocal.isNullOrBlank()) {
-            val sanitized = sanitizeUserName(emailLocal)
-            if (sanitized != null) return sanitized
+        // Try full email
+        val email = profile?.email?.trim()
+        if (!email.isNullOrBlank() && email.length in 5..50) {
+            return email
         }
 
-        // Try displayName
+        // Try displayName (sanitized)
         val displayName = profile?.displayName?.trim()
         if (!displayName.isNullOrBlank()) {
             val sanitized = sanitizeUserName(displayName)

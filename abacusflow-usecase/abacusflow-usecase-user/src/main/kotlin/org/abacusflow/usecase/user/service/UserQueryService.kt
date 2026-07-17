@@ -5,12 +5,12 @@ import org.abacusflow.usecase.user.UserTO
 import org.springframework.security.access.prepost.PreAuthorize
 
 interface UserQueryService {
-    @PreAuthorize("hasAuthority('user:read')")
+    @PreAuthorize("hasAuthority('platform:user:read')")
     fun getUser(id: Long): UserTO?
 
-    @PreAuthorize("hasAuthority('user:read')")
+    @PreAuthorize("hasAuthority('platform:user:read')")
     fun getUser(name: String): UserTO?
 
-    @PreAuthorize("hasAuthority('user:read')")
+    @PreAuthorize("hasAuthority('platform:user:read')")
     fun listBasicUsers(): List<BasicUserTO>
 }

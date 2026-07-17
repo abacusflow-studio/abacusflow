@@ -44,18 +44,27 @@ class TenantCommandServiceImpl(
         // Create default roles for the new tenant with permissions
         val allPermissions = permissionRepository.findAllByOrderByNameAsc()
 
+        // Platform-level permissions (platform:*) are NOT assigned to tenant roles
+        val tenantPermissions = allPermissions.filter { it.name.startsWith("tenant:") }
+        val businessPermissions = allPermissions.filter {
+            !it.name.startsWith("platform:") && !it.name.startsWith("tenant:")
+        }
+
         val adminRole = Role(name = "admin", tenantId = savedTenant.id).apply {
             updateProfile("超级管理员")
-            allPermissions.forEach { addPermission(it) }
+            tenantPermissions.forEach { addPermission(it) }
+            businessPermissions.forEach { addPermission(it) }
         }
         val readerRole = Role(name = "reader", tenantId = savedTenant.id).apply {
             updateProfile("只读用户")
-            allPermissions.filter { it.name.endsWith(":read") }.forEach { addPermission(it) }
+            tenantPermissions.filter { it.name.endsWith(":read") }.forEach { addPermission(it) }
+            businessPermissions.filter { it.name.endsWith(":read") }.forEach { addPermission(it) }
         }
         val operatorRole = Role(name = "operator", tenantId = savedTenant.id).apply {
             updateProfile("操作员")
-            allPermissions.filter { it.name !in listOf("user:read", "role:read", "user:manage", "role:manage") }
+            tenantPermissions.filter { it.name !in listOf("tenant:role:read", "tenant:role:manage") }
                 .forEach { addPermission(it) }
+            businessPermissions.forEach { addPermission(it) }
         }
         roleRepository.saveAll(listOf(adminRole, readerRole, operatorRole))
 

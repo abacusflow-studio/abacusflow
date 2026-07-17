@@ -6,15 +6,15 @@ import org.abacusflow.usecase.user.UserTO
 import org.springframework.security.access.prepost.PreAuthorize
 
 interface UserCommandService {
-    @PreAuthorize("hasAuthority('user:manage')")
+    @PreAuthorize("hasAuthority('platform:user:manage')")
     fun createUser(input: CreateUserInputTO): UserTO
 
-    @PreAuthorize("hasAuthority('user:manage')")
+    @PreAuthorize("hasAuthority('platform:user:manage')")
     fun updateUser(
         id: Long,
         input: UpdateUserInputTO,
     ): UserTO
 
-    @PreAuthorize("hasAuthority('user:manage')")
+    @PreAuthorize("hasAuthority('platform:user:manage')")
     fun deleteUser(id: Long): UserTO
 }

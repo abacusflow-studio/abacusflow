@@ -33,13 +33,15 @@ import { getAuthClient, userApi } from "@abacusflow/core";
 import type { TenantInfo } from "@abacusflow/core";
 import { useTheme } from "../../components/providers";
 import { useTenant } from "../../components/tenant-provider";
+import { useAuth } from "../../components/auth-provider";
+import { usePermission } from "../../hooks/use-permission";
 import { FeedbackModal } from "../../components/feedback-modal";
 
 const { Sider, Header, Content, Footer } = Layout;
 
 type MenuItemType = Required<MenuProps>["items"][number];
 
-const NAV_ITEMS: MenuItemType[] = [
+const BUSINESS_NAV_ITEMS: MenuItemType[] = [
   {
     key: "/dashboard",
     label: <Link href="/dashboard">仪表盘</Link>,
@@ -116,45 +118,6 @@ const NAV_ITEMS: MenuItemType[] = [
     label: <Link href="/feedback">问题反馈</Link>,
     icon: <ExclamationCircleOutlined />,
   },
-  {
-    key: "/platform",
-    label: "平台管理",
-    icon: <SettingOutlined />,
-    children: [
-      {
-        key: "/platform/users",
-        label: <Link href="/platform/users">用户管理</Link>,
-        icon: <UserOutlined />,
-      },
-      {
-        key: "/platform/permissions",
-        label: <Link href="/platform/permissions">权限管理</Link>,
-        icon: <SettingOutlined />,
-      },
-    ],
-  },
-  {
-    key: "/tenant",
-    label: "租户管理",
-    icon: <ShopOutlined />,
-    children: [
-      {
-        key: "/tenant",
-        label: <Link href="/tenant">租户信息</Link>,
-        icon: <ShopOutlined />,
-      },
-      {
-        key: "/tenant/members",
-        label: <Link href="/tenant/members">成员管理</Link>,
-        icon: <UserOutlined />,
-      },
-      {
-        key: "/tenant/roles",
-        label: <Link href="/tenant/roles">角色管理</Link>,
-        icon: <TeamOutlined />,
-      },
-    ],
-  },
 ];
 
 const ROUTE_META = [
@@ -189,11 +152,12 @@ const ROUTE_META = [
   { key: "/depots", title: "储存点管理", subtitle: "仓点位置与容量" },
   { key: "/analytics", title: "数据刻画", subtitle: "业务趋势与指标洞察" },
   { key: "/feedback", title: "问题反馈", subtitle: "用户反馈查看与处理" },
+  { key: "/platform/tenants", title: "租户管理", subtitle: "租户创建与配置" },
   { key: "/platform/users", title: "用户管理", subtitle: "系统用户账号管理" },
   { key: "/platform/permissions", title: "权限管理", subtitle: "权限定义与配置" },
-  { key: "/tenant", title: "租户信息", subtitle: "租户信息与切换" },
-  { key: "/tenant/members", title: "成员管理", subtitle: "成员管理与角色分配" },
-  { key: "/tenant/roles", title: "角色管理", subtitle: "角色与权限配置" },
+  { key: "/tenant", title: "基本信息", subtitle: "当前租户详情" },
+  { key: "/tenant/members", title: "成员", subtitle: "成员管理与角色分配" },
+  { key: "/tenant/roles", title: "角色", subtitle: "角色与权限配置" },
 ];
 
 const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
@@ -227,7 +191,17 @@ export default function AdminLayout({
   const [showTenantModal, setShowTenantModal] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
   const { themeMode, toggleTheme } = useTheme();
-  const { tenantStatus, tenants, currentTenantId, currentTenant, selectTenant, setBootstrapData, clearTenant } = useTenant();
+  const {
+    tenantStatus,
+    tenants,
+    currentTenantId,
+    currentTenant,
+    selectTenant,
+    setBootstrapData,
+    clearTenant,
+  } = useTenant();
+  const { setAuthData, clearAuth } = useAuth();
+  const { hasPlatformPermission, hasTenantPermission } = usePermission();
 
   useEffect(() => {
     let cancelled = false;
@@ -242,6 +216,11 @@ export default function AdminLayout({
               const bootstrap = await userApi.bootstrap();
               if (!cancelled) {
                 setDisplayName(bootstrap.displayName ?? "");
+                setAuthData({
+                  platformPermissions: bootstrap.platformPermissions ?? [],
+                  tenantPermissions: bootstrap.tenantPermissions ?? [],
+                  displayName: bootstrap.displayName ?? "",
+                });
                 setBootstrapData(
                   bootstrap.tenantStatus,
                   (bootstrap.tenants ?? []) as TenantInfo[],
@@ -289,7 +268,78 @@ export default function AdminLayout({
     return () => {
       cancelled = true;
     };
-  }, [pathname, router, setBootstrapData]);
+  }, [pathname, router, setBootstrapData, setAuthData]);
+
+  // Build permission-filtered navigation items
+  const navItems = useMemo(() => {
+    const items: MenuItemType[] = [...BUSINESS_NAV_ITEMS];
+
+    // Platform center — only show if user has any platform:* permission
+    const platformChildren: MenuItemType[] = [];
+    if (hasPlatformPermission("platform:tenant:list")) {
+      platformChildren.push({
+        key: "/platform/tenants",
+        label: <Link href="/platform/tenants">租户管理</Link>,
+        icon: <ShopOutlined />,
+      });
+    }
+    if (hasPlatformPermission("platform:user:read")) {
+      platformChildren.push({
+        key: "/platform/users",
+        label: <Link href="/platform/users">用户管理</Link>,
+        icon: <UserOutlined />,
+      });
+    }
+    if (hasPlatformPermission("platform:permission:read")) {
+      platformChildren.push({
+        key: "/platform/permissions",
+        label: <Link href="/platform/permissions">权限管理</Link>,
+        icon: <SettingOutlined />,
+      });
+    }
+    if (platformChildren.length > 0) {
+      items.push({
+        key: "/platform",
+        label: "平台中心",
+        icon: <SettingOutlined />,
+        children: platformChildren,
+      });
+    }
+
+    // Tenant space — only show if user has any tenant:* permission
+    const tenantChildren: MenuItemType[] = [];
+    if (hasTenantPermission("tenant:info:read")) {
+      tenantChildren.push({
+        key: "/tenant",
+        label: <Link href="/tenant">基本信息</Link>,
+        icon: <ShopOutlined />,
+      });
+    }
+    if (hasTenantPermission("tenant:member:read")) {
+      tenantChildren.push({
+        key: "/tenant/members",
+        label: <Link href="/tenant/members">成员</Link>,
+        icon: <UserOutlined />,
+      });
+    }
+    if (hasTenantPermission("tenant:role:read")) {
+      tenantChildren.push({
+        key: "/tenant/roles",
+        label: <Link href="/tenant/roles">角色</Link>,
+        icon: <TeamOutlined />,
+      });
+    }
+    if (tenantChildren.length > 0) {
+      items.push({
+        key: "/tenant-group",
+        label: "租户空间",
+        icon: <ShopOutlined />,
+        children: tenantChildren,
+      });
+    }
+
+    return items;
+  }, [hasPlatformPermission, hasTenantPermission]);
 
   const selectedKeys = useMemo(() => {
     const match = ALL_ROUTE_KEYS.filter(
@@ -304,7 +354,7 @@ export default function AdminLayout({
     if (selectedKeys[0]?.startsWith("/products")) keys.push("/products-group");
     if (selectedKeys[0]?.startsWith("/partner")) keys.push("/partner");
     if (selectedKeys[0]?.startsWith("/platform")) keys.push("/platform");
-    if (selectedKeys[0]?.startsWith("/tenant")) keys.push("/tenant");
+    if (selectedKeys[0]?.startsWith("/tenant")) keys.push("/tenant-group");
     return keys;
   }, [selectedKeys]);
 
@@ -364,7 +414,7 @@ export default function AdminLayout({
           theme={themeMode === "dark" ? "dark" : "light"}
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
-          items={NAV_ITEMS}
+          items={navItems}
         />
       </Sider>
 
@@ -453,6 +503,7 @@ export default function AdminLayout({
                     onClick: async () => {
                       const auth = getAuthClient();
                       clearTenant();
+                      clearAuth();
                       await auth.logout();
                     },
                   },

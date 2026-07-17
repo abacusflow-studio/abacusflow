@@ -31,4 +31,8 @@ class TenantQueryServiceImpl(
             tenant?.let { membership.toSummaryTO(it) }
         }
     }
+
+    override fun listTenants(userId: Long): List<TenantSummaryTO> {
+        return listTenantsForUser(userId)
+    }
 }

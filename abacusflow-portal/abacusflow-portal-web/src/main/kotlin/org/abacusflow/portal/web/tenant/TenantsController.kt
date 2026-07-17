@@ -63,14 +63,10 @@ class TenantsController(
     override fun updateTenant(tenantId: Long, updateTenantInputVO: UpdateTenantInputVO): ResponseEntity<TenantDetailVO> {
         val userId = currentUserId()
 
-        // Verify the user is a member and has role:manage authority
+        // Verify the user is a member
         val memberships = tenantQueryService.listTenantsForUser(userId)
         val membership = memberships.find { it.tenantId == tenantId }
             ?: return ResponseEntity.status(403).build()
-
-        if (!hasAuthority("role:manage")) {
-            return ResponseEntity.status(403).build()
-        }
 
         val updated = tenantCommandService.updateTenant(tenantId, updateTenantInputVO.displayName)
         return ResponseEntity.ok(updated.toDetailVO(membership.roleNames, membership.permissionNames))
@@ -78,7 +74,7 @@ class TenantsController(
 
     override fun listTenants(): ResponseEntity<List<TenantSummaryVO>> {
         val userId = currentUserId()
-        val tenantSummaries = tenantQueryService.listTenantsForUser(userId)
+        val tenantSummaries = tenantQueryService.listTenants(userId)
         return ResponseEntity.ok(tenantSummaries.map { it.toVO() })
     }
 
@@ -89,9 +85,6 @@ class TenantsController(
     }
 
     override fun addTenantMember(addTenantMemberInputVO: AddTenantMemberInputVO): ResponseEntity<TenantMemberVO> {
-        if (!hasAuthority("role:manage")) {
-            return ResponseEntity.status(403).build()
-        }
         val tenantId = currentTenantProvider.requireTenantId()
         val member = tenantMembershipService.addMember(
             tenantId = tenantId,
@@ -102,9 +95,6 @@ class TenantsController(
     }
 
     override fun removeTenantMember(membershipId: Long): ResponseEntity<Unit> {
-        if (!hasAuthority("role:manage")) {
-            return ResponseEntity.status(403).build()
-        }
         val tenantId = currentTenantProvider.requireTenantId()
         // Find the membership to get the userId
         val members = tenantMembershipService.listMembers(tenantId)
@@ -118,9 +108,6 @@ class TenantsController(
         membershipId: Long,
         updateMemberRolesInputVO: UpdateMemberRolesInputVO,
     ): ResponseEntity<TenantMemberVO> {
-        if (!hasAuthority("role:manage")) {
-            return ResponseEntity.status(403).build()
-        }
         val updated = tenantMembershipService.updateMemberRoles(membershipId, updateMemberRolesInputVO.roleIds)
         return ResponseEntity.ok(updated.toMemberVO())
     }
@@ -129,10 +116,5 @@ class TenantsController(
         val authentication = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val details = authentication.details as AbacusFlowAuthenticationDetails
         return details.userId
-    }
-
-    private fun hasAuthority(authority: String): Boolean {
-        val authentication = SecurityContextHolder.getContext().authentication
-        return authentication?.authorities?.any { it.authority == authority } == true
     }
 }

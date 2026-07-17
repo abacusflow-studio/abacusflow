@@ -13,6 +13,8 @@ data class CurrentUserTO(
     val locked: Boolean,
     val roles: List<String>,
     val permissions: List<String>,
+    val platformPermissions: List<String>,
+    val tenantPermissions: List<String>,
     val tenantStatus: TenantSelectionStatus,
     val tenants: List<TenantSummaryTO>,
     val currentTenantId: Long?,

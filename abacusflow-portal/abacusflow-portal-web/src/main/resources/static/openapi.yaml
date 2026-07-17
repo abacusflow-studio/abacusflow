@@ -22,6 +22,8 @@ tags:
     description: 收集和管理用户反馈，支持问题提交、状态流转、负责人分配和内部备注。
   - name: tenant
     description: 管理租户的创建和查询，支持多租户环境下的租户选择与切换。
+  - name: permission
+    description: 管理系统权限定义（平台级）
   - name: role
     description: 管理租户级角色和权限分配
   - name: file
@@ -75,7 +77,7 @@ paths:
       summary: Create a new tenant
       description: |
         创建一个新租户。当前用户将自动成为该租户的管理员。
-        仅在用户 tenantStatus 为 NEEDS_ONBOARDING 时可调用。
+        仅在用户 tenantStatus 为 NEEDS_ONBOARDING 时可调用。需要 platform:tenant:create 权限
       requestBody:
         required: true
         content:
@@ -99,7 +101,7 @@ paths:
       tags:
         - tenant
       summary: List user's tenants
-      description: 返回当前用户所属的所有租户列表
+      description: 返回当前用户所属的所有租户列表，需要 platform:tenant:list 权限
       responses:
         "200":
           description: Tenant list
@@ -116,7 +118,7 @@ paths:
       tags:
         - tenant
       summary: Get tenant detail
-      description: 返回指定租户的详细信息，仅限该租户的成员可查看
+      description: 返回指定租户的详细信息，仅限该租户的成员可查看，需要 tenant:info:read 权限
       parameters:
         - name: tenantId
           in: path
@@ -141,7 +143,7 @@ paths:
       tags:
         - tenant
       summary: Update tenant
-      description: 更新租户的显示名称，仅限该租户的管理员可操作
+      description: 更新租户的显示名称，需要 platform:tenant:update 权限
       parameters:
         - name: tenantId
           in: path
@@ -173,7 +175,7 @@ paths:
       tags:
         - tenant
       summary: List tenant members
-      description: 返回当前租户（基于 X-Tenant-Id）的所有成员列表
+      description: 返回当前租户（基于 X-Tenant-Id）的所有成员列表，需要 tenant:member:read 权限
       responses:
         "200":
           description: Member list
@@ -190,7 +192,7 @@ paths:
       tags:
         - tenant
       summary: Add a member to the current tenant
-      description: 将已有用户添加为当前租户的成员，并可指定初始角色
+      description: 将已有用户添加为当前租户的成员，并可指定初始角色，需要 tenant:member:create 权限
       requestBody:
         required: true
         content:
@@ -215,7 +217,7 @@ paths:
       tags:
         - tenant
       summary: Remove a member from the current tenant
-      description: 从当前租户中移除成员（不删除用户账号）
+      description: 从当前租户中移除成员（不删除用户账号），需要 tenant:member:remove 权限
       parameters:
         - name: membershipId
           in: path
@@ -237,7 +239,7 @@ paths:
       tags:
         - tenant
       summary: Update member roles
-      description: 更新成员的角色列表，需要 role:manage 权限
+      description: 更新成员的角色列表，需要 tenant:member:update 权限
       parameters:
         - name: membershipId
           in: path
@@ -287,7 +289,7 @@ paths:
       tags:
         - role
       summary: Create a role
-      description: 创建新角色，需要 role:manage 权限
+      description: 创建新角色，需要 tenant:role:manage 权限
       requestBody:
         required: true
         content:
@@ -337,7 +339,7 @@ paths:
       tags:
         - role
       summary: Update role
-      description: 更新角色的显示名称和权限，需要 role:manage 权限
+      description: 更新角色的显示名称和权限，需要 tenant:role:manage 权限
       parameters:
         - name: roleId
           in: path
@@ -368,7 +370,7 @@ paths:
       tags:
         - role
       summary: Delete a role
-      description: 删除角色（有成员使用时不可删除），需要 role:manage 权限
+      description: 删除角色（有成员使用时不可删除），需要 tenant:role:manage 权限
       parameters:
         - name: roleId
           in: path
@@ -388,9 +390,9 @@ paths:
     get:
       operationId: listPermissions
       tags:
-        - role
+        - permission
       summary: List all permissions
-      description: 返回系统所有可用权限列表（全局共享）
+      description: 返回系统所有可用权限列表（全局共享），需要 platform:permission:read 权限
       responses:
         "200":
           description: Permission list
@@ -403,9 +405,9 @@ paths:
     post:
       operationId: createPermission
       tags:
-        - role
+        - permission
       summary: Create a permission
-      description: 创建新权限，需要 role:manage 权限
+      description: 创建新权限，需要 platform:permission:manage 权限
       requestBody:
         required: true
         content:
@@ -428,9 +430,9 @@ paths:
     put:
       operationId: updatePermission
       tags:
-        - role
+        - permission
       summary: Update a permission
-      description: 更新权限的显示名称和描述，需要 role:manage 权限
+      description: 更新权限的显示名称和描述，需要 platform:permission:manage 权限
       parameters:
         - name: permissionId
           in: path
@@ -458,9 +460,9 @@ paths:
     delete:
       operationId: deletePermission
       tags:
-        - role
+        - permission
       summary: Delete a permission
-      description: 删除权限（有角色使用时不可删除），需要 role:manage 权限
+      description: 删除权限（有角色使用时不可删除），需要 platform:permission:manage 权限
       parameters:
         - name: permissionId
           in: path
@@ -2061,7 +2063,17 @@ components:
           type: array
           items:
             type: string
-          description: 权限列表
+          description: 所有权限列表（含平台和租户权限）
+        platformPermissions:
+          type: array
+          items:
+            type: string
+          description: 平台级权限列表（platform:* 前缀）
+        tenantPermissions:
+          type: array
+          items:
+            type: string
+          description: 租户级权限列表（tenant:* 前缀）
         email:
           type: string
           nullable: true
@@ -2433,7 +2445,17 @@ components:
           type: array
           items:
             type: string
-          description: 权限列表
+          description: 所有权限列表（含平台和租户权限）
+        platformPermissions:
+          type: array
+          items:
+            type: string
+          description: 平台级权限列表（platform:* 前缀）
+        tenantPermissions:
+          type: array
+          items:
+            type: string
+          description: 租户级权限列表（tenant:* 前缀）
         tenantStatus:
           type: string
           enum:

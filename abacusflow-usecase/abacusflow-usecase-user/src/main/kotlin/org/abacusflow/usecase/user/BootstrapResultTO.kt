@@ -10,6 +10,8 @@ data class BootstrapResultTO(
     val locked: Boolean,
     val roles: List<String>,
     val permissions: List<String>,
+    val platformPermissions: List<String>,
+    val tenantPermissions: List<String>,
     val email: String?,
     val displayName: String?,
     val pictureUrl: String?,

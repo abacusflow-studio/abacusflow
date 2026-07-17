@@ -25,10 +25,24 @@ ON CONFLICT (tenant_id, name) DO NOTHING;
 -- ✅ 默认权限
 INSERT INTO permission (name, label, description)
 VALUES
-    ('user:read', '查看用户', '允许查看用户列表和详情'),
-    ('role:read', '查看角色', '允许查看角色和权限'),
-    ('user:manage', '管理用户', '允许管理用户角色和状态'),
-    ('role:manage', '管理角色', '允许管理角色和权限'),
+    -- 平台级权限
+    ('platform:tenant:list',       '查看租户列表', '平台管理员查看所有租户'),
+    ('platform:tenant:create',     '创建租户',     '平台管理员创建租户'),
+    ('platform:tenant:update',     '更新租户',     '平台管理员更新租户信息'),
+    ('platform:tenant:delete',     '删除租户',     '平台管理员删除租户'),
+    ('platform:user:read',         '查看平台用户', '查看用户列表和详情'),
+    ('platform:user:manage',       '管理平台用户', '管理用户角色和状态'),
+    ('platform:permission:read',   '查看权限定义', '查看权限列表'),
+    ('platform:permission:manage', '管理权限定义', '管理权限 CRUD'),
+    -- 租户级权限
+    ('tenant:info:read',       '查看租户信息', '查看当前租户详情'),
+    ('tenant:member:read',     '查看租户成员', '查看成员列表'),
+    ('tenant:member:create',   '添加租户成员', '邀请新成员'),
+    ('tenant:member:update',   '更新成员角色', '修改成员角色分配'),
+    ('tenant:member:remove',   '移除租户成员', '移除成员'),
+    ('tenant:role:read',       '查看租户角色', '查看角色列表'),
+    ('tenant:role:manage',     '管理租户角色', '角色增删改'),
+    -- 业务权限
     ('product:read', '查看产品', '允许查看产品列表和详情'),
     ('product:create', '创建产品', '允许创建新产品'),
     ('product:update', '更新产品', '允许更新产品信息'),
@@ -65,27 +79,33 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- ✅ 角色权限绑定
--- admin 角色绑定所有权限
+-- admin 角色绑定所有权限（platform:* + tenant:* + 业务权限）
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'admin' AND r.tenant_id = 1
 ON CONFLICT DO NOTHING;
 
--- reader 角色绑定只读权限
+-- reader 角色：只绑定 tenant:* 的 :read 权限 + 业务 :read 权限（不含任何 platform:* 权限）
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'reader' AND r.tenant_id = 1
-  AND p.name LIKE '%:read'
+  AND (
+    (p.name LIKE 'tenant:%' AND p.name LIKE '%:read')
+    OR (p.name NOT LIKE 'platform:%' AND p.name NOT LIKE 'tenant:%' AND p.name LIKE '%:read')
+  )
 ON CONFLICT DO NOTHING;
 
--- operator 角色绑定业务操作权限（读写+审批，不含管理类）
+-- operator 角色：绑定 tenant:info:read + tenant:member:* + tenant:role:read + 业务权限（不含 platform:* 权限）
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r, permission p
 WHERE r.name = 'operator' AND r.tenant_id = 1
-  AND p.name NOT IN ('user:read', 'role:read', 'user:manage', 'role:manage')
+  AND (
+    p.name IN ('tenant:info:read', 'tenant:member:read', 'tenant:member:create', 'tenant:member:update', 'tenant:member:remove', 'tenant:role:read')
+    OR (p.name NOT LIKE 'platform:%' AND p.name NOT LIKE 'tenant:%')
+  )
 ON CONFLICT DO NOTHING;
 
 -- ✅ 管理员账号

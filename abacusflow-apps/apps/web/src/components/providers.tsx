@@ -5,6 +5,7 @@ import { App, ConfigProvider, theme as antdTheme } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { initWebAuth } from "../lib/auth-provider";
 import { TenantProvider } from "./tenant-provider";
+import { AuthProvider } from "./auth-provider";
 
 type ThemeMode = "light" | "dark";
 
@@ -232,21 +233,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const isDark = themeMode === "dark";
 
   return (
-    <TenantProvider>
-      <ThemeContext.Provider value={ctx}>
-        <ConfigProvider
-          locale={zhCN}
-          theme={{
-            algorithm: isDark
-              ? antdTheme.darkAlgorithm
-              : antdTheme.defaultAlgorithm,
-            token: isDark ? DARK_TOKENS : LIGHT_TOKENS,
-            components: isDark ? DARK_COMPONENTS : LIGHT_COMPONENTS,
-          }}
-        >
-          <App>{children}</App>
-        </ConfigProvider>
-      </ThemeContext.Provider>
-    </TenantProvider>
+    <AuthProvider>
+      <TenantProvider>
+        <ThemeContext.Provider value={ctx}>
+          <ConfigProvider
+            locale={zhCN}
+            theme={{
+              algorithm: isDark
+                ? antdTheme.darkAlgorithm
+                : antdTheme.defaultAlgorithm,
+              token: isDark ? DARK_TOKENS : LIGHT_TOKENS,
+              components: isDark ? DARK_COMPONENTS : LIGHT_COMPONENTS,
+            }}
+          >
+            <App>{children}</App>
+          </ConfigProvider>
+        </ThemeContext.Provider>
+      </TenantProvider>
+    </AuthProvider>
   );
 }
