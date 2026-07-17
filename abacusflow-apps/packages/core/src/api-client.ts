@@ -16,6 +16,7 @@ import {
   UserApi,
   FeedbackApi,
   RoleApi,
+  PermissionApi,
   TenantApi,
 } from "./openapi/apis/index";
 
@@ -89,6 +90,9 @@ export type {
   TenantMember,
   UpdateMemberRolesInput,
   AddTenantMemberInput,
+  TenantInvitation,
+  CreateTenantInvitationInput,
+  AcceptTenantInvitationInput,
   Role,
   CreateRoleInput,
   UpdateRoleInput,
@@ -122,6 +126,9 @@ export type {
   UpdateMemberRolesRequest,
   AddTenantMemberRequest,
   RemoveTenantMemberRequest,
+  CreateTenantInvitationRequest,
+  AcceptTenantInvitationRequest,
+  CancelTenantInvitationRequest,
   // Permission request types
   CreatePermissionRequest,
   UpdatePermissionRequest,
@@ -242,5 +249,6 @@ export const partnerApi = new PartnerApi(getApiConfig());
 export const transactionApi = new TransactionApi(getApiConfig());
 export const userApi = new UserApi(getApiConfig());
 export const feedbackApi = new FeedbackApi(getApiConfig());
+export const permissionApi = new PermissionApi(getApiConfig());
 export const roleApi = new RoleApi(getApiConfig());
 export const tenantApi = new TenantApi(getApiConfig());

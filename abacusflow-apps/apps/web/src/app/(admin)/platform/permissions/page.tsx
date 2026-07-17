@@ -16,7 +16,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import {
-  roleApi,
+  permissionApi,
   type Permission,
   type CreatePermissionInput,
   type UpdatePermissionInput,
@@ -36,7 +36,7 @@ export default function PermissionManagementPage() {
 
   const loadPermissions = useCallback(async () => {
     try {
-      const data = await roleApi.listPermissions();
+      const data = await permissionApi.listPermissions();
       setPermissions(data);
     } catch (err) {
       message.error(err instanceof Error ? err.message : "加载权限列表失败");
@@ -77,14 +77,14 @@ export default function PermissionManagementPage() {
           label: values.label || values.name,
           description: values.description || "",
         };
-        await roleApi.createPermission({ createPermissionInput: input });
+        await permissionApi.createPermission({ createPermissionInput: input });
         message.success("创建成功");
       } else if (editItem) {
         const input: UpdatePermissionInput = {
           label: values.label || undefined,
           description: values.description || undefined,
         };
-        await roleApi.updatePermission({
+        await permissionApi.updatePermission({
           permissionId: editItem.id,
           updatePermissionInput: input,
         });
@@ -104,7 +104,7 @@ export default function PermissionManagementPage() {
 
   const handleDelete = async (permissionId: number) => {
     try {
-      await roleApi.deletePermission({ permissionId });
+      await permissionApi.deletePermission({ permissionId });
       message.success("删除成功");
       await loadPermissions();
     } catch (err) {

@@ -6,13 +6,15 @@ import {
   Table,
   Modal,
   Form,
+  Input,
   App,
   Space,
   Tag,
   Select,
   Popconfirm,
+  Tabs,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, MailOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import {
@@ -23,6 +25,8 @@ import {
   type Role,
   type BasicUser,
   type AddTenantMemberInput,
+  type TenantInvitation,
+  type CreateTenantInvitationInput,
 } from "@abacusflow/core";
 
 function translateMemberStatus(value: string): string {
@@ -39,11 +43,24 @@ function memberStatusColor(value: string): string {
   return "default";
 }
 
+function translateInvitationStatus(value: string): string {
+  if (value === "PENDING") return "待接受";
+  if (value === "ACCEPTED") return "已接受";
+  return value;
+}
+
+function invitationStatusColor(value: string): string {
+  if (value === "PENDING") return "processing";
+  if (value === "ACCEPTED") return "success";
+  return "default";
+}
+
 export default function MemberManagementPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
 
   const [members, setMembers] = useState<TenantMember[]>([]);
+  const [invitations, setInvitations] = useState<TenantInvitation[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [allUsers, setAllUsers] = useState<BasicUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +68,7 @@ export default function MemberManagementPage() {
   const [editMember, setEditMember] = useState<TenantMember | null>(null);
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showInviteForm, setShowInviteForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const loadMembers = useCallback(async () => {
@@ -63,6 +81,15 @@ export default function MemberManagementPage() {
       setLoading(false);
     }
   }, [message]);
+
+  const loadInvitations = useCallback(async () => {
+    try {
+      const data = await tenantApi.listTenantInvitations();
+      setInvitations(data);
+    } catch {
+      // silent — invitations are best-effort
+    }
+  }, []);
 
   const loadRoles = useCallback(async () => {
     try {
@@ -82,9 +109,14 @@ export default function MemberManagementPage() {
     }
   }, []);
 
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    await Promise.all([loadMembers(), loadInvitations(), loadRoles(), loadAllUsers()]);
+  }, [loadMembers, loadInvitations, loadRoles, loadAllUsers]);
+
   useEffect(() => {
-    void Promise.all([loadMembers(), loadRoles(), loadAllUsers()]);
-  }, [loadMembers, loadRoles, loadAllUsers]);
+    void loadAll();
+  }, [loadAll]);
 
   // Non-member users for the "Add Member" selector
   const nonMemberUsers = useMemo(() => {
@@ -98,11 +130,11 @@ export default function MemberManagementPage() {
   }));
 
   const userOptions = nonMemberUsers.map((u) => ({
-    label: `${u.name}${u.nick ? ` (${u.nick})` : ""}`,
+    label: `${u.name}${u.nick && u.nick !== u.name ? ` (${u.nick})` : ""}`,
     value: u.id,
   }));
 
-  // ---- Add Member ----
+  // ---- Add Member (direct) ----
   const openAddMember = () => {
     form.resetFields();
     setShowAddForm(true);
@@ -119,13 +151,51 @@ export default function MemberManagementPage() {
       await tenantApi.addTenantMember({ addTenantMemberInput: input });
       message.success("添加成员成功");
       setShowAddForm(false);
-      await loadMembers();
+      await loadAll();
     } catch (err) {
       if (err instanceof Error) {
         message.error(err.message);
       }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // ---- Invite Member (by email) ----
+  const openInviteMember = () => {
+    form.resetFields();
+    setShowInviteForm(true);
+  };
+
+  const handleInviteMember = async () => {
+    try {
+      const values = await form.validateFields();
+      setSubmitting(true);
+      const input: CreateTenantInvitationInput = {
+        email: values.email,
+        roleIds: values.roleIds || [],
+      };
+      await tenantApi.createTenantInvitation({ createTenantInvitationInput: input });
+      message.success("邀请已发送");
+      setShowInviteForm(false);
+      await loadAll();
+    } catch (err) {
+      if (err instanceof Error) {
+        message.error(err.message);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ---- Cancel Invitation ----
+  const handleCancelInvitation = async (invitationId: number) => {
+    try {
+      await tenantApi.cancelTenantInvitation({ invitationId });
+      message.success("邀请已取消");
+      await loadInvitations();
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "取消失败");
     }
   };
 
@@ -172,7 +242,7 @@ export default function MemberManagementPage() {
     }
   };
 
-  const columns: ColumnsType<TenantMember> = [
+  const memberColumns: ColumnsType<TenantMember> = [
     {
       title: "用户名",
       dataIndex: "userName",
@@ -222,28 +292,109 @@ export default function MemberManagementPage() {
     },
   ];
 
+  const invitationColumns: ColumnsType<TenantInvitation> = [
+    {
+      title: "邮箱",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "角色",
+      key: "roleNames",
+      render: (_, record) =>
+        record.roleNames.length > 0
+          ? record.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
+          : <Tag>无角色</Tag>,
+    },
+    {
+      title: "状态",
+      key: "status",
+      width: 100,
+      render: (_, record) => (
+        <Tag color={invitationStatusColor(record.status)}>
+          {translateInvitationStatus(record.status)}
+        </Tag>
+      ),
+    },
+    {
+      title: "过期时间",
+      key: "expiresAt",
+      width: 180,
+      render: (_, record) => new Date(record.expiresAt).toLocaleString(),
+    },
+    {
+      title: "操作",
+      key: "action",
+      width: 100,
+      render: (_, record) =>
+        record.status === "PENDING" ? (
+          <Popconfirm
+            title="确认取消"
+            description="确定要取消这个邀请吗？"
+            onConfirm={() => handleCancelInvitation(record.id)}
+            okText="取消邀请"
+            cancelText="保留"
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="link" size="small" danger>
+              取消邀请
+            </Button>
+          </Popconfirm>
+        ) : null,
+    },
+  ];
+
   return (
     <div className="af-crud-page">
       <AdminPageHeader
-        eyebrow="租户管理 / 成员"
+        eyebrow="租户空间 / 成员"
         title="成员管理"
-        description="管理当前租户的成员，添加已有用户为成员并分配角色。"
+        description="管理当前租户的成员，邀请用户加入或直接添加已有用户。"
         metrics={[{ label: "成员总数", value: members.length }]}
         actions={
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAddMember}>
-            添加成员
-          </Button>
+          <Space>
+            <Button icon={<MailOutlined />} onClick={openInviteMember}>
+              邀请成员
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={openAddMember}>
+              添加成员
+            </Button>
+          </Space>
         }
       />
 
       <div className="card af-table-card">
-        <Table<TenantMember>
-          columns={columns}
-          dataSource={members}
-          rowKey="id"
-          loading={loading}
-          pagination={false}
-          size="middle"
+        <Tabs
+          defaultActiveKey="members"
+          items={[
+            {
+              key: "members",
+              label: `成员 (${members.length})`,
+              children: (
+                <Table<TenantMember>
+                  columns={memberColumns}
+                  dataSource={members}
+                  rowKey="id"
+                  loading={loading}
+                  pagination={false}
+                  size="middle"
+                />
+              ),
+            },
+            {
+              key: "invitations",
+              label: `邀请 (${invitations.length})`,
+              children: (
+                <Table<TenantInvitation>
+                  columns={invitationColumns}
+                  dataSource={invitations}
+                  rowKey="id"
+                  pagination={false}
+                  size="middle"
+                />
+              ),
+            },
+          ]}
         />
       </div>
 
@@ -275,6 +426,39 @@ export default function MemberManagementPage() {
             <Select
               mode="multiple"
               placeholder="请选择角色"
+              options={roleOptions}
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Invite Member Modal */}
+      <Modal
+        open={showInviteForm}
+        title="邀请成员"
+        onCancel={() => setShowInviteForm(false)}
+        onOk={handleInviteMember}
+        confirmLoading={submitting}
+        width={520}
+        destroyOnHidden
+      >
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="email"
+            label="邮箱地址"
+            rules={[
+              { required: true, message: "请输入邮箱地址" },
+              { type: "email", message: "请输入有效的邮箱地址" },
+            ]}
+            extra="被邀请人将通过邮箱收到邀请链接，新用户注册后可接受邀请加入租户"
+          >
+            <Input placeholder="请输入被邀请人的邮箱" />
+          </Form.Item>
+          <Form.Item name="roleIds" label="分配角色">
+            <Select
+              mode="multiple"
+              placeholder="请选择角色（默认为 reader）"
               options={roleOptions}
               style={{ width: "100%" }}
             />

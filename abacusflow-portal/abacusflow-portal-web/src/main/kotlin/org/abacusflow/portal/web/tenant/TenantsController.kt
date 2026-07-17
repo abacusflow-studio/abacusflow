@@ -3,9 +3,12 @@ package org.abacusflow.portal.web.tenant
 import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.portal.web.api.TenantsApi
 import org.abacusflow.portal.web.authentication.AbacusFlowAuthenticationDetails
+import org.abacusflow.portal.web.model.AcceptTenantInvitationInputVO
 import org.abacusflow.portal.web.model.AddTenantMemberInputVO
 import org.abacusflow.portal.web.model.CreateTenantInputVO
+import org.abacusflow.portal.web.model.CreateTenantInvitationInputVO
 import org.abacusflow.portal.web.model.TenantDetailVO
+import org.abacusflow.portal.web.model.TenantInvitationVO
 import org.abacusflow.portal.web.model.TenantMemberVO
 import org.abacusflow.portal.web.model.TenantSummaryVO
 import org.abacusflow.portal.web.model.UpdateMemberRolesInputVO
@@ -15,6 +18,7 @@ import org.abacusflow.portal.web.user.toMemberVO
 import org.abacusflow.portal.web.user.toVO
 import org.abacusflow.usecase.tenant.CreateTenantInputTO
 import org.abacusflow.usecase.tenant.service.TenantCommandService
+import org.abacusflow.usecase.tenant.service.TenantInvitationService
 import org.abacusflow.usecase.tenant.service.TenantMembershipService
 import org.abacusflow.usecase.tenant.service.TenantQueryService
 import org.springframework.http.ResponseEntity
@@ -27,6 +31,7 @@ class TenantsController(
     private val tenantCommandService: TenantCommandService,
     private val tenantQueryService: TenantQueryService,
     private val tenantMembershipService: TenantMembershipService,
+    private val tenantInvitationService: TenantInvitationService,
     private val currentTenantProvider: CurrentTenantProvider,
 ) : TenantsApi {
 
@@ -68,7 +73,7 @@ class TenantsController(
         val membership = memberships.find { it.tenantId == tenantId }
             ?: return ResponseEntity.status(403).build()
 
-        val updated = tenantCommandService.updateTenant(tenantId, updateTenantInputVO.displayName)
+        val updated = tenantCommandService.updateOwnTenant(tenantId, updateTenantInputVO.displayName)
         return ResponseEntity.ok(updated.toDetailVO(membership.roleNames, membership.permissionNames))
     }
 
@@ -110,6 +115,41 @@ class TenantsController(
     ): ResponseEntity<TenantMemberVO> {
         val updated = tenantMembershipService.updateMemberRoles(membershipId, updateMemberRolesInputVO.roleIds)
         return ResponseEntity.ok(updated.toMemberVO())
+    }
+
+    // ============= Invitation endpoints =============
+
+    override fun createTenantInvitation(createTenantInvitationInputVO: CreateTenantInvitationInputVO): ResponseEntity<TenantInvitationVO> {
+        val tenantId = currentTenantProvider.requireTenantId()
+        val userId = currentUserId()
+
+        val invitation = tenantInvitationService.createInvitation(
+            tenantId = tenantId,
+            email = createTenantInvitationInputVO.email,
+            roleIds = createTenantInvitationInputVO.roleIds ?: emptyList(),
+            invitedByUserId = userId,
+        )
+        return ResponseEntity.status(201).body(invitation.toVO())
+    }
+
+    override fun listTenantInvitations(): ResponseEntity<List<TenantInvitationVO>> {
+        val tenantId = currentTenantProvider.requireTenantId()
+        val invitations = tenantInvitationService.listInvitations(tenantId)
+        return ResponseEntity.ok(invitations.map { it.toVO() })
+    }
+
+    override fun acceptTenantInvitation(acceptTenantInvitationInputVO: AcceptTenantInvitationInputVO): ResponseEntity<TenantInvitationVO> {
+        val userId = currentUserId()
+        val invitation = tenantInvitationService.acceptInvitation(
+            token = acceptTenantInvitationInputVO.token,
+            userId = userId,
+        )
+        return ResponseEntity.ok(invitation.toVO())
+    }
+
+    override fun cancelTenantInvitation(invitationId: Long): ResponseEntity<Unit> {
+        tenantInvitationService.cancelInvitation(invitationId)
+        return ResponseEntity.ok().build()
     }
 
     private fun currentUserId(): Long {

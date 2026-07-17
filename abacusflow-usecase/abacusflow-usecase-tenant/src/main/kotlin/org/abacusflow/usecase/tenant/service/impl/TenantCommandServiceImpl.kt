@@ -81,7 +81,15 @@ class TenantCommandServiceImpl(
         }
     }
 
+    override fun updateOwnTenant(tenantId: Long, displayName: String?): TenantTO {
+        val tenant = tenantRepository.findById(tenantId)
+            .orElseThrow { NoSuchElementException("Tenant $tenantId not found") }
+        tenant.updateProfile(displayName)
+        return tenantRepository.save(tenant).toTO()
+    }
+
     override fun updateTenant(tenantId: Long, displayName: String?): TenantTO {
+        // Platform-level update — same logic, but gated by @PreAuthorize on the interface
         val tenant = tenantRepository.findById(tenantId)
             .orElseThrow { NoSuchElementException("Tenant $tenantId not found") }
         tenant.updateProfile(displayName)

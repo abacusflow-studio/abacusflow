@@ -18,6 +18,7 @@ import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import {
   roleApi,
+  permissionApi,
   type Role,
   type Permission,
   type CreateRoleInput,
@@ -50,7 +51,7 @@ export default function RoleManagementPage() {
 
   const loadPermissions = useCallback(async () => {
     try {
-      const data = await roleApi.listPermissions();
+      const data = await permissionApi.listPermissions();
       setPermissions(data);
     } catch {
       // silent — permissions are best-effort
