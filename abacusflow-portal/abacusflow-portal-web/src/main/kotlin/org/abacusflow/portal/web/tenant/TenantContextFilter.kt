@@ -38,10 +38,11 @@ class TenantContextFilter(
                     return
                 }
 
-                // Validate tenant access against JWT claims (tamper-proof)
+                // If no authentication details, the user is not properly authenticated —
+                // let Spring Security's authentication entry point handle it (returns 401)
                 if (details == null) {
-                    log.error("No authentication details found — rejecting tenant selection")
-                    response.sendError(403, "User does not have access to tenant $tenantId")
+                    log.warn("No authentication details found for tenant selection — passing through to authentication layer")
+                    filterChain.doFilter(request, response)
                     return
                 }
 

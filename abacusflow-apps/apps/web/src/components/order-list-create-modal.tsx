@@ -91,8 +91,7 @@ export function OrderCreateModal({
               onChange={(val) => onPartnerChange(String(val))}
               placeholder={`请选择${partnerLabel}`}
               options={partnerOptions}
-              showSearch
-              filterOption={labelFilter}
+              showSearch={{ optionFilterProp: "label" }}
               status={errors.partnerId ? "error" : undefined}
               dropdownRender={
                 orderType === "sale"
@@ -223,8 +222,7 @@ function OrderItemRow({
           }
           placeholder={`请选择${itemLabel}`}
           options={itemOptions}
-          showSearch
-          filterOption={labelFilter}
+          showSearch={{ optionFilterProp: "label" }}
           status={errors[`item-${index}`] ? "error" : undefined}
         />
         {errors[`item-${index}`] && (
@@ -319,11 +317,3 @@ function FieldError({ children }: { children: React.ReactNode }) {
   return <div style={{ color: "#ff4d4f", fontSize: 12 }}>{children}</div>;
 }
 
-function labelFilter(
-  input: string,
-  option?: { label?: string | number | boolean | React.ReactElement | React.ReactPortal | null },
-): boolean {
-  return String(option?.label ?? "")
-    .toLowerCase()
-    .includes(input.toLowerCase());
-}

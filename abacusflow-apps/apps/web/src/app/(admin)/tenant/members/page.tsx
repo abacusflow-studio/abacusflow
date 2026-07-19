@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Button,
   Table,
@@ -14,17 +14,14 @@ import {
   Popconfirm,
   Tabs,
 } from "antd";
-import { PlusOutlined, MailOutlined } from "@ant-design/icons";
+import { MailOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import {
   tenantApi,
   roleApi,
-  userApi,
   type TenantMember,
   type Role,
-  type BasicUser,
-  type AddTenantMemberInput,
   type TenantInvitation,
   type CreateTenantInvitationInput,
 } from "@abacusflow/core";
@@ -62,12 +59,10 @@ export default function MemberManagementPage() {
   const [members, setMembers] = useState<TenantMember[]>([]);
   const [invitations, setInvitations] = useState<TenantInvitation[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [allUsers, setAllUsers] = useState<BasicUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editMember, setEditMember] = useState<TenantMember | null>(null);
   const [showRoleForm, setShowRoleForm] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -100,66 +95,20 @@ export default function MemberManagementPage() {
     }
   }, []);
 
-  const loadAllUsers = useCallback(async () => {
-    try {
-      const data = await userApi.listBasicUsers();
-      setAllUsers(data);
-    } catch {
-      // silent
-    }
-  }, []);
-
   const loadAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([loadMembers(), loadInvitations(), loadRoles(), loadAllUsers()]);
-  }, [loadMembers, loadInvitations, loadRoles, loadAllUsers]);
+    await Promise.all([loadMembers(), loadInvitations(), loadRoles()]);
+  }, [loadMembers, loadInvitations, loadRoles]);
 
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
 
-  // Non-member users for the "Add Member" selector
-  const nonMemberUsers = useMemo(() => {
-    const memberUserIds = new Set(members.map((m) => m.userId));
-    return allUsers.filter((u) => !memberUserIds.has(u.id));
-  }, [allUsers, members]);
-
   const roleOptions = roles.map((r) => ({
     label: r.label || r.name,
     value: r.id,
+    name: r.name,
   }));
-
-  const userOptions = nonMemberUsers.map((u) => ({
-    label: `${u.name}${u.nick && u.nick !== u.name ? ` (${u.nick})` : ""}`,
-    value: u.id,
-  }));
-
-  // ---- Add Member (direct) ----
-  const openAddMember = () => {
-    form.resetFields();
-    setShowAddForm(true);
-  };
-
-  const handleAddMember = async () => {
-    try {
-      const values = await form.validateFields();
-      setSubmitting(true);
-      const input: AddTenantMemberInput = {
-        userId: values.userId,
-        roleIds: values.roleIds || [],
-      };
-      await tenantApi.addTenantMember({ addTenantMemberInput: input });
-      message.success("添加成员成功");
-      setShowAddForm(false);
-      await loadAll();
-    } catch (err) {
-      if (err instanceof Error) {
-        message.error(err.message);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   // ---- Invite Member (by email) ----
   const openInviteMember = () => {
@@ -349,17 +298,12 @@ export default function MemberManagementPage() {
       <AdminPageHeader
         eyebrow="租户空间 / 成员"
         title="成员管理"
-        description="管理当前租户的成员，邀请用户加入或直接添加已有用户。"
+        description="管理当前租户的成员，通过邀请链接邀请新成员加入。"
         metrics={[{ label: "成员总数", value: members.length }]}
         actions={
-          <Space>
-            <Button icon={<MailOutlined />} onClick={openInviteMember}>
-              邀请成员
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openAddMember}>
-              添加成员
-            </Button>
-          </Space>
+          <Button type="primary" icon={<MailOutlined />} onClick={openInviteMember}>
+            邀请成员
+          </Button>
         }
       />
 
@@ -398,41 +342,6 @@ export default function MemberManagementPage() {
         />
       </div>
 
-      {/* Add Member Modal */}
-      <Modal
-        open={showAddForm}
-        title="添加成员"
-        onCancel={() => setShowAddForm(false)}
-        onOk={handleAddMember}
-        confirmLoading={submitting}
-        width={520}
-        destroyOnHidden
-      >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item
-            name="userId"
-            label="选择用户"
-            rules={[{ required: true, message: "请选择要添加的用户" }]}
-          >
-            <Select
-              showSearch
-              placeholder="请选择用户"
-              options={userOptions}
-              optionFilterProp="label"
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-          <Form.Item name="roleIds" label="初始角色">
-            <Select
-              mode="multiple"
-              placeholder="请选择角色"
-              options={roleOptions}
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
-
       {/* Invite Member Modal */}
       <Modal
         open={showInviteForm}
@@ -460,6 +369,8 @@ export default function MemberManagementPage() {
               mode="multiple"
               placeholder="请选择角色（默认为 reader）"
               options={roleOptions}
+              showSearch={{ optionFilterProp: ["label", "name"] }}
+              maxTagCount={3}
               style={{ width: "100%" }}
             />
           </Form.Item>
@@ -482,6 +393,8 @@ export default function MemberManagementPage() {
               mode="multiple"
               placeholder="请选择角色"
               options={roleOptions}
+              showSearch={{ optionFilterProp: ["label", "name"] }}
+              maxTagCount={3}
               style={{ width: "100%" }}
             />
           </Form.Item>

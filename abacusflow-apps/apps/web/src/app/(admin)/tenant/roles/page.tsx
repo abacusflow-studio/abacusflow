@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Table,
   Modal,
   Input,
   Form,
-  Tag,
   App,
   Space,
   Select,
@@ -24,6 +23,21 @@ import {
   type CreateRoleInput,
   type UpdateRoleInput,
 } from "@abacusflow/core";
+
+const domainLabelMap: Record<string, string> = {
+  platform: "平台",
+  tenant: "租户",
+  product: "产品",
+  "product-category": "产品分类",
+  inventory: "库存",
+  "inventory-unit": "库存单元",
+  depot: "仓库",
+  customer: "客户",
+  supplier: "供应商",
+  "purchase-order": "采购",
+  "sale-order": "销售",
+  feedback: "反馈",
+};
 
 export default function RoleManagementPage() {
   const { message } = App.useApp();
@@ -61,6 +75,19 @@ export default function RoleManagementPage() {
   useEffect(() => {
     void Promise.all([loadRoles(), loadPermissions()]);
   }, [loadRoles, loadPermissions]);
+
+  // Flat permission options with domain prefix for display, multi-field search
+  const permissionOptions = useMemo(() => {
+    return permissions.map((p) => {
+      const domain = p.name.split(":")[0];
+      const domainLabel = domainLabelMap[domain] ?? domain;
+      return {
+        label: `${domainLabel} · ${p.label}`,
+        value: p.id,
+        name: p.name,
+      };
+    });
+  }, [permissions]);
 
   const openCreate = () => {
     setEditItem(null);
@@ -123,12 +150,6 @@ export default function RoleManagementPage() {
       message.error(err instanceof Error ? err.message : "删除失败");
     }
   };
-
-  // Group permissions by domain for better UX
-  const permissionOptions = permissions.map((p) => ({
-    label: `${p.label} (${p.name})`,
-    value: p.id,
-  }));
 
   const columns: ColumnsType<Role> = [
     {
@@ -229,8 +250,7 @@ export default function RoleManagementPage() {
               mode="multiple"
               placeholder="请选择权限"
               options={permissionOptions}
-              optionFilterProp="label"
-              showSearch
+              showSearch={{ optionFilterProp: ["label", "name"] }}
               maxTagCount={5}
               style={{ width: "100%" }}
             />

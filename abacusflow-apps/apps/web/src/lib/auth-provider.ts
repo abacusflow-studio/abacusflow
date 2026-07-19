@@ -90,10 +90,15 @@ export async function initWebAuth(): Promise<void> {
     async getAccessToken() {
       try {
         if (!(await auth0Client!.isAuthenticated())) {
+          // Not authenticated — trigger login redirect
+          await client.login();
           return "";
         }
         return await auth0Client!.getTokenSilently({ timeoutInSeconds: 5 });
-      } catch {
+      } catch (err) {
+        // Token refresh failed (session expired) — trigger login redirect
+        console.warn("Failed to get access token, redirecting to login:", err);
+        await client.login();
         return "";
       }
     },
