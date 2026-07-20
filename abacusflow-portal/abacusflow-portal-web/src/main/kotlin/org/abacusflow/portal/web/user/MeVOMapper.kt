@@ -3,9 +3,9 @@ package org.abacusflow.portal.web.user
 import org.abacusflow.portal.web.model.BootstrapResultVO
 import org.abacusflow.portal.web.model.CurrentUserVO
 import org.abacusflow.portal.web.model.PermissionVO
-import org.abacusflow.portal.web.model.RoleVO
 import org.abacusflow.portal.web.model.TenantDetailVO
 import org.abacusflow.portal.web.model.TenantMemberVO
+import org.abacusflow.portal.web.model.TenantRoleVO
 import org.abacusflow.portal.web.model.TenantSummaryVO
 import org.abacusflow.usecase.tenant.TenantMembershipTO
 import org.abacusflow.usecase.tenant.TenantSummaryTO
@@ -13,7 +13,7 @@ import org.abacusflow.usecase.tenant.TenantTO
 import org.abacusflow.usecase.user.BootstrapResultTO
 import org.abacusflow.usecase.user.CurrentUserTO
 import org.abacusflow.usecase.user.PermissionTO
-import org.abacusflow.usecase.user.RoleTO
+import org.abacusflow.usecase.user.TenantRoleTO
 
 fun BootstrapResultTO.toVO() =
     BootstrapResultVO(
@@ -24,6 +24,7 @@ fun BootstrapResultTO.toVO() =
         roles = roles,
         permissions = permissions,
         platformPermissions = platformPermissions,
+        platformRoles = platformRoles,
         tenantPermissions = tenantPermissions,
         email = email,
         displayName = displayName,
@@ -42,17 +43,19 @@ fun TenantSummaryTO.toVO() =
         permissionNames = permissionNames,
     )
 
-fun TenantTO.toDetailVO(roleNames: List<String>, permissionNames: List<String>) =
-    TenantDetailVO(
-        tenantId = id,
-        name = name,
-        displayName = displayName,
-        status = TenantDetailVO.Status.forValue(status),
-        roleNames = roleNames,
-        permissionNames = permissionNames,
-        createdAt = createdAt.toEpochMilli(),
-        updatedAt = updatedAt.toEpochMilli(),
-    )
+fun TenantTO.toDetailVO(
+    roleNames: List<String>,
+    permissionNames: List<String>,
+) = TenantDetailVO(
+    tenantId = id,
+    name = name,
+    displayName = displayName,
+    status = TenantDetailVO.Status.forValue(status),
+    roleNames = roleNames,
+    permissionNames = permissionNames,
+    createdAt = createdAt.toEpochMilli(),
+    updatedAt = updatedAt.toEpochMilli(),
+)
 
 fun CurrentUserTO.toVO() =
     CurrentUserVO(
@@ -66,6 +69,7 @@ fun CurrentUserTO.toVO() =
         roles = roles,
         permissions = permissions,
         platformPermissions = platformPermissions,
+        platformRoles = platformRoles,
         tenantPermissions = tenantPermissions,
         tenantStatus = CurrentUserVO.TenantStatus.forValue(tenantStatus.name),
         tenants = tenants.map { it.toVO() },
@@ -82,8 +86,8 @@ fun TenantMembershipTO.toMemberVO() =
         roleNames = roleNames,
     )
 
-fun RoleTO.toRoleVO() =
-    RoleVO(
+fun TenantRoleTO.toTenantRoleVO() =
+    TenantRoleVO(
         id = id,
         name = name,
         label = label,
@@ -98,4 +102,5 @@ fun PermissionTO.toPermissionVO() =
         name = name,
         label = label,
         description = description,
+        scope = PermissionVO.Scope.forValue(scope),
     )

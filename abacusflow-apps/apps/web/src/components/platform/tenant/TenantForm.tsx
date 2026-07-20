@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { Modal, Input, Form } from 'antd';
-import type { TenantDetail } from '@abacusflow/core';
+import type { PlatformTenant } from '@abacusflow/core';
 
 interface TenantFormProps {
   open: boolean;
   isCreateMode: boolean;
-  editItem: TenantDetail | null;
+  editItem: PlatformTenant | null;
   submitting: boolean;
   onCancel: () => void;
   onOk: () => void;
@@ -50,6 +50,19 @@ export function TenantForm({
         <Form.Item name="displayName" label="显示名称">
           <Input placeholder="请输入显示名称" />
         </Form.Item>
+        {isCreateMode && (
+          <Form.Item
+            name="initialAdministratorEmail"
+            label="首位租户管理员邮箱"
+            rules={[
+              { required: true, message: '请输入首位管理员邮箱' },
+              { type: 'email', message: '请输入有效邮箱地址' },
+            ]}
+            extra="租户将保持待激活状态，直到此邮箱对应的已验证用户接受邀请。"
+          >
+            <Input placeholder="admin@example.com" />
+          </Form.Item>
+        )}
       </Form>
     </Modal>
   );

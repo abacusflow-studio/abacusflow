@@ -24,8 +24,10 @@ tags:
     description: 管理租户的创建和查询，支持多租户环境下的租户选择与切换。
   - name: permission
     description: 管理系统权限定义（平台级）
-  - name: role
-    description: 管理租户级角色和权限分配
+  - name: tenant-role
+    description: 管理当前租户的角色和权限分配
+  - name: platform-role
+    description: 管理全局平台角色和用户分配
   - name: file
     description: 文件上传管理
 
@@ -69,39 +71,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/BootstrapResult"
 
-  /tenants:
-    post:
-      operationId: createTenant
-      tags:
-        - tenant
-      summary: Create a new tenant
-      description: |
-        创建一个新租户。当前用户将自动成为该租户的管理员。
-        任何已认证用户都可以创建自己的租户（自服务操作，不需要特殊权限）。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateTenantInput"
-      responses:
-        "201":
-          description: Tenant created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TenantSummary"
-        "400":
-          description: 参数错误
-        "403":
-          description: 无权限
-
+  /me/tenants:
     get:
-      operationId: listTenants
+      operationId: listMyTenants
       tags:
         - tenant
-      summary: List user's tenants
-      description: 返回当前用户所属的所有租户列表，需要 platform:tenant:list 权限
+      summary: List current user's active tenant memberships
       responses:
         "200":
           description: Tenant list
@@ -112,20 +87,34 @@ paths:
                 items:
                   $ref: "#/components/schemas/TenantSummary"
 
-  /tenants/{tenantId}:
-    get:
-      operationId: getTenant
+  /me/invitations/accept:
+    post:
+      operationId: acceptTenantInvitation
       tags:
         - tenant
-      summary: Get tenant detail
-      description: 返回指定租户的详细信息，仅限该租户的成员可查看，需要 tenant:info:read 权限
-      parameters:
-        - name: tenantId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      summary: Accept a tenant invitation with the current verified identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptTenantInvitationInput"
+      responses:
+        "200":
+          description: Invitation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantInvitation"
+        "400":
+          description: 邀请无效、邮箱不匹配或邮箱未验证
+
+  /tenant:
+    get:
+      operationId: getCurrentTenant
+      tags:
+        - tenant
+      summary: Get selected tenant detail
       responses:
         "200":
           description: Tenant detail
@@ -139,18 +128,11 @@ paths:
           description: 租户不存在
 
     put:
-      operationId: updateTenant
+      operationId: updateCurrentTenant
       tags:
         - tenant
-      summary: Update tenant
-      description: 更新租户的显示名称，需要是该租户的成员
-      parameters:
-        - name: tenantId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      summary: Update selected tenant profile
+      description: 需要 tenant:profile:update
       requestBody:
         required: true
         content:
@@ -169,7 +151,7 @@ paths:
         "404":
           description: 租户不存在
 
-  /tenants/members:
+  /tenant/members:
     get:
       operationId: listTenantMembers
       tags:
@@ -187,31 +169,7 @@ paths:
                   $ref: "#/components/schemas/TenantMember"
         "403":
           description: 无权限
-    post:
-      operationId: addTenantMember
-      tags:
-        - tenant
-      summary: Add a member to the current tenant
-      description: 将已有用户添加为当前租户的成员，并可指定初始角色，需要 tenant:member:create 权限
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddTenantMemberInput"
-      responses:
-        "201":
-          description: Member added
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TenantMember"
-        "400":
-          description: 参数错误
-        "403":
-          description: 无权限
-
-  /tenants/members/{membershipId}:
+  /tenant/members/{membershipId}:
     delete:
       operationId: removeTenantMember
       tags:
@@ -233,7 +191,7 @@ paths:
         "404":
           description: 成员不存在
 
-  /tenants/members/{membershipId}/roles:
+  /tenant/members/{membershipId}/roles:
     put:
       operationId: updateMemberRoles
       tags:
@@ -265,7 +223,7 @@ paths:
         "404":
           description: 成员不存在
 
-  /tenants/invitations:
+  /tenant/invitations:
     get:
       operationId: listTenantInvitations
       tags:
@@ -307,7 +265,7 @@ paths:
         "403":
           description: 无权限
 
-  /tenants/invitations/{invitationId}:
+  /tenant/invitations/{invitationId}:
     delete:
       operationId: cancelTenantInvitation
       tags:
@@ -329,37 +287,100 @@ paths:
         "404":
           description: 邀请不存在
 
-  /tenants/invitations/accept:
-    post:
-      operationId: acceptTenantInvitation
+  /platform/tenants:
+    get:
+      operationId: listPlatformTenants
       tags:
         - tenant
-      summary: Accept a tenant invitation
-      description: 通过邀请 token 接受邀请，任何已认证用户均可调用
+      summary: List every tenant in the platform control plane
+      responses:
+        "200":
+          description: Platform tenant directory
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformTenant"
+    post:
+      operationId: provisionTenant
+      tags:
+        - tenant
+      summary: Provision a pending tenant and its initial administrator invitation
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AcceptTenantInvitationInput"
+              $ref: "#/components/schemas/CreateTenantInput"
+      responses:
+        "201":
+          description: Tenant provisioned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantProvisioning"
+
+  /platform/tenants/{tenantId}:
+    put:
+      operationId: updatePlatformTenant
+      tags:
+        - tenant
+      summary: Update any tenant control-plane profile
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenantInput"
       responses:
         "200":
-          description: Invitation accepted
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformTenant"
+
+  /platform/tenants/{tenantId}/initial-invitation/reissue:
+    post:
+      operationId: reissueInitialTenantInvitation
+      tags:
+        - tenant
+      summary: Cancel and reissue a pending tenant's initial administrator invitation
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReissueInitialInvitationInput"
+      responses:
+        "200":
+          description: One-time invitation delivery result
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/TenantInvitation"
-        "400":
-          description: 邀请已过期或已被接受
-        "404":
-          description: 邀请不存在
 
-  /roles:
+  /tenant/roles:
     get:
-      operationId: listRoles
+      operationId: listTenantRoles
       tags:
-        - role
-      summary: List roles
+        - tenant-role
+      summary: List tenant roles
       description: 返回当前租户的所有角色列表
       responses:
         "200":
@@ -369,40 +390,40 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Role"
+                  $ref: "#/components/schemas/TenantRole"
         "403":
           description: 无权限
 
     post:
-      operationId: createRole
+      operationId: createTenantRole
       tags:
-        - role
-      summary: Create a role
+        - tenant-role
+      summary: Create a tenant role
       description: 创建新角色，需要 tenant:role:manage 权限
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateRoleInput"
+              $ref: "#/components/schemas/CreateTenantRoleInput"
       responses:
         "201":
           description: Role created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Role"
+                $ref: "#/components/schemas/TenantRole"
         "400":
           description: 参数错误
         "403":
           description: 无权限
 
-  /roles/{roleId}:
+  /tenant/roles/{roleId}:
     get:
-      operationId: getRole
+      operationId: getTenantRole
       tags:
-        - role
-      summary: Get role detail
+        - tenant-role
+      summary: Get tenant role detail
       description: 返回角色详情
       parameters:
         - name: roleId
@@ -417,17 +438,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Role"
+                $ref: "#/components/schemas/TenantRole"
         "403":
           description: 无权限
         "404":
           description: 角色不存在
 
     put:
-      operationId: updateRole
+      operationId: updateTenantRole
       tags:
-        - role
-      summary: Update role
+        - tenant-role
+      summary: Update tenant role
       description: 更新角色的显示名称和权限，需要 tenant:role:manage 权限
       parameters:
         - name: roleId
@@ -441,24 +462,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateRoleInput"
+              $ref: "#/components/schemas/UpdateTenantRoleInput"
       responses:
         "200":
           description: Role updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Role"
+                $ref: "#/components/schemas/TenantRole"
         "403":
           description: 无权限
         "404":
           description: 角色不存在
 
     delete:
-      operationId: deleteRole
+      operationId: deleteTenantRole
       tags:
-        - role
-      summary: Delete a role
+        - tenant-role
+      summary: Delete a tenant role
       description: 删除角色（有成员使用时不可删除），需要 tenant:role:manage 权限
       parameters:
         - name: roleId
@@ -475,7 +496,23 @@ paths:
         "404":
           description: 角色不存在
 
-  /permissions:
+  /tenant/role-permissions:
+    get:
+      operationId: listTenantRolePermissions
+      tags:
+        - tenant-role
+      summary: List permissions assignable to tenant roles
+      responses:
+        "200":
+          description: Tenant and business permission catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Permission"
+
+  /platform/permissions:
     get:
       operationId: listPermissions
       tags:
@@ -491,31 +528,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Permission"
-    post:
-      operationId: createPermission
-      tags:
-        - permission
-      summary: Create a permission
-      description: 创建新权限，需要 platform:permission:manage 权限
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreatePermissionInput"
-      responses:
-        "201":
-          description: Permission created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Permission"
-        "400":
-          description: 参数错误
-        "403":
-          description: 无权限
-
-  /permissions/{permissionId}:
+  /platform/permissions/{permissionId}:
     put:
       operationId: updatePermission
       tags:
@@ -546,14 +559,73 @@ paths:
           description: 无权限
         "404":
           description: 权限不存在
-    delete:
-      operationId: deletePermission
+  /platform/roles:
+    get:
+      operationId: listPlatformRoles
       tags:
-        - permission
-      summary: Delete a permission
-      description: 删除权限（有角色使用时不可删除），需要 platform:permission:manage 权限
+        - platform-role
+      summary: List global platform roles
+      responses:
+        "200":
+          description: Platform roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformRole"
+    post:
+      operationId: createPlatformRole
+      tags:
+        - platform-role
+      summary: Create a global platform role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformRoleInput"
+      responses:
+        "201":
+          description: Platform role created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformRole"
+
+  /platform/roles/{roleId}:
+    put:
+      operationId: updatePlatformRole
+      tags:
+        - platform-role
+      summary: Update a global platform role
       parameters:
-        - name: permissionId
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformRoleInput"
+      responses:
+        "200":
+          description: Platform role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformRole"
+    delete:
+      operationId: deletePlatformRole
+      tags:
+        - platform-role
+      summary: Delete a global platform role
+      parameters:
+        - name: roleId
           in: path
           required: true
           schema:
@@ -561,11 +633,78 @@ paths:
             format: int64
       responses:
         "200":
-          description: Permission deleted
-        "403":
-          description: 无权限
-        "404":
-          description: 权限不存在
+          description: Platform role deleted
+
+  /platform/roles/{roleId}/users/{userId}:
+    post:
+      operationId: assignPlatformRole
+      tags:
+        - platform-role
+      summary: Assign a global platform role to a user
+      parameters:
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "201":
+          description: Platform role assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformRoleAssignment"
+    delete:
+      operationId: removePlatformRole
+      tags:
+        - platform-role
+      summary: Remove a global platform role from a user
+      parameters:
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Platform role removed
+
+  /platform/roles/{roleId}/users:
+    get:
+      operationId: listPlatformRoleAssignments
+      tags:
+        - platform-role
+      summary: List users assigned to a global platform role
+      parameters:
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Platform role assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformRoleAssignment"
 
   /me:
     get:
@@ -2158,6 +2297,11 @@ components:
           items:
             type: string
           description: 平台级权限列表（platform:* 前缀）
+        platformRoles:
+          type: array
+          items:
+            type: string
+          description: 全局平台角色列表
         tenantPermissions:
           type: array
           items:
@@ -2197,6 +2341,7 @@ components:
       type: object
       required:
         - name
+        - initialAdministratorEmail
       properties:
         name:
           type: string
@@ -2206,6 +2351,57 @@ components:
           type: string
           nullable: true
           description: 租户显示名称
+        initialAdministratorEmail:
+          type: string
+          format: email
+          description: 首位租户管理员邮箱
+
+    ReissueInitialInvitationInput:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+
+    PlatformTenant:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING_ACTIVATION, ACTIVE, SUSPENDED, DEPROVISIONED]
+        createdAt:
+          type: integer
+          format: int64
+        updatedAt:
+          type: integer
+          format: int64
+
+    TenantProvisioning:
+      type: object
+      required:
+        - tenant
+        - initialInvitation
+      properties:
+        tenant:
+          $ref: "#/components/schemas/PlatformTenant"
+        initialInvitation:
+          $ref: "#/components/schemas/TenantInvitation"
 
     TenantSummary:
       type: object
@@ -2262,6 +2458,7 @@ components:
         status:
           type: string
           enum:
+            - PENDING_ACTIVATION
             - ACTIVE
             - SUSPENDED
             - DEPROVISIONED
@@ -2344,22 +2541,6 @@ components:
             format: int64
           description: 要分配的角色 ID 列表
 
-    AddTenantMemberInput:
-      type: object
-      required:
-        - userId
-      properties:
-        userId:
-          type: integer
-          format: int64
-          description: 要添加的用户ID
-        roleIds:
-          type: array
-          items:
-            type: integer
-            format: int64
-          description: 初始角色ID列表
-
     CreateTenantInvitationInput:
       type: object
       required:
@@ -2394,10 +2575,10 @@ components:
         - email
         - roleIds
         - roleNames
-        - token
         - status
         - expiresAt
         - createdAt
+        - initialAdministrator
       properties:
         id:
           type: integer
@@ -2431,12 +2612,14 @@ components:
           description: 发起邀请的用户 ID
         token:
           type: string
-          description: 邀请唯一 token
+          nullable: true
+          description: 邀请唯一 token；仅在创建或重发响应中返回一次，列表和接受响应不会返回
         status:
           type: string
           enum:
             - PENDING
             - ACCEPTED
+            - CANCELLED
           description: 邀请状态
         expiresAt:
           type: integer
@@ -2451,8 +2634,11 @@ components:
           type: integer
           format: int64
           description: 创建时间戳（毫秒）
+        initialAdministrator:
+          type: boolean
+          description: 是否为待激活租户的首位管理员邀请
 
-    Role:
+    TenantRole:
       type: object
       required:
         - id
@@ -2486,7 +2672,7 @@ components:
           format: int64
           description: 更新时间戳（毫秒）
 
-    CreateRoleInput:
+    CreateTenantRoleInput:
       type: object
       required:
         - name
@@ -2508,7 +2694,7 @@ components:
             format: int64
           description: 要分配的权限 ID 列表
 
-    UpdateRoleInput:
+    UpdateTenantRoleInput:
       type: object
       properties:
         label:
@@ -2530,6 +2716,7 @@ components:
         - name
         - label
         - description
+        - scope
       properties:
         id:
           type: integer
@@ -2537,34 +2724,62 @@ components:
           description: 权限 ID
         name:
           type: string
-          description: 权限名称（如 product:read）
+          description: 权限名称（如 business:product:read）
         label:
           type: string
           description: 显示名称
         description:
           type: string
           description: 权限描述
+        scope:
+          type: string
+          enum: [PLATFORM, TENANT, BUSINESS]
 
-    CreatePermissionInput:
+    PlatformRole:
       type: object
-      required:
-        - name
-        - label
-        - description
+      required: [id, name, label, permissionNames]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        label:
+          type: string
+        permissionNames:
+          type: array
+          items:
+            type: string
+
+    PlatformRoleInput:
+      type: object
+      required: [name, permissionIds]
       properties:
         name:
           type: string
-          description: 权限名称（英文/数字/冒号，如 product:read）
-          maxLength: 100
-          pattern: "^[a-zA-Z0-9_:]*$"
         label:
           type: string
-          description: 显示名称
-          maxLength: 255
-        description:
+          nullable: true
+        permissionIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    PlatformRoleAssignment:
+      type: object
+      required: [userId, userName, roleId, roleName]
+      properties:
+        userId:
+          type: integer
+          format: int64
+        userName:
           type: string
-          description: 权限描述
-          maxLength: 500
+        roleId:
+          type: integer
+          format: int64
+        roleName:
+          type: string
 
     UpdatePermissionInput:
       type: object
@@ -2632,6 +2847,11 @@ components:
           items:
             type: string
           description: 平台级权限列表（platform:* 前缀）
+        platformRoles:
+          type: array
+          items:
+            type: string
+          description: 全局平台角色列表
         tenantPermissions:
           type: array
           items:
@@ -3266,28 +3486,31 @@ components:
       type: object
       required:
         - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: 分类名称
+        description:
+          type: string
+          nullable: true
+          description: 分类描述
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 父分类ID。省略或 null 表示创建顶级分类；非空值必须指向当前租户的真实分类。
+
+    UpdateProductCategoryInput:
+      type: object
+      required:
+        - name
         - parentId
       properties:
         name:
           type: string
           minLength: 1
-          description: 分类名称
-        description:
-          type: string
-          nullable: true
-          description: 分类描述
-        parentId:
-          type: integer
-          format: int64
-          description: 父分类ID
-
-    UpdateProductCategoryInput:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-          description: 分类名称
+          description: 分类名称（必填，完整目标状态）
         description:
           type: string
           nullable: true
@@ -3296,7 +3519,7 @@ components:
           type: integer
           format: int64
           nullable: true
-          description: 父分类ID
+          description: 父分类ID（必填 + nullable）。null 表示移动为顶级分类；非空值必须指向当前租户的真实分类。
 
     SelectableProductCategory:
       type: object

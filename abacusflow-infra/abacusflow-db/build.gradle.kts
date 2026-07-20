@@ -17,4 +17,7 @@ dependencies {
     implementation(libs.spring.boot.starter.aop)
     implementation(libs.flyway.core)
     implementation(libs.flyway.postgresql)
+    testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.postgresql)
 }

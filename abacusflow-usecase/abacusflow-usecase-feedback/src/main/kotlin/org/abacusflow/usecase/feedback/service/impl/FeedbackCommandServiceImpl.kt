@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.feedback.service.impl
 
+import org.abacusflow.commons.file.FileStorageService
 import org.abacusflow.db.feedback.FeedbackRepository
 import org.abacusflow.feedback.Feedback
 import org.abacusflow.feedback.FeedbackCategory
@@ -18,8 +19,10 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class FeedbackCommandServiceImpl(
     private val feedbackRepository: FeedbackRepository,
+    private val fileStorageService: FileStorageService,
 ) : FeedbackCommandService {
     override fun createFeedback(input: CreateFeedbackInputTO): FeedbackTO {
+        input.imageUrls.forEach(fileStorageService::requireOwnedReference)
         val feedback =
             Feedback(
                 category = FeedbackCategory.valueOf(input.category),

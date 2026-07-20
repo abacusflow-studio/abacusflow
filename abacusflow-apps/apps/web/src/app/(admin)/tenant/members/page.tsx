@@ -17,11 +17,12 @@ import {
 import { MailOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { usePermission } from "@/hooks/use-permission";
 import {
   tenantApi,
-  roleApi,
+  tenantRoleApi,
   type TenantMember,
-  type Role,
+  type TenantRole,
   type TenantInvitation,
   type CreateTenantInvitationInput,
 } from "@abacusflow/core";
@@ -55,10 +56,14 @@ function invitationStatusColor(value: string): string {
 export default function MemberManagementPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
+  const { can } = usePermission();
+  const canInvite = can("tenant:member:create");
+  const canUpdate = can("tenant:member:update");
+  const canRemove = can("tenant:member:remove");
 
   const [members, setMembers] = useState<TenantMember[]>([]);
   const [invitations, setInvitations] = useState<TenantInvitation[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<TenantRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editMember, setEditMember] = useState<TenantMember | null>(null);
@@ -88,7 +93,7 @@ export default function MemberManagementPage() {
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await roleApi.listRoles();
+      const data = await tenantRoleApi.listTenantRoles();
       setRoles(data);
     } catch {
       // silent
@@ -219,12 +224,12 @@ export default function MemberManagementPage() {
       title: "操作",
       key: "action",
       width: 180,
-      render: (_, record) => (
+      render: (_, record) => (canUpdate || canRemove) ? (
         <Space size="small">
-          <Button type="link" size="small" onClick={() => openEditRoles(record)}>
+          {canUpdate && <Button type="link" size="small" onClick={() => openEditRoles(record)}>
             编辑角色
-          </Button>
-          <Popconfirm
+          </Button>}
+          {canRemove && <Popconfirm
             title="确认移除"
             description={`确定要将「${record.userName}」从租户中移除吗？用户账号不会被删除。`}
             onConfirm={() => handleRemoveMember(record)}
@@ -235,9 +240,9 @@ export default function MemberManagementPage() {
             <Button type="link" size="small" danger>
               移除
             </Button>
-          </Popconfirm>
+          </Popconfirm>}
         </Space>
-      ),
+      ) : null,
     },
   ];
 
@@ -276,7 +281,7 @@ export default function MemberManagementPage() {
       key: "action",
       width: 100,
       render: (_, record) =>
-        record.status === "PENDING" ? (
+        canInvite && record.status === "PENDING" ? (
           <Popconfirm
             title="确认取消"
             description="确定要取消这个邀请吗？"
@@ -300,11 +305,11 @@ export default function MemberManagementPage() {
         title="成员管理"
         description="管理当前租户的成员，通过邀请链接邀请新成员加入。"
         metrics={[{ label: "成员总数", value: members.length }]}
-        actions={
+        actions={canInvite ? (
           <Button type="primary" icon={<MailOutlined />} onClick={openInviteMember}>
             邀请成员
           </Button>
-        }
+        ) : undefined}
       />
 
       <div className="card af-table-card">

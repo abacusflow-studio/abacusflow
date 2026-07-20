@@ -8,6 +8,7 @@ import {
   feedbackApi,
   type FeedbackCategory,
   getAuthClient,
+  getCurrentTenantId,
 } from "@abacusflow/core";
 import { getConfig } from "@abacusflow/config";
 import { usePathname } from "next/navigation";
@@ -46,6 +47,8 @@ export function FeedbackModal({
     try {
       const auth = getAuthClient();
       const token = await auth.getAccessToken();
+      const tenantId = getCurrentTenantId();
+      if (tenantId === null) throw new Error("请先选择租户");
       const baseUrl = getConfig().apiBaseUrl.replace(/\/+$/, "");
 
       const formData = new FormData();
@@ -55,6 +58,7 @@ export function FeedbackModal({
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          "X-Tenant-Id": tenantId.toString(),
         },
         body: formData,
       });

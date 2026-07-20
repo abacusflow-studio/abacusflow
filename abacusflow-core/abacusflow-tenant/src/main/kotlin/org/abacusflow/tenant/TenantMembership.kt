@@ -12,7 +12,6 @@ import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
-import org.abacusflow.user.Role
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcType
 import org.hibernate.annotations.UpdateTimestamp
@@ -26,8 +25,8 @@ import java.time.Instant
  * 表示用户与租户之间的关联关系，即"某个用户属于某个租户"。
  * 一个用户可以属于多个租户（多租户成员），每个成员关系有独立的状态和角色。
  *
- * 成员资格通过 [TenantInvitation] 邀请流程创建，或由管理员直接分配。
- * 每个成员关系可关联多个 [Role]，决定该用户在此租户下的权限。
+ * 成员资格仅通过 [TenantInvitation] 邀请流程创建。
+ * 每个成员关系可关联多个 [TenantRole]，决定该用户在此租户下的权限。
  */
 @Entity
 @Table(
@@ -60,7 +59,7 @@ class TenantMembership(
     /**
      * 该成员在当前租户下拥有的角色集合。
      *
-     * 角色决定了用户在此租户下可执行的操作（如 product:read、order:write 等）。
+     * 角色决定了用户在此租户下可执行的操作（如 business:product:read、business:sale-order:create 等）。
      * 通过 tenant_membership_role 关联表实现多对多关系。
      */
     @ManyToMany
@@ -69,10 +68,10 @@ class TenantMembership(
         joinColumns = [JoinColumn(name = "membership_id")],
         inverseJoinColumns = [JoinColumn(name = "role_id")],
     )
-    private val rolesMutable: MutableSet<Role> = mutableSetOf()
+    private val rolesMutable: MutableSet<TenantRole> = mutableSetOf()
 
     /** 角色集合的只读视图 */
-    val roles: Set<Role>
+    val tenantRoles: Set<TenantRole>
         get() = rolesMutable.toSet()
 
     /** 创建时间，由 Hibernate 自动填充 */
@@ -87,20 +86,25 @@ class TenantMembership(
     /**
      * 为该成员添加角色。
      *
-     * @param role 要添加的角色
+     * @param tenantRole 要添加的角色
+     * @throws IllegalArgumentException if the role belongs to a different tenant
      */
-    fun addRole(role: Role) {
-        rolesMutable.add(role)
+    fun addRole(tenantRole: TenantRole) {
+        require(tenantRole.tenantId == tenantId) {
+            "Role '${tenantRole.name}' belongs to tenant ${tenantRole.tenantId}, " +
+                "but this membership is for tenant $tenantId"
+        }
+        rolesMutable.add(tenantRole)
         updatedAt = Instant.now()
     }
 
     /**
      * 移除该成员的角色。
      *
-     * @param role 要移除的角色
+     * @param tenantRole 要移除的角色
      */
-    fun removeRole(role: Role) {
-        rolesMutable.remove(role)
+    fun removeRole(tenantRole: TenantRole) {
+        rolesMutable.remove(tenantRole)
         updatedAt = Instant.now()
     }
 

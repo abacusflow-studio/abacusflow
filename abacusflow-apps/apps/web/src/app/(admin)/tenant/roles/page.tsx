@@ -15,18 +15,19 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { usePermission } from "@/hooks/use-permission";
 import {
-  roleApi,
-  permissionApi,
-  type Role,
+  tenantRoleApi,
+  type TenantRole,
   type Permission,
-  type CreateRoleInput,
-  type UpdateRoleInput,
+  type CreateTenantRoleInput,
+  type UpdateTenantRoleInput,
 } from "@abacusflow/core";
 
 const domainLabelMap: Record<string, string> = {
   platform: "平台",
   tenant: "租户",
+  business: "业务",
   product: "产品",
   "product-category": "产品分类",
   inventory: "库存",
@@ -42,19 +43,21 @@ const domainLabelMap: Record<string, string> = {
 export default function RoleManagementPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
+  const { can } = usePermission();
+  const canManage = can("tenant:role:manage");
 
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<TenantRole[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [editItem, setEditItem] = useState<Role | null>(null);
+  const [editItem, setEditItem] = useState<TenantRole | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await roleApi.listRoles();
+      const data = await tenantRoleApi.listTenantRoles();
       setRoles(data);
     } catch (err) {
       message.error(err instanceof Error ? err.message : "加载角色列表失败");
@@ -65,7 +68,7 @@ export default function RoleManagementPage() {
 
   const loadPermissions = useCallback(async () => {
     try {
-      const data = await permissionApi.listPermissions();
+      const data = await tenantRoleApi.listTenantRolePermissions();
       setPermissions(data);
     } catch {
       // silent — permissions are best-effort
@@ -96,7 +99,7 @@ export default function RoleManagementPage() {
     setShowForm(true);
   };
 
-  const openEdit = (record: Role) => {
+  const openEdit = (record: TenantRole) => {
     setEditItem(record);
     setIsCreateMode(false);
     form.setFieldsValue({
@@ -114,19 +117,19 @@ export default function RoleManagementPage() {
       setSubmitting(true);
 
       if (isCreateMode) {
-        const input: CreateRoleInput = {
+        const input: CreateTenantRoleInput = {
           name: values.name,
           label: values.label || undefined,
           permissionIds: values.permissionIds || [],
         };
-        await roleApi.createRole({ createRoleInput: input });
+        await tenantRoleApi.createTenantRole({ createTenantRoleInput: input });
         message.success("创建成功");
       } else if (editItem) {
-        const input: UpdateRoleInput = {
+        const input: UpdateTenantRoleInput = {
           label: values.label || undefined,
           permissionIds: values.permissionIds || [],
         };
-        await roleApi.updateRole({ roleId: editItem.id, updateRoleInput: input });
+        await tenantRoleApi.updateTenantRole({ roleId: editItem.id, updateTenantRoleInput: input });
         message.success("更新成功");
       }
 
@@ -143,7 +146,7 @@ export default function RoleManagementPage() {
 
   const handleDelete = async (roleId: number) => {
     try {
-      await roleApi.deleteRole({ roleId });
+      await tenantRoleApi.deleteTenantRole({ roleId });
       message.success("删除成功");
       await loadRoles();
     } catch (err) {
@@ -151,7 +154,7 @@ export default function RoleManagementPage() {
     }
   };
 
-  const columns: ColumnsType<Role> = [
+  const columns: ColumnsType<TenantRole> = [
     {
       title: "角色名称",
       dataIndex: "name",
@@ -172,7 +175,7 @@ export default function RoleManagementPage() {
       title: "操作",
       key: "action",
       width: 200,
-      render: (_, record) => (
+      render: (_, record) => canManage ? (
         <Space size="small">
           <Button type="link" size="small" onClick={() => openEdit(record)}>
             编辑
@@ -190,7 +193,7 @@ export default function RoleManagementPage() {
             </Button>
           </Popconfirm>
         </Space>
-      ),
+      ) : null,
     },
   ];
 
@@ -201,15 +204,15 @@ export default function RoleManagementPage() {
         title="角色管理"
         description="管理当前租户的角色定义和权限分配。"
         metrics={[{ label: "角色总数", value: roles.length }]}
-        actions={
+        actions={canManage ? (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             新增角色
           </Button>
-        }
+        ) : undefined}
       />
 
       <div className="card af-table-card">
-        <Table<Role>
+        <Table<TenantRole>
           columns={columns}
           dataSource={roles}
           rowKey="id"

@@ -15,4 +15,5 @@ data class TenantInvitationTO(
     val expiresAt: Instant,
     val acceptedAt: Instant?,
     val createdAt: Instant,
+    val initialAdministrator: Boolean,
 )

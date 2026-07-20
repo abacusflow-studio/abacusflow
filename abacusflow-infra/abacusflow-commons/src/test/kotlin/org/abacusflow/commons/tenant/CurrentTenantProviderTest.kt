@@ -7,7 +7,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class CurrentTenantProviderTest {
-
     private val provider = CurrentTenantProvider()
 
     @AfterTest
@@ -54,12 +53,13 @@ class CurrentTenantProviderTest {
     fun `ThreadLocal isolation - different threads have different tenants`() {
         provider.setTenantId(1001L)
 
-        val thread = Thread {
-            assertNull(provider.getCurrentTenantId())
-            provider.setTenantId(2001L)
-            assertEquals(2001L, provider.getCurrentTenantId())
-            provider.clear()
-        }
+        val thread =
+            Thread {
+                assertNull(provider.getCurrentTenantId())
+                provider.setTenantId(2001L)
+                assertEquals(2001L, provider.getCurrentTenantId())
+                provider.clear()
+            }
         thread.start()
         thread.join()
 
@@ -80,5 +80,25 @@ class CurrentTenantProviderTest {
         assertFailsWith<IllegalStateException> {
             provider.requireTenantId()
         }
+    }
+
+    @Test
+    fun `withTenant restores previous tenant context`() {
+        provider.setTenantId(1001L)
+
+        withTenant(2001L) {
+            assertEquals(2001L, provider.requireTenantId())
+        }
+
+        assertEquals(1001L, provider.requireTenantId())
+    }
+
+    @Test
+    fun `withTenant clears context when there was no previous tenant`() {
+        withTenant(2001L) {
+            assertEquals(2001L, provider.requireTenantId())
+        }
+
+        assertNull(provider.getCurrentTenantId())
     }
 }

@@ -1,6 +1,11 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
-import { feedbackApi, getAuthClient } from "@abacusflow/core";
+import {
+  feedbackApi,
+  getAuthClient,
+  getCurrentTenantId,
+  type FeedbackCategory,
+} from "@abacusflow/core";
 import { getConfig, getCurrentVersion } from "@abacusflow/config";
 
 /** 上传图片到服务器 */
@@ -9,6 +14,8 @@ export async function uploadImages(uris: string[]): Promise<string[]> {
 
   const auth = getAuthClient();
   const token = await auth.getAccessToken();
+  const tenantId = getCurrentTenantId();
+  if (tenantId === null) throw new Error("请先选择租户");
   const baseUrl = getConfig().apiBaseUrl.replace(/\/+$/, "");
 
   const urls: string[] = [];
@@ -23,7 +30,10 @@ export async function uploadImages(uris: string[]): Promise<string[]> {
 
     const res = await fetch(`${baseUrl}/files/upload`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-Tenant-Id": tenantId.toString(),
+      },
       body: formData,
     });
 
@@ -55,7 +65,7 @@ export async function submitFeedback(input: {
 
   await feedbackApi.createFeedback({
     createFeedbackInput: {
-      category: input.category as any,
+      category: input.category as FeedbackCategory,
       source: "MOBILE",
       title: input.title || undefined,
       description: input.description,

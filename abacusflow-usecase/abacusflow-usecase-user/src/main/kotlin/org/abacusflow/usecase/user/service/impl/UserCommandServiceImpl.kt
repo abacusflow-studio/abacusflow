@@ -1,7 +1,9 @@
 package org.abacusflow.usecase.user.service.impl
 
 import org.abacusflow.commons.Sex
+import org.abacusflow.db.user.PlatformUserRoleRepository
 import org.abacusflow.db.user.UserRepository
+import org.abacusflow.usecase.commons.security.PermissionNames
 import org.abacusflow.usecase.user.CreateUserInputTO
 import org.abacusflow.usecase.user.UpdateUserInputTO
 import org.abacusflow.usecase.user.UserTO
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 class UserCommandServiceImpl(
     private val userRepository: UserRepository,
     private val userPasswordEncoder: UserPasswordEncoder,
+    private val platformUserRoleRepository: PlatformUserRoleRepository,
 ) : UserCommandService {
     override fun createUser(input: CreateUserInputTO): UserTO {
         val newUser = User(name = input.name)
@@ -44,6 +47,18 @@ class UserCommandServiceImpl(
 
     override fun deleteUser(id: Long): UserTO {
         val user = userRepository.findById(id).orElseThrow { NoSuchElementException("User not found") }
+        val removesActivePlatformAdministrator =
+            user.enabled && !user.locked &&
+                platformUserRoleRepository.findAllByUserId(id).any { assignment ->
+                    assignment.role.permissions.any { it.name == PermissionNames.Platform.ROLE_MANAGE }
+                }
+        if (removesActivePlatformAdministrator) {
+            require(
+                platformUserRoleRepository.countActiveUsersWithPermission(
+                    PermissionNames.Platform.ROLE_MANAGE,
+                ) > 1,
+            ) { "Cannot delete the final active platform administrator" }
+        }
         userRepository.delete(user)
         return user.toTO()
     }

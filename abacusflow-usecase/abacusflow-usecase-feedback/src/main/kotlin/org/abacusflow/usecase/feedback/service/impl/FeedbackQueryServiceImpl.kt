@@ -2,6 +2,7 @@ package org.abacusflow.usecase.feedback.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.abacusflow.commons.file.FileStorageService
 import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.feedback.FeedbackRepository
 import org.abacusflow.generated.jooq.Tables.FEEDBACK
@@ -27,6 +28,7 @@ class FeedbackQueryServiceImpl(
     private val jooqDsl: DSLContext,
     private val objectMapper: ObjectMapper,
     private val currentTenantProvider: CurrentTenantProvider,
+    private val fileStorageService: FileStorageService,
 ) : FeedbackQueryService {
     override fun listFeedbacksPage(
         pageable: Pageable,
@@ -83,8 +85,11 @@ class FeedbackQueryServiceImpl(
                         reporterUserId = it[FEEDBACK.REPORTER_USER_ID],
                         assigneeUserId = it[FEEDBACK.ASSIGNEE_USER_ID],
                         createdAt = it[FEEDBACK.CREATED_AT]!!.toInstant(),
-                        imageUrls = it[FEEDBACK.IMAGE_URLS]?.data()?.let { json -> objectMapper.readValue<List<String>>(json) }
-                            ?: emptyList(),
+                        imageUrls =
+                            resolveImageUrls(
+                                it[FEEDBACK.IMAGE_URLS]?.data()?.let { json -> objectMapper.readValue<List<String>>(json) }
+                                    ?: emptyList(),
+                            ),
                     )
                 }
 
@@ -96,6 +101,9 @@ class FeedbackQueryServiceImpl(
             feedbackRepository.findById(id)
                 .orElseThrow { NoSuchElementException("Feedback not found with id: $id") }
 
-        return feedback.toTO()
+        val result = feedback.toTO()
+        return result.copy(imageUrls = resolveImageUrls(result.imageUrls))
     }
+
+    private fun resolveImageUrls(objectKeys: List<String>): List<String> = objectKeys.map(fileStorageService::createReadUrl)
 }

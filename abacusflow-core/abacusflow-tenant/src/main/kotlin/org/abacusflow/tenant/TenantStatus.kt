@@ -6,6 +6,9 @@ package org.abacusflow.tenant
  * 用于标识租户的生命周期状态，控制租户是否可正常使用系统。
  */
 enum class TenantStatus {
+    /** 已由平台创建，等待初始管理员接受邀请，不能进入租户业务空间 */
+    PENDING_ACTIVATION,
+
     /** 正常活跃，租户可正常访问和操作 */
     ACTIVE,
 

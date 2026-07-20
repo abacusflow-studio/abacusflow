@@ -23,9 +23,12 @@ class ProductCategoryCommandServiceImpl(
         }
 
         val parentCategoryFromInput =
-            productCategoryRepository
-                .findById(input.parentId)
-                .orElseThrow { NoSuchElementException("Product category not found with id: ${input.parentId}") }
+            input.parentId?.let { parentId ->
+                productCategoryRepository
+                    .findById(parentId)
+                    .orElseThrow { NoSuchElementException("Product category not found with id: $parentId") }
+            }
+        // null parentId → top-level category
 
         val category =
             ProductCategory(
@@ -45,20 +48,26 @@ class ProductCategoryCommandServiceImpl(
                 .findById(id)
                 .orElseThrow { NoSuchElementException("Product category not found with id: $id") }
 
+        // Name uniqueness check excluding self
+        require(!productCategoryRepository.existsByNameExcludingId(input.name, id)) {
+            "Product category with name '${input.name}' already exists in this tenant"
+        }
+
+        // Resolve the target parent: null → top level, non-null → must exist in current tenant
+        val targetParent =
+            input.parentId?.let { parentId ->
+                productCategoryRepository
+                    .findById(parentId)
+                    .orElseThrow { NoSuchElementException("Product category not found with id: $parentId") }
+            }
+
         category.apply {
+            // Validate the requested hierarchy before mutating the remaining PUT state.
+            moveTo(targetParent)
             updateBasicInfo(
                 input.name,
                 input.description,
             )
-
-            input.parentId?.let { parentId ->
-                val parentCategoryFromInput =
-                    productCategoryRepository
-                        .findById(parentId)
-                        .orElseThrow { NoSuchElementException("Product category not found with id: $parentId") }
-
-                changeParent(parentCategoryFromInput)
-            }
         }
 
         return productCategoryRepository.save(category).toTO()
@@ -70,6 +79,12 @@ class ProductCategoryCommandServiceImpl(
                 .findById(id)
                 .orElseThrow { NoSuchElementException("Product category not found with id: $id") }
 
+        // Reject if direct children exist
+        require(!productCategoryRepository.existsByParentId(id)) {
+            "Cannot delete category: it has child categories"
+        }
+
+        // Reject if products reference this category
         val productCount = productRepository.countProductByCategoryId(id)
         require(productCount == 0) { "Cannot delete category: $productCount products are still associated" }
 

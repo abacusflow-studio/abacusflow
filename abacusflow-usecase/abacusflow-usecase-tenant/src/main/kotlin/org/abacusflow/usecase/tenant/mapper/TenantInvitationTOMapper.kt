@@ -19,4 +19,5 @@ fun TenantInvitation.toTO(
     expiresAt = expiresAt,
     acceptedAt = acceptedAt,
     createdAt = createdAt,
+    initialAdministrator = initialAdministrator,
 )

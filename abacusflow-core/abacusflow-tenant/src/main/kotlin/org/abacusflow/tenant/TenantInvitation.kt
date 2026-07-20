@@ -60,6 +60,10 @@ class TenantInvitation(
     /** 邀请过期时间，超过此时间后邀请失效 */
     @Column(name = "expires_at", nullable = false)
     val expiresAt: Instant,
+
+    /** 是否为平台供应租户时发出的首位管理员邀请。 */
+    @Column(name = "initial_administrator", nullable = false)
+    val initialAdministrator: Boolean = false,
 ) : AbstractAggregateRoot<TenantInvitation>() {
 
     @Id
@@ -92,6 +96,7 @@ class TenantInvitation(
      * 调用方需负责创建对应的 [TenantMembership]。
      */
     fun accept() {
+        require(status == "PENDING") { "Only pending invitations can be accepted" }
         status = "ACCEPTED"
         acceptedAt = Instant.now()
         updatedAt = Instant.now()
@@ -103,4 +108,10 @@ class TenantInvitation(
      * @return true 表示当前时间已超过过期时间，邀请失效
      */
     fun isExpired(): Boolean = Instant.now().isAfter(expiresAt)
+
+    fun cancel() {
+        require(status == "PENDING") { "Only pending invitations can be cancelled" }
+        status = "CANCELLED"
+        updatedAt = Instant.now()
+    }
 }

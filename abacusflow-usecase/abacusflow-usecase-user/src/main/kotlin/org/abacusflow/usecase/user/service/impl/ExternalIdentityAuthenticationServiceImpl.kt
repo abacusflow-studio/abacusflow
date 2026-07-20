@@ -1,10 +1,14 @@
 package org.abacusflow.usecase.user.service.impl
 
+import org.abacusflow.commons.tenant.withTenant
+import org.abacusflow.db.TenantPersistenceContext
 import org.abacusflow.db.tenant.TenantMembershipRepository
 import org.abacusflow.db.tenant.TenantRepository
 import org.abacusflow.db.user.ExternalIdentityRepository
+import org.abacusflow.db.user.PlatformUserRoleRepository
 import org.abacusflow.db.user.UserRepository
 import org.abacusflow.tenant.MembershipStatus
+import org.abacusflow.tenant.TenantStatus
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.abacusflow.usecase.user.service.OidcUserProfileFetcher
@@ -22,9 +26,10 @@ class ExternalIdentityAuthenticationServiceImpl(
     private val userRepository: UserRepository,
     private val tenantMembershipRepository: TenantMembershipRepository,
     private val tenantRepository: TenantRepository,
+    private val platformUserRoleRepository: PlatformUserRoleRepository,
     private val profileFetcher: OidcUserProfileFetcher,
+    private val tenantPersistenceContext: TenantPersistenceContext,
 ) : ExternalIdentityAuthenticationService {
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun resolveAuthorizedUser(
@@ -66,37 +71,44 @@ class ExternalIdentityAuthenticationServiceImpl(
         }
 
         val memberships = tenantMembershipRepository.findByUserIdAndStatus(user.id, MembershipStatus.ACTIVE)
-        val membershipInfos = memberships.map { membership ->
-            val tenant = tenantRepository.findById(membership.tenantId).orElse(null)
-            AuthenticatedUserTO.TenantMembershipInfo(
-                tenantId = membership.tenantId,
-                tenantName = tenant?.name ?: "",
-                tenantDisplayName = tenant?.displayName,
-                roleNames = membership.roles.map { it.name }.toSet(),
-                permissionNames = membership.roles.flatMap { it.permissions }.map { it.name }.toSet(),
-            )
-        }
+        val membershipInfos =
+            memberships.mapNotNull { membership ->
+                val tenant =
+                    tenantRepository.findByIdAndStatus(membership.tenantId, TenantStatus.ACTIVE)
+                        ?: return@mapNotNull null
+                withTenant(membership.tenantId) {
+                    tenantPersistenceContext.activate(membership.tenantId)
+                    AuthenticatedUserTO.TenantMembershipInfo(
+                        tenantId = membership.tenantId,
+                        tenantName = tenant.name,
+                        tenantDisplayName = tenant.displayName,
+                        roleNames = membership.tenantRoles.map { it.name }.toSet(),
+                        permissionNames =
+                            membership.tenantRoles
+                                .flatMap { it.permissions }
+                                .filter { it.scope != org.abacusflow.user.PermissionScope.PLATFORM }
+                                .map { it.name }
+                                .toSet(),
+                    )
+                }
+            }
 
-        val resolvedRoles: Set<String>
-        val resolvedPermissions: Set<String>
-
-        if (membershipInfos.size == 1) {
-            resolvedRoles = membershipInfos[0].roleNames
-            resolvedPermissions = membershipInfos[0].permissionNames
-        } else if (membershipInfos.size > 1) {
-            resolvedRoles = emptySet()
-            resolvedPermissions = emptySet()
-        } else {
-            resolvedRoles = emptySet()
-            resolvedPermissions = emptySet()
-        }
+        val platformAssignments = platformUserRoleRepository.findAllByUserId(user.id)
+        val platformRoles = platformAssignments.mapTo(mutableSetOf()) { it.role.name }
+        val platformPermissions =
+            platformAssignments
+                .flatMap { it.role.permissions }
+                .filter { it.scope == org.abacusflow.user.PermissionScope.PLATFORM }
+                .mapTo(mutableSetOf()) { it.name }
 
         return AuthenticatedUserTO(
             id = user.id,
             name = user.name,
-            roleNames = resolvedRoles,
-            permissionNames = resolvedPermissions,
+            roleNames = platformRoles,
+            permissionNames = platformPermissions,
             tenantMemberships = membershipInfos,
+            email = externalIdentity.email?.trim()?.lowercase(),
+            emailVerified = externalIdentity.emailVerified,
         )
     }
 
@@ -141,6 +153,8 @@ class ExternalIdentityAuthenticationServiceImpl(
             roleNames = emptySet(),
             permissionNames = emptySet(),
             tenantMemberships = emptyList(),
+            email = externalIdentity.email?.trim()?.lowercase(),
+            emailVerified = externalIdentity.emailVerified,
         )
     }
 
@@ -167,7 +181,7 @@ class ExternalIdentityAuthenticationServiceImpl(
         // Both taken (very unlikely) — append numeric suffix
         var suffix = 2
         while (true) {
-            val candidate = "${hashed}_${suffix}"
+            val candidate = "${hashed}_$suffix"
             if (!userRepository.existsByName(candidate)) {
                 return candidate
             }
@@ -206,10 +220,11 @@ class ExternalIdentityAuthenticationServiceImpl(
      * Returns null if the result would be too short or empty.
      */
     private fun sanitizeUserName(input: String): String? {
-        val sanitized = input
-            .replace(Regex("[^a-zA-Z0-9_]"), "_")   // Replace invalid chars with underscore
-            .replace(Regex("_+"), "_")                 // Collapse multiple underscores
-            .trim('_')                                 // Remove leading/trailing underscores
+        val sanitized =
+            input
+                .replace(Regex("[^a-zA-Z0-9_]"), "_") // Replace invalid chars with underscore
+                .replace(Regex("_+"), "_") // Collapse multiple underscores
+                .trim('_') // Remove leading/trailing underscores
         if (sanitized.length < 5 || sanitized.length > 50) return null
         return sanitized
     }

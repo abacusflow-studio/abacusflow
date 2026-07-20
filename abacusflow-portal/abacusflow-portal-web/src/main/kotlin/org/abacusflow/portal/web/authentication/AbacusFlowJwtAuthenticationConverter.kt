@@ -1,6 +1,5 @@
 package org.abacusflow.portal.web.authentication
 
-import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
@@ -34,6 +33,10 @@ class AbacusFlowJwtAuthenticationConverter(
                 AbacusFlowAuthenticationDetails(
                     userId = user.id,
                     tenantMemberships = user.tenantMemberships,
+                    platformRoleNames = user.roleNames,
+                    platformPermissionNames = user.permissionNames,
+                    email = user.email,
+                    emailVerified = user.emailVerified,
                 ),
             )
         }

@@ -16,4 +16,3 @@ package org.abacusflow.commons.tenant
 interface TenantScopedEntity {
     val tenantId: Long
 }
-

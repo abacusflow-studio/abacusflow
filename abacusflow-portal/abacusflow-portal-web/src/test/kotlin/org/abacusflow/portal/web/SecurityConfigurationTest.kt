@@ -1,9 +1,9 @@
 package org.abacusflow.portal.web
 
 import jakarta.servlet.http.Cookie
+import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.portal.web.authentication.AbacusFlowJwtAuthenticationConverter
 import org.abacusflow.portal.web.tenant.TenantContextFilter
-import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.usecase.user.AuthenticatedUserTO
 import org.abacusflow.usecase.user.service.ExternalIdentityAuthenticationService
 import org.hamcrest.Matchers.containsString
@@ -201,9 +201,8 @@ class SecurityConfigurationTest(
         fun currentTenantProvider(): CurrentTenantProvider = CurrentTenantProvider()
 
         @Bean
-        fun tenantContextFilter(
-            currentTenantProvider: CurrentTenantProvider,
-        ): TenantContextFilter = TenantContextFilter(currentTenantProvider)
+        fun tenantContextFilter(currentTenantProvider: CurrentTenantProvider): TenantContextFilter =
+            TenantContextFilter(currentTenantProvider)
 
         private fun validAccessToken(
             token: String,

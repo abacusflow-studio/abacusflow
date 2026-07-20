@@ -13,6 +13,5 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class JooqTenantConfig {
     @Bean
-    fun tenantRlsExecuteListenerProvider(): ExecuteListenerProvider =
-        ExecuteListenerProvider { TenantRlsExecuteListener() }
+    fun tenantRlsExecuteListenerProvider(): ExecuteListenerProvider = ExecuteListenerProvider { TenantRlsExecuteListener() }
 }

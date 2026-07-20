@@ -1,5 +1,7 @@
 package org.abacusflow.usecase.transaction.service
 
+import org.abacusflow.usecase.commons.security.RequiredAuthority
+
 import org.abacusflow.usecase.transaction.BasicPurchaseOrderTO
 import org.abacusflow.usecase.transaction.PurchaseOrderTO
 import org.springframework.data.domain.Page
@@ -9,7 +11,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 interface PurchaseOrderQueryService {
-    @PreAuthorize("hasAuthority('purchase-order:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_PURCHASE_ORDER_READ)
     fun listBasicPurchaseOrdersPage(
         pageable: Pageable,
         orderNo: UUID?,
@@ -20,6 +22,6 @@ interface PurchaseOrderQueryService {
         orderDate: LocalDate?,
     ): Page<BasicPurchaseOrderTO>
 
-    @PreAuthorize("hasAuthority('purchase-order:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_PURCHASE_ORDER_READ)
     fun getPurchaseOrder(id: Long): PurchaseOrderTO
 }

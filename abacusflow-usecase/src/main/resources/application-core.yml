@@ -6,8 +6,8 @@ spring:
           issuer-uri: ${ABACUSFLOW_OIDC_ISSUER_URI:https://wls1964302791.us.auth0.com/}
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:abacusflow}
-    username: ${POSTGRES_USER:abacusflow}
-    password: ${POSTGRES_PASSWORD:123ABCdef*}
+    username: ${POSTGRES_APP_USER:${POSTGRES_USER:abacusflow}}
+    password: ${POSTGRES_APP_PASSWORD:${POSTGRES_PASSWORD:123ABCdef*}}
     hikari:
       transaction-isolation: TRANSACTION_READ_COMMITTED
   jpa:
@@ -18,6 +18,8 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+    user: ${POSTGRES_MIGRATION_USER:${POSTGRES_USER:abacusflow}}
+    password: ${POSTGRES_MIGRATION_PASSWORD:${POSTGRES_PASSWORD:123ABCdef*}}
 
 logging:
   pattern:

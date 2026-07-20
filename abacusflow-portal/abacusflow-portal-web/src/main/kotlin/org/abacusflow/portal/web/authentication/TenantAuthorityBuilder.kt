@@ -9,6 +9,6 @@ object TenantAuthorityBuilder {
     ): Set<SimpleGrantedAuthority> =
         // Role authorities with ROLE_ prefix (for hasRole())
         roleNames.map { SimpleGrantedAuthority("ROLE_$it") }.toSet() +
-            // Permission authorities as-is (for hasAuthority('product:read'))
+            // Permission authorities as-is (for hasAuthority('business:product:read'))
             permissionNames.map { SimpleGrantedAuthority(it) }
 }

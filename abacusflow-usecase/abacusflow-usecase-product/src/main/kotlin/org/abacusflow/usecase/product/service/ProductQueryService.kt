@@ -1,5 +1,6 @@
 package org.abacusflow.usecase.product.service
 
+import org.abacusflow.usecase.commons.security.RequiredAuthority
 import org.abacusflow.usecase.product.BasicProductTO
 import org.abacusflow.usecase.product.ProductTO
 import org.springframework.data.domain.Page
@@ -7,7 +8,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.security.access.prepost.PreAuthorize
 
 interface ProductQueryService {
-    @PreAuthorize("hasAuthority('product:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_PRODUCT_READ)
     fun listBasicProductsPage(
         pageable: Pageable,
         name: String?,
@@ -16,12 +17,12 @@ interface ProductQueryService {
         categoryId: Long?,
     ): Page<BasicProductTO>
 
-    @PreAuthorize("hasAuthority('product:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_PRODUCT_READ)
     fun listProducts(): List<ProductTO>
 
-    @PreAuthorize("hasAuthority('product:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_PRODUCT_READ)
     fun getProduct(id: Long): ProductTO
 
-    @PreAuthorize("hasAuthority('product:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_PRODUCT_READ)
     fun getProduct(name: String): ProductTO
 }

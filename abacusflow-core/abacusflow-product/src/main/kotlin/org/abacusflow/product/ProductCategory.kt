@@ -22,7 +22,7 @@ import java.time.Instant
 @Entity
 @Table(
     name = "product_category",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "parent_id", "name"])],
+    uniqueConstraints = [UniqueConstraint(columnNames = ["tenant_id", "name"])],
 )
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 class ProductCategory(
@@ -39,7 +39,7 @@ class ProductCategory(
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "parent_id", nullable = true)
-    var parent: ProductCategory? = parent
+    var parent: ProductCategory? = requireValidParent(parent)
         private set
 
     @field:Size(max = 500)
@@ -61,25 +61,43 @@ class ProductCategory(
     var updatedAt: Instant = Instant.now()
 
     fun updateBasicInfo(
-        newName: String?,
+        newName: String,
         newDescription: String?,
     ) {
-        newName?.let {
-            name = newName
+        require(newName.isNotBlank()) {
+            "Category name cannot be blank"
         }
-        newDescription?.let {
-            description = newDescription
-        }
+
+        name = newName.trim()
+        description = newDescription?.trim()
 
         updatedAt = Instant.now()
     }
 
-    fun changeParent(newParent: ProductCategory) {
-        if (parent == newParent) return
-        require(newParent != this) { "Categories cannot be set as their own parent category" }
-
-        parent = newParent
-
+    /**
+     * Move this category to a new parent (or to the top level if [newParent] is null).
+     *
+     * Rejects:
+     * - self-parenting (newParent == this)
+     * - cross-tenant parents
+     * - moves that would create an ancestor cycle (newParent is a descendant of this)
+     */
+    fun moveTo(newParent: ProductCategory?) {
+        parent = requireValidParent(newParent)
         updatedAt = Instant.now()
+    }
+
+    private fun requireValidParent(candidate: ProductCategory?): ProductCategory? {
+        if (candidate == null) return null
+
+        require(candidate !== this) { "Categories cannot be set as their own parent category" }
+        require(candidate.tenantId == tenantId) { "Cannot move a category under a parent from a different tenant" }
+
+        var ancestor: ProductCategory? = candidate
+        while (ancestor != null) {
+            require(ancestor !== this) { "Cannot move a category below its own descendant (would create a cycle)" }
+            ancestor = ancestor.parent
+        }
+        return candidate
     }
 }

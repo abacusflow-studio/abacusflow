@@ -1,5 +1,7 @@
 package org.abacusflow.usecase.transaction.service
 
+import org.abacusflow.usecase.commons.security.RequiredAuthority
+
 import org.abacusflow.usecase.transaction.BasicSaleOrderTO
 import org.abacusflow.usecase.transaction.SaleOrderTO
 import org.springframework.data.domain.Page
@@ -9,7 +11,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 interface SaleOrderQueryService {
-    @PreAuthorize("hasAuthority('sale-order:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_SALE_ORDER_READ)
     fun listBasicSaleOrdersPage(
         pageable: Pageable,
         orderNo: UUID?,
@@ -19,6 +21,6 @@ interface SaleOrderQueryService {
         orderDate: LocalDate?,
     ): Page<BasicSaleOrderTO>
 
-    @PreAuthorize("hasAuthority('sale-order:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_SALE_ORDER_READ)
     fun getSaleOrder(id: Long): SaleOrderTO
 }

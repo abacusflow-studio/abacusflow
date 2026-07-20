@@ -135,27 +135,22 @@ tenant_id  cell_id          storage_mode  status
 script/initdb/01-schema.sql
 ```
 
-需要建立正式版本迁移：
+在首次共享环境发布前，将最终状态压缩为两文件初始化基线：
 
 ```text
-V001__baseline.sql
-V002__create_tenant_tables.sql
-V003__add_tenant_id.sql
-V004__migrate_user_roles.sql
-V005__enable_rls.sql
+V001__init_schema.sql  # 最终结构、索引、RLS、数据库运行时授权
+V002__init_data.sql    # 权限目录、默认角色与初始化数据
 ```
 
-迁移顺序：
+开发阶段通过删除并重建数据库验证该基线，不兼容已经记录旧 V003–V005 的数据库。首次共享/生产部署后，V001/V002 必须冻结，后续变更再使用新的 forward-only migration。
+
+V001 的最终结构包含：
 
 ```text
-创建租户表
-→ 创建默认租户
-→ 业务表增加 nullable tenant_id
-→ 回填已有数据
-→ 修改唯一约束
-→ 设置 tenant_id NOT NULL
-→ 启用 RLS
-→ 验证后删除旧 user_role
+租户与平台授权表
+→ 业务表 tenant_id 与唯一约束
+→ 索引与 PostgreSQL RLS
+→ 运行时数据库角色授权
 ```
 
 ---

@@ -7,6 +7,8 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3Configuration
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import java.net.URI
 
 @Configuration
@@ -20,6 +22,17 @@ class StorageConfiguration {
             .credentialsProvider(StaticCredentialsProvider.create(credentials))
             .region(Region.of(properties.region))
             .forcePathStyle(true)
+            .build()
+    }
+
+    @Bean
+    fun s3Presigner(properties: StorageProperties): S3Presigner {
+        val credentials = AwsBasicCredentials.create(properties.accessKeyId, properties.secretAccessKey)
+        return S3Presigner.builder()
+            .endpointOverride(URI.create(properties.endpoint))
+            .credentialsProvider(StaticCredentialsProvider.create(credentials))
+            .region(Region.of(properties.region))
+            .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
             .build()
     }
 }

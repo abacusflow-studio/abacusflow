@@ -1,28 +1,20 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useAuth } from '../components/auth-provider';
-import { useTenant } from '../components/tenant-provider';
+import { canPermission } from '../lib/menu-registry';
 
 export function usePermission() {
-  const { platformPermissions } = useAuth();
-  const { currentTenant } = useTenant();
+  const { platformPermissions, tenantPermissions } = useAuth();
 
-  const hasPlatformPermission = (name: string): boolean =>
-    platformPermissions.includes(name);
+  const can = useCallback(
+    (permission: string): boolean =>
+      canPermission(permission, {
+        platformPermissions,
+        tenantPermissions,
+      }),
+    [platformPermissions, tenantPermissions],
+  );
 
-  const hasTenantPermission = (name: string): boolean =>
-    currentTenant?.permissionNames?.includes(name) ?? false;
-
-  const hasAnyPlatformPermission = (...names: string[]): boolean =>
-    names.some((n) => platformPermissions.includes(n));
-
-  const hasAnyTenantPermission = (...names: string[]): boolean =>
-    names.some((n) => currentTenant?.permissionNames?.includes(n) ?? false);
-
-  return {
-    hasPlatformPermission,
-    hasTenantPermission,
-    hasAnyPlatformPermission,
-    hasAnyTenantPermission,
-  };
+  return { can };
 }

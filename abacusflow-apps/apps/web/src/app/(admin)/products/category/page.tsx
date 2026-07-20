@@ -12,6 +12,7 @@ import {
   App,
   Space,
   Spin,
+  Empty,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -21,10 +22,15 @@ import {
   type ProductCategory,
   type SelectableProductCategory,
 } from "@abacusflow/core";
+import {
+  createParentIdFromForm,
+  flattenProductCategories,
+  TOP_LEVEL_PARENT_VALUE,
+  updateParentIdFromForm,
+  type ProductCategoryRow,
+} from "../../../../lib/product-category-hierarchy";
 
-interface CategoryRow extends SelectableProductCategory {
-  depth: number;
-}
+type CategoryRow = ProductCategoryRow<SelectableProductCategory>;
 
 export default function ProductCategoriesPage() {
   const { message } = App.useApp();
@@ -34,6 +40,7 @@ export default function ProductCategoriesPage() {
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [editItem, setEditItem] = useState<ProductCategory | null>(null);
+  // null = creating from virtual root (top-level), SelectableProductCategory = creating under that parent
   const [parentContext, setParentContext] =
     useState<SelectableProductCategory | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -56,7 +63,10 @@ export default function ProductCategoriesPage() {
     loadCategories();
   }, [loadCategories]);
 
-  const rows = useMemo(() => flattenCategories(categories), [categories]);
+  const rows = useMemo(
+    () => flattenProductCategories(categories),
+    [categories],
+  );
 
   const filteredRows = useMemo(() => {
     const value = keyword.trim();
@@ -67,22 +77,25 @@ export default function ProductCategoriesPage() {
     );
   }, [keyword, rows]);
 
-  const rootCategory =
-    categories.find((category) => category.name === "根节点") ??
-    categories.find((category) => !category.parentId);
-
+  // Category options for the parent selector — only real categories, excluding self when editing
   const categoryOptions = categories
     .filter((category) => category.id !== editItem?.id)
     .map((category) => ({ label: category.name, value: category.id }));
 
+  // Top-level option for moving a category to the top
+  const parentOptions = [
+    { label: "（顶级分类）", value: TOP_LEVEL_PARENT_VALUE },
+    ...categoryOptions,
+  ];
+
   const openCreate = (parent?: SelectableProductCategory | null) => {
-    const parentCategory = parent ?? rootCategory;
+    // parent=null means creating from virtual root → top-level category
     setEditItem(null);
-    setParentContext(parentCategory ?? null);
+    setParentContext(parent ?? null);
     form.resetFields();
     form.setFieldsValue({
       name: "",
-      parentId: parentCategory?.id,
+      parentId: parent?.id ?? undefined,
       description: "",
     });
     setShowForm(true);
@@ -97,7 +110,7 @@ export default function ProductCategoriesPage() {
       setParentContext(null);
       form.setFieldsValue({
         name: category.name,
-        parentId: category.parentId,
+        parentId: category.parentId ?? TOP_LEVEL_PARENT_VALUE,
         description: category.description ?? "",
       });
     } catch (err) {
@@ -112,26 +125,27 @@ export default function ProductCategoriesPage() {
     try {
       const values = await form.validateFields();
       setSubmitting(true);
-      const payload = {
-        name: values.name as string,
-        ...(values.parentId != null
-          ? { parentId: values.parentId as number }
-          : {}),
-        ...(values.description
-          ? { description: values.description as string }
-          : {}),
-      };
+
       if (editItem) {
+        // PUT: complete target state — name and parentId are both required
+        const parentIdValue = updateParentIdFromForm(values.parentId);
         await productApi.updateProductCategory({
           id: editItem.id,
-          updateProductCategoryInput: payload,
+          updateProductCategoryInput: {
+            name: values.name as string,
+            parentId: parentIdValue,
+            description: (values.description as string) || null,
+          },
         });
         message.success("编辑成功");
       } else {
+        // POST: parentId is optional — null/omitted = top-level
+        const parentIdValue = createParentIdFromForm(values.parentId);
         await productApi.addProductCategory({
           createProductCategoryInput: {
-            ...payload,
-            parentId: values.parentId as number,
+            name: values.name as string,
+            parentId: parentIdValue,
+            description: (values.description as string) || null,
           },
         });
         message.success("新增成功");
@@ -148,7 +162,6 @@ export default function ProductCategoriesPage() {
   };
 
   const handleDelete = async (record: SelectableProductCategory) => {
-    if (record.name === "根节点") return;
     Modal.confirm({
       title: "确认删除",
       content: "确定删除该产品类别？",
@@ -179,35 +192,32 @@ export default function ProductCategoriesPage() {
     {
       title: "操作",
       key: "action",
-      render: (_, record) => {
-        const isRoot = record.name === "根节点";
-        return (
-          <Space size="small">
-            <Button type="link" size="small" onClick={() => openCreate(record)}>
-              新增
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              disabled={isRoot}
-              onClick={() => openEdit(record)}
-            >
-              编辑
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              danger
-              disabled={isRoot}
-              onClick={() => handleDelete(record)}
-            >
-              删除
-            </Button>
-          </Space>
-        );
-      },
+      render: (_, record) => (
+        <Space size="small">
+          <Button type="link" size="small" onClick={() => openCreate(record)}>
+            新增
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openEdit(record)}
+          >
+            编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            danger
+            onClick={() => handleDelete(record)}
+          >
+            删除
+          </Button>
+        </Space>
+      ),
     },
   ];
+
+  const isEmpty = categories.length === 0;
 
   return (
     <div className="af-crud-page">
@@ -224,7 +234,6 @@ export default function ProductCategoriesPage() {
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => openCreate()}
-            disabled={!rootCategory}
           >
             新增产品类别
           </Button>
@@ -255,14 +264,29 @@ export default function ProductCategoriesPage() {
       </div>
 
       <div className="card af-table-card">
-        <Table<CategoryRow>
-          columns={columns}
-          dataSource={filteredRows}
-          rowKey="id"
-          loading={loading}
-          pagination={false}
-          size="middle"
-        />
+        {isEmpty && !loading ? (
+          <Empty
+            description="暂无产品类别，请先创建顶级分类"
+            style={{ padding: "48px 0" }}
+          >
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => openCreate()}
+            >
+              创建顶级分类
+            </Button>
+          </Empty>
+        ) : (
+          <Table<CategoryRow>
+            columns={columns}
+            dataSource={filteredRows}
+            rowKey="id"
+            loading={loading}
+            pagination={false}
+            size="middle"
+          />
+        )}
       </div>
 
       <Modal
@@ -291,6 +315,11 @@ export default function ProductCategoriesPage() {
                 父类别：{parentContext.name}
               </div>
             )}
+            {!parentContext && !editItem && (
+              <div style={{ marginBottom: 12, fontSize: 14, color: "#888" }}>
+                父类别：全部分类（顶级分类）
+              </div>
+            )}
             <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
               <Form.Item
                 name="name"
@@ -303,14 +332,23 @@ export default function ProductCategoriesPage() {
                 name="parentId"
                 label="父类别"
                 rules={
-                  editItem ? [] : [{ required: true, message: "请选择父类别" }]
+                  editItem
+                    ? [{ required: true, message: "请选择父类别" }]
+                    : []
                 }
               >
-                <Select
-                  options={categoryOptions}
-                  placeholder="请选择父类别"
-                  allowClear
-                />
+                {editItem ? (
+                  <Select
+                    options={parentOptions}
+                    placeholder="请选择父类别"
+                  />
+                ) : (
+                  <Select
+                    options={categoryOptions}
+                    placeholder="留空则创建顶级分类"
+                    allowClear
+                  />
+                )}
               </Form.Item>
               <Form.Item name="description" label="描述">
                 <Input.TextArea placeholder="请输入描述" rows={3} />
@@ -321,31 +359,4 @@ export default function ProductCategoriesPage() {
       </Modal>
     </div>
   );
-}
-
-function flattenCategories(
-  categories: SelectableProductCategory[],
-): CategoryRow[] {
-  const childrenByParent = new Map<
-    number | undefined,
-    SelectableProductCategory[]
-  >();
-  for (const category of categories) {
-    const parentId = category.parentId ?? undefined;
-    const list = childrenByParent.get(parentId) ?? [];
-    list.push(category);
-    childrenByParent.set(parentId, list);
-  }
-
-  const result: CategoryRow[] = [];
-  const visit = (parentId: number | undefined, depth: number) => {
-    const children = childrenByParent.get(parentId) ?? [];
-    for (const child of children) {
-      result.push({ ...child, depth });
-      visit(child.id, depth + 1);
-    }
-  };
-
-  visit(undefined, 0);
-  return result;
 }

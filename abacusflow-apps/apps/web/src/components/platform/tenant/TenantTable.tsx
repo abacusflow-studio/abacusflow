@@ -1,61 +1,50 @@
 'use client';
 
-import React, { useState } from 'react';
-import {
-  Button,
-  Table,
-  Modal,
-  Form,
-  Tag,
-  App,
-  Space,
-  Descriptions,
-  Spin,
-} from 'antd';
-import { PlusOutlined, SwapOutlined } from '@ant-design/icons';
+import React, { useCallback, useEffect, useState } from 'react';
+import { App, Button, Form, Input, Modal, Space, Table, Tag } from 'antd';
+import { CopyOutlined, PlusOutlined, RedoOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminPageHeader } from '@/components/admin-page-header';
-import { useTenant } from '@/components/tenant-provider';
+import { usePermission } from '@/hooks/use-permission';
 import {
   tenantApi,
-  type TenantDetail,
-  type TenantSummary,
+  type PlatformTenant,
   type UpdateTenantInput,
 } from '@abacusflow/core';
 import { TenantForm } from './TenantForm';
-import { translateTenantStatus, tenantStatusColor, formatTimestamp } from './utils';
+import { tenantStatusColor, translateTenantStatus } from './utils';
 
 export function TenantTable() {
   const { message } = App.useApp();
+  const { can } = usePermission();
   const [form] = Form.useForm();
-  const {
-    tenants,
-    currentTenantId,
-    selectTenant,
-    updateTenantInList,
-    setBootstrapData,
-  } = useTenant();
-
-  const [editItem, setEditItem] = useState<TenantDetail | null>(null);
+  const [tenants, setTenants] = useState<PlatformTenant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editItem, setEditItem] = useState<PlatformTenant | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deliveryToken, setDeliveryToken] = useState<string | null>(null);
+  const [reissueItem, setReissueItem] = useState<PlatformTenant | null>(null);
+  const [reissueEmail, setReissueEmail] = useState('');
 
-  const [showDetail, setShowDetail] = useState(false);
-  const [detailItem, setDetailItem] = useState<TenantDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const canCreate = can('platform:tenant:create');
+  const canUpdate = can('platform:tenant:update');
 
-  const refreshTenantList = async () => {
+  const loadTenants = useCallback(async () => {
+    setLoading(true);
     try {
-      const updatedTenants = await tenantApi.listTenants();
-      setBootstrapData(
-        updatedTenants.length > 1 ? 'MULTI_TENANT' : 'SINGLE_TENANT',
-        updatedTenants,
-      );
-    } catch {
-      // silent — list refresh is best-effort
+      setTenants(await tenantApi.listPlatformTenants());
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '加载平台租户目录失败');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [message]);
+
+  useEffect(() => {
+    void loadTenants();
+  }, [loadTenants]);
 
   const openCreate = () => {
     setEditItem(null);
@@ -64,135 +53,85 @@ export function TenantTable() {
     setShowForm(true);
   };
 
-  const openEdit = async (record: TenantSummary) => {
+  const openEdit = (record: PlatformTenant) => {
+    setEditItem(record);
     setIsCreateMode(false);
+    form.setFieldsValue({ displayName: record.displayName ?? '' });
     setShowForm(true);
-    setSubmitting(true);
-    try {
-      const detail = await tenantApi.getTenant({ tenantId: record.tenantId });
-      setEditItem(detail);
-      form.setFieldsValue({
-        displayName: detail.displayName ?? '',
-      });
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载失败');
-      setShowForm(false);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const openDetail = async (tenantId: number) => {
-    setShowDetail(true);
-    setDetailLoading(true);
-    try {
-      const item = await tenantApi.getTenant({ tenantId });
-      setDetailItem(item);
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载失败');
-      setShowDetail(false);
-    } finally {
-      setDetailLoading(false);
-    }
   };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       setSubmitting(true);
-
       if (isCreateMode) {
-        await tenantApi.createTenant({
+        const result = await tenantApi.provisionTenant({
           createTenantInput: {
             name: values.name,
             displayName: values.displayName || undefined,
+            initialAdministratorEmail: values.initialAdministratorEmail,
           },
         });
-        message.success('创建成功');
-        setShowForm(false);
-        await refreshTenantList();
+        setDeliveryToken(result.initialInvitation.token ?? null);
+        message.success('租户已创建，等待首位管理员接受邀请');
       } else if (editItem) {
-        const payload: UpdateTenantInput = {
-          displayName: values.displayName || null,
-        };
-        const updated = await tenantApi.updateTenant({
-          tenantId: editItem.tenantId,
-          updateTenantInput: payload,
-        });
-        message.success('更新成功');
-        setShowForm(false);
-        updateTenantInList(editItem.tenantId, {
-          displayName: updated.displayName ?? undefined,
-        });
+        const input: UpdateTenantInput = { displayName: values.displayName || null };
+        await tenantApi.updatePlatformTenant({ tenantId: editItem.id, updateTenantInput: input });
+        message.success('租户资料已更新');
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        message.error(err.message);
-      }
+      setShowForm(false);
+      await loadTenants();
+    } catch (error) {
+      if (error instanceof Error) message.error(error.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const columns: ColumnsType<TenantSummary> = [
+  const handleReissue = async () => {
+    if (!reissueItem) return;
+    try {
+      setSubmitting(true);
+      const invitation = await tenantApi.reissueInitialTenantInvitation({
+        tenantId: reissueItem.id,
+        reissueInitialInvitationInput: { email: reissueEmail },
+      });
+      setReissueItem(null);
+      setDeliveryToken(invitation.token ?? null);
+      message.success('初始管理员邀请已重新签发');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '重新签发失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const columns: ColumnsType<PlatformTenant> = [
+    { title: '租户名称', dataIndex: 'name', key: 'name' },
+    { title: '显示名称', key: 'displayName', render: (_, item) => item.displayName || '-' },
     {
-      title: '租户名称',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: '显示名称',
-      key: 'displayName',
-      render: (_, record) => record.displayName || '-',
-    },
-    {
-      title: '角色',
-      key: 'roleNames',
-      render: (_, record) =>
-        record.roleNames.length > 0
-          ? record.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
-          : '-',
-    },
-    {
-      title: '当前',
-      key: 'current',
-      render: (_, record) =>
-        record.tenantId === currentTenantId ? (
-          <Tag color="success">当前</Tag>
-        ) : null,
+      title: '状态',
+      key: 'status',
+      render: (_, item) => <Tag color={tenantStatusColor(item.status)}>{translateTenantStatus(item.status)}</Tag>,
     },
     {
       title: '操作',
-      key: 'action',
-      render: (_, record) => (
-        <Space size="small">
-          {record.tenantId !== currentTenantId && (
+      key: 'actions',
+      render: (_, item) => (
+        <Space>
+          {canUpdate && <Button type="link" onClick={() => openEdit(item)}>编辑</Button>}
+          {canUpdate && item.status === 'PENDING_ACTIVATION' && (
             <Button
               type="link"
-              size="small"
-              icon={<SwapOutlined />}
+              icon={<RedoOutlined />}
               onClick={() => {
-                selectTenant(record.tenantId);
-                window.location.reload();
+                setReissueItem(item);
+                setReissueEmail('');
               }}
             >
-              切换
+              重发首邀
             </Button>
           )}
-          <Button
-            type="link"
-            size="small"
-            onClick={() => openDetail(record.tenantId)}
-          >
-            详情
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => openEdit(record)}
-          >
-            编辑
-          </Button>
         </Space>
       ),
     },
@@ -203,26 +142,13 @@ export function TenantTable() {
       <AdminPageHeader
         eyebrow="平台中心 / 租户管理"
         title="租户管理"
-        description="查看和管理平台上的所有租户，包括租户创建、编辑和切换。"
+        description="控制面租户目录；待激活租户不会出现在任何用户的租户切换器中。"
         metrics={[{ label: '租户总数', value: tenants.length }]}
-        actions={
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            新增租户
-          </Button>
-        }
+        actions={canCreate ? <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增租户</Button> : undefined}
       />
-
       <div className="card af-table-card">
-        <Table<TenantSummary>
-          columns={columns}
-          dataSource={tenants}
-          rowKey="tenantId"
-          loading={false}
-          pagination={false}
-          size="middle"
-        />
+        <Table columns={columns} dataSource={tenants} rowKey="id" loading={loading} pagination={false} />
       </div>
-
       <TenantForm
         open={showForm}
         isCreateMode={isCreateMode}
@@ -232,55 +158,31 @@ export function TenantTable() {
         onOk={handleSubmit}
         form={form}
       />
-
       <Modal
-        open={showDetail}
-        title="租户详情"
-        onCancel={() => setShowDetail(false)}
-        footer={null}
-        width={520}
-        destroyOnHidden
+        open={Boolean(reissueItem)}
+        title="重新签发首位管理员邀请"
+        onCancel={() => setReissueItem(null)}
+        onOk={handleReissue}
+        confirmLoading={submitting}
       >
-        {detailLoading ? (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              padding: '2rem 0',
-            }}
-          >
-            <Spin />
-          </div>
-        ) : detailItem ? (
-          <Descriptions
-            column={1}
-            size="small"
-            styles={{ label: { width: 100 } }}
-          >
-            <Descriptions.Item label="租户名称">
-              {detailItem.name}
-            </Descriptions.Item>
-            <Descriptions.Item label="显示名称">
-              {detailItem.displayName ?? '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="状态">
-              <Tag color={tenantStatusColor(detailItem.status)}>
-                {translateTenantStatus(detailItem.status)}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="角色">
-              {detailItem.roleNames.length > 0
-                ? detailItem.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
-                : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="创建时间">
-              {formatTimestamp(detailItem.createdAt)}
-            </Descriptions.Item>
-            <Descriptions.Item label="更新时间">
-              {formatTimestamp(detailItem.updatedAt)}
-            </Descriptions.Item>
-          </Descriptions>
-        ) : null}
+        <Input
+          value={reissueEmail}
+          onChange={(event) => setReissueEmail(event.target.value)}
+          placeholder="新的首位管理员邮箱"
+        />
+      </Modal>
+      <Modal
+        open={Boolean(deliveryToken)}
+        title="一次性邀请交付"
+        onCancel={() => setDeliveryToken(null)}
+        footer={<Button onClick={() => setDeliveryToken(null)}>我已保存</Button>}
+      >
+        <p>该 token 只在本次操作中展示，请通过安全渠道交付给被邀请人。</p>
+        <Input
+          readOnly
+          value={deliveryToken ?? ''}
+          addonAfter={<CopyOutlined onClick={() => void navigator.clipboard.writeText(deliveryToken ?? '')} />}
+        />
       </Modal>
     </div>
   );

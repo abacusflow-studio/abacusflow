@@ -219,9 +219,9 @@ P1 再扩展：
 
 权限建议：
 
-- `feedback:create`：所有已登录用户。
-- `feedback:read`：P1 管理页需要时再加入，管理员、运营、产品负责人。
-- `feedback:update`：P1 管理页需要时再加入，管理员、运营、产品负责人。
+- `business:feedback:create`：所有已登录用户。
+- `business:feedback:read`：P1 管理页需要时再加入，管理员、运营、产品负责人。
+- `business:feedback:update`：P1 管理页需要时再加入，管理员、运营、产品负责人。
 - `feedback:comment`：P1 需要内部备注时再加入。
 
 ### 5.3 Web 实现

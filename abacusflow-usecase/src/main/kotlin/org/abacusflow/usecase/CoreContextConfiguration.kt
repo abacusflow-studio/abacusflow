@@ -7,9 +7,16 @@ import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.PropertySource
+
+
+
+
+
+import org.springframework.core.Ordered
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+import org.springframework.transaction.annotation.EnableTransactionManagement
 
 @Configuration
 @EnableAutoConfiguration
@@ -24,6 +31,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableCaching
 @EnableScheduling
 @EnableMethodSecurity
+@EnableTransactionManagement(order = Ordered.HIGHEST_PRECEDENCE)
 @EnableJpaRepositories(
     basePackages = [
         "org.abacusflow.db",

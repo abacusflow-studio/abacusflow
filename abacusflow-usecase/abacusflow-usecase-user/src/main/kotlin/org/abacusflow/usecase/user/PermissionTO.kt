@@ -5,4 +5,5 @@ data class PermissionTO(
     val name: String,
     val label: String,
     val description: String,
+    val scope: String,
 )

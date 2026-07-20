@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.user.service
 
 interface OidcUserProfileFetcher {
-
     data class Profile(
         val subject: String,
         val email: String?,

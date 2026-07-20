@@ -18,6 +18,7 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { usePermission } from "@/hooks/use-permission";
 import {
   userApi,
   type User,
@@ -41,6 +42,11 @@ function translateSex(value?: string): string {
 export default function UsersPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
+  const { can } = usePermission();
+  const canManage = can("platform:user:manage");
+  const canCreate = canManage;
+  const canUpdate = canManage;
+  const canDelete = canManage;
 
   const [editItem, setEditItem] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -228,19 +234,19 @@ export default function UsersPage() {
           >
             详情
           </Button>
-          {record.name !== "admin" && (
+          {record.name !== "admin" && (canUpdate || canDelete) && (
             <>
-              <Button type="link" size="small" onClick={() => openEdit(record)}>
+              {canUpdate && <Button type="link" size="small" onClick={() => openEdit(record)}>
                 编辑
-              </Button>
-              <Button
+              </Button>}
+              {canDelete && <Button
                 type="link"
                 size="small"
                 danger
                 onClick={() => handleDelete(record.id)}
               >
                 删除
-              </Button>
+              </Button>}
             </>
           )}
         </Space>
@@ -258,11 +264,11 @@ export default function UsersPage() {
           { label: "用户总数", value: allUsers.length },
           { label: "当前显示", value: total },
         ]}
-        actions={
+        actions={canCreate ? (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             新增用户
           </Button>
-        }
+        ) : undefined}
       />
 
       <div className="card af-filter-card">

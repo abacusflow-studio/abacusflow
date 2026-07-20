@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getConfig } from "@abacusflow/config";
-import { getAuthClient } from "@abacusflow/core";
+import { getAuthClient, getCurrentTenantId } from "@abacusflow/core";
 
 export interface CubeTimeDimension {
   dimension: string;
@@ -31,30 +31,46 @@ export function useCubeQuery<T = Record<string, string | number | null>>(
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const tenantId = getCurrentTenantId();
+  const queryKey = JSON.stringify(query);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    const endpoint = `${getConfig().cubeEndpoint}/v1/load`;
+    const load = async () => {
+      if (tenantId === null) throw new Error("请先选择租户");
+      const config = getConfig();
+      const accessToken = await getAuthClient().getAccessToken();
+      const tokenResponse = await fetch(
+        `${config.apiBaseUrl.replace(/\/+$/, "")}/api/cube-token`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "X-Tenant-Id": tenantId.toString(),
+          },
+        },
+      );
+      if (!tokenResponse.ok) {
+        throw new Error(`Cube Token 请求失败 (${tokenResponse.status})`);
+      }
+      const { token: cubeToken } = (await tokenResponse.json()) as { token: string };
+      if (!cubeToken) throw new Error("Cube Token 未配置");
 
-    getAuthClient()
-      .getAccessToken()
-      .then((token) =>
-        fetch(endpoint, {
+      const res = await fetch(`${config.cubeEndpoint}/v1/load`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${cubeToken}`,
           },
-          body: JSON.stringify({ query }),
-        })
-      )
-      .then((res) => {
-        if (!res.ok) throw new Error(`Cube.js 请求失败 (${res.status})`);
-        return res.json() as Promise<{ data: T[]; error?: string }>;
-      })
+          body: JSON.stringify({ query: JSON.parse(queryKey) as CubeQuery }),
+        });
+      if (!res.ok) throw new Error(`Cube.js 请求失败 (${res.status})`);
+      return res.json() as Promise<{ data: T[]; error?: string }>;
+    };
+
+    load()
       .then((json) => {
         if (json.error) throw new Error(json.error);
         if (!cancelled) {
@@ -72,8 +88,7 @@ export function useCubeQuery<T = Record<string, string | number | null>>(
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(query)]);
+  }, [queryKey, tenantId]);
 
   return { data, loading, error };
 }

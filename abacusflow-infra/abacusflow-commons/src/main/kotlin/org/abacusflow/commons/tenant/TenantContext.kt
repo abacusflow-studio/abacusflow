@@ -1,7 +1,7 @@
 package org.abacusflow.commons.tenant
 
 /**
- * 在指定租户上下文中执行代码块，执行完毕后自动清除上下文。
+ * 在指定租户上下文中执行代码块，执行完毕后恢复原有上下文。
  *
  * 适用于定时任务等需要逐租户遍历的场景：
  * ```kotlin
@@ -20,11 +20,19 @@ package org.abacusflow.commons.tenant
  * @param block 在租户上下文中执行的代码
  * @return 代码块的返回值
  */
-inline fun <T> withTenant(tenantId: Long, block: () -> T): T {
+inline fun <T> withTenant(
+    tenantId: Long,
+    block: () -> T,
+): T {
+    val previousTenantId = TenantContextHolder.currentTenantIdOrNull()
     TenantContextHolder.setTenantId(tenantId)
     try {
         return block()
     } finally {
-        TenantContextHolder.clear()
+        if (previousTenantId == null) {
+            TenantContextHolder.clear()
+        } else {
+            TenantContextHolder.setTenantId(previousTenantId)
+        }
     }
 }

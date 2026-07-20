@@ -1,5 +1,7 @@
 package org.abacusflow.usecase.inventory.service
 
+import org.abacusflow.usecase.commons.security.RequiredAuthority
+
 import org.abacusflow.usecase.inventory.BasicInventoryUnitTO
 import org.abacusflow.usecase.inventory.InventoryUnitForExportTO
 import org.abacusflow.usecase.inventory.InventoryUnitTO
@@ -9,7 +11,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.security.access.prepost.PreAuthorize
 
 interface InventoryUnitQueryService {
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_INVENTORY_UNIT_READ)
     fun listBasicInventoryUnits(
         pageable: Pageable,
         productCategoryId: Long?,
@@ -19,15 +21,15 @@ interface InventoryUnitQueryService {
         depotName: String?,
     ): Page<BasicInventoryUnitTO>
 
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_INVENTORY_UNIT_READ)
     fun listInventoryUnits(): List<InventoryUnitTO>
 
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_INVENTORY_UNIT_READ)
     fun listInventoryUnitsForExport(productCategoryId: Long?): List<InventoryUnitForExportTO>
 
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_INVENTORY_UNIT_READ)
     fun listInventoryUnitsWithTitle(statusList: List<String>? = null): List<InventoryUnitWithTitleTO>
 
-    @PreAuthorize("hasAuthority('inventory-unit:read')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_INVENTORY_UNIT_READ)
     fun getInventoryUnit(id: Long): InventoryUnitTO?
 }

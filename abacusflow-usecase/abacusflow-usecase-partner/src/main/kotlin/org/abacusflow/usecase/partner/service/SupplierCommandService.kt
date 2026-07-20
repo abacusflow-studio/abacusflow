@@ -1,20 +1,22 @@
 package org.abacusflow.usecase.partner.service
 
+import org.abacusflow.usecase.commons.security.RequiredAuthority
+
 import org.abacusflow.usecase.partner.CreateSupplierInputTO
 import org.abacusflow.usecase.partner.SupplierTO
 import org.abacusflow.usecase.partner.UpdateSupplierInputTO
 import org.springframework.security.access.prepost.PreAuthorize
 
 interface SupplierCommandService {
-    @PreAuthorize("hasAuthority('supplier:create')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_SUPPLIER_CREATE)
     fun createSupplier(supplier: CreateSupplierInputTO): SupplierTO
 
-    @PreAuthorize("hasAuthority('supplier:update')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_SUPPLIER_UPDATE)
     fun updateSupplier(
         id: Long,
         supplierTO: UpdateSupplierInputTO,
     ): SupplierTO
 
-    @PreAuthorize("hasAuthority('supplier:delete')")
+    @PreAuthorize(RequiredAuthority.BUSINESS_SUPPLIER_DELETE)
     fun deleteSupplier(id: Long): SupplierTO
 }

@@ -1,10 +1,14 @@
 package org.abacusflow.usecase.user.service.impl
 
+import org.abacusflow.commons.tenant.CurrentTenantProvider
+import org.abacusflow.commons.tenant.withTenant
+import org.abacusflow.db.TenantPersistenceContext
 import org.abacusflow.db.tenant.TenantMembershipRepository
 import org.abacusflow.db.tenant.TenantRepository
 import org.abacusflow.db.user.ExternalIdentityRepository
+import org.abacusflow.db.user.PlatformUserRoleRepository
 import org.abacusflow.tenant.MembershipStatus
-import org.abacusflow.commons.tenant.CurrentTenantProvider
+import org.abacusflow.tenant.TenantStatus
 import org.abacusflow.usecase.tenant.TenantSelectionStatus
 import org.abacusflow.usecase.tenant.TenantSummaryTO
 import org.abacusflow.usecase.user.BootstrapResultTO
@@ -12,6 +16,7 @@ import org.abacusflow.usecase.user.CurrentUserTO
 import org.abacusflow.usecase.user.service.OidcUserProfileFetcher
 import org.abacusflow.usecase.user.service.UserAuthenticationService
 import org.abacusflow.user.ExternalIdentity
+import org.abacusflow.user.PermissionScope
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -22,10 +27,11 @@ class UserAuthenticationServiceImpl(
     private val externalIdentityRepository: ExternalIdentityRepository,
     private val tenantMembershipRepository: TenantMembershipRepository,
     private val tenantRepository: TenantRepository,
+    private val platformUserRoleRepository: PlatformUserRoleRepository,
     private val currentTenantProvider: CurrentTenantProvider,
     private val profileFetcher: OidcUserProfileFetcher,
+    private val tenantPersistenceContext: TenantPersistenceContext,
 ) : UserAuthenticationService {
-
     companion object {
         /** Profile sync threshold: 24 hours */
         private const val PROFILE_SYNC_THRESHOLD_SECONDS = 24 * 60 * 60L
@@ -46,10 +52,11 @@ class UserAuthenticationServiceImpl(
         val user = externalIdentity.user
 
         // Sync profile from OIDC provider if stale (>24h since last sync)
-        val shouldSync = externalIdentity.profileSyncedAt == null ||
-            externalIdentity.profileSyncedAt!!.isBefore(
-                Instant.now().minusSeconds(PROFILE_SYNC_THRESHOLD_SECONDS),
-            )
+        val shouldSync =
+            externalIdentity.profileSyncedAt == null ||
+                externalIdentity.profileSyncedAt!!.isBefore(
+                    Instant.now().minusSeconds(PROFILE_SYNC_THRESHOLD_SECONDS),
+                )
         if (shouldSync) {
             val profile = profileFetcher.fetchProfile(accessToken)
             if (profile != null) {
@@ -81,25 +88,11 @@ class UserAuthenticationServiceImpl(
 
         val (tenantStatus, tenantSummaries, currentTenantId) = resolveTenantInfo(user.id)
 
-        // Resolve roles/permissions based on tenant context
-        val roles: List<String>
-        val permissions: List<String>
-
-        if (tenantSummaries.size == 1) {
-            // Single tenant: use that tenant's roles
-            roles = tenantSummaries[0].roleNames
-            permissions = resolvePermissionsForTenant(user.id, tenantSummaries[0].tenantId)
-        } else if (currentTenantId != null) {
-            // Multi-tenant with a selected tenant: use selected tenant's roles
-            val selectedSummary = tenantSummaries.find { it.tenantId == currentTenantId }
-            roles = selectedSummary?.roleNames ?: emptyList()
-            permissions = resolvePermissionsForTenant(user.id, currentTenantId)
-        } else {
-            // No tenant or multi-tenant without selection: no roles at user level
-            // Roles are now managed exclusively through tenant memberships
-            roles = emptyList()
-            permissions = emptyList()
-        }
+        val globalAuthorization = resolveGlobalAuthorization(user.id)
+        val selectedTenantRoles = resolveSelectedTenantRoles(tenantSummaries, currentTenantId)
+        val selectedTenantPermissions = currentTenantId?.let { resolvePermissionsForTenant(user.id, it) }.orEmpty()
+        val roles = (globalAuthorization.roleNames + selectedTenantRoles).distinct()
+        val permissions = (globalAuthorization.permissionNames + selectedTenantPermissions).distinct()
 
         return CurrentUserTO(
             userId = user.id,
@@ -111,8 +104,9 @@ class UserAuthenticationServiceImpl(
             locked = user.locked,
             roles = roles,
             permissions = permissions,
-            platformPermissions = permissions.filter { it.startsWith("platform:") },
-            tenantPermissions = permissions.filter { it.startsWith("tenant:") },
+            platformPermissions = globalAuthorization.permissionNames,
+            platformRoles = globalAuthorization.roleNames,
+            tenantPermissions = selectedTenantPermissions,
             tenantStatus = tenantStatus,
             tenants = tenantSummaries,
             currentTenantId = currentTenantId,
@@ -126,25 +120,11 @@ class UserAuthenticationServiceImpl(
     ): BootstrapResultTO {
         val (tenantStatus, tenantSummaries, currentTenantId) = resolveTenantInfo(user.id)
 
-        // Resolve roles/permissions based on tenant context
-        val roles: List<String>
-        val permissions: List<String>
-
-        if (tenantSummaries.size == 1) {
-            // Single tenant: use that tenant's roles
-            roles = tenantSummaries[0].roleNames
-            permissions = resolvePermissionsForTenant(user.id, tenantSummaries[0].tenantId)
-        } else if (currentTenantId != null) {
-            // Multi-tenant with a selected tenant: use selected tenant's roles
-            val selectedSummary = tenantSummaries.find { it.tenantId == currentTenantId }
-            roles = selectedSummary?.roleNames ?: emptyList()
-            permissions = resolvePermissionsForTenant(user.id, currentTenantId)
-        } else {
-            // No tenant or multi-tenant without selection: no roles at user level
-            // Roles are now managed exclusively through tenant memberships
-            roles = emptyList()
-            permissions = emptyList()
-        }
+        val globalAuthorization = resolveGlobalAuthorization(user.id)
+        val selectedTenantRoles = resolveSelectedTenantRoles(tenantSummaries, currentTenantId)
+        val selectedTenantPermissions = currentTenantId?.let { resolvePermissionsForTenant(user.id, it) }.orEmpty()
+        val roles = (globalAuthorization.roleNames + selectedTenantRoles).distinct()
+        val permissions = (globalAuthorization.permissionNames + selectedTenantPermissions).distinct()
 
         return BootstrapResultTO(
             userId = user.id,
@@ -153,8 +133,9 @@ class UserAuthenticationServiceImpl(
             locked = user.locked,
             roles = roles,
             permissions = permissions,
-            platformPermissions = permissions.filter { it.startsWith("platform:") },
-            tenantPermissions = permissions.filter { it.startsWith("tenant:") },
+            platformPermissions = globalAuthorization.permissionNames,
+            platformRoles = globalAuthorization.roleNames,
+            tenantPermissions = selectedTenantPermissions,
             email = identity.email,
             displayName = identity.displayName,
             pictureUrl = identity.pictureUrl,
@@ -173,29 +154,42 @@ class UserAuthenticationServiceImpl(
     private fun resolveTenantInfo(userId: Long): TenantInfo {
         val memberships = tenantMembershipRepository.findByUserIdAndStatus(userId, MembershipStatus.ACTIVE)
 
-        val tenantSummaries = memberships.map { membership ->
-            val tenant = tenantRepository.findById(membership.tenantId).orElse(null)
-            TenantSummaryTO(
-                tenantId = membership.tenantId,
-                name = tenant?.name ?: "",
-                displayName = tenant?.displayName,
-                roleNames = membership.roles.map { it.name },
-                permissionNames = membership.roles.flatMap { it.permissions }.map { it.name }.distinct(),
-            )
-        }
+        val tenantSummaries =
+            memberships.mapNotNull { membership ->
+                val tenant =
+                    tenantRepository.findByIdAndStatus(membership.tenantId, TenantStatus.ACTIVE)
+                        ?: return@mapNotNull null
+                withTenant(membership.tenantId) {
+                    tenantPersistenceContext.activate(membership.tenantId)
+                    TenantSummaryTO(
+                        tenantId = membership.tenantId,
+                        name = tenant.name,
+                        displayName = tenant.displayName,
+                        roleNames = membership.tenantRoles.map { it.name },
+                        permissionNames =
+                            membership.tenantRoles
+                                .flatMap { it.permissions }
+                                .filter { it.scope != PermissionScope.PLATFORM }
+                                .map { it.name }
+                                .distinct(),
+                    )
+                }
+            }
 
-        val tenantStatus = when {
-            tenantSummaries.isEmpty() -> TenantSelectionStatus.NEEDS_ONBOARDING
-            tenantSummaries.size == 1 -> TenantSelectionStatus.SINGLE_TENANT
-            else -> TenantSelectionStatus.MULTI_TENANT
-        }
+        val tenantStatus =
+            when {
+                tenantSummaries.isEmpty() -> TenantSelectionStatus.NEEDS_ONBOARDING
+                tenantSummaries.size == 1 -> TenantSelectionStatus.SINGLE_TENANT
+                else -> TenantSelectionStatus.MULTI_TENANT
+            }
 
         // For single-tenant users, auto-set the current tenant
-        val currentTenantId = when (tenantStatus) {
-            TenantSelectionStatus.SINGLE_TENANT -> tenantSummaries[0].tenantId
-            TenantSelectionStatus.MULTI_TENANT -> currentTenantProvider.getCurrentTenantId()
-            TenantSelectionStatus.NEEDS_ONBOARDING -> null
-        }
+        val currentTenantId =
+            when (tenantStatus) {
+                TenantSelectionStatus.SINGLE_TENANT -> tenantSummaries[0].tenantId
+                TenantSelectionStatus.MULTI_TENANT -> currentTenantProvider.getCurrentTenantId()
+                TenantSelectionStatus.NEEDS_ONBOARDING -> null
+            }
 
         // Auto-set tenant context for single-tenant users
         if (tenantStatus == TenantSelectionStatus.SINGLE_TENANT) {
@@ -205,9 +199,44 @@ class UserAuthenticationServiceImpl(
         return TenantInfo(tenantStatus, tenantSummaries, currentTenantId)
     }
 
-    private fun resolvePermissionsForTenant(userId: Long, tenantId: Long): List<String> {
-        val membership = tenantMembershipRepository.findByTenantIdAndUserId(tenantId, userId)
-            ?: return emptyList()
-        return membership.roles.flatMap { role -> role.permissions.map { it.name } }.distinct()
+    private fun resolvePermissionsForTenant(
+        userId: Long,
+        tenantId: Long,
+    ): List<String> {
+        tenantPersistenceContext.activate(tenantId)
+        val membership =
+            tenantMembershipRepository.findByTenantIdAndUserId(tenantId, userId)
+                ?: return emptyList()
+        return membership.tenantRoles
+            .flatMap { role -> role.permissions }
+            .filter { it.scope != PermissionScope.PLATFORM }
+            .map { it.name }
+            .distinct()
     }
+
+    private data class GlobalAuthorization(
+        val roleNames: List<String>,
+        val permissionNames: List<String>,
+    )
+
+    private fun resolveGlobalAuthorization(userId: Long): GlobalAuthorization {
+        val assignments = platformUserRoleRepository.findAllByUserId(userId)
+        return GlobalAuthorization(
+            roleNames = assignments.map { it.role.name }.distinct(),
+            permissionNames =
+                assignments
+                    .flatMap { it.role.permissions }
+                    .filter { it.scope == PermissionScope.PLATFORM }
+                    .map { it.name }
+                    .distinct(),
+        )
+    }
+
+    private fun resolveSelectedTenantRoles(
+        tenantSummaries: List<TenantSummaryTO>,
+        currentTenantId: Long?,
+    ): List<String> =
+        currentTenantId
+            ?.let { selectedId -> tenantSummaries.find { it.tenantId == selectedId }?.roleNames }
+            .orEmpty()
 }

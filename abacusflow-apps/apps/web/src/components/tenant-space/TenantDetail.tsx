@@ -5,6 +5,7 @@ import { Descriptions, Tag, Spin, App, Button, Modal, Input, Form } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { AdminPageHeader } from '@/components/admin-page-header';
 import { useTenant } from '@/components/tenant-provider';
+import { usePermission } from '@/hooks/use-permission';
 import { tenantApi, type TenantDetail, type UpdateTenantInput } from '@abacusflow/core';
 import { translateTenantStatus, tenantStatusColor, formatTimestamp } from '../platform/tenant/utils';
 
@@ -12,6 +13,8 @@ export function TenantDetail() {
   const { message } = App.useApp();
   const [editForm] = Form.useForm();
   const { currentTenantId, updateTenantInList } = useTenant();
+  const { can } = usePermission();
+  const canUpdate = can('tenant:profile:update');
 
   const [detail, setDetail] = useState<TenantDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +28,7 @@ export function TenantDetail() {
     setLoading(true);
 
     tenantApi
-      .getTenant({ tenantId: currentTenantId })
+      .getCurrentTenant()
       .then((data) => {
         if (!cancelled) setDetail(data);
       })
@@ -57,8 +60,7 @@ export function TenantDetail() {
       const payload: UpdateTenantInput = {
         displayName: values.displayName || null,
       };
-      const updated = await tenantApi.updateTenant({
-        tenantId: detail.tenantId,
+      const updated = await tenantApi.updateCurrentTenant({
         updateTenantInput: payload,
       });
       message.success('更新成功');
@@ -112,11 +114,11 @@ export function TenantDetail() {
         eyebrow="租户空间 / 基本信息"
         title="基本信息"
         description="当前租户的基本信息与配置"
-        actions={
+        actions={canUpdate ? (
           <Button icon={<EditOutlined />} onClick={openEdit}>
             编辑
           </Button>
-        }
+        ) : undefined}
       />
 
       <div className="card" style={{ padding: 24 }}>

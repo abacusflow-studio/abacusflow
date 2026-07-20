@@ -1,4 +1,5 @@
 export function translateTenantStatus(value?: string): string {
+  if (value === 'PENDING_ACTIVATION') return '待激活';
   if (value === 'ACTIVE') return '正常';
   if (value === 'SUSPENDED') return '已暂停';
   if (value === 'DEPROVISIONED') return '已注销';
@@ -6,6 +7,7 @@ export function translateTenantStatus(value?: string): string {
 }
 
 export function tenantStatusColor(value?: string): string {
+  if (value === 'PENDING_ACTIVATION') return 'processing';
   if (value === 'ACTIVE') return 'success';
   if (value === 'SUSPENDED') return 'warning';
   if (value === 'DEPROVISIONED') return 'error';

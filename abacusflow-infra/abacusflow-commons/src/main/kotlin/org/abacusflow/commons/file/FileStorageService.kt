@@ -6,4 +6,8 @@ interface FileStorageService {
         originalFilename: String,
         contentType: String,
     ): String
+
+    fun requireOwnedReference(objectKey: String)
+
+    fun createReadUrl(objectKey: String): String
 }

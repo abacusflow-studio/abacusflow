@@ -1,7 +1,7 @@
 import { getConfig } from "@abacusflow/config";
 import { getAuthClient } from "./auth";
 import { redirect } from "./platform";
-import { getCurrentTenantId } from "./tenant";
+import { getCurrentTenantId, isTenantScopedApiUrl } from "./tenant";
 import {
   Configuration,
   type ConfigurationParameters,
@@ -15,7 +15,8 @@ import {
   TransactionApi,
   UserApi,
   FeedbackApi,
-  RoleApi,
+  TenantRoleApi,
+  PlatformRoleApi,
   PermissionApi,
   TenantApi,
 } from "./openapi/apis/index";
@@ -82,22 +83,26 @@ export type {
   FeedbackSource,
   CreateFeedbackInput,
   UpdateFeedbackInput,
-  // Tenant & Role types
+  // Tenant and role types
   TenantSummary,
   TenantDetail,
   CreateTenantInput,
   UpdateTenantInput,
   TenantMember,
   UpdateMemberRolesInput,
-  AddTenantMemberInput,
   TenantInvitation,
+  TenantProvisioning,
+  PlatformTenant,
+  ReissueInitialInvitationInput,
   CreateTenantInvitationInput,
   AcceptTenantInvitationInput,
-  Role,
-  CreateRoleInput,
-  UpdateRoleInput,
+  TenantRole,
+  CreateTenantRoleInput,
+  UpdateTenantRoleInput,
   Permission,
-  CreatePermissionInput,
+  PlatformRole,
+  PlatformRoleInput,
+  PlatformRoleAssignment,
   UpdatePermissionInput,
 } from "./openapi/models/index";
 
@@ -119,20 +124,27 @@ export type {
   UpdateUserRequest as UpdateUserApiRequest,
   ListFeedbackPageRequest,
   UpdateFeedbackRequest,
-  // Tenant & Role request types
-  CreateTenantRequest,
-  GetTenantRequest,
-  UpdateTenantRequest,
+  // Tenant and role request types
+  ProvisionTenantRequest,
+  UpdateCurrentTenantRequest,
+  UpdatePlatformTenantRequest,
+  ReissueInitialTenantInvitationRequest,
   UpdateMemberRolesRequest,
-  AddTenantMemberRequest,
   RemoveTenantMemberRequest,
   CreateTenantInvitationRequest,
   AcceptTenantInvitationRequest,
   CancelTenantInvitationRequest,
-  // Permission request types
-  CreatePermissionRequest,
+  CreateTenantRoleRequest,
+  DeleteTenantRoleRequest,
+  GetTenantRoleRequest,
+  UpdateTenantRoleRequest,
+  AssignPlatformRoleRequest,
+  CreatePlatformRoleRequest,
+  DeletePlatformRoleRequest,
+  ListPlatformRoleAssignmentsRequest,
+  RemovePlatformRoleRequest,
+  UpdatePlatformRoleRequest,
   UpdatePermissionRequest,
-  DeletePermissionRequest,
 } from "./openapi/apis/index";
 
 // ---- Custom utility types ----
@@ -185,7 +197,7 @@ function createApiConfig(): Configuration {
       {
         pre: async (ctx: { url: string; init: RequestInit }) => {
           const tenantId = getCurrentTenantId();
-          if (tenantId !== null) {
+          if (tenantId !== null && isTenantScopedApiUrl(ctx.url)) {
             const headers = new Headers(ctx.init.headers);
             headers.set("X-Tenant-Id", tenantId.toString());
             ctx.init.headers = headers;
@@ -203,6 +215,10 @@ function createApiConfig(): Configuration {
               redirect("/");
             }
             return response;
+          }
+
+          if (response.status === 403) {
+            redirect("/forbidden");
           }
 
           if (!response.ok) {
@@ -250,5 +266,6 @@ export const transactionApi = new TransactionApi(getApiConfig());
 export const userApi = new UserApi(getApiConfig());
 export const feedbackApi = new FeedbackApi(getApiConfig());
 export const permissionApi = new PermissionApi(getApiConfig());
-export const roleApi = new RoleApi(getApiConfig());
+export const tenantRoleApi = new TenantRoleApi(getApiConfig());
+export const platformRoleApi = new PlatformRoleApi(getApiConfig());
 export const tenantApi = new TenantApi(getApiConfig());

@@ -35,9 +35,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [currentTenantId, setCurrentTenantId] = useState<number | null>(getStoredTenantId());
 
   const selectTenant = useCallback((tenantId: number) => {
+    if (!tenants.some((tenant) => tenant.tenantId === tenantId)) {
+      throw new Error(`Tenant ${tenantId} is not available to the current user`);
+    }
     setCurrentTenantId(tenantId);
     setStoredTenantId(tenantId);
-  }, []);
+  }, [tenants]);
 
   const setBootstrapData = useCallback((
     status: string,
@@ -48,10 +51,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     setTenantStatus(validStatus === 'LOADING' ? 'NEEDS_ONBOARDING' : validStatus);
     setTenants(tenantList);
 
-    if (autoSelectId) {
-      setCurrentTenantId(autoSelectId);
-      setStoredTenantId(autoSelectId);
-    }
+    const candidateId = autoSelectId === undefined ? getStoredTenantId() : autoSelectId;
+    const validatedId = tenantList.some((tenant) => tenant.tenantId === candidateId)
+      ? candidateId
+      : null;
+    setCurrentTenantId(validatedId);
+    setStoredTenantId(validatedId);
   }, []);
 
   const clearTenant = useCallback(() => {

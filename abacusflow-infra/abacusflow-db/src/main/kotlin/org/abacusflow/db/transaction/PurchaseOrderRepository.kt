@@ -15,5 +15,8 @@ interface PurchaseOrderRepository : JpaRepository<PurchaseOrder, Long> {
     fun findBySupplierId(supplierId: Long): List<PurchaseOrder>
 
     /** 按状态和日期查询采购单（Filter 自动追加 tenant_id 条件） */
-    fun findByStatusAndOrderDateBefore(status: org.abacusflow.transaction.OrderStatus, date: java.time.LocalDate): List<PurchaseOrder>
+    fun findByStatusAndOrderDateBefore(
+        status: org.abacusflow.transaction.OrderStatus,
+        date: java.time.LocalDate,
+    ): List<PurchaseOrder>
 }

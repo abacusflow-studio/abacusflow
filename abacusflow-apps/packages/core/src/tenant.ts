@@ -2,6 +2,22 @@
 
 const TENANT_STORAGE_KEY = 'abacusflow_current_tenant_id';
 
+const TENANT_SCOPED_API_PATH_PREFIXES = [
+  '/tenant',
+  '/suppliers',
+  '/customers',
+  '/products',
+  '/product-categories',
+  '/depots',
+  '/inventories',
+  '/inventory-units',
+  '/sale-orders',
+  '/purchase-orders',
+  '/feedback',
+  '/files',
+  '/api/cube-token',
+] as const;
+
 export interface TenantInfo {
   tenantId: number;
   name: string;
@@ -78,6 +94,23 @@ export function setStoredTenantId(tenantId: number | null): void {
 // Get current tenant ID (for API headers)
 export function getCurrentTenantId(): number | null {
   return getStoredTenantId();
+}
+
+/**
+ * Tenant headers are sent only to tenant-scoped APIs. Bootstrap, invitation,
+ * and platform control-plane calls must remain usable when a browser has a
+ * stale tenant ID left over from another account or a recreated database.
+ */
+export function isTenantScopedApiUrl(url: string): boolean {
+  const requestPath = new URL(url, 'http://abacusflow.local').pathname;
+  const candidatePaths = requestPath.startsWith('/api/')
+    ? [requestPath, requestPath.slice('/api'.length)]
+    : [requestPath];
+  return candidatePaths.some((path) =>
+    TENANT_SCOPED_API_PATH_PREFIXES.some(
+      (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+    ),
+  );
 }
 
 // Clear tenant context (on logout or switch)

@@ -10,4 +10,5 @@ dependencies {
     implementation(project(":abacusflow-core:abacusflow-inventory"))
     implementation(project(":abacusflow-core:abacusflow-tenant"))
     implementation(project(":abacusflow-infra:abacusflow-db"))
+    testImplementation(libs.spring.boot.starter.test)
 }

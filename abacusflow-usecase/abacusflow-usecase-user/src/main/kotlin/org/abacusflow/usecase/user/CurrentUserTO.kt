@@ -14,6 +14,7 @@ data class CurrentUserTO(
     val roles: List<String>,
     val permissions: List<String>,
     val platformPermissions: List<String>,
+    val platformRoles: List<String>,
     val tenantPermissions: List<String>,
     val tenantStatus: TenantSelectionStatus,
     val tenants: List<TenantSummaryTO>,

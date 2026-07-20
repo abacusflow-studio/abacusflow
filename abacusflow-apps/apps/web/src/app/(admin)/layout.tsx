@@ -22,103 +22,63 @@ import {
   SettingOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
-  ShoppingOutlined,
   SunOutlined,
   SwapOutlined,
   TeamOutlined,
   TransactionOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { getAuthClient, userApi } from "@abacusflow/core";
+import {
+  getAuthClient,
+  getStoredTenantId,
+  tenantApi,
+  userApi,
+} from "@abacusflow/core";
 import type { TenantInfo } from "@abacusflow/core";
 import { useTheme } from "../../components/providers";
 import { useTenant } from "../../components/tenant-provider";
 import { useAuth } from "../../components/auth-provider";
-import { usePermission } from "../../hooks/use-permission";
 import { FeedbackModal } from "../../components/feedback-modal";
+import {
+  filterMenuRegistry,
+  firstVisibleRoute,
+  type MenuIcon,
+  type MenuRegistryEntry,
+} from "../../lib/menu-registry";
+import { resolveBootstrapTenantId } from "../../lib/tenant-bootstrap";
 
 const { Sider, Header, Content, Footer } = Layout;
 
 type MenuItemType = Required<MenuProps>["items"][number];
 
-const BUSINESS_NAV_ITEMS: MenuItemType[] = [
-  {
-    key: "/dashboard",
-    label: <Link href="/dashboard">仪表盘</Link>,
-    icon: <DashboardOutlined />,
-  },
-  {
-    key: "/inventory",
-    label: <Link href="/inventory">库存管理</Link>,
-    icon: <InboxOutlined />,
-  },
-  {
-    key: "/transaction",
-    label: "交易管理",
-    icon: <TransactionOutlined />,
-    children: [
-      {
-        key: "/transaction/purchase-order",
-        label: <Link href="/transaction/purchase-order">采购单管理</Link>,
-        icon: <ShoppingCartOutlined />,
-      },
-      {
-        key: "/transaction/sale-order",
-        label: <Link href="/transaction/sale-order">销售单管理</Link>,
-        icon: <ShopOutlined />,
-      },
-    ],
-  },
-  {
-    key: "/products-group",
-    label: "产品中心",
-    icon: <ShoppingOutlined />,
-    children: [
-      {
-        key: "/products",
-        label: <Link href="/products">产品管理</Link>,
-        icon: <AppstoreOutlined />,
-      },
-      {
-        key: "/products/category",
-        label: <Link href="/products/category">产品类别管理</Link>,
-        icon: <AppstoreOutlined />,
-      },
-    ],
-  },
-  {
-    key: "/partner",
-    label: "合作伙伴",
-    icon: <TeamOutlined />,
-    children: [
-      {
-        key: "/partner/customer",
-        label: <Link href="/partner/customer">客户管理</Link>,
-        icon: <UserOutlined />,
-      },
-      {
-        key: "/partner/supplier",
-        label: <Link href="/partner/supplier">供应商管理</Link>,
-        icon: <BankOutlined />,
-      },
-    ],
-  },
-  {
-    key: "/depots",
-    label: <Link href="/depots">储存点管理</Link>,
-    icon: <HomeOutlined />,
-  },
-  {
-    key: "/analytics",
-    label: <Link href="/analytics">数据刻画</Link>,
-    icon: <AreaChartOutlined />,
-  },
-  {
-    key: "/feedback",
-    label: <Link href="/feedback">问题反馈</Link>,
-    icon: <ExclamationCircleOutlined />,
-  },
-];
+const MENU_ICONS: Record<MenuIcon, React.ReactNode> = {
+  dashboard: <DashboardOutlined />,
+  inventory: <InboxOutlined />,
+  transaction: <TransactionOutlined />,
+  purchase: <ShoppingCartOutlined />,
+  sale: <ShopOutlined />,
+  product: <AppstoreOutlined />,
+  partner: <TeamOutlined />,
+  customer: <UserOutlined />,
+  supplier: <BankOutlined />,
+  depot: <HomeOutlined />,
+  analytics: <AreaChartOutlined />,
+  feedback: <ExclamationCircleOutlined />,
+  platform: <SettingOutlined />,
+  tenant: <ShopOutlined />,
+  user: <UserOutlined />,
+  permission: <SettingOutlined />,
+  role: <TeamOutlined />,
+};
+
+function toMenuItem(entry: MenuRegistryEntry): MenuItemType {
+  return {
+    key: entry.key,
+    label: entry.route ? <Link href={entry.route}>{entry.label}</Link> : entry.label,
+    icon: MENU_ICONS[entry.icon],
+    children: entry.children?.map(toMenuItem),
+  } as MenuItemType;
+}
 
 const ROUTE_META = [
   { key: "/dashboard", title: "业务仪表盘", subtitle: "全链路库存与订单信号" },
@@ -155,6 +115,7 @@ const ROUTE_META = [
   { key: "/platform/tenants", title: "租户管理", subtitle: "租户创建与配置" },
   { key: "/platform/users", title: "用户管理", subtitle: "系统用户账号管理" },
   { key: "/platform/permissions", title: "权限管理", subtitle: "权限定义与配置" },
+  { key: "/platform/roles", title: "平台角色", subtitle: "全局平台授权" },
   { key: "/tenant", title: "基本信息", subtitle: "当前租户详情" },
   { key: "/tenant/members", title: "成员", subtitle: "成员管理与角色分配" },
   { key: "/tenant/roles", title: "角色", subtitle: "角色与权限配置" },
@@ -172,12 +133,6 @@ function getCurrentBrowserPath() {
   return `${pathname}${search}${hash}` || "/dashboard";
 }
 
-function getStoredTenantIdLocal(): number | null {
-  if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem("abacusflow_current_tenant_id");
-  return stored ? parseInt(stored, 10) : null;
-}
-
 export default function AdminLayout({
   children,
 }: {
@@ -192,7 +147,6 @@ export default function AdminLayout({
   const [displayName, setDisplayName] = useState<string>("");
   const { themeMode, toggleTheme } = useTheme();
   const {
-    tenantStatus,
     tenants,
     currentTenantId,
     currentTenant,
@@ -200,8 +154,7 @@ export default function AdminLayout({
     setBootstrapData,
     clearTenant,
   } = useTenant();
-  const { setAuthData, clearAuth } = useAuth();
-  const { hasPlatformPermission, hasTenantPermission } = usePermission();
+  const { platformPermissions, tenantPermissions, setAuthData, clearAuth } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -214,28 +167,50 @@ export default function AdminLayout({
             // Fetch user info and bootstrap tenant data
             try {
               const bootstrap = await userApi.bootstrap();
+              const myTenants = await tenantApi.listMyTenants();
               if (!cancelled) {
+                const selectedTenantId = resolveBootstrapTenantId(
+                  bootstrap.tenantStatus,
+                  myTenants,
+                  getStoredTenantId(),
+                );
+                const selectedTenant = myTenants.find(
+                  (tenant) => tenant.tenantId === selectedTenantId,
+                );
                 setDisplayName(bootstrap.displayName ?? "");
                 setAuthData({
                   platformPermissions: bootstrap.platformPermissions ?? [],
-                  tenantPermissions: bootstrap.tenantPermissions ?? [],
+                  platformRoles: bootstrap.platformRoles ?? [],
+                  tenantPermissions: selectedTenant?.permissionNames ?? [],
                   displayName: bootstrap.displayName ?? "",
                 });
                 setBootstrapData(
                   bootstrap.tenantStatus,
-                  (bootstrap.tenants ?? []) as TenantInfo[],
-                  bootstrap.tenantStatus === "SINGLE_TENANT" && (bootstrap.tenants?.length ?? 0) > 0
-                    ? bootstrap.tenants![0].tenantId
-                    : null,
+                  myTenants as TenantInfo[],
+                  selectedTenantId,
                 );
 
                 // Handle tenant redirects
                 if (bootstrap.tenantStatus === "NEEDS_ONBOARDING") {
-                  setAuthStatus("tenant_redirect");
-                  router.replace("/onboarding");
-                  return;
+                  const destination = pathname.startsWith("/platform")
+                    ? null
+                    : firstVisibleRoute(
+                        filterMenuRegistry({
+                          platformPermissions: bootstrap.platformPermissions ?? [],
+                          tenantPermissions: [],
+                        }),
+                      ) ?? "/onboarding";
+                  if (destination) {
+                    setAuthStatus("tenant_redirect");
+                    router.replace(destination);
+                    return;
+                  }
                 }
-                if (bootstrap.tenantStatus === "MULTI_TENANT" && !getStoredTenantIdLocal()) {
+                if (
+                  bootstrap.tenantStatus === "MULTI_TENANT" &&
+                  selectedTenantId === null &&
+                  !pathname.startsWith("/platform")
+                ) {
                   setAuthStatus("tenant_redirect");
                   router.replace("/tenant/select");
                   return;
@@ -270,76 +245,14 @@ export default function AdminLayout({
     };
   }, [pathname, router, setBootstrapData, setAuthData]);
 
-  // Build permission-filtered navigation items
-  const navItems = useMemo(() => {
-    const items: MenuItemType[] = [...BUSINESS_NAV_ITEMS];
-
-    // Platform center — only show if user has any platform:* permission
-    const platformChildren: MenuItemType[] = [];
-    if (hasPlatformPermission("platform:tenant:list")) {
-      platformChildren.push({
-        key: "/platform/tenants",
-        label: <Link href="/platform/tenants">租户管理</Link>,
-        icon: <ShopOutlined />,
-      });
-    }
-    if (hasPlatformPermission("platform:user:read")) {
-      platformChildren.push({
-        key: "/platform/users",
-        label: <Link href="/platform/users">用户管理</Link>,
-        icon: <UserOutlined />,
-      });
-    }
-    if (hasPlatformPermission("platform:permission:read")) {
-      platformChildren.push({
-        key: "/platform/permissions",
-        label: <Link href="/platform/permissions">权限管理</Link>,
-        icon: <SettingOutlined />,
-      });
-    }
-    if (platformChildren.length > 0) {
-      items.push({
-        key: "/platform",
-        label: "平台中心",
-        icon: <SettingOutlined />,
-        children: platformChildren,
-      });
-    }
-
-    // Tenant space — only show if user has any tenant:* permission
-    const tenantChildren: MenuItemType[] = [];
-    if (hasTenantPermission("tenant:info:read")) {
-      tenantChildren.push({
-        key: "/tenant",
-        label: <Link href="/tenant">基本信息</Link>,
-        icon: <ShopOutlined />,
-      });
-    }
-    if (hasTenantPermission("tenant:member:read")) {
-      tenantChildren.push({
-        key: "/tenant/members",
-        label: <Link href="/tenant/members">成员</Link>,
-        icon: <UserOutlined />,
-      });
-    }
-    if (hasTenantPermission("tenant:role:read")) {
-      tenantChildren.push({
-        key: "/tenant/roles",
-        label: <Link href="/tenant/roles">角色</Link>,
-        icon: <TeamOutlined />,
-      });
-    }
-    if (tenantChildren.length > 0) {
-      items.push({
-        key: "/tenant-group",
-        label: "租户空间",
-        icon: <ShopOutlined />,
-        children: tenantChildren,
-      });
-    }
-
-    return items;
-  }, [hasPlatformPermission, hasTenantPermission]);
+  const navItems = useMemo(
+    () =>
+      filterMenuRegistry({
+        platformPermissions,
+        tenantPermissions,
+      }).map(toMenuItem),
+    [platformPermissions, tenantPermissions],
+  );
 
   const selectedKeys = useMemo(() => {
     const match = ALL_ROUTE_KEYS.filter(

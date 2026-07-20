@@ -26,7 +26,7 @@ import java.time.Instant
  * 代表 SaaS 系统中的一个租户（组织/企业），是数据隔离的基本单位。
  * 每个租户拥有独立的业务数据（产品、库存、订单等），通过 PostgreSQL RLS 实现行级隔离。
  *
- * 租户的生命周期：创建(ACTIVE) → 暂停(SUSPENDED) → 注销(DEPROVISIONED)
+ * 租户的生命周期：待激活(PENDING_ACTIVATION) → 正常(ACTIVE) → 暂停(SUSPENDED) → 注销(DEPROVISIONED)
  */
 @Entity
 @Table(
@@ -35,13 +35,20 @@ import java.time.Instant
         UniqueConstraint(columnNames = ["name"]),
     ],
 )
-@FilterDef(name = "tenantFilter", parameters = [ParamDef(name = "tenantId", type = Long::class)])
+@FilterDef(
+    name = "tenantFilter",
+    parameters = [ParamDef(name = "tenantId", type = Long::class)],
+    applyToLoadByKey = true,
+)
 class Tenant(
     /** 租户唯一标识名，用于系统内部引用（不可重复，创建后不可修改） */
     @field:NotBlank
     @field:Size(min = 1, max = 100)
     @Column(name = "name", nullable = false, length = 100)
     val name: String,
+
+    /** 平台供应的新租户从待激活开始；兼容既有内部创建者的默认值保持 ACTIVE。 */
+    initialStatus: TenantStatus = TenantStatus.ACTIVE,
 ) : AbstractAggregateRoot<Tenant>() {
 
     @Id
@@ -57,7 +64,7 @@ class Tenant(
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType::class)
     @Column(name = "status", nullable = false)
-    var status: TenantStatus = TenantStatus.ACTIVE
+    var status: TenantStatus = initialStatus
         private set
 
     /** 创建时间，由 Hibernate 自动填充 */
@@ -96,6 +103,14 @@ class Tenant(
      * 将暂停状态的租户恢复为正常可用状态。
      */
     fun reactivate() {
+        require(status == TenantStatus.SUSPENDED) { "Only suspended tenants can be reactivated" }
+        status = TenantStatus.ACTIVE
+        updatedAt = Instant.now()
+    }
+
+    /** 初始管理员成功接受邀请后完成首次激活。 */
+    fun activateFromInitialInvitation() {
+        require(status == TenantStatus.PENDING_ACTIVATION) { "Tenant is not pending activation" }
         status = TenantStatus.ACTIVE
         updatedAt = Instant.now()
     }

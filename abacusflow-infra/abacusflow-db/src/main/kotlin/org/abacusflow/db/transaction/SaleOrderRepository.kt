@@ -15,5 +15,8 @@ interface SaleOrderRepository : JpaRepository<SaleOrder, Long> {
     fun findByCustomerId(customerId: Long): List<SaleOrder>
 
     /** 按状态和日期查询销售单（Filter 自动追加 tenant_id 条件） */
-    fun findByStatusAndOrderDateBefore(status: org.abacusflow.transaction.OrderStatus, date: java.time.LocalDate): List<SaleOrder>
+    fun findByStatusAndOrderDateBefore(
+        status: org.abacusflow.transaction.OrderStatus,
+        date: java.time.LocalDate,
+    ): List<SaleOrder>
 }

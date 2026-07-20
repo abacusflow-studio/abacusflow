@@ -9,9 +9,8 @@ import {
   userApi,
   setMemoryTenantId,
   clearTenantContext,
+  type TenantInfo,
 } from "@abacusflow/core";
-
-import type { TenantInfo } from "@abacusflow/core";
 
 import {
   appConfig,
@@ -219,7 +218,15 @@ async function syncAuthenticatedSession(): Promise<void> {
       selectedTenantId = bootstrapTenants[0].tenantId;
     } else if (bootstrap.tenantStatus === "MULTI_TENANT") {
       const storedRaw = await SecureStore.getItemAsync(TENANT_STORE_KEY);
-      selectedTenantId = storedRaw ? parseInt(storedRaw, 10) : null;
+      const storedTenantId = storedRaw ? Number(storedRaw) : null;
+      selectedTenantId = storedTenantId !== null &&
+        Number.isSafeInteger(storedTenantId) &&
+        bootstrapTenants.some((tenant) => tenant.tenantId === storedTenantId)
+        ? storedTenantId
+        : null;
+      if (storedRaw && selectedTenantId === null) {
+        await SecureStore.deleteItemAsync(TENANT_STORE_KEY);
+      }
     }
 
     // Set in-memory tenant ID for API header injection
@@ -376,6 +383,8 @@ const mobileAuthClient: AuthClient = {
       // Local logout still succeeds if Auth0 token revocation is unavailable.
     } finally {
       await clearToken();
+      setMemoryTenantId(null);
+      await SecureStore.deleteItemAsync(TENANT_STORE_KEY);
       publish({
         ready: true,
         authenticated: false,
@@ -474,6 +483,9 @@ export function subscribeMobileAuth(listener: Listener): () => void {
  * so the X-Tenant-Id header is sent on subsequent API calls.
  */
 export async function selectMobileTenant(tenantId: number): Promise<void> {
+  if (!snapshot.tenants.some((tenant) => tenant.tenantId === tenantId)) {
+    throw new Error(`Tenant ${tenantId} is not available to the current user`);
+  }
   setMemoryTenantId(tenantId);
   await SecureStore.setItemAsync(TENANT_STORE_KEY, tenantId.toString());
   publish({

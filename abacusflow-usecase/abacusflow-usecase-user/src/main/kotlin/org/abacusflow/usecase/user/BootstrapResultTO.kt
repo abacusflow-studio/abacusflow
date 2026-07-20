@@ -11,6 +11,7 @@ data class BootstrapResultTO(
     val roles: List<String>,
     val permissions: List<String>,
     val platformPermissions: List<String>,
+    val platformRoles: List<String>,
     val tenantPermissions: List<String>,
     val email: String?,
     val displayName: String?,

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Card, Result, Spin, Typography, App } from "antd";
-import { MailOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined } from "@ant-design/icons";
 import { tenantApi } from "@abacusflow/core";
 
 const { Text, Title } = Typography;

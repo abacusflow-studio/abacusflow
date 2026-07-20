@@ -6,6 +6,8 @@ data class AuthenticatedUserTO(
     val roleNames: Set<String>,
     val permissionNames: Set<String>,
     val tenantMemberships: List<TenantMembershipInfo> = emptyList(),
+    val email: String? = null,
+    val emailVerified: Boolean = false,
 ) {
     data class TenantMembershipInfo(
         val tenantId: Long,
