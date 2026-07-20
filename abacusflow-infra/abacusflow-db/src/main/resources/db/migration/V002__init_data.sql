@@ -70,38 +70,38 @@ VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- ✅ 默认租户角色
-INSERT INTO role (name, label, tenant_id)
+INSERT INTO tenant_role (name, label, tenant_id)
 VALUES
     ('admin', '超级管理员', 1),
     ('reader', '只读用户', 1),
     ('operator', '操作员', 1)
 ON CONFLICT (tenant_id, name) DO NOTHING;
 
-INSERT INTO role_permission (role_id, permission_id)
-SELECT role.id, permission.id
-FROM role
+INSERT INTO tenant_role_permission (role_id, permission_id)
+SELECT tenant_role.id, permission.id
+FROM tenant_role
 CROSS JOIN permission
-WHERE role.name = 'admin'
-  AND role.tenant_id = 1
+WHERE tenant_role.name = 'admin'
+  AND tenant_role.tenant_id = 1
   AND permission.scope IN ('TENANT', 'BUSINESS')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_permission (role_id, permission_id)
-SELECT role.id, permission.id
-FROM role
+INSERT INTO tenant_role_permission (role_id, permission_id)
+SELECT tenant_role.id, permission.id
+FROM tenant_role
 CROSS JOIN permission
-WHERE role.name = 'reader'
-  AND role.tenant_id = 1
+WHERE tenant_role.name = 'reader'
+  AND tenant_role.tenant_id = 1
   AND permission.scope = 'BUSINESS'
   AND permission.name LIKE '%:read'
 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_permission (role_id, permission_id)
-SELECT role.id, permission.id
-FROM role
+INSERT INTO tenant_role_permission (role_id, permission_id)
+SELECT tenant_role.id, permission.id
+FROM tenant_role
 CROSS JOIN permission
-WHERE role.name = 'operator'
-  AND role.tenant_id = 1
+WHERE tenant_role.name = 'operator'
+  AND tenant_role.tenant_id = 1
   AND permission.scope = 'BUSINESS'
 ON CONFLICT DO NOTHING;
 
@@ -132,10 +132,10 @@ WHERE user_account.name = 'admin'
 ON CONFLICT (tenant_id, user_id) DO NOTHING;
 
 INSERT INTO tenant_membership_role (membership_id, role_id)
-SELECT membership.id, role.id
+SELECT membership.id, tenant_role.id
 FROM tenant_membership membership
 JOIN user_account ON user_account.id = membership.user_id AND user_account.name = 'admin'
-JOIN role ON role.name = 'admin' AND role.tenant_id = membership.tenant_id
+JOIN tenant_role ON tenant_role.name = 'admin' AND tenant_role.tenant_id = membership.tenant_id
 WHERE membership.tenant_id = 1
 ON CONFLICT DO NOTHING;
 
