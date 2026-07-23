@@ -82,6 +82,7 @@ portalModules.forEach {
 // ------------------------------------
 val toolsModules =
     listOf(
+        "abacusflow-migration",
         "abacusflow-monitor",
     )
 toolsModules.forEach {

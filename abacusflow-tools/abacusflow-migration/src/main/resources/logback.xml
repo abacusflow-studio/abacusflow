@@ -1,0 +1,12 @@
+<configuration>
+    <!-- TODO(实现者)：生产执行前补充滚动文件、JSON 格式和脱敏规则。禁止逐条记录日志。 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{ISO8601} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

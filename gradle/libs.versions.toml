@@ -22,6 +22,9 @@ jooq = "3.19.15"
 testcontainers = "1.21.4"
 aws-sdk = "2.25.0"
 flyway = "11.7.2"
+picocli = "4.7.6"
+kotlinLogging = "7.0.3"
+logback = "1.5.18"
 
 [plugins]
 jsonschema2pojo = { id = "org.jsonschema2pojo", version = "1.2.2" }
@@ -102,6 +105,12 @@ docker-java-core = { module = "com.github.docker-java:docker-java-core", version
 # Flyway
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+
+# Standalone migration CLI (intentionally independent from Spring Boot)
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlinLogging" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 # AWS S3
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }

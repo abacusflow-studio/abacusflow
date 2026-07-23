@@ -1,0 +1,24 @@
+# 复制为 migration.yml 后使用。生产环境密码必须通过环境变量注入，不要提交明文。
+source:
+  url: jdbc:postgresql://localhost:5432/abacusflow_old
+  username: abacusflow_migration_reader
+  password: ${SOURCE_DB_PASSWORD}
+  schema: public
+  connection-timeout-seconds: 30
+
+target:
+  url: jdbc:postgresql://localhost:5432/abacusflow_new
+  username: abacusflow_migration_writer
+  password: ${TARGET_DB_PASSWORD}
+  schema: public
+  connection-timeout-seconds: 30
+
+migration:
+  batch-size: 1000
+  fetch-size: 1000
+  control-schema: abacusflow_migration
+  fail-fast: true
+  default-tenant:
+    id: 1
+    name: default
+    display-name: 默认租户
