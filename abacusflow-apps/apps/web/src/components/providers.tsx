@@ -190,6 +190,7 @@ const DARK_COMPONENTS = {
 export function Providers({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [themeMode, setThemeMode] = useState<ThemeMode>("light");
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("af-theme") as ThemeMode | null;
@@ -209,6 +210,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
     localStorage.setItem("af-theme", themeMode);
   }, [themeMode]);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    syncPreference();
+    mediaQuery.addEventListener("change", syncPreference);
+    return () => mediaQuery.removeEventListener("change", syncPreference);
+  }, []);
+
   const toggleTheme = useMemo(
     () => () => setThemeMode((prev) => (prev === "light" ? "dark" : "light")),
     [],
@@ -217,6 +227,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const ctx = useMemo(
     () => ({ themeMode, toggleTheme }),
     [themeMode, toggleTheme],
+  );
+
+  const isDark = themeMode === "dark";
+  const themeTokens = useMemo(
+    () => ({
+      ...(isDark ? DARK_TOKENS : LIGHT_TOKENS),
+      // Let Ant Design disable rc-motion itself. A global 0.01ms animation
+      // override can leave portalled popups at their scale(0) prepare state.
+      motion: !prefersReducedMotion,
+    }),
+    [isDark, prefersReducedMotion],
   );
 
   if (!ready) {
@@ -230,8 +251,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isDark = themeMode === "dark";
-
   return (
     <AuthProvider>
       <TenantProvider>
@@ -242,7 +261,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               algorithm: isDark
                 ? antdTheme.darkAlgorithm
                 : antdTheme.defaultAlgorithm,
-              token: isDark ? DARK_TOKENS : LIGHT_TOKENS,
+              token: themeTokens,
               components: isDark ? DARK_COMPONENTS : LIGHT_COMPONENTS,
             }}
           >

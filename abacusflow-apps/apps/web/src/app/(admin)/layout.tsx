@@ -467,7 +467,7 @@ export default function AdminLayout({
         onCancel={() => setShowTenantModal(false)}
         footer={null}
         width={420}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
           {tenants.map((t) => {

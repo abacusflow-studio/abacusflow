@@ -518,6 +518,17 @@ a:hover {
   box-shadow: 0 28px 90px var(--af-shadow-strong) !important;
 }
 
+/*
+ * rc-motion starts Select popups at scale(0) and measures them during its
+ * prepare phase. If that phase misses a frame, rc-trigger observes a 0 x 0
+ * popup and calculates a wildly offset position. Keep the measurable box at
+ * full scale; the opacity animation still provides the visual transition.
+ */
+.ant-select-dropdown.ant-slide-up-enter,
+.ant-select-dropdown.ant-slide-up-appear {
+  transform: scale(1) !important;
+}
+
 /* Better focus states */
 .ant-btn:focus-visible,
 .ant-input:focus-visible,
@@ -2041,11 +2052,19 @@ a:hover {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  body::after,
+  .af-gradient-text,
+  .af-gradient-border::before,
+  .af-loader-ring,
+  .af-flow-board::before,
+  .af-board-lane::before,
+  .af-login-hero-text,
+  .af-login-floating-card,
+  .af-dashboard-hero::after,
+  .af-route-line,
+  .af-stat-card,
+  .af-stat-spark,
+  .af-workflow-meter span {
+    animation: none !important;
   }
 }

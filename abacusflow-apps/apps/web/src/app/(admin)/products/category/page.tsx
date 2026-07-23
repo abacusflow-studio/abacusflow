@@ -296,7 +296,7 @@ export default function ProductCategoriesPage() {
         onOk={handleSubmit}
         confirmLoading={submitting}
         width={560}
-        destroyOnHidden
+        forceRender
       >
         {formLoading ? (
           <div
