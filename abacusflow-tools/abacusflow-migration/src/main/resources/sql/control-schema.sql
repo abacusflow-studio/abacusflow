@@ -2,6 +2,14 @@
 -- 本脚本由运维显式审核/执行；骨架阶段不会自动修改任何数据库。
 CREATE SCHEMA IF NOT EXISTS abacusflow_migration;
 
+-- 迁移锁：防止多个迁移实例同时执行
+CREATE TABLE IF NOT EXISTS abacusflow_migration.migration_lock (
+    lock_id INTEGER PRIMARY KEY DEFAULT 1,
+    acquired_at TIMESTAMPTZ NOT NULL,
+    acquired_by VARCHAR(255) NOT NULL,
+    CONSTRAINT ck_migration_lock_single_row CHECK (lock_id = 1)
+);
+
 CREATE TABLE IF NOT EXISTS abacusflow_migration.migration_run (
     run_id UUID PRIMARY KEY,
     status VARCHAR(20) NOT NULL,
@@ -49,3 +57,19 @@ CREATE TABLE IF NOT EXISTS abacusflow_migration.migration_error (
 
 CREATE INDEX IF NOT EXISTS idx_migration_error_run_task
     ON abacusflow_migration.migration_error (run_id, task_name);
+
+-- V1 → V2 ID 映射表：所有基础数据通过映射表转换，不直接保留 V1 ID
+CREATE TABLE IF NOT EXISTS abacusflow_migration.v1_user_id_map (
+    v1_user_id BIGINT PRIMARY KEY,
+    v2_user_id BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS abacusflow_migration.v1_role_id_map (
+    v1_role_id BIGINT PRIMARY KEY,
+    v2_role_id BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS abacusflow_migration.v1_permission_id_map (
+    v1_permission_id BIGINT PRIMARY KEY,
+    v2_permission_id BIGINT NOT NULL
+);

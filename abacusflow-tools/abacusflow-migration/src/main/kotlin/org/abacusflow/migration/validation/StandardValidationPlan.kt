@@ -11,9 +11,14 @@ object StandardValidationPlan {
             PermissionValidator(),
             RolePermissionValidator(),
             ProductValidator(),
-            PurchaseOrderValidator(),
+            DepotValidator(),
             InventoryValidator(),
+            SupplierValidator(),
+            PurchaseOrderValidator(),
+            PurchaseOrderItemValidator(),
+            CustomerValidator(),
             SaleOrderValidator(),
+            SaleOrderItemValidator(),
             FinalizeValidator(),
         )
 }

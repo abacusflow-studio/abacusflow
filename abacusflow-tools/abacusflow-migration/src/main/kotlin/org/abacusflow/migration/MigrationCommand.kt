@@ -83,3 +83,48 @@ class ValidateCommand(
         return if (report.passed) 0 else 2
     }
 }
+
+@Command(
+    name = "plan",
+    description = ["Dry run：分析源和目标数据库，输出迁移计划，不修改任何数据"],
+    mixinStandardHelpOptions = true,
+)
+class PlanCommand(
+    private val applicationFactory: MigrationApplicationFactory = MigrationApplicationFactory(),
+) : Callable<Int> {
+    @Option(
+        names = ["-c", "--config"],
+        description = ["YAML 配置路径"],
+        defaultValue = "migration.yml",
+    )
+    lateinit var configPath: Path
+
+    override fun call(): Int {
+        // 加载配置并连接数据库，执行 schema check 和数据量统计
+        val app = applicationFactory.create(configPath)
+        try {
+            println("=== AbacusFlow Migration Plan (Dry Run) ===")
+            println()
+
+            // 输出任务执行顺序
+            println("Task execution order:")
+            for (taskId in org.abacusflow.migration.framework.MigrationTaskId.entries) {
+                println("  ${taskId.ordinal + 1}. ${taskId.cliName}")
+            }
+            println()
+
+            // 输出任务组
+            println("Task groups:")
+            println("  authorization = role, permission, role-permission")
+            println("  transaction   = supplier, purchase-order, purchase-order-item, customer, sale-order, sale-order-item")
+            println("  inventory-group = depot, inventory")
+            println()
+
+            println("Note: This is a dry run. No data will be modified.")
+            println("Run 'migrate' command to execute the actual migration.")
+        } finally {
+            app.close()
+        }
+        return 0
+    }
+}

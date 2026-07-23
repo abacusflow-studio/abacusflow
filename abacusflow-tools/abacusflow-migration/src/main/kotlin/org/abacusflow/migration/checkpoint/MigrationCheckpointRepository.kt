@@ -20,9 +20,15 @@ data class MigrationCheckpoint(
     val updatedAt: Instant,
 )
 
-/** 控制表仓储。save 必须使用业务批次传入的 transaction，保证原子提交。 */
+/**
+ * 控制表仓储。save 必须使用业务批次传入的 transaction，保证原子提交。
+ * find 也需要 DSLContext 参数以支持在事务内读取。
+ */
 interface MigrationCheckpointRepository {
-    fun find(key: CheckpointKey): MigrationCheckpoint?
+    fun find(
+        dsl: DSLContext,
+        key: CheckpointKey,
+    ): MigrationCheckpoint?
 
     fun save(
         transaction: DSLContext,

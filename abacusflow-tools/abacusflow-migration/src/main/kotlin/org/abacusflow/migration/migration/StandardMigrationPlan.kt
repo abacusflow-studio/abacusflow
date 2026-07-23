@@ -2,7 +2,7 @@ package org.abacusflow.migration.migration
 
 import org.abacusflow.migration.framework.MigrationPlan
 
-/** 标准全量计划的唯一注册位置；列表顺序应与依赖图的拓扑顺序一致。 */
+/** 标准全量计划的唯一注册位置；列表顺序与固定执行顺序一致。 */
 object StandardMigrationPlan {
     fun create(): MigrationPlan =
         MigrationPlan(
@@ -14,9 +14,14 @@ object StandardMigrationPlan {
                 PermissionMigration(),
                 RolePermissionMigration(),
                 ProductMigration(),
-                PurchaseOrderMigration(),
+                DepotMigration(),
                 InventoryMigration(),
+                SupplierMigration(),
+                PurchaseOrderMigration(),
+                PurchaseOrderItemMigration(),
+                CustomerMigration(),
                 SaleOrderMigration(),
+                SaleOrderItemMigration(),
                 FinalizeMigration(),
             ),
         )

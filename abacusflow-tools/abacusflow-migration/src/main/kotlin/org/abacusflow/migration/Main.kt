@@ -12,5 +12,6 @@ fun main(args: Array<String>) {
     val commandLine = CommandLine(MigrationCommand())
     commandLine.addSubcommand("migrate", MigrateCommand(applicationFactory))
     commandLine.addSubcommand("validate", ValidateCommand(applicationFactory))
+    commandLine.addSubcommand("plan", PlanCommand(applicationFactory))
     exitProcess(commandLine.execute(*args))
 }

@@ -9,9 +9,9 @@ interface MigrationDatabaseFactory {
     fun openTarget(config: DatabaseConfig): TargetDatabase
 }
 
-/** TODO(实现者)：用 PostgreSQL JDBC + jOOQ 实现连接、事务和确定性的资源关闭。 */
+/** 使用 PostgreSQL JDBC + jOOQ + HikariCP 实现连接、事务和确定性的资源关闭。 */
 class JooqMigrationDatabaseFactory : MigrationDatabaseFactory {
-    override fun openSource(config: DatabaseConfig): SourceDatabase = throw UnsupportedOperationException("Implement source jOOQ database")
+    override fun openSource(config: DatabaseConfig): SourceDatabase = JooqSourceDatabase(config)
 
-    override fun openTarget(config: DatabaseConfig): TargetDatabase = throw UnsupportedOperationException("Implement target jOOQ database")
+    override fun openTarget(config: DatabaseConfig): TargetDatabase = JooqTargetDatabase(config)
 }

@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.picocli)
     implementation(libs.jooq)
     implementation(libs.postgresql)
+    implementation(libs.hikari)
     implementation(libs.kotlin.logging)
     implementation(libs.logback.classic)
     implementation(libs.jackson.databind)
@@ -23,6 +24,7 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${libs.versions.jackson.get()}")
 
     testImplementation(kotlin("test"))
+    testImplementation(libs.testcontainers.postgresql)
 }
 
 application {

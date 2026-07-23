@@ -19,9 +19,6 @@ data class MigrationRun(
     val finishedAt: Instant?,
 )
 
-/**
- * 运行/任务状态控制面。实现应使用独立短事务，使失败状态不会随业务批次一起回滚。
- */
 interface MigrationRunRepository {
     fun start(run: MigrationRun)
 
@@ -39,6 +36,6 @@ interface MigrationRunRepository {
         runId: UUID,
         status: MigrationRunStatus,
         finishedAt: Instant,
-        message: String? = null,
+        message: String?,
     )
 }

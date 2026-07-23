@@ -25,6 +25,7 @@ flyway = "11.7.2"
 picocli = "4.7.6"
 kotlinLogging = "7.0.3"
 logback = "1.5.18"
+hikari = "6.2.1"
 
 [plugins]
 jsonschema2pojo = { id = "org.jsonschema2pojo", version = "1.2.2" }
@@ -111,6 +112,7 @@ picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlinLogging" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 
 # AWS S3
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk" }

@@ -20,12 +20,58 @@ class SkeletonArchitectureTest {
     }
 
     @Test
-    fun `transaction CLI group selects both sides of inventory`() {
+    fun `standard plan follows fixed topological order`() {
+        val taskIds = StandardMigrationPlan.create().tasks.map { it.id }
+
+        assertEquals(MigrationTaskId.entries, taskIds)
+    }
+
+    @Test
+    fun `transaction CLI group selects all transaction tasks`() {
         val selection = assertIs<MigrationSelection.Selected>(MigrationSelection.fromCli(listOf("transaction")))
 
         assertEquals(
-            setOf(MigrationTaskId.PURCHASE_ORDER, MigrationTaskId.SALE_ORDER),
+            setOf(
+                MigrationTaskId.SUPPLIER,
+                MigrationTaskId.PURCHASE_ORDER,
+                MigrationTaskId.PURCHASE_ORDER_ITEM,
+                MigrationTaskId.CUSTOMER,
+                MigrationTaskId.SALE_ORDER,
+                MigrationTaskId.SALE_ORDER_ITEM,
+            ),
             selection.taskIds,
+        )
+    }
+
+    @Test
+    fun `authorization CLI group selects authorization tasks`() {
+        val selection = assertIs<MigrationSelection.Selected>(MigrationSelection.fromCli(listOf("authorization")))
+
+        assertEquals(
+            setOf(
+                MigrationTaskId.ROLE,
+                MigrationTaskId.PERMISSION,
+                MigrationTaskId.ROLE_PERMISSION,
+            ),
+            selection.taskIds,
+        )
+    }
+
+    @Test
+    fun `dependency closure includes predecessors for partial selection`() {
+        val selection = assertIs<MigrationSelection.Selected>(MigrationSelection.fromCli(listOf("sale-order")))
+
+        // sale-order 依赖 customer + inventory；inventory 依赖 product + depot
+        assertEquals(
+            setOf(
+                MigrationTaskId.SALE_ORDER,
+                MigrationTaskId.CUSTOMER,
+                MigrationTaskId.INVENTORY,
+                MigrationTaskId.PRODUCT,
+                MigrationTaskId.DEPOT,
+                MigrationTaskId.TENANT,
+            ),
+            selection.taskIds.let { MigrationSelection.resolveClosure(it) },
         )
     }
 
