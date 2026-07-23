@@ -133,6 +133,8 @@ export type {
   RemoveTenantMemberRequest,
   CreateTenantInvitationRequest,
   AcceptTenantInvitationRequest,
+  AcceptMyTenantInvitationRequest,
+  DeclineMyTenantInvitationRequest,
   CancelTenantInvitationRequest,
   CreateTenantRoleRequest,
   DeleteTenantRoleRequest,

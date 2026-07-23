@@ -21,3 +21,25 @@ export function resolveBootstrapTenantId(
 
   return null;
 }
+
+export function shouldShowPendingInvitations(pendingInvitationCount: number): boolean {
+  return Number.isSafeInteger(pendingInvitationCount) && pendingInvitationCount > 0;
+}
+
+export type InvitationOnboardingState =
+  | "VERIFY_EMAIL"
+  | "PENDING_INVITATIONS"
+  | "NO_PENDING_INVITATIONS";
+
+export function resolveInvitationOnboardingState(
+  emailVerified: boolean,
+  pendingInvitationCount: number,
+): InvitationOnboardingState {
+  if (!emailVerified) {
+    return "VERIFY_EMAIL";
+  }
+
+  return shouldShowPendingInvitations(pendingInvitationCount)
+    ? "PENDING_INVITATIONS"
+    : "NO_PENDING_INVITATIONS";
+}

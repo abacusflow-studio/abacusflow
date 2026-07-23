@@ -101,6 +101,106 @@ class TenantInvitationSecurityTest {
     }
 
     @Test
+    fun `verified user lists unexpired pending invitations for normalized email`() {
+        val tenant = tenant()
+        val role = role()
+        val activeInvitation = invitation()
+        val expiredInvitation = invitation(expiresAt = Instant.now().minus(1, ChronoUnit.DAYS))
+        `when`(
+            invitationRepository.findAllByEmailAndStatusOrderByCreatedAtDesc(
+                "admin@example.com",
+                "PENDING",
+            ),
+        ).thenReturn(listOf(activeInvitation, expiredInvitation))
+        `when`(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant))
+        `when`(roleRepository.findById(ROLE_ID)).thenReturn(Optional.of(role))
+
+        val invitations = service.listMyPendingInvitations("  ADMIN@EXAMPLE.COM ", true)
+
+        assertEquals(1, invitations.size)
+        assertEquals(TENANT_ID, invitations.single().tenantId)
+        assertEquals(listOf("admin"), invitations.single().roleNames)
+    }
+
+    @Test
+    fun `unverified user cannot list invitations`() {
+        assertFailsWith<IllegalArgumentException> {
+            service.listMyPendingInvitations("admin@example.com", false)
+        }
+    }
+
+    @Test
+    fun `matching user accepts initial administrator invitation by id`() {
+        val tenant = tenant()
+        val role = role()
+        val invitation = invitation()
+        `when`(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(invitation))
+        `when`(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant))
+        `when`(membershipRepository.existsByTenantIdAndUserId(TENANT_ID, USER_ID)).thenReturn(false)
+        `when`(roleRepository.findById(ROLE_ID)).thenReturn(Optional.of(role))
+        `when`(membershipRepository.save(any(TenantMembership::class.java))).thenAnswer { it.arguments[0] }
+        `when`(invitationRepository.save(any(TenantInvitation::class.java))).thenAnswer { it.arguments[0] }
+        `when`(tenantRepository.save(any(Tenant::class.java))).thenAnswer { it.arguments[0] }
+
+        service.acceptInvitationById(INVITATION_ID, USER_ID, "admin@example.com", true)
+
+        assertEquals("ACCEPTED", invitation.status)
+        assertEquals(TenantStatus.ACTIVE, tenant.status)
+        verify(membershipRepository).save(any(TenantMembership::class.java))
+    }
+
+    @Test
+    fun `matching user accepts ordinary member invitation by id without changing active tenant lifecycle`() {
+        val tenant = tenant(TenantStatus.ACTIVE)
+        val role = role()
+        val invitation = invitation(initialAdministrator = false)
+        `when`(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(invitation))
+        `when`(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant))
+        `when`(membershipRepository.existsByTenantIdAndUserId(TENANT_ID, USER_ID)).thenReturn(false)
+        `when`(roleRepository.findById(ROLE_ID)).thenReturn(Optional.of(role))
+        `when`(membershipRepository.save(any(TenantMembership::class.java))).thenAnswer { it.arguments[0] }
+        `when`(invitationRepository.save(any(TenantInvitation::class.java))).thenAnswer { it.arguments[0] }
+
+        service.acceptInvitationById(INVITATION_ID, USER_ID, "admin@example.com", true)
+
+        assertEquals("ACCEPTED", invitation.status)
+        assertEquals(TenantStatus.ACTIVE, tenant.status)
+        verify(membershipRepository).save(any(TenantMembership::class.java))
+        verify(tenantRepository, never()).save(any(Tenant::class.java))
+    }
+
+    @Test
+    fun `different verified user cannot accept invitation by id`() {
+        val invitation = invitation()
+        `when`(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(invitation))
+
+        assertFailsWith<IllegalArgumentException> {
+            service.acceptInvitationById(INVITATION_ID, USER_ID, "other@example.com", true)
+        }
+
+        assertEquals("PENDING", invitation.status)
+        verify(membershipRepository, never()).save(any(TenantMembership::class.java))
+        verify(invitationRepository, never()).save(any(TenantInvitation::class.java))
+    }
+
+    @Test
+    fun `matching user declines initial administrator invitation and tenant remains pending`() {
+        val tenant = tenant()
+        val role = role()
+        val invitation = invitation()
+        `when`(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(invitation))
+        `when`(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant))
+        `when`(roleRepository.findById(ROLE_ID)).thenReturn(Optional.of(role))
+        `when`(invitationRepository.save(any(TenantInvitation::class.java))).thenAnswer { it.arguments[0] }
+
+        service.declineInvitation(INVITATION_ID, " ADMIN@EXAMPLE.COM ", true)
+
+        assertEquals("DECLINED", invitation.status)
+        assertEquals(TenantStatus.PENDING_ACTIVATION, tenant.status)
+        verify(membershipRepository, never()).save(any(TenantMembership::class.java))
+    }
+
+    @Test
     fun `failure before membership persistence leaves initial invitation and tenant pending`() {
         val tenant = tenant()
         val role = role()
@@ -139,18 +239,21 @@ class TenantInvitationSecurityTest {
         kotlin.test.assertTrue(reissued.initialAdministrator)
     }
 
-    private fun invitation(expiresAt: Instant = Instant.now().plus(1, ChronoUnit.DAYS)) =
+    private fun invitation(
+        expiresAt: Instant = Instant.now().plus(1, ChronoUnit.DAYS),
+        initialAdministrator: Boolean = true,
+    ) =
         TenantInvitation(
             tenantId = TENANT_ID,
             email = "admin@example.com",
             roleIds = mutableSetOf(ROLE_ID),
             token = TOKEN,
             expiresAt = expiresAt,
-            initialAdministrator = true,
+            initialAdministrator = initialAdministrator,
         )
 
-    private fun tenant() =
-        Tenant("pending-tenant", TenantStatus.PENDING_ACTIVATION).also {
+    private fun tenant(status: TenantStatus = TenantStatus.PENDING_ACTIVATION) =
+        Tenant("tenant", status).also {
             setId(it, TENANT_ID)
         }
 
@@ -170,6 +273,7 @@ class TenantInvitationSecurityTest {
         const val TENANT_ID = 1001L
         const val ROLE_ID = 2001L
         const val USER_ID = 3001L
+        const val INVITATION_ID = 4001L
         const val TOKEN = "secure-invitation-token"
     }
 }

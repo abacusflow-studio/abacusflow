@@ -31,6 +31,8 @@
 - [x] 4.6 Remove the direct add-member portal/use-case operation so successful invitation acceptance is the only normal runtime path that creates a membership; preserve existing memberships during rollout.
 - [x] 4.7 Add platform-authorized cancellation/reissue for a pending tenant's initial invitation and a one-time manual-delivery result while email delivery remains out of scope.
 - [x] 4.8 Add lifecycle and invitation security tests for unauthorized tenant creation, platform provisioning, pending-tenant access, initial activation rollback, token theft, email normalization, unverified email, expired invitations, and direct-add rejection.
+- [x] 4.9 Add verified-email pending-invitation discovery plus invitation-ID accept/decline use cases shared by ordinary and initial-administrator invitations, with security and lifecycle tests.
+- [ ] 4.10 Expose email verification in bootstrap and refresh unverified OIDC profiles immediately so completed verification is not hidden by the normal profile cache.
 
 ## 5. Separate platform, current-tenant, and current-user APIs
 
@@ -42,6 +44,7 @@
 - [x] 5.6 Prevent membership removal, suspension, or role reassignment from leaving an active tenant without an effective administrator; only pending activation may exist without one.
 - [x] 5.7 Add integration tests for the platform/tenant/no-tenant API boundary and the new-user, ordinary-member, tenant-administrator, and platform-administrator access matrix.
 - [x] 5.8 Regenerate shared frontend API types/clients and migrate Web/mobile call sites; retain compatibility aliases only for non-security-sensitive path moves and the agreed migration window.
+- [x] 5.9 Add tenant-neutral current-user invitation list and invitation-ID accept/decline operations while retaining token acceptance for link compatibility.
 
 ## 6. Align Web onboarding, navigation, routes, and actions
 
@@ -54,6 +57,8 @@
 - [x] 6.7 Gate tenant member, invitation, role, profile, platform tenant, user, permission, and platform-role actions by their exact create/update/delete/manage permissions rather than page visibility alone.
 - [x] 6.8 Populate the header tenant switcher only from `/me/tenants`, and populate platform tenant management from `/platform/tenants` without presenting pending or non-member tenants as switchable.
 - [x] 6.9 Add Web tests for a no-tenant invited user, read-only users, tenant administrators without platform grants, and platform administrators with and without tenant membership.
+- [x] 6.10 Replace manual-token onboarding with a verified-email invitation choice UI and route authenticated users with pending invitations to it, including initial administrators.
+- [ ] 6.11 Show an explicit verification-required onboarding state, skip invitation discovery while unverified, and recheck bootstrap before listing invitations.
 
 ## 7. Verify rollout and regression safety
 
@@ -64,3 +69,5 @@
 - [ ] 7.4 Manually verify the persona access matrix through real API calls and Web navigation, including crafted tenant creation, direct membership, stolen invitation token, and hidden-action requests.
   - Real unauthenticated API probes return 401 and the automated persona matrix passes; authenticated browser verification remains pending because no browser instance/authenticated persona sessions are available.
 - [x] 7.5 Run `git diff --check` and confirm no unrelated user changes were modified before completing the change.
+- [x] 7.6 Run targeted backend invitation tests, regenerate the shared client, and run Web lint/type/build verification for the invitation-choice flow.
+- [ ] 7.7 Add and run targeted backend and Web tests for the unverified-to-verified invitation discovery transition.

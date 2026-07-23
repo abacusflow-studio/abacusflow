@@ -18,12 +18,12 @@ import java.time.Instant
  * 租户邀请聚合根。
  *
  * 表示向外部用户发出的加入租户的邀请。
- * 邀请通过邮件发送，包含一次性 token，用户点击后可接受邀请并成为租户成员。
+ * 邀请与被邀请人的已验证邮箱绑定。用户登录后可直接接受或拒绝；一次性 token 仅用于兼容邀请链接。
  *
  * 邀请流程：
  * 1. 租户管理员创建邀请（指定邮箱和角色）
- * 2. 系统生成唯一 token 并发送邀请邮件
- * 3. 被邀请人通过 token 链接接受邀请
+ * 2. 系统生成唯一 token 作为备用邀请链接凭证
+ * 3. 被邀请人登录后通过已验证邮箱发现邀请并选择接受或拒绝
  * 4. 系统自动创建 [TenantMembership] 并关联指定角色
  */
 @Entity
@@ -70,7 +70,7 @@ class TenantInvitation(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0
 
-    /** 邀请状态：PENDING（待接受）、ACCEPTED（已接受） */
+    /** 邀请状态：PENDING（待接受）、ACCEPTED（已接受）、DECLINED（被邀请人拒绝）、CANCELLED（邀请人撤销） */
     @Column(name = "status", nullable = false, length = 20)
     var status: String = "PENDING"
         private set
@@ -112,6 +112,12 @@ class TenantInvitation(
     fun cancel() {
         require(status == "PENDING") { "Only pending invitations can be cancelled" }
         status = "CANCELLED"
+        updatedAt = Instant.now()
+    }
+
+    fun decline() {
+        require(status == "PENDING") { "Only pending invitations can be declined" }
+        status = "DECLINED"
         updatedAt = Instant.now()
     }
 }

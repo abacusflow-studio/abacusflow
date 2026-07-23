@@ -173,15 +173,29 @@ export function TenantTable() {
       </Modal>
       <Modal
         open={Boolean(deliveryToken)}
-        title="一次性邀请交付"
+        title="备用邀请凭证"
         onCancel={() => setDeliveryToken(null)}
         footer={<Button onClick={() => setDeliveryToken(null)}>我已保存</Button>}
       >
-        <p>该 token 只在本次操作中展示，请通过安全渠道交付给被邀请人。</p>
+        <p>首位管理员使用该邮箱登录后会直接看到邀请，无需输入 token。该凭证仅作为备用交付方式并只展示一次。</p>
         <Input
           readOnly
-          value={deliveryToken ?? ''}
-          addonAfter={<CopyOutlined onClick={() => void navigator.clipboard.writeText(deliveryToken ?? '')} />}
+          value={
+            deliveryToken && typeof window !== 'undefined'
+              ? `${window.location.origin}/invitation/accept?token=${encodeURIComponent(deliveryToken)}`
+              : ''
+          }
+          addonAfter={
+            <CopyOutlined
+              onClick={() => {
+                if (deliveryToken) {
+                  void navigator.clipboard.writeText(
+                    `${window.location.origin}/invitation/accept?token=${encodeURIComponent(deliveryToken)}`,
+                  );
+                }
+              }}
+            />
+          }
         />
       </Modal>
     </div>

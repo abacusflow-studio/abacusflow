@@ -14,7 +14,7 @@ import {
   Popconfirm,
   Tabs,
 } from "antd";
-import { MailOutlined } from "@ant-design/icons";
+import { CopyOutlined, MailOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { usePermission } from "@/hooks/use-permission";
@@ -44,6 +44,8 @@ function memberStatusColor(value: string): string {
 function translateInvitationStatus(value: string): string {
   if (value === "PENDING") return "待接受";
   if (value === "ACCEPTED") return "已接受";
+  if (value === "DECLINED") return "已拒绝";
+  if (value === "CANCELLED") return "已取消";
   return value;
 }
 
@@ -70,6 +72,7 @@ export default function MemberManagementPage() {
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deliveryToken, setDeliveryToken] = useState<string | null>(null);
 
   const loadMembers = useCallback(async () => {
     try {
@@ -129,8 +132,9 @@ export default function MemberManagementPage() {
         email: values.email,
         roleIds: values.roleIds || [],
       };
-      await tenantApi.createTenantInvitation({ createTenantInvitationInput: input });
-      message.success("邀请已发送");
+      const invitation = await tenantApi.createTenantInvitation({ createTenantInvitationInput: input });
+      setDeliveryToken(invitation.token ?? null);
+      message.success("邀请已创建，对方登录后即可直接接受或拒绝");
       setShowInviteForm(false);
       await loadAll();
     } catch (err) {
@@ -365,7 +369,7 @@ export default function MemberManagementPage() {
               { required: true, message: "请输入邮箱地址" },
               { type: "email", message: "请输入有效的邮箱地址" },
             ]}
-            extra="被邀请人将通过邮箱收到邀请链接，新用户注册后可接受邀请加入租户"
+            extra="对方使用这个已验证邮箱登录后，会直接看到接受或拒绝邀请的选项"
           >
             <Input placeholder="请输入被邀请人的邮箱" />
           </Form.Item>
@@ -380,6 +384,34 @@ export default function MemberManagementPage() {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        open={Boolean(deliveryToken)}
+        title="备用邀请链接"
+        onCancel={() => setDeliveryToken(null)}
+        footer={<Button onClick={() => setDeliveryToken(null)}>完成</Button>}
+      >
+        <p>被邀请人无需输入 token；下面的链接仅用于你需要通过其他渠道提醒对方时备用。</p>
+        <Input
+          readOnly
+          value={
+            deliveryToken && typeof window !== "undefined"
+              ? `${window.location.origin}/invitation/accept?token=${encodeURIComponent(deliveryToken)}`
+              : ""
+          }
+          addonAfter={
+            <CopyOutlined
+              onClick={() => {
+                if (deliveryToken) {
+                  void navigator.clipboard.writeText(
+                    `${window.location.origin}/invitation/accept?token=${encodeURIComponent(deliveryToken)}`,
+                  );
+                }
+              }}
+            />
+          }
+        />
       </Modal>
 
       {/* Edit Roles Modal */}

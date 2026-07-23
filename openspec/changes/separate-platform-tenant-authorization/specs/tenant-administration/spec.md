@@ -45,6 +45,12 @@ The system MUST create a normal runtime tenant membership only through successfu
 - **THEN** a pending invitation is created
 - **AND** no membership exists until the invitation is accepted
 
+#### Scenario: Invitee has not registered or verified an account
+- **WHEN** an administrator creates an invitation for a syntactically valid email that has no existing verified external identity
+- **THEN** the pending invitation is created for the normalized email
+- **AND** no placeholder user or membership is created
+- **AND** the invitation can be discovered and accepted only after a user proves ownership through a matching verified login email
+
 #### Scenario: Client calls the former direct add-member operation
 - **WHEN** a client attempts to directly add an existing user to a tenant
 - **THEN** the operation is unavailable
@@ -73,6 +79,27 @@ Invitation acceptance MUST require the normalized invitation email to equal the 
 - **WHEN** the authenticated identity has no email or the provider has not verified it
 - **THEN** the system rejects the acceptance
 - **AND** the invitation remains pending
+
+### Requirement: Authenticated users manage invitations matched to their identity
+The system MUST allow an authenticated user with a verified email to list and act on unexpired pending invitations addressed to that normalized email without requiring an invitation token or `X-Tenant-Id`.
+
+#### Scenario: User lists matching invitations
+- **WHEN** a user with a verified email requests their pending invitations
+- **THEN** the response contains every unexpired pending ordinary and initial-administrator invitation addressed to that normalized email
+- **AND** each result contains tenant and role summaries but no invitation token
+
+#### Scenario: User accepts a matching invitation by ID
+- **WHEN** the intended user accepts an unexpired pending invitation by invitation ID
+- **THEN** the system revalidates the user's verified normalized email and performs the same atomic membership and activation behavior as token acceptance
+
+#### Scenario: User declines a matching invitation
+- **WHEN** the intended user declines an unexpired pending invitation by invitation ID
+- **THEN** the invitation becomes declined and cannot subsequently create a membership
+- **AND** an initial-administrator invitation leaves its tenant in `PENDING_ACTIVATION`
+
+#### Scenario: User queries or mutates another identity's invitation
+- **WHEN** a user has an unverified email or attempts to accept or decline an invitation addressed to a different normalized email
+- **THEN** the system rejects the operation without exposing or consuming the invitation
 
 ### Requirement: Users without memberships remain in a safe global state
 An authenticated user without an active tenant membership MUST be able to bootstrap and accept an invitation without `X-Tenant-Id`, but MUST NOT receive tenant permissions or access tenant-scoped operations.

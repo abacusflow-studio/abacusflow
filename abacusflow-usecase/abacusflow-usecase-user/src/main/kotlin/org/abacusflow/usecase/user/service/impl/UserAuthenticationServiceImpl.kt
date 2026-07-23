@@ -51,9 +51,12 @@ class UserAuthenticationServiceImpl(
 
         val user = externalIdentity.user
 
-        // Sync profile from OIDC provider if stale (>24h since last sync)
+        // Unverified identities are refreshed on every bootstrap so a user who just
+        // verified their email can discover invitations immediately instead of
+        // waiting for the normal 24-hour profile refresh window.
         val shouldSync =
-            externalIdentity.profileSyncedAt == null ||
+            !externalIdentity.emailVerified ||
+                externalIdentity.profileSyncedAt == null ||
                 externalIdentity.profileSyncedAt!!.isBefore(
                     Instant.now().minusSeconds(PROFILE_SYNC_THRESHOLD_SECONDS),
                 )
@@ -137,6 +140,7 @@ class UserAuthenticationServiceImpl(
             platformRoles = globalAuthorization.roleNames,
             tenantPermissions = selectedTenantPermissions,
             email = identity.email,
+            emailVerified = identity.emailVerified,
             displayName = identity.displayName,
             pictureUrl = identity.pictureUrl,
             tenantStatus = tenantStatus,

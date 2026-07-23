@@ -45,7 +45,10 @@ import {
   type MenuIcon,
   type MenuRegistryEntry,
 } from "../../lib/menu-registry";
-import { resolveBootstrapTenantId } from "../../lib/tenant-bootstrap";
+import {
+  resolveBootstrapTenantId,
+  shouldShowPendingInvitations,
+} from "../../lib/tenant-bootstrap";
 
 const { Sider, Header, Content, Footer } = Layout;
 
@@ -167,7 +170,12 @@ export default function AdminLayout({
             // Fetch user info and bootstrap tenant data
             try {
               const bootstrap = await userApi.bootstrap();
-              const myTenants = await tenantApi.listMyTenants();
+              const [myTenants, pendingInvitations] = await Promise.all([
+                tenantApi.listMyTenants(),
+                bootstrap.emailVerified
+                  ? tenantApi.listMyInvitations().catch(() => [])
+                  : Promise.resolve([]),
+              ]);
               if (!cancelled) {
                 const selectedTenantId = resolveBootstrapTenantId(
                   bootstrap.tenantStatus,
@@ -189,6 +197,12 @@ export default function AdminLayout({
                   myTenants as TenantInfo[],
                   selectedTenantId,
                 );
+
+                if (shouldShowPendingInvitations(pendingInvitations.length)) {
+                  setAuthStatus("tenant_redirect");
+                  router.replace("/onboarding");
+                  return;
+                }
 
                 // Handle tenant redirects
                 if (bootstrap.tenantStatus === "NEEDS_ONBOARDING") {

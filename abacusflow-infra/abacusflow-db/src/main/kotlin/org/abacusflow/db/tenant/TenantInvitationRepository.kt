@@ -17,4 +17,9 @@ interface TenantInvitationRepository : JpaRepository<TenantInvitation, Long> {
     ): TenantInvitation?
 
     fun findAllByTenantId(tenantId: Long): List<TenantInvitation>
+
+    fun findAllByEmailAndStatusOrderByCreatedAtDesc(
+        email: String,
+        status: String,
+    ): List<TenantInvitation>
 }

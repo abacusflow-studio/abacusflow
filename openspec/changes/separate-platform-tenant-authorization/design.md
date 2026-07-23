@@ -107,9 +107,17 @@ Existing active tenants and memberships remain active during migration. `PENDING
 
 Remove the public/direct add-member operation. Tenant administrators add members by creating invitations containing the intended roles; the only normal runtime use case that creates a membership is successful invitation acceptance. Migration and controlled recovery procedures are explicit system-level exceptions, not user-facing APIs.
 
+Invitation creation accepts any syntactically valid email address and does not require that an account or verified external identity already exist. This lets administrators invite a future user and lets platform administrators nominate the first tenant administrator before that person has registered. The pending invitation is bound to the normalized address, not to a user record created at invitation time.
+
 Invitation acceptance must compare the normalized invitation email with the authenticated external identity's normalized email and require that identity email to be verified. A mismatched, missing, or unverified email is rejected without consuming the invitation or creating a membership. Token possession alone is insufficient.
 
 An authenticated user with no active membership may call bootstrap, list their empty membership set, and accept an invitation without `X-Tenant-Id`. The user may not create a tenant or call any current-tenant/business operation. After acceptance, bootstrap exposes the new membership and the client selects it before issuing tenant-scoped requests.
+
+The primary acceptance experience is identity-driven rather than token-entry-driven. After login, an authenticated user with a verified email may list every unexpired pending invitation whose normalized email matches that identity, including both ordinary member invitations and the initial administrator invitation for a pending tenant. The invitation list exposes tenant and role summaries but never exposes invitation tokens. The user may accept or decline an invitation by invitation ID; both operations revalidate the verified normalized email, invitation status, and expiry at mutation time.
+
+Token acceptance remains as a compatibility path for one-time invitation links and manual delivery while email delivery is unavailable. A token link must not be the only way for the intended user to discover or act on an invitation. Declining an initial administrator invitation leaves the tenant in `PENDING_ACTIVATION`, allowing a platform administrator to reissue the invitation.
+
+Bootstrap exposes the external identity's current email-verification state. If the cached identity is unverified, bootstrap refreshes it from the OIDC provider even inside the normal 24-hour profile-sync window. The Web onboarding route renders a verification-required state and does not request or disclose matching invitations until bootstrap reports a verified email; its recheck action repeats bootstrap first so a newly completed verification becomes effective immediately.
 
 ### Expose a tenant-assignable permission catalog
 

@@ -14,6 +14,9 @@ test('tenant-neutral bootstrap and platform APIs never receive a cached tenant h
   assert.equal(isTenantScopedApiUrl('/api/me/bootstrap'), false);
   assert.equal(isTenantScopedApiUrl('/me/tenants'), false);
   assert.equal(isTenantScopedApiUrl('/me/invitations/accept'), false);
+  assert.equal(isTenantScopedApiUrl('/me/invitations'), false);
+  assert.equal(isTenantScopedApiUrl('/me/invitations/42/accept'), false);
+  assert.equal(isTenantScopedApiUrl('/me/invitations/42/decline'), false);
   assert.equal(isTenantScopedApiUrl('/platform/tenants'), false);
   assert.equal(isTenantScopedApiUrl('/users'), false);
 });

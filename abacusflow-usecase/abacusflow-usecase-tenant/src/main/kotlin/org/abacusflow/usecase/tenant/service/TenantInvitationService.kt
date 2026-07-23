@@ -26,6 +26,12 @@ interface TenantInvitationService {
     @PreAuthorize(RequiredAuthority.TENANT_MEMBER_READ)
     fun listInvitations(tenantId: Long): List<TenantInvitationTO>
 
+    /** 列出与当前已验证邮箱匹配的未过期待处理邀请，不暴露 token。 */
+    fun listMyPendingInvitations(
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): List<TenantInvitationTO>
+
     /**
      * 通过邀请 token 接受邀请。
      * 不需要特殊权限——任何已认证用户持有有效 token 即可接受。
@@ -35,6 +41,21 @@ interface TenantInvitationService {
     fun acceptInvitation(
         token: String,
         userId: Long,
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): TenantInvitationTO
+
+    /** 当前登录用户按邀请 ID 接受与其已验证邮箱匹配的邀请。 */
+    fun acceptInvitationById(
+        invitationId: Long,
+        userId: Long,
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): TenantInvitationTO
+
+    /** 当前登录用户按邀请 ID 拒绝与其已验证邮箱匹配的邀请。 */
+    fun declineInvitation(
+        invitationId: Long,
         authenticatedEmail: String?,
         emailVerified: Boolean,
     ): TenantInvitationTO

@@ -109,6 +109,70 @@ paths:
         "400":
           description: 邀请无效、邮箱不匹配或邮箱未验证
 
+  /me/invitations:
+    get:
+      operationId: listMyInvitations
+      tags:
+        - tenant
+      summary: List pending tenant invitations for the current verified email
+      responses:
+        "200":
+          description: Pending invitations addressed to the current verified identity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TenantInvitation"
+        "400":
+          description: 当前身份缺少已验证邮箱
+
+  /me/invitations/{invitationId}/accept:
+    post:
+      operationId: acceptMyTenantInvitation
+      tags:
+        - tenant
+      summary: Accept a matching tenant invitation without entering a token
+      parameters:
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Invitation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantInvitation"
+        "400":
+          description: 邀请无效、已过期、邮箱不匹配或邮箱未验证
+
+  /me/invitations/{invitationId}/decline:
+    post:
+      operationId: declineMyTenantInvitation
+      tags:
+        - tenant
+      summary: Decline a matching tenant invitation
+      parameters:
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Invitation declined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantInvitation"
+        "400":
+          description: 邀请无效、已过期、邮箱不匹配或邮箱未验证
+
   /tenant:
     get:
       operationId: getCurrentTenant
@@ -2263,6 +2327,7 @@ components:
         - locked
         - roles
         - permissions
+        - emailVerified
         - tenantStatus
         - tenants
       properties:
@@ -2311,6 +2376,9 @@ components:
           type: string
           nullable: true
           description: 邮箱
+        emailVerified:
+          type: boolean
+          description: 登录身份提供方是否已验证该邮箱
         displayName:
           type: string
           nullable: true
@@ -2619,6 +2687,7 @@ components:
           enum:
             - PENDING
             - ACCEPTED
+            - DECLINED
             - CANCELLED
           description: 邀请状态
         expiresAt:

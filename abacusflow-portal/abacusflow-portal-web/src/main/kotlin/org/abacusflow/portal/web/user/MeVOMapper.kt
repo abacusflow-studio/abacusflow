@@ -27,6 +27,7 @@ fun BootstrapResultTO.toVO() =
         platformRoles = platformRoles,
         tenantPermissions = tenantPermissions,
         email = email,
+        emailVerified = emailVerified,
         displayName = displayName,
         pictureUrl = pictureUrl,
         tenantStatus = BootstrapResultVO.TenantStatus.forValue(tenantStatus.name),

@@ -13,6 +13,27 @@ The Web application MUST show an invitation-required state to an authenticated u
 - **THEN** the Web application renders the invitation-required state or redirects to it
 - **AND** no self-service create request is available
 
+#### Scenario: Authenticated user has matching pending invitations
+- **WHEN** the authenticated user's verified email has one or more pending invitations
+- **THEN** the Web application displays the tenant and proposed roles for each invitation
+- **AND** the user can accept or decline each invitation without entering a token
+
+#### Scenario: Authenticated user's email is missing or unverified
+- **WHEN** bootstrap reports that the authenticated identity has no email or an unverified email
+- **THEN** onboarding explains that invitations may already be pending but require email verification before disclosure
+- **AND** no invitation list or acceptance action is requested or rendered
+- **AND** a recheck action refreshes bootstrap before querying invitations so newly completed verification takes effect immediately
+
+#### Scenario: Invitation is for an initial tenant administrator
+- **WHEN** the matching invitation is the initial administrator invitation created during platform tenant provisioning
+- **THEN** it appears in the same invitation choice experience as an ordinary member invitation
+- **AND** accepting it activates the pending tenant while declining it leaves the tenant pending
+
+#### Scenario: Authenticated user has no matching invitation
+- **WHEN** a user without memberships has no matching pending invitation
+- **THEN** the Web application shows a waiting-for-invitation state
+- **AND** no manual token field is presented as the primary onboarding action
+
 ### Requirement: Platform tenant creation captures the initial administrator invitation
 The platform tenant page MUST show tenant creation only to users with `platform:tenant:create` and MUST require a valid initial administrator email.
 

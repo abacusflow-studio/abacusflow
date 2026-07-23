@@ -39,6 +39,36 @@ class MeController(
         return ResponseEntity.ok(invitation.toVO())
     }
 
+    override fun listMyInvitations(): ResponseEntity<List<TenantInvitationVO>> {
+        val details = currentDetails()
+        return ResponseEntity.ok(
+            tenantInvitationService.listMyPendingInvitations(details.email, details.emailVerified).map { it.toVO() },
+        )
+    }
+
+    override fun acceptMyTenantInvitation(invitationId: Long): ResponseEntity<TenantInvitationVO> {
+        val details = currentDetails()
+        val invitation =
+            tenantInvitationService.acceptInvitationById(
+                invitationId = invitationId,
+                userId = details.userId,
+                authenticatedEmail = details.email,
+                emailVerified = details.emailVerified,
+            )
+        return ResponseEntity.ok(invitation.toVO())
+    }
+
+    override fun declineMyTenantInvitation(invitationId: Long): ResponseEntity<TenantInvitationVO> {
+        val details = currentDetails()
+        val invitation =
+            tenantInvitationService.declineInvitation(
+                invitationId = invitationId,
+                authenticatedEmail = details.email,
+                emailVerified = details.emailVerified,
+            )
+        return ResponseEntity.ok(invitation.toVO())
+    }
+
     override fun bootstrap(): ResponseEntity<BootstrapResultVO> {
         val jwt = currentJwt()
         val issuer = jwt.issuer?.toString() ?: return ResponseEntity.badRequest().build()

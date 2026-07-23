@@ -77,7 +77,7 @@ class TenantInvitationServiceImpl(
             )
 
         val saved = tenantInvitationRepository.save(invitation)
-        log.info("Created invitation for $email to tenant $tenantId (token=$token, invitedBy=$invitedByUserId)")
+        log.info("Created invitation for $email to tenant $tenantId (invitedBy=$invitedByUserId)")
 
         return saved.toTO(
             tenantName = tenant.name,
@@ -100,6 +100,17 @@ class TenantInvitationServiceImpl(
         }
     }
 
+    @Transactional(readOnly = true)
+    override fun listMyPendingInvitations(
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): List<TenantInvitationTO> {
+        val normalizedEmail = requireVerifiedEmail(authenticatedEmail, emailVerified)
+        return tenantInvitationRepository.findAllByEmailAndStatusOrderByCreatedAtDesc(normalizedEmail, "PENDING")
+            .filterNot(TenantInvitation::isExpired)
+            .map(::toDetailedTO)
+    }
+
     override fun acceptInvitation(
         token: String,
         userId: Long,
@@ -108,15 +119,34 @@ class TenantInvitationServiceImpl(
     ): TenantInvitationTO {
         val invitation =
             tenantInvitationRepository.findByToken(token)
-                ?: throw NoSuchElementException("Invitation not found for token $token")
+                ?: throw NoSuchElementException("Invitation not found")
+
+        return acceptMatchingInvitation(invitation, userId, authenticatedEmail, emailVerified)
+    }
+
+    override fun acceptInvitationById(
+        invitationId: Long,
+        userId: Long,
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): TenantInvitationTO {
+        val invitation =
+            tenantInvitationRepository.findById(invitationId)
+                .orElseThrow { NoSuchElementException("Invitation $invitationId not found") }
+
+        return acceptMatchingInvitation(invitation, userId, authenticatedEmail, emailVerified)
+    }
+
+    private fun acceptMatchingInvitation(
+        invitation: TenantInvitation,
+        userId: Long,
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): TenantInvitationTO {
+        requireInvitationMatchesIdentity(invitation, authenticatedEmail, emailVerified)
 
         require(invitation.status == "PENDING") { "Invitation has already been ${invitation.status.lowercase()}" }
         require(!invitation.isExpired()) { "Invitation has expired" }
-        require(emailVerified) { "A verified email is required to accept an invitation" }
-        val normalizedEmail = authenticatedEmail?.trim()?.lowercase()
-        require(normalizedEmail != null && normalizedEmail == invitation.email.trim().lowercase()) {
-            "Authenticated email does not match the invitation"
-        }
 
         return withTenant(invitation.tenantId) {
             tenantPersistenceContext.activate(invitation.tenantId)
@@ -163,6 +193,24 @@ class TenantInvitationServiceImpl(
                 roleNames = roles.map { it.name },
             )
         }
+    }
+
+    override fun declineInvitation(
+        invitationId: Long,
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): TenantInvitationTO {
+        val invitation =
+            tenantInvitationRepository.findById(invitationId)
+                .orElseThrow { NoSuchElementException("Invitation $invitationId not found") }
+        requireInvitationMatchesIdentity(invitation, authenticatedEmail, emailVerified)
+        require(invitation.status == "PENDING") { "Invitation has already been ${invitation.status.lowercase()}" }
+        require(!invitation.isExpired()) { "Invitation has expired" }
+
+        invitation.decline()
+        tenantInvitationRepository.save(invitation)
+        log.info("Invitation ${invitation.id} to tenant ${invitation.tenantId} was declined by its intended recipient")
+        return toDetailedTO(invitation)
     }
 
     override fun cancelInvitation(invitationId: Long): TenantInvitationTO {
@@ -229,4 +277,38 @@ class TenantInvitationServiceImpl(
             invitation.toTO(tenantName = tenant.name, roleNames = listOf(adminRole.name))
         }
     }
+
+    private fun requireVerifiedEmail(
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ): String {
+        require(emailVerified) { "A verified email is required to manage invitations" }
+        val normalizedEmail = authenticatedEmail?.trim()?.lowercase()
+        require(!normalizedEmail.isNullOrBlank()) { "A verified email is required to manage invitations" }
+        return normalizedEmail
+    }
+
+    private fun requireInvitationMatchesIdentity(
+        invitation: TenantInvitation,
+        authenticatedEmail: String?,
+        emailVerified: Boolean,
+    ) {
+        val normalizedEmail = requireVerifiedEmail(authenticatedEmail, emailVerified)
+        require(normalizedEmail == invitation.email.trim().lowercase()) {
+            "Authenticated email does not match the invitation"
+        }
+    }
+
+    private fun toDetailedTO(invitation: TenantInvitation): TenantInvitationTO =
+        withTenant(invitation.tenantId) {
+            tenantPersistenceContext.activate(invitation.tenantId)
+            val tenant =
+                tenantRepository.findById(invitation.tenantId)
+                    .orElseThrow { NoSuchElementException("Tenant ${invitation.tenantId} not found") }
+            val roleNames =
+                invitation.roleIds.mapNotNull { roleId ->
+                    roleRepository.findById(roleId).orElse(null)?.name
+                }
+            invitation.toTO(tenantName = tenant.name, roleNames = roleNames)
+        }
 }
