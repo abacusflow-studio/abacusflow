@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -64,15 +65,14 @@ class YamlConfigLoader : ConfigLoader {
      *   可空类型、默认参数值等特性。没有它，Jackson 无法正确实例化 Kotlin data class。
      * - [DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES = true]：遇到 YAML 中
      *   没有对应字段的属性时抛出异常，防止配置文件中有拼写错误却被静默忽略。
-     * - [PropertyNamingStrategies.SNAKE_CASE]：YAML 中的 snake_case 字段名
-     *   （如 batch_size）自动映射到 Kotlin 的 camelCase 属性（如 batchSize）。
-     *   这样 YAML 文件可保持惯用的 snake_case 风格，而 Kotlin 代码保持 camelCase。
+     * - [PropertyNamingStrategies.KEBAB_CASE]：面向操作者的 YAML 使用 canonical kebab-case，
+     *   例如 batch-size；Kotlin 数据类内部继续使用 camelCase，例如 batchSize。
      */
     private val mapper =
         com.fasterxml.jackson.databind.ObjectMapper(YAMLFactory())
             .registerModule(KotlinModule.Builder().build())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
-            .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE)
 
     /**
      * 加载配置的完整流程：读取 -> 环境变量替换 -> 反序列化 -> 校验。
@@ -82,7 +82,12 @@ class YamlConfigLoader : ConfigLoader {
      */
     override fun load(path: Path): MigrationConfig {
         // 1. 读取 YAML 文件的原始文本内容
-        val rawYaml = Files.readString(path)
+        if (!Files.isRegularFile(path)) {
+            throw IllegalArgumentException(
+                "Configuration file not found: ${path.toAbsolutePath().normalize()}",
+            )
+        }
+        val rawYaml = Files.readString(path, StandardCharsets.UTF_8)
         // 2. 将 ${ENV_NAME} 占位符替换为实际环境变量值
         val resolvedYaml = resolveEnvironmentVariables(rawYaml)
         // 3. 用 Jackson 将 YAML 反序列化为 MigrationConfig 对象
@@ -156,6 +161,9 @@ class YamlConfigLoader : ConfigLoader {
         if (config.target.username.isBlank()) errors.add("target.username must not be blank")
         if (config.migration.batchSize <= 0) errors.add("migration.batch-size must be positive")
         if (config.migration.fetchSize <= 0) errors.add("migration.fetch-size must be positive")
+        if (!CONTROL_SCHEMA_PATTERN.matches(config.migration.controlSchema)) {
+            errors.add("migration.control-schema must match ${CONTROL_SCHEMA_PATTERN.pattern}")
+        }
         if (config.migration.defaultTenant.id <= 0) errors.add("migration.default-tenant.id must be positive")
 
         if (errors.isNotEmpty()) {
@@ -163,5 +171,9 @@ class YamlConfigLoader : ConfigLoader {
                 "Configuration validation failed:\n  - ${errors.joinToString("\n  - ")}",
             )
         }
+    }
+
+    private companion object {
+        val CONTROL_SCHEMA_PATTERN = Regex("[a-z_][a-z0-9_]*")
     }
 }

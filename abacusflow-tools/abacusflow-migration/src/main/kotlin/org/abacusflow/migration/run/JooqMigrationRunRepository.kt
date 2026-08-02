@@ -3,7 +3,9 @@ package org.abacusflow.migration.run
 import org.abacusflow.migration.database.TargetDatabase
 import org.abacusflow.migration.framework.MigrationTaskId
 import org.abacusflow.migration.framework.TaskResult
+import org.jooq.JSONB
 import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import java.time.Instant
 import java.util.UUID
 
@@ -68,6 +70,7 @@ class JooqMigrationRunRepository(
      * 任务执行控制表的 jOOQ Table 对象。
      */
     private val taskRunTable = DSL.table(DSL.name(controlSchema, "migration_task_run"))
+    private val selectedTasksField = DSL.field(DSL.name("selected_tasks"), SQLDataType.JSONB)
 
     /**
      * 记录迁移运行开始，创建运行记录。
@@ -96,19 +99,22 @@ class JooqMigrationRunRepository(
      * @param run 运行记录（状态应为 RUNNING）
      */
     override fun start(run: MigrationRun) {
+        val selectedTasksJson =
+            run.selectedTasks
+                .map { it.cliName }
+                .sorted()
+                .joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")
         target.transaction { dsl ->
             dsl.insertInto(runTable)
                 .columns(
                     DSL.field("run_id"),
                     DSL.field("status"),
-                    DSL.field("selected_tasks"),
+                    selectedTasksField,
                     DSL.field("started_at"),
                 ).values(
                     run.runId,
                     run.status.name,
-                    run.selectedTasks.map { it.cliName }.let { names ->
-                        "[" + names.joinToString(",") { "\"$it\"" } + "]"
-                    },
+                    JSONB.valueOf(selectedTasksJson),
                     run.startedAt,
                 ).execute()
         }
@@ -184,14 +190,37 @@ class JooqMigrationRunRepository(
         result: TaskResult,
     ) {
         target.transaction { dsl ->
+            val taskStatus =
+                if (result.errorCount == 0L) {
+                    MigrationRunStatus.SUCCEEDED
+                } else {
+                    MigrationRunStatus.FAILED
+                }
             dsl.update(taskRunTable)
-                .set(DSL.field("status"), MigrationRunStatus.SUCCEEDED.name)
+                .set(DSL.field("status"), taskStatus.name)
                 .set(DSL.field("processed_count"), result.processedCount)
                 .set(DSL.field("skipped_count"), result.skippedCount)
                 .set(DSL.field("error_count"), result.errorCount)
                 .set(DSL.field("finished_at"), Instant.now())
                 .where(DSL.field("run_id").eq(runId))
                 .and(DSL.field("task_name").eq(result.taskId.cliName))
+                .execute()
+        }
+    }
+
+    override fun taskFailed(
+        runId: UUID,
+        taskId: MigrationTaskId,
+        finishedAt: Instant,
+        message: String?,
+    ) {
+        target.transaction { dsl ->
+            dsl.update(taskRunTable)
+                .set(DSL.field("status"), MigrationRunStatus.FAILED.name)
+                .set(DSL.field("error_count"), 1L)
+                .set(DSL.field("finished_at"), finishedAt)
+                .where(DSL.field("run_id").eq(runId))
+                .and(DSL.field("task_name").eq(taskId.cliName))
                 .execute()
         }
     }

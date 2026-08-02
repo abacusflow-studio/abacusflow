@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 迁移销售订单明细（sale_order_item）表，并为所有记录补 tenant_id。
@@ -50,4 +52,15 @@ class SaleOrderItemMigration :
          * 销售订单必须先迁移完成，明细才能正确写入外键引用。
          */
         setOf(MigrationTaskId.SALE_ORDER),
-    )
+    ) {
+    override fun execute(context: MigrationContext): TaskResult =
+        listOf(
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "sale-order-item",
+                sourceTable = "sale_order_item",
+                columns = V1V2Columns.SALE_ORDER_ITEM,
+            ),
+        ).toTaskResult(id)
+}

@@ -49,6 +49,9 @@ bin/
 
 .env
 
+### AbacusFlow Migration CLI local configuration ###
+abacusflow-tools/abacusflow-migration/migration.yml
+
 ### Mac OS ###
 .DS_Store
 

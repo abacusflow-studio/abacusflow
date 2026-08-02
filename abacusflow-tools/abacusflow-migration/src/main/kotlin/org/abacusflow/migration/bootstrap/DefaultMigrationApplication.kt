@@ -1,7 +1,10 @@
 package org.abacusflow.migration.bootstrap
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.abacusflow.migration.check.SchemaChecker
 import org.abacusflow.migration.checkpoint.JooqMigrationCheckpointRepository
+import org.abacusflow.migration.config.MigrationOptions
+import org.abacusflow.migration.control.ControlSchemaInitializer
 import org.abacusflow.migration.database.SourceDatabase
 import org.abacusflow.migration.database.TargetDatabase
 import org.abacusflow.migration.error.JooqMigrationErrorRepository
@@ -83,7 +86,17 @@ class DefaultMigrationApplication(
     private val source: SourceDatabase,
     /** 目标数据库（V2），迁移时写入数据。 */
     private val target: TargetDatabase,
+    /** 从 YAML 加载的迁移选项；所有运行期组件必须共享这一份配置。 */
+    private val options: MigrationOptions,
 ) : MigrationApplication {
+    override fun plan(selection: MigrationSelection): MigrationPlanReport {
+        val schemaCheck = SchemaChecker(source, target, options.controlSchema).check()
+        val tasks = StandardMigrationPlan.create().resolve(selection).map { it.id }
+        return MigrationPlanReport(schemaCheck, tasks)
+    }
+
+    private val controlSchemaInitializer = ControlSchemaInitializer(target, options.controlSchema)
+
     /**
      * 执行数据迁移。
      *
@@ -122,10 +135,19 @@ class DefaultMigrationApplication(
      * @return MigrationReport 包含所有任务的执行结果
      */
     override fun migrate(selection: MigrationSelection): MigrationReport {
+        // 必须早于 migration_run 的第一次写入；重复运行只会确认对象已经存在。
+        controlSchemaInitializer.initialize()
         // 生成本次迁移运行的唯一 ID，贯穿整个迁移流程
         val runId = UUID.randomUUID()
-        // 控制表所在的 schema 名称
-        val controlSchema = "abacusflow_migration"
+        val controlSchema = options.controlSchema
+        val schemaChecker = SchemaChecker(source, target, controlSchema)
+        val schemaCheck = schemaChecker.check()
+        require(schemaCheck.passed) {
+            "Migration schema check failed:\n${schemaCheck.errors.joinToString("\n")}"
+        }
+        check(schemaChecker.acquireLock(runId)) {
+            "Another migration process currently holds the migration lock"
+        }
 
         // ===== 组装基础设施组件 =====
         // 检查点仓库：基于 jOOQ 实现，将检查点写入 abacusflow_migration schema
@@ -153,14 +175,19 @@ class DefaultMigrationApplication(
                 checkpoints = checkpoints,
                 errors = errors,
                 runs = runs,
-                options = org.abacusflow.migration.config.MigrationOptions(), // 使用默认配置
+                options = options,
                 progress = progress,
                 clock = Clock.systemUTC(), // UTC 时钟，便于测试时注入
             )
 
         // ===== 执行迁移 =====
         logger.info { "Starting migration run $runId" }
-        val report = runner.run(context, selection)
+        val report =
+            try {
+                runner.run(context, selection)
+            } finally {
+                schemaChecker.releaseLock()
+            }
         // 记录迁移结果：所有任务零错误则为成功，否则为有错误
         logger.info {
             "Migration run $runId ${if (report.taskResults.all { it.errorCount == 0L }) "succeeded" else "had errors"} " +
@@ -209,10 +236,15 @@ class DefaultMigrationApplication(
      * @return ValidationReport 包含所有验证器的验证结果
      */
     override fun validate(selection: MigrationSelection): ValidationReport {
+        // validate 也会读取控制表，因此支持在全新目标库上独立执行。
+        controlSchemaInitializer.initialize()
         // 生成本次验证运行的唯一 ID
         val runId = UUID.randomUUID()
-        // 控制表所在的 schema 名称
-        val controlSchema = "abacusflow_migration"
+        val controlSchema = options.controlSchema
+        val schemaCheck = SchemaChecker(source, target, controlSchema).check()
+        require(schemaCheck.passed) {
+            "Validation schema check failed:\n${schemaCheck.errors.joinToString("\n")}"
+        }
 
         // ===== 组装基础设施组件（与 migrate 相同） =====
         val checkpoints = JooqMigrationCheckpointRepository(controlSchema)
@@ -229,14 +261,19 @@ class DefaultMigrationApplication(
                 checkpoints = checkpoints,
                 errors = errors,
                 runs = runs,
-                options = org.abacusflow.migration.config.MigrationOptions(),
+                options = options,
                 progress = progress,
                 clock = Clock.systemUTC(),
             )
 
         // ===== 执行验证器 =====
         // 从 StandardValidationPlan 获取所有验证器实例
-        val validators = StandardValidationPlan.create()
+        val selectedTaskIds =
+            when (selection) {
+                MigrationSelection.All -> org.abacusflow.migration.framework.MigrationTaskId.entries.toSet()
+                is MigrationSelection.Selected -> MigrationSelection.resolveClosure(selection.taskIds)
+            }
+        val validators = StandardValidationPlan.create().filter { it.taskId in selectedTaskIds }
         // 逐个执行验证器，捕获未实现的验证器异常
         val results =
             validators.map { validator ->

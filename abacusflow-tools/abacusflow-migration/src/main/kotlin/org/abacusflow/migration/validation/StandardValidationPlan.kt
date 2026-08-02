@@ -88,8 +88,6 @@ object StandardValidationPlan {
             ProductValidator(),
             // 仓库校验：仓库数量、名称唯一、租户归属
             DepotValidator(),
-            // 库存校验：数量、总数量、冻结量、精确金额、引用完整性
-            InventoryValidator(),
             // ===== 第四层：采购交易 =====
             // 供应商校验：供应商数量、名称唯一、租户归属
             SupplierValidator(),
@@ -97,6 +95,8 @@ object StandardValidationPlan {
             PurchaseOrderValidator(),
             // 采购明细校验：明细数量、金额聚合、产品引用
             PurchaseOrderItemValidator(),
+            // 库存校验：库存单元依赖采购链，放在采购校验之后
+            InventoryValidator(),
             // ===== 第五层：销售交易 =====
             // 客户校验：客户数量、名称唯一、租户归属
             CustomerValidator(),

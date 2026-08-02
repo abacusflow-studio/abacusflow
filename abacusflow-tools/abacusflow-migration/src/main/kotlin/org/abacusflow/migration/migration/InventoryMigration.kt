@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 依次迁移 inventory 与 inventory_unit 两张表，并为所有记录补 tenant_id。
@@ -47,8 +49,26 @@ class InventoryMigration :
         /** 任务唯一标识符，对应 MigrationTaskId.INVENTORY，持久化到检查点和错误记录中。 */
         MigrationTaskId.INVENTORY,
         /**
-         * 前置依赖集合：PRODUCT（inventory 引用 product_id）和 DEPOT（inventory_unit 引用 depot_id）。
-         * 只有产品和仓库都迁移完成后，库存才能正确写入外键引用。
+         * 前置依赖集合：PRODUCT、DEPOT 和 PURCHASE_ORDER。
+         * inventory_unit 同时引用仓库、库存和采购订单，三者都必须先完成。
          */
-        setOf(MigrationTaskId.PRODUCT, MigrationTaskId.DEPOT),
-    )
+        setOf(MigrationTaskId.PRODUCT, MigrationTaskId.DEPOT, MigrationTaskId.PURCHASE_ORDER),
+    ) {
+    override fun execute(context: MigrationContext): TaskResult =
+        listOf(
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "inventory",
+                sourceTable = "inventory",
+                columns = V1V2Columns.INVENTORY,
+            ),
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "inventory-unit",
+                sourceTable = "inventory_unit",
+                columns = V1V2Columns.INVENTORY_UNIT,
+            ),
+        ).toTaskResult(id)
+}

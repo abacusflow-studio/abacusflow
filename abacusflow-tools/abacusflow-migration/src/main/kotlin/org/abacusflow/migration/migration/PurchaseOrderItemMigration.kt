@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 迁移采购订单明细（purchase_order_item）表，并为所有记录补 tenant_id。
@@ -44,5 +46,16 @@ class PurchaseOrderItemMigration :
          * 前置依赖集合：PURCHASE_ORDER（明细引用 order_id 外键）。
          * 采购订单必须先迁移完成，明细才能正确写入外键引用。
          */
-        setOf(MigrationTaskId.PURCHASE_ORDER),
-    )
+        setOf(MigrationTaskId.PURCHASE_ORDER, MigrationTaskId.PRODUCT),
+    ) {
+    override fun execute(context: MigrationContext): TaskResult =
+        listOf(
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "purchase-order-item",
+                sourceTable = "purchase_order_item",
+                columns = V1V2Columns.PURCHASE_ORDER_ITEM,
+            ),
+        ).toTaskResult(id)
+}

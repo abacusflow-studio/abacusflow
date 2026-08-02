@@ -1,13 +1,18 @@
 package org.abacusflow.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationSelection
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.migration.PlannedMigrationTask
 import org.abacusflow.migration.migration.StandardMigrationPlan
+import org.abacusflow.migration.validation.PlannedMigrationValidator
 import org.abacusflow.migration.validation.StandardValidationPlan
 import picocli.CommandLine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 /** 只保护战略契约；详细迁移测试由各任务实现者补齐。 */
 class SkeletonArchitectureTest {
@@ -21,9 +26,41 @@ class SkeletonArchitectureTest {
 
     @Test
     fun `standard plan follows fixed topological order`() {
-        val taskIds = StandardMigrationPlan.create().tasks.map { it.id }
+        val tasks = StandardMigrationPlan.create().tasks
+        val taskIds = tasks.map { it.id }
 
         assertEquals(MigrationTaskId.entries, taskIds)
+        tasks.forEachIndexed { index, task ->
+            val predecessors = taskIds.take(index).toSet()
+            assertTrue(
+                predecessors.containsAll(task.dependencies),
+                "${task.id.cliName} has a dependency registered after itself: ${task.dependencies - predecessors}",
+            )
+        }
+    }
+
+    @Test
+    fun `standard plan contains no migration execution placeholders`() {
+        StandardMigrationPlan.create().tasks.forEach { task ->
+            val method = task.javaClass.getMethod("execute", MigrationContext::class.java)
+            assertNotEquals(
+                PlannedMigrationTask::class.java,
+                method.declaringClass,
+                "${task.id.cliName} still uses PlannedMigrationTask.execute",
+            )
+        }
+    }
+
+    @Test
+    fun `standard validation plan contains no validator placeholders`() {
+        StandardValidationPlan.create().forEach { validator ->
+            val method = validator.javaClass.getMethod("validate", MigrationContext::class.java)
+            assertNotEquals(
+                PlannedMigrationValidator::class.java,
+                method.declaringClass,
+                "${validator.taskId.cliName} still uses PlannedMigrationValidator.validate",
+            )
+        }
     }
 
     @Test
@@ -69,10 +106,27 @@ class SkeletonArchitectureTest {
                 MigrationTaskId.INVENTORY,
                 MigrationTaskId.PRODUCT,
                 MigrationTaskId.DEPOT,
+                MigrationTaskId.SUPPLIER,
+                MigrationTaskId.PURCHASE_ORDER,
                 MigrationTaskId.TENANT,
             ),
             selection.taskIds.let { MigrationSelection.resolveClosure(it) },
         )
+    }
+
+    @Test
+    fun `purchase order item selection also includes products`() {
+        val closure = MigrationSelection.resolveClosure(setOf(MigrationTaskId.PURCHASE_ORDER_ITEM))
+
+        assertTrue(MigrationTaskId.PRODUCT in closure)
+        assertTrue(MigrationTaskId.PURCHASE_ORDER in closure)
+    }
+
+    @Test
+    fun `finalize selection resolves the complete plan`() {
+        val closure = MigrationSelection.resolveClosure(setOf(MigrationTaskId.FINALIZE))
+
+        assertEquals(MigrationTaskId.entries.toSet(), closure)
     }
 
     @Test

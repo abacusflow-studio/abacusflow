@@ -29,6 +29,11 @@ import org.abacusflow.migration.validation.ValidationReport
  */
 interface MigrationApplication : AutoCloseable {
     /**
+     * 只读分析数据库结构并解析任务依赖，不初始化控制表，也不写入业务数据。
+     */
+    fun plan(selection: MigrationSelection): MigrationPlanReport
+
+    /**
      * 执行迁移。根据 selection 决定全量或部分迁移。
      * @param selection 选中的任务集（All 或 Selected）
      * @return 迁移报告（每个任务的处理数、耗时等）

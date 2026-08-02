@@ -100,8 +100,6 @@ object StandardMigrationPlan {
                 ProductMigration(),
                 // 仓库迁移依赖租户（V2 仓库是租户级的）
                 DepotMigration(),
-                // 库存迁移依赖产品和仓库（库存记录引用产品 ID 和仓库 ID）
-                InventoryMigration(),
                 // ===== 第四层：业务关联实体 =====
                 // 供应商迁移依赖租户
                 SupplierMigration(),
@@ -109,6 +107,8 @@ object StandardMigrationPlan {
                 PurchaseOrderMigration(),
                 // 采购订单明细迁移依赖采购订单（明细是订单的子项）
                 PurchaseOrderItemMigration(),
+                // 库存单元引用采购订单，必须在采购链之后迁移
+                InventoryMigration(),
                 // 客户迁移依赖租户
                 CustomerMigration(),
                 // 销售订单迁移依赖客户和仓库

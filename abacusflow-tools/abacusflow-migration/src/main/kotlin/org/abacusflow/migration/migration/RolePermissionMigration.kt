@@ -1,6 +1,12 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.checkpoint.CheckpointKey
+import org.abacusflow.migration.framework.BatchPage
+import org.abacusflow.migration.framework.BatchProcessor
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
+import org.jooq.impl.DSL
 
 /**
  * 迁移 V1 角色-权限关联到 V2 的 tenant_role_permission 和 tenant_membership_role。
@@ -71,4 +77,159 @@ class RolePermissionMigration(
             MigrationTaskId.ROLE,
             MigrationTaskId.PERMISSION,
         ),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult {
+        val rolePermissionResult = migrateRolePermissions(context)
+        val membershipRoleResult = migrateMembershipRoles(context)
+        return listOf(rolePermissionResult, membershipRoleResult).toTaskResult(id)
+    }
+
+    private fun migrateRolePermissions(context: MigrationContext) =
+        BatchProcessor().processBatches(
+            context = context,
+            checkpointKey = CheckpointKey(id, "tenant-role-permission"),
+            readPage = { lastId, limit ->
+                context.source.read { dsl ->
+                    val roleId = DSL.field("id", Long::class.javaObjectType)
+                    val roleIds =
+                        dsl.select(roleId)
+                            .from(DSL.table(DSL.name("role")))
+                            .where(lastId?.let(roleId::gt) ?: DSL.noCondition())
+                            .orderBy(roleId)
+                            .limit(limit)
+                            .fetch(roleId)
+                    val links =
+                        if (roleIds.isEmpty()) {
+                            emptyMap()
+                        } else {
+                            val linkRoleId = DSL.field("role_id", Long::class.javaObjectType)
+                            val permissionId = DSL.field("permission_id", Long::class.javaObjectType)
+                            dsl.select(linkRoleId, permissionId)
+                                .from(DSL.table(DSL.name("role_permission")))
+                                .where(linkRoleId.`in`(roleIds))
+                                .fetch()
+                                .groupBy({ requireNotNull(it.value1()) }, { requireNotNull(it.value2()) })
+                        }
+                    BatchPage(
+                        records = roleIds.map { sourceRoleId -> RoleLinks(sourceRoleId, links[sourceRoleId].orEmpty()) },
+                        nextCursor = roleIds.lastOrNull(),
+                    )
+                }
+            },
+            transformAndWrite = { dsl, groups ->
+                val roleMap = dsl.render(DSL.name(context.options.controlSchema, "v1_role_id_map"))
+                val permissionMap = dsl.render(DSL.name(context.options.controlSchema, "v1_permission_id_map"))
+                groups.forEach { group ->
+                    group.linkedIds.forEach { v1PermissionId ->
+                        val mapping =
+                            dsl.fetchOne(
+                                """
+                                SELECT r.v2_role_id, p.v2_permission_id
+                                FROM $roleMap r
+                                CROSS JOIN $permissionMap p
+                                WHERE r.v1_role_id = ? AND p.v1_permission_id = ?
+                                """.trimIndent(),
+                                group.sourceId,
+                                v1PermissionId,
+                            )
+                        val v2RoleId =
+                            requireNotNull(mapping?.get("v2_role_id", Long::class.java)) {
+                                "Missing role mapping for V1 role ${group.sourceId}"
+                            }
+                        val v2PermissionId =
+                            requireNotNull(mapping.get("v2_permission_id", Long::class.java)) {
+                                "Missing permission mapping for V1 permission $v1PermissionId"
+                            }
+                        dsl.execute(
+                            """
+                            INSERT INTO tenant_role_permission (role_id, permission_id)
+                            VALUES (?, ?) ON CONFLICT DO NOTHING
+                            """.trimIndent(),
+                            v2RoleId,
+                            v2PermissionId,
+                        )
+                    }
+                }
+                groups.size
+            },
+        )
+
+    private fun migrateMembershipRoles(context: MigrationContext) =
+        BatchProcessor().processBatches(
+            context = context,
+            checkpointKey = CheckpointKey(id, "tenant-membership-role"),
+            readPage = { lastId, limit ->
+                context.source.read { dsl ->
+                    val userId = DSL.field("id", Long::class.javaObjectType)
+                    val userIds =
+                        dsl.select(userId)
+                            .from(DSL.table(DSL.name("user_account")))
+                            .where(lastId?.let(userId::gt) ?: DSL.noCondition())
+                            .orderBy(userId)
+                            .limit(limit)
+                            .fetch(userId)
+                    val links =
+                        if (userIds.isEmpty()) {
+                            emptyMap()
+                        } else {
+                            val linkUserId = DSL.field("user_id", Long::class.javaObjectType)
+                            val roleId = DSL.field("role_id", Long::class.javaObjectType)
+                            dsl.select(linkUserId, roleId)
+                                .from(DSL.table(DSL.name("user_role")))
+                                .where(linkUserId.`in`(userIds))
+                                .fetch()
+                                .groupBy({ requireNotNull(it.value1()) }, { requireNotNull(it.value2()) })
+                        }
+                    BatchPage(
+                        records = userIds.map { sourceUserId -> RoleLinks(sourceUserId, links[sourceUserId].orEmpty()) },
+                        nextCursor = userIds.lastOrNull(),
+                    )
+                }
+            },
+            transformAndWrite = { dsl, groups ->
+                val userMap = dsl.render(DSL.name(context.options.controlSchema, "v1_user_id_map"))
+                val roleMap = dsl.render(DSL.name(context.options.controlSchema, "v1_role_id_map"))
+                groups.forEach { group ->
+                    group.linkedIds.forEach { v1RoleId ->
+                        val mapping =
+                            dsl.fetchOne(
+                                """
+                                SELECT membership.id AS membership_id, role_map.v2_role_id
+                                FROM $userMap user_map
+                                JOIN tenant_membership membership
+                                  ON membership.user_id = user_map.v2_user_id
+                                 AND membership.tenant_id = ?
+                                CROSS JOIN $roleMap role_map
+                                WHERE user_map.v1_user_id = ? AND role_map.v1_role_id = ?
+                                """.trimIndent(),
+                                context.options.defaultTenant.id,
+                                group.sourceId,
+                                v1RoleId,
+                            )
+                        val membershipId =
+                            requireNotNull(mapping?.get("membership_id", Long::class.java)) {
+                                "Missing membership mapping for V1 user ${group.sourceId}"
+                            }
+                        val v2RoleId =
+                            requireNotNull(mapping.get("v2_role_id", Long::class.java)) {
+                                "Missing role mapping for V1 role $v1RoleId"
+                            }
+                        dsl.execute(
+                            """
+                            INSERT INTO tenant_membership_role (membership_id, role_id)
+                            VALUES (?, ?) ON CONFLICT DO NOTHING
+                            """.trimIndent(),
+                            membershipId,
+                            v2RoleId,
+                        )
+                    }
+                }
+                groups.size
+            },
+        )
+
+    private data class RoleLinks(
+        val sourceId: Long,
+        val linkedIds: List<Long>,
+    )
+}

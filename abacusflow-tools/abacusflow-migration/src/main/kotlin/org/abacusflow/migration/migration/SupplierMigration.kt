@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 迁移供应商（supplier）表，并为所有记录补 tenant_id。
@@ -40,4 +42,15 @@ class SupplierMigration :
          * 租户必须先迁移完成，供应商才能正确写入外键引用。
          */
         setOf(MigrationTaskId.TENANT),
-    )
+    ) {
+    override fun execute(context: MigrationContext): TaskResult =
+        listOf(
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "supplier",
+                sourceTable = "supplier",
+                columns = V1V2Columns.SUPPLIER,
+            ),
+        ).toTaskResult(id)
+}

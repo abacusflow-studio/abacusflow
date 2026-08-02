@@ -1,6 +1,12 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.checkpoint.CheckpointKey
+import org.abacusflow.migration.framework.BatchPage
+import org.abacusflow.migration.framework.BatchProcessor
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
+import org.jooq.impl.DSL
 
 /**
  * 为每个有效 V1 用户创建 V2 默认租户的成员关系（tenant_membership）。
@@ -58,4 +64,48 @@ class MembershipMigration(
      * - UserMigration：提供 V1→V2 用户 ID 映射（v1_user_id_map）
      */
     dependencies: Set<MigrationTaskId> = setOf(MigrationTaskId.TENANT, MigrationTaskId.USER),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult {
+        val result =
+            BatchProcessor().processBatches(
+                context = context,
+                checkpointKey = CheckpointKey(id, "tenant-membership"),
+                readPage = { lastId, limit ->
+                    context.source.read { dsl ->
+                        val userId = DSL.field(DSL.name("id"), Long::class.javaObjectType)
+                        val ids =
+                            dsl.select(userId)
+                                .from(DSL.table(DSL.name("user_account")))
+                                .where(lastId?.let(userId::gt) ?: DSL.noCondition())
+                                .orderBy(userId)
+                                .limit(limit)
+                                .fetch(userId)
+                        BatchPage(ids, ids.lastOrNull())
+                    }
+                },
+                transformAndWrite = { dsl, userIds ->
+                    setTenantContext(dsl, context.options.defaultTenant.id)
+                    val userMap = dsl.render(DSL.name(context.options.controlSchema, "v1_user_id_map"))
+                    userIds.forEach { v1UserId ->
+                        val inserted =
+                            dsl.execute(
+                                """
+                                INSERT INTO tenant_membership (tenant_id, user_id, status)
+                                SELECT ?, m.v2_user_id, CAST('ACTIVE' AS membership_status)
+                                FROM $userMap m
+                                WHERE m.v1_user_id = ?
+                                ON CONFLICT (tenant_id, user_id) DO UPDATE SET
+                                    status = EXCLUDED.status,
+                                    updated_at = NOW()
+                                """.trimIndent(),
+                                context.options.defaultTenant.id,
+                                v1UserId,
+                            )
+                        check(inserted == 1) { "Missing user ID mapping for V1 user $v1UserId" }
+                    }
+                    userIds.size
+                },
+            )
+        return listOf(result).toTaskResult(id)
+    }
+}

@@ -47,4 +47,20 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.INVENTORY：将校验器与库存迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class InventoryValidator : PlannedMigrationValidator(MigrationTaskId.INVENTORY)
+class InventoryValidator :
+    TableCountValidator(
+        MigrationTaskId.INVENTORY,
+        listOf(
+            TableValidationSpec("inventory"),
+            TableValidationSpec(
+                "inventory_unit",
+                aggregateExpressions =
+                    mapOf(
+                        "initial-quantity" to "initial_quantity",
+                        "quantity" to "quantity",
+                        "frozen-quantity" to "frozen_quantity",
+                        "inventory-value" to "COALESCE(unit_price, 0) * initial_quantity",
+                    ),
+            ),
+        ),
+    )

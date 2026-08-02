@@ -46,6 +46,11 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.processResources {
+    // 真实数据库配置必须位于 JAR 外；classpath 中只允许保留无凭据的示例文件。
+    exclude("migration.yml")
+}
+
 tasks.jar {
     enabled = false
 }

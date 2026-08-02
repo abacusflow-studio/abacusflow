@@ -32,6 +32,8 @@ package org.abacusflow.migration.framework
 enum class MigrationTaskId(
     /** 命令行短名称，用于 CLI 参数匹配。小写、连字符分隔，便于用户输入。 */
     val cliName: String,
+    /** 单流任务对应的 V1 表，用于低成本进度总量估算。 */
+    val sourceTable: String? = null,
 ) {
     // ─── 基础实体层 ────────────────────────────────────────────
     // 租户是整个多租户系统的根实体，几乎所有其他实体都依赖它
@@ -41,14 +43,14 @@ enum class MigrationTaskId(
     USER("user"),
 
     // 成员关系：用户与租户的关联（多对多），依赖租户和用户
-    MEMBERSHIP("membership"),
+    MEMBERSHIP("membership", "user_account"),
 
     // ─── 授权层 ────────────────────────────────────────────────
     // 角色定义，依赖租户（租户级角色）
-    ROLE("role"),
+    ROLE("role", "role"),
 
     // 权限定义，依赖角色（权限挂载在角色下）
-    PERMISSION("permission"),
+    PERMISSION("permission", "permission"),
 
     // 角色-权限关联（多对多），依赖成员关系、角色和权限三者
     ROLE_PERMISSION("role-permission"),
@@ -58,30 +60,30 @@ enum class MigrationTaskId(
     PRODUCT("product"),
 
     // 仓库/库位定义，依赖租户
-    DEPOT("depot"),
-
-    // 库存记录，依赖产品（知道是什么）和仓库（知道在哪里）
-    INVENTORY("inventory"),
+    DEPOT("depot", "depot"),
 
     // ─── 采购交易层 ────────────────────────────────────────────
     // 供应商，依赖租户
-    SUPPLIER("supplier"),
+    SUPPLIER("supplier", "supplier"),
 
     // 采购订单，依赖供应商
-    PURCHASE_ORDER("purchase-order"),
+    PURCHASE_ORDER("purchase-order", "purchase_order"),
 
     // 采购订单行项，依赖采购订单
-    PURCHASE_ORDER_ITEM("purchase-order-item"),
+    PURCHASE_ORDER_ITEM("purchase-order-item", "purchase_order_item"),
+
+    // 库存单元引用采购订单，因此必须在采购链之后迁移
+    INVENTORY("inventory"),
 
     // ─── 销售交易层 ────────────────────────────────────────────
     // 客户，依赖租户
-    CUSTOMER("customer"),
+    CUSTOMER("customer", "customer"),
 
     // 销售订单，依赖客户（知道卖给谁）和库存（扣减库存）
-    SALE_ORDER("sale-order"),
+    SALE_ORDER("sale-order", "sale_order"),
 
     // 销售订单行项，依赖销售订单
-    SALE_ORDER_ITEM("sale-order-item"),
+    SALE_ORDER_ITEM("sale-order-item", "sale_order_item"),
 
     // ─── 收尾层 ────────────────────────────────────────────────
     // 最终化任务：所有数据迁移完成后的校验/清理/一致性检查
@@ -226,14 +228,21 @@ sealed interface MigrationSelection {
                 MigrationTaskId.ROLE_PERMISSION to setOf(MigrationTaskId.MEMBERSHIP, MigrationTaskId.ROLE, MigrationTaskId.PERMISSION),
                 MigrationTaskId.PRODUCT to setOf(MigrationTaskId.TENANT),
                 MigrationTaskId.DEPOT to setOf(MigrationTaskId.TENANT),
-                MigrationTaskId.INVENTORY to setOf(MigrationTaskId.PRODUCT, MigrationTaskId.DEPOT),
                 MigrationTaskId.SUPPLIER to setOf(MigrationTaskId.TENANT),
                 MigrationTaskId.PURCHASE_ORDER to setOf(MigrationTaskId.SUPPLIER),
-                MigrationTaskId.PURCHASE_ORDER_ITEM to setOf(MigrationTaskId.PURCHASE_ORDER),
+                MigrationTaskId.PURCHASE_ORDER_ITEM to
+                    setOf(MigrationTaskId.PURCHASE_ORDER, MigrationTaskId.PRODUCT),
+                MigrationTaskId.INVENTORY to
+                    setOf(MigrationTaskId.PRODUCT, MigrationTaskId.DEPOT, MigrationTaskId.PURCHASE_ORDER),
                 MigrationTaskId.CUSTOMER to setOf(MigrationTaskId.TENANT),
                 MigrationTaskId.SALE_ORDER to setOf(MigrationTaskId.CUSTOMER, MigrationTaskId.INVENTORY),
                 MigrationTaskId.SALE_ORDER_ITEM to setOf(MigrationTaskId.SALE_ORDER),
-                MigrationTaskId.FINALIZE to setOf(MigrationTaskId.ROLE_PERMISSION, MigrationTaskId.SALE_ORDER_ITEM),
+                MigrationTaskId.FINALIZE to
+                    setOf(
+                        MigrationTaskId.ROLE_PERMISSION,
+                        MigrationTaskId.PURCHASE_ORDER_ITEM,
+                        MigrationTaskId.SALE_ORDER_ITEM,
+                    ),
             )
 
         /**

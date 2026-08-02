@@ -117,6 +117,7 @@ class MigrationRunner(
 
         val taskResults = mutableListOf<TaskResult>()
         var failed = false
+        var failureMessage: String? = null
 
         for (task in resolvedTasks) {
             // failFast 模式下，前序任务失败后跳过所有后续任务
@@ -125,10 +126,13 @@ class MigrationRunner(
                 break
             }
 
-            val taskStartedAt = Instant.now(context.clock)
             // 通知 run 仓库和进度报告器任务开始
             context.runs.taskStarted(context.runId, task.id)
-            context.progress.taskStarted(task.id, null)
+            val estimatedTotal =
+                runCatching { task.estimateTotal(context) }
+                    .onFailure { logger.warn(it) { "Cannot estimate total rows for ${task.id.cliName}" } }
+                    .getOrNull()
+            context.progress.taskStarted(task.id, estimatedTotal)
 
             try {
                 // 执行任务的核心逻辑（由各 MigrationTask 实现类提供）
@@ -137,6 +141,10 @@ class MigrationRunner(
                 context.runs.taskCompleted(context.runId, result)
                 context.progress.taskCompleted(result)
                 taskResults.add(result)
+                if (result.errorCount > 0) {
+                    failed = true
+                    failureMessage = "Task ${task.id.cliName} completed with ${result.errorCount} error(s)"
+                }
 
                 logger.info {
                     "Task ${task.id.cliName} completed: processed=${result.processedCount}, " +
@@ -153,6 +161,9 @@ class MigrationRunner(
                     )
                 taskResults.add(failedResult)
                 failed = true
+                failureMessage = e.message
+                context.runs.taskFailed(context.runId, task.id, Instant.now(context.clock), e.message)
+                context.progress.taskCompleted(failedResult)
                 logger.error { "Task ${task.id.cliName} is not implemented: ${e.message}" }
 
                 if (context.options.failFast) break
@@ -166,6 +177,9 @@ class MigrationRunner(
                     )
                 taskResults.add(failedResult)
                 failed = true
+                failureMessage = e.message
+                context.runs.taskFailed(context.runId, task.id, Instant.now(context.clock), e.message)
+                context.progress.taskCompleted(failedResult)
                 // logger.error(e) 会打印完整异常堆栈，便于排查
                 logger.error(e) { "Task ${task.id.cliName} failed" }
 
@@ -182,7 +196,7 @@ class MigrationRunner(
                 org.abacusflow.migration.run.MigrationRunStatus.SUCCEEDED
             }
         // 在 run 表中记录运行结束
-        context.runs.finish(context.runId, finalStatus, finishedAt, null)
+        context.runs.finish(context.runId, finalStatus, finishedAt, failureMessage)
 
         return MigrationReport(
             runId = context.runId,

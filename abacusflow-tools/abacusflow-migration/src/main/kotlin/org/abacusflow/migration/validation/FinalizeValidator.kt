@@ -1,6 +1,11 @@
 package org.abacusflow.migration.validation
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.migration.setTenantContext
+import org.jooq.impl.DSL
+import java.time.Duration
+import java.time.Instant
 
 /**
  * 收尾校验器 —— 校验迁移收尾阶段的数据一致性。
@@ -44,4 +49,53 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.FINALIZE：将校验器与收尾迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class FinalizeValidator : PlannedMigrationValidator(MigrationTaskId.FINALIZE)
+class FinalizeValidator : MigrationValidator {
+    override val taskId: MigrationTaskId = MigrationTaskId.FINALIZE
+
+    override fun validate(context: MigrationContext): ValidationResult {
+        val startedAt = Instant.now(context.clock)
+        val violations = mutableListOf<String>()
+        var checked = 0
+        context.target.read { dsl ->
+            setTenantContext(dsl, context.options.defaultTenant.id)
+            val currentSchema = dsl.fetchValue("SELECT current_schema()") as String? ?: "public"
+            val tableName = DSL.field("table_name", String::class.java)
+            val tables =
+                dsl.select(tableName)
+                    .from(DSL.table(DSL.name("information_schema", "columns")))
+                    .where(DSL.field("table_schema").eq(currentSchema))
+                    .and(DSL.field("column_name").eq("id"))
+                    .and(DSL.field("is_identity").eq("YES"))
+                    .fetch(tableName)
+            tables.forEach { table ->
+                val renderedTable = dsl.render(DSL.name(table))
+                val sequence = dsl.fetchValue("SELECT pg_get_serial_sequence(?, 'id')", table) as String?
+                if (sequence == null) {
+                    violations += "$table.id has no identity sequence"
+                } else {
+                    val maxId =
+                        requireNotNull(
+                            dsl.fetchValue("SELECT COALESCE(MAX(id), 0) FROM $renderedTable") as Number?,
+                        ).toLong()
+                    val lastValue =
+                        requireNotNull(
+                            dsl.fetchValue(
+                                "SELECT last_value FROM ${dsl.render(DSL.name(*sequence.split('.').toTypedArray()))}",
+                            ) as Number?,
+                        ).toLong()
+                    if (lastValue < maxOf(maxId + 1, 100L)) {
+                        violations += "$sequence last_value=$lastValue is behind max($table.id)=$maxId"
+                    }
+                }
+                checked++
+            }
+        }
+        return ValidationResult(
+            taskId = taskId,
+            passed = violations.isEmpty(),
+            metrics = mapOf("identity-sequences-checked" to checked.toString()),
+            violations = violations,
+            duration = Duration.between(startedAt, Instant.now(context.clock)),
+        )
+    }
+}

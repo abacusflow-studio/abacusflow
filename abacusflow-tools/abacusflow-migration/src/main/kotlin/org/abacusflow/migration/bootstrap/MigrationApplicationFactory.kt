@@ -86,7 +86,7 @@ class MigrationApplicationFactory {
             val target = dbFactory.openTarget(config.target)
             // 所有资源就绪，返回装配好的 Application
             // 调用者（MigrateCommand）用 .use {} 确保最终 close()
-            return DefaultMigrationApplication(source, target)
+            return DefaultMigrationApplication(source, target, config.migration)
         } catch (e: Exception) {
             // target 失败：关闭已创建的 source，再抛出主异常
             runCatching { source.close() }

@@ -79,6 +79,17 @@ interface MigrationTask {
      */
     val dependencies: Set<MigrationTaskId>
 
+    /** 返回可低成本获得的源记录总量；复合流任务默认返回 null，避免展示错误进度。 */
+    fun estimateTotal(context: MigrationContext): Long? {
+        if (id == MigrationTaskId.TENANT) return 1L
+        val table = id.sourceTable ?: return null
+        return context.source.read { dsl ->
+            requireNotNull(
+                dsl.fetchValue("SELECT COUNT(*) FROM ${dsl.render(org.jooq.impl.DSL.name(table))}") as Number?,
+            ).toLong()
+        }
+    }
+
     /**
      * 执行迁移任务。
      *

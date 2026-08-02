@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 将 V1 仓库（depot）迁移到 V2 depot，补填 tenant_id。
@@ -53,4 +55,15 @@ class DepotMigration(
      * 从 v1_tenant_id_map 读取默认租户 ID，为记录填充 tenant_id。
      */
     dependencies: Set<MigrationTaskId> = setOf(MigrationTaskId.TENANT),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult =
+        listOf(
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "depot",
+                sourceTable = "depot",
+                columns = V1V2Columns.DEPOT,
+            ),
+        ).toTaskResult(id)
+}

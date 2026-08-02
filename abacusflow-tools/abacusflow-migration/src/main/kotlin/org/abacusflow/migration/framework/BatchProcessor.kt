@@ -3,6 +3,8 @@ package org.abacusflow.migration.framework
 import org.abacusflow.migration.checkpoint.CheckpointKey
 import org.abacusflow.migration.checkpoint.MigrationCheckpoint
 import org.jooq.DSLContext
+import java.sql.SQLException
+import java.time.Duration
 import java.time.Instant
 
 /**
@@ -85,10 +87,13 @@ class BatchProcessor {
         transformAndWrite: (DSLContext, List<T>) -> Int,
     ): BatchResult {
         // 从 checkpoint 加载上次的断点位置，首次运行为 null（从头开始）
-        var lastId: Long? = loadCursor(context, checkpointKey)
-        var totalProcessed = 0L
+        val previousCheckpoint = loadCheckpoint(context, checkpointKey)
+        val compatibleCheckpoint = previousCheckpoint?.takeIf { it.implementationVersion == implementationVersion }
+        var lastId: Long? = compatibleCheckpoint?.cursor?.toLongOrNull()
+        var totalProcessed = compatibleCheckpoint?.processedCount ?: 0L
         var totalSkipped = 0L
         var totalErrors = 0L
+        val processingStartedAt = Instant.now(context.clock)
 
         while (true) {
             // 1. 从源库读取一页（不持有源库事务，避免长时间锁表）
@@ -129,7 +134,7 @@ class BatchProcessor {
                 context.progress.batchCompleted(
                     checkpointKey.taskId,
                     totalProcessed,
-                    java.time.Duration.ofMillis(0), // 由调用者计算，这里传 0
+                    Duration.between(processingStartedAt, Instant.now(context.clock)),
                 )
             } catch (e: Exception) {
                 // 事务已回滚（包括 checkpoint 保存），lastId 不变
@@ -141,16 +146,16 @@ class BatchProcessor {
                         taskId = checkpointKey.taskId,
                         stream = checkpointKey.stream,
                         // recordKey 标识出错的批次位置，便于排查
-                        recordKey = "batch-after-$lastId",
+                        recordKey = (e as? MigrationRecordException)?.recordKey ?: "batch-after-$lastId",
                         // 截断错误信息到 2000 字符，防止超长异常信息撑爆数据库字段
                         message = e.message?.take(2000) ?: "Unknown error",
-                        retryable = true, // 批处理错误通常是临时的，可重试
+                        retryable = isRetryableMigrationFailure(e),
                         createdAt = Instant.now(context.clock),
                     ),
                 )
-                // failFast 模式：立即抛出异常，中断整个迁移运行
-                // 非 failFast 模式：记录错误，继续处理下一批
-                if (context.options.failFast) throw e
+                // 整批事务失败时不能安全推进 cursor；继续循环只会永远重试同一页。
+                // 记录级容错必须由 transformAndWrite 在事务内部显式实现。
+                throw e
             }
         }
 
@@ -182,17 +187,33 @@ class BatchProcessor {
      * @param key checkpoint 键
      * @return 上次断点位置的 ID，首次运行返回 null
      */
-    private fun loadCursor(
+    private fun loadCheckpoint(
         context: MigrationContext,
         key: CheckpointKey,
-    ): Long? {
-        var cursor: Long? = null
+    ): MigrationCheckpoint? {
+        var checkpoint: MigrationCheckpoint? = null
         context.target.read { dsl ->
-            val checkpoint = context.checkpoints.find(dsl, key)
-            cursor = checkpoint?.cursor?.toLongOrNull()
+            checkpoint = context.checkpoints.find(dsl, key)
         }
-        return cursor
+        return checkpoint
     }
+}
+
+/** 在批事务失败时把源记录业务键带到独立错误仓储。 */
+class MigrationRecordException(
+    val recordKey: String,
+    cause: Throwable,
+) : RuntimeException(cause.message, cause)
+
+/** 按 PostgreSQL SQLSTATE 分类；约束/数据错误不会被错误标记为可重试。 */
+internal fun isRetryableMigrationFailure(error: Throwable): Boolean {
+    val sqlState =
+        generateSequence(error) { it.cause }
+            .filterIsInstance<SQLException>()
+            .mapNotNull { it.sqlState }
+            .firstOrNull()
+            ?: return false
+    return sqlState.take(2) in setOf("08", "40", "53", "55", "57", "58")
 }
 
 /**

@@ -37,7 +37,11 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.SUPPLIER：将校验器与供应商迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class SupplierValidator : PlannedMigrationValidator(MigrationTaskId.SUPPLIER)
+class SupplierValidator :
+    TableCountValidator(
+        MigrationTaskId.SUPPLIER,
+        listOf(TableValidationSpec("supplier")),
+    )
 
 /**
  * 采购订单校验器 —— 校验迁移后的采购订单数据是否正确。
@@ -72,7 +76,11 @@ class SupplierValidator : PlannedMigrationValidator(MigrationTaskId.SUPPLIER)
  * - 构造函数参数 MigrationTaskId.PURCHASE_ORDER：将校验器与采购订单迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class PurchaseOrderValidator : PlannedMigrationValidator(MigrationTaskId.PURCHASE_ORDER)
+class PurchaseOrderValidator :
+    TableCountValidator(
+        MigrationTaskId.PURCHASE_ORDER,
+        listOf(TableValidationSpec("purchase_order")),
+    )
 
 /**
  * 采购订单明细校验器 —— 校验迁移后的采购订单行项数据是否正确。
@@ -106,7 +114,20 @@ class PurchaseOrderValidator : PlannedMigrationValidator(MigrationTaskId.PURCHAS
  * - 构造函数参数 MigrationTaskId.PURCHASE_ORDER_ITEM：将校验器与采购明细迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class PurchaseOrderItemValidator : PlannedMigrationValidator(MigrationTaskId.PURCHASE_ORDER_ITEM)
+class PurchaseOrderItemValidator :
+    TableCountValidator(
+        MigrationTaskId.PURCHASE_ORDER_ITEM,
+        listOf(
+            TableValidationSpec(
+                "purchase_order_item",
+                aggregateExpressions =
+                    mapOf(
+                        "quantity" to "quantity",
+                        "amount" to "COALESCE(unit_price, 0) * quantity",
+                    ),
+            ),
+        ),
+    )
 
 /**
  * 客户校验器 —— 校验迁移后的客户数据是否正确。
@@ -143,7 +164,11 @@ class PurchaseOrderItemValidator : PlannedMigrationValidator(MigrationTaskId.PUR
  * - 构造函数参数 MigrationTaskId.CUSTOMER：将校验器与客户迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class CustomerValidator : PlannedMigrationValidator(MigrationTaskId.CUSTOMER)
+class CustomerValidator :
+    TableCountValidator(
+        MigrationTaskId.CUSTOMER,
+        listOf(TableValidationSpec("customer")),
+    )
 
 /**
  * 销售订单校验器 —— 校验迁移后的销售订单数据是否正确。
@@ -178,7 +203,11 @@ class CustomerValidator : PlannedMigrationValidator(MigrationTaskId.CUSTOMER)
  * - 构造函数参数 MigrationTaskId.SALE_ORDER：将校验器与销售订单迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class SaleOrderValidator : PlannedMigrationValidator(MigrationTaskId.SALE_ORDER)
+class SaleOrderValidator :
+    TableCountValidator(
+        MigrationTaskId.SALE_ORDER,
+        listOf(TableValidationSpec("sale_order")),
+    )
 
 /**
  * 销售订单明细校验器 —— 校验迁移后的销售订单行项数据是否正确。
@@ -213,4 +242,18 @@ class SaleOrderValidator : PlannedMigrationValidator(MigrationTaskId.SALE_ORDER)
  * - 构造函数参数 MigrationTaskId.SALE_ORDER_ITEM：将校验器与销售明细迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class SaleOrderItemValidator : PlannedMigrationValidator(MigrationTaskId.SALE_ORDER_ITEM)
+class SaleOrderItemValidator :
+    TableCountValidator(
+        MigrationTaskId.SALE_ORDER_ITEM,
+        listOf(
+            TableValidationSpec(
+                "sale_order_item",
+                aggregateExpressions =
+                    mapOf(
+                        "quantity" to "quantity",
+                        "gross-amount" to "COALESCE(unit_price, 0) * quantity",
+                        "discount-factor" to "COALESCE(discount_factor, 0)",
+                    ),
+            ),
+        ),
+    )

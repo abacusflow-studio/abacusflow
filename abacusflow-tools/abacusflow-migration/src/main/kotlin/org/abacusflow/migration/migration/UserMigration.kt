@@ -1,6 +1,9 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
+import org.jooq.impl.DSL
 
 /**
  * 将 V1 user_account 迁移到 V2 user_account，并迁移关联的 external_identity。
@@ -57,4 +60,38 @@ class UserMigration(
      * 从控制表 v1_tenant_id_map 读取 V2 租户 ID，为用户记录填充 tenant_id。
      */
     dependencies: Set<MigrationTaskId> = setOf(MigrationTaskId.TENANT),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult {
+        val support = TableMigrationSupport()
+        val userMap = DSL.table(DSL.name(context.options.controlSchema, "v1_user_id_map"))
+        return listOf(
+            support.migrate(
+                context = context,
+                taskId = id,
+                stream = "user-account",
+                sourceTable = "user_account",
+                columns = V1V2Columns.USER_ACCOUNT,
+                tenantAware = false,
+                afterBatch = { dsl, rows ->
+                    rows.forEach { row ->
+                        dsl.insertInto(userMap)
+                            .columns(DSL.field("v1_user_id"), DSL.field("v2_user_id"))
+                            .values(row.id, row.id)
+                            .onConflict(DSL.field("v1_user_id"))
+                            .doUpdate()
+                            .set(DSL.field("v2_user_id"), row.id)
+                            .execute()
+                    }
+                },
+            ),
+            support.migrate(
+                context = context,
+                taskId = id,
+                stream = "user-external-identity",
+                sourceTable = "user_external_identity",
+                columns = V1V2Columns.USER_EXTERNAL_IDENTITY,
+                tenantAware = false,
+            ),
+        ).toTaskResult(id)
+    }
+}

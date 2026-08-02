@@ -1,6 +1,14 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.checkpoint.CheckpointKey
+import org.abacusflow.migration.framework.BatchPage
+import org.abacusflow.migration.framework.BatchProcessor
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
+import org.abacusflow.migration.migration.mapping.PermissionMapping
+import org.jooq.impl.DSL
+import java.time.Instant
 
 /**
  * 将 V1 permission 迁移到 V2 permission，建立 v1_permission_id_map 映射表。
@@ -64,4 +72,97 @@ class PermissionMigration(
      * 从 v1_role_id_map 可间接确认租户 ID（角色归属租户）。
      */
     dependencies: Set<MigrationTaskId> = setOf(MigrationTaskId.ROLE),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult {
+        val result =
+            BatchProcessor().processBatches(
+                context = context,
+                checkpointKey = CheckpointKey(id, "permission"),
+                readPage = { lastId, limit ->
+                    context.source.read { dsl ->
+                        val permissionId = DSL.field("id", Long::class.javaObjectType)
+                        val rows =
+                            dsl.select(
+                                permissionId,
+                                DSL.field("name", String::class.java),
+                                DSL.field("label", String::class.java),
+                                DSL.field("description", String::class.java),
+                                DSL.field("created_at", Instant::class.java),
+                                DSL.field("updated_at", Instant::class.java),
+                            ).from(DSL.table(DSL.name("permission")))
+                                .where(lastId?.let(permissionId::gt) ?: DSL.noCondition())
+                                .orderBy(permissionId)
+                                .limit(limit)
+                                .fetch { record ->
+                                    PermissionRow(
+                                        id = requireNotNull(record.value1()),
+                                        name = requireNotNull(record.value2()),
+                                        label = record.value3(),
+                                        description = record.value4(),
+                                        createdAt = requireNotNull(record.value5()),
+                                        updatedAt = requireNotNull(record.value6()),
+                                    )
+                                }
+                        BatchPage(rows, rows.lastOrNull()?.id)
+                    }
+                },
+                transformAndWrite = { dsl, rows ->
+                    val permissionMap = dsl.render(DSL.name(context.options.controlSchema, "v1_permission_id_map"))
+                    rows.forEach { row ->
+                        val mappedName = resolvePermissionName(row.name)
+                        val scope = mappedName.substringBefore(':').uppercase()
+                        check(scope in setOf("PLATFORM", "TENANT", "BUSINESS")) {
+                            "Cannot infer V2 permission scope for '${row.name}'"
+                        }
+                        val record =
+                            dsl.fetchOne(
+                                """
+                                INSERT INTO permission (name, label, description, scope, created_at, updated_at)
+                                VALUES (?, ?, ?, ?, CAST(? AS timestamptz), CAST(? AS timestamptz))
+                                ON CONFLICT (name) DO UPDATE SET
+                                    label = EXCLUDED.label,
+                                    description = EXCLUDED.description,
+                                    scope = EXCLUDED.scope,
+                                    updated_at = EXCLUDED.updated_at
+                                RETURNING id
+                                """.trimIndent(),
+                                mappedName,
+                                row.label ?: row.name,
+                                row.description,
+                                scope,
+                                row.createdAt,
+                                row.updatedAt,
+                            )
+                        val v2Id = requireNotNull(record?.get("id", Long::class.java))
+                        dsl.execute(
+                            """
+                            INSERT INTO $permissionMap (v1_permission_id, v2_permission_id)
+                            VALUES (?, ?)
+                            ON CONFLICT (v1_permission_id) DO UPDATE SET v2_permission_id = EXCLUDED.v2_permission_id
+                            """.trimIndent(),
+                            row.id,
+                            v2Id,
+                        )
+                    }
+                    rows.size
+                },
+            )
+        return listOf(result).toTaskResult(id)
+    }
+
+    private fun resolvePermissionName(v1Name: String): String {
+        PermissionMapping.mapPermissionName(v1Name)?.let { return it }
+        val prefix = v1Name.substringBefore(':').uppercase()
+        if (prefix in setOf("PLATFORM", "TENANT", "BUSINESS")) return v1Name
+        return "${PermissionMapping.inferScope(v1Name).lowercase()}:$v1Name"
+    }
+
+    private data class PermissionRow(
+        val id: Long,
+        val name: String,
+        val label: String?,
+        val description: String?,
+        val createdAt: Instant,
+        val updatedAt: Instant,
+    )
+}

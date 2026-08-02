@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 迁移 V1 产品分类（product_category）和产品（product）到 V2，补填 tenant_id。
@@ -59,4 +61,32 @@ class ProductMigration(
      * 从 v1_tenant_id_map 读取默认租户 ID，为记录填充 tenant_id。
      */
     dependencies: Set<MigrationTaskId> = setOf(MigrationTaskId.TENANT),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult {
+        val support = TableMigrationSupport()
+        val categoryColumns = V1V2Columns.PRODUCT_CATEGORY
+        return listOf(
+            support.migrate(
+                context = context,
+                taskId = id,
+                stream = "product-category",
+                sourceTable = "product_category",
+                columns = categoryColumns.filterNot { it.sourceName == "parent_id" },
+            ),
+            support.update(
+                context = context,
+                taskId = id,
+                stream = "product-category-parent",
+                sourceTable = "product_category",
+                columns = categoryColumns.filter { it.sourceName == "id" || it.sourceName == "parent_id" },
+            ),
+            support.migrate(
+                context = context,
+                taskId = id,
+                stream = "product",
+                sourceTable = "product",
+                columns = V1V2Columns.PRODUCT,
+            ),
+        ).toTaskResult(id)
+    }
+}

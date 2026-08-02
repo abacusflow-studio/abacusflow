@@ -1,172 +1,214 @@
-# AbacusFlow Migration CLI 战略骨架
+# AbacusFlow Migration CLI
 
-这个模块是 AbacusFlow V1 单租户数据库到 V2 多租户数据库的独立 Kotlin CLI。它不依赖 Spring Boot、JPA、Hibernate 或业务模块。
+独立 Kotlin CLI，用于将 AbacusFlow V1 单租户 PostgreSQL 数据迁移到 V2 多租户数据库。
+模块不依赖 Spring Boot、JPA、Hibernate 或业务 Domain 模型。
 
-当前交付是“可编译、不可误执行”的战略骨架：命令、模块边界、任务依赖、配置模型、控制表和实现约束已经确定；数据库连接、SQL、字段映射、批处理算法及校验 SQL 留给各文件负责人实现。所有未实现的执行入口会明确抛出 `UnsupportedOperationException`，不会用空操作伪造成功。
+当前实现包含：双数据库连接、严格 YAML 配置、任务依赖解析、keyset 分页、批事务、
+checkpoint 恢复、控制表自动初始化、单实例迁移锁、运行/错误记录、数据迁移、只读校验、
+sequence 对齐、dry-run 计划以及可执行 fat JAR。
 
-## 架构原则
+## 数据范围
 
-- Source 永远只读；Target 只通过显式事务端口写入。
-- 使用 keyset/cursor 分页，禁止 `SELECT *`、offset 深分页和全表载入内存。
-- 每批顺序为：读取 source → 转换 → 在同一个 target 事务中批量写入与推进 checkpoint。
-- 任务必须可重入。Checkpoint 使用 `task + stream + opaque cursor`，可表达复合任务、UUID 和复合键。
-- 迁移任务与 Validator 一一对应；未实现 Validator 不允许返回 PASS。
-- 保留源 ID 后必须在最终化阶段统一校正 PostgreSQL identity sequence。
-- 不引用现有 Domain/JPA 模型，避免新业务代码的生命周期、监听器、RLS 上下文改变历史数据。
-
-## 任务拓扑
+标准计划共 16 个任务，固定顺序如下：
 
 ```text
-Tenant ─┬─> User ─> Membership ───────────────┐
-        ├─> Role ─> Permission ───────────────┼─> RolePermission ─┐
-        └─> Product ─> PurchaseOrder ─> Inventory ─> SaleOrder ───┼─> Finalize
-                                                               ───┘
+tenant
+  ├─ user ─ membership ──────────────────────────────────────────────┐
+  ├─ role ─ permission ─ role-permission ────────────────────────────┤
+  ├─ product ────────────────────────────────────────┐               │
+  ├─ depot ──────────────────────────────────────────┤               │
+  ├─ supplier ─ purchase-order ─ purchase-order-item ┤               │
+  │                                                  └─ inventory ──┤
+  └─ customer ───────────────────────────────────────── sale-order ─ sale-order-item
+                                                                       │
+                                                                    finalize
 ```
 
-原计划中的 `Transaction` 被拆成 `PurchaseOrder` 和 `SaleOrder`：V2 的库存单元引用采购信息，而销售明细又依赖库存单元，单一任务无法准确表达依赖顺序。CLI 仍保留 `transaction` 任务组，一次选中两者。
+实际拓扑中 `inventory` 依赖 `product`、`depot` 和 `purchase-order`，因为
+`inventory_unit.purchase_order_id` 引用采购单。CLI 选择下游任务时会自动补齐所有依赖。
 
-`ProductMigration` 负责分类和产品，`PurchaseOrderMigration` 负责供应商和采购，`InventoryMigration` 负责仓库和库存，`SaleOrderMigration` 负责客户和销售。每张表使用独立 checkpoint stream。
+覆盖的 V1 表：
 
-## 文件结构与职责
+- 用户与身份：`user_account`、`user_external_identity`
+- 授权：`role`、`permission`、`role_permission`、`user_role`
+- 商品：`product_category`、`product`
+- 仓储采购：`depot`、`supplier`、`purchase_order`、`purchase_order_item`
+- 库存：`inventory`、`inventory_unit`
+- 销售：`customer`、`sale_order`、`sale_order_item`
+
+不在当前标准计划内：`feedback`、V2 `tenant_invitation`、平台角色相关表。它们不是原始实现计划的
+迁移对象，上线前必须明确是保留 V2 seed、另写迁移任务，还是确认无需迁移。
+
+## ID 与重复执行策略
+
+- `user_account`、`user_external_identity` 和同名业务表保留 V1 主键；原有业务外键因此可直接保留。
+- 角色和权限会与 V2 seed 按名称合并，并写入 `v1_role_id_map`、`v1_permission_id_map`。
+- 用户保留 ID，同时写入 `v1_user_id_map`，供 membership 和成员角色转换使用。
+- 同一主键重复执行采用确定性 upsert；源数据覆盖该主键下的目标字段。
+- 非主键唯一约束冲突不会被吞掉，会回滚整批并在 `migration_error` 中记录失败源记录。
+- checkpoint 与业务写入处于同一个目标库事务；失败时二者一起回滚。
+- `implementation_version` 不匹配时丢弃旧 cursor，从该 stream 起点重新执行。
+- `finalize` 将目标配置 schema 内所有 identity sequence 推进到 `max(id) + 1`，且不低于 100。
+
+目标库若已存在与 V1 无关的数据，尤其是相同 ID 或业务唯一键的数据，必须先评审冲突策略。
+本工具不会自动删除目标数据，也不会用 `ON CONFLICT DO NOTHING` 隐藏冲突。
+
+## 目录与文件职责
 
 ```text
-abacusflow-tools/abacusflow-migration/
-├── build.gradle.kts
-├── README.md
-└── src/
-    ├── main/
-    │   ├── kotlin/org/abacusflow/migration/
-    │   │   ├── Main.kt
-    │   │   ├── MigrationCommand.kt
-    │   │   ├── bootstrap/
-    │   │   ├── checkpoint/
-    │   │   ├── config/
-    │   │   ├── database/
-    │   │   ├── error/
-    │   │   ├── framework/
-    │   │   ├── migration/
-    │   │   ├── report/
-    │   │   ├── run/
-    │   │   └── validation/
-    │   └── resources/
-    │       ├── migration.example.yml
-    │       ├── logback.xml
-    │       └── sql/control-schema.sql
-    └── test/kotlin/org/abacusflow/migration/
-        └── SkeletonArchitectureTest.kt
+src/main/kotlin/org/abacusflow/migration/
+├── Main.kt                         进程入口和 Picocli 子命令装配
+├── MigrationCommand.kt             migrate / validate / plan 参数与退出码
+├── bootstrap/
+│   ├── MigrationApplication.kt     CLI 应用层门面
+│   ├── MigrationApplicationFactory.kt  配置和双数据库的唯一组合根
+│   ├── DefaultMigrationApplication.kt  schema check、锁、Runner、Validator 编排
+│   └── MigrationPlanReport.kt      plan 的只读诊断结果
+├── check/SchemaChecker.kt          V1/V2 表、Flyway 版本和迁移锁检查
+├── config/                         UTF-8 YAML、kebab-case 绑定和配置校验
+├── control/ControlSchemaInitializer.kt  advisory lock 下幂等创建控制面
+├── database/                       只读 Source 与事务型 Target 的 jOOQ/Hikari 实现
+├── framework/
+│   ├── MigrationTask.kt            任务契约、总量估算和 TaskResult
+│   ├── MigrationTaskId.kt          稳定任务名、任务组和依赖闭包
+│   ├── MigrationPlan.kt            固定拓扑解析
+│   ├── MigrationRunner.kt          run/task 生命周期和失败状态
+│   ├── BatchProcessor.kt           keyset 分页、原子 checkpoint、错误分类
+│   └── MigrationContext.kt         单次运行的显式依赖
+├── migration/
+│   ├── TableMigrationSupport.kt    保留 ID 表的通用分页/upsert 模板
+│   ├── V1V2Columns.kt              V1/V2 权威列、类型和显式 PostgreSQL cast
+│   ├── *Migration.kt               16 个具体任务
+│   └── mapping/                     角色、权限和字段转换规则
+├── checkpoint/                     checkpoint 模型与 jOOQ 仓储
+├── error/                          独立短事务错误仓储
+├── run/                            run/task 状态仓储，JSONB 正确绑定
+├── report/                         进度、速度和 ETA 控制台输出
+└── validation/
+    ├── TableCountValidator.kt      数量、ID 摘要和精确聚合校验模板
+    ├── *Validator.kt               每个任务一一对应的 Validator
+    └── StandardValidationPlan.kt   唯一校验注册清单
 ```
 
-### 构建和入口
+资源与测试：
 
-| 文件 | 作用 |
+| 文件 | 用途 |
 | --- | --- |
-| `build.gradle.kts` | 声明纯 Kotlin CLI、jOOQ/JDBC/Picocli/日志/YAML 依赖，并生成可执行 fat jar；刻意不应用仓库中会引入 Spring 的 `abacusflow-base`。 |
-| `Main.kt` | 进程入口、子命令装配和退出码传递。 |
-| `MigrationCommand.kt` | 定义 `migrate` / `validate` 参数契约；不承载数据库或迁移逻辑。 |
+| `src/main/resources/migration.example.yml` | 无真实凭据的外部配置模板 |
+| `src/main/resources/sql/control-schema.sql` | run、task、checkpoint、error、ID map、锁的唯一 DDL |
+| `SkeletonArchitectureTest.kt` | 任务/Validator 对齐、无占位实现、固定拓扑和依赖闭包 |
+| `BatchProcessorTest.kt` | 断点版本、累计恢复、事务失败不死循环 |
+| `JooqMigrationRunRepositoryTest.kt` | `selected_tasks` 生成 `CAST(? AS JSONB)` |
+| `PostgresMigrationIntegrationTest.kt` | 临时 PostgreSQL 验证真实 SQL、枚举/数组、授权映射和 checkpoint |
 
-### 组合、配置和数据库边界
+## 配置
 
-| 文件 | 作用 |
-| --- | --- |
-| `bootstrap/MigrationApplication.kt` | CLI 调用的应用层门面。 |
-| `bootstrap/MigrationApplicationFactory.kt` | 唯一组合根，未来负责配置、数据库、仓储、Runner、Validator 的手动依赖装配与资源清理。 |
-| `config/DatabaseConfig.kt` | source/target 连接参数模型及密码脱敏边界。 |
-| `config/MigrationConfig.kt` | YAML 顶层模型、批大小、控制 schema、默认租户等运行策略。 |
-| `config/ConfigLoader.kt` | 配置加载端口与 YAML 实现占位；后续补环境变量替换和启动前校验。 |
-| `database/SourceDatabase.kt` | V1 只读 jOOQ 端口。 |
-| `database/TargetDatabase.kt` | V2 查询和显式事务端口；批写与 checkpoint 必须共享事务。 |
-| `database/MigrationDatabaseFactory.kt` | 双数据库创建端口及 JDBC+jOOQ 适配器占位。 |
+YAML 使用 kebab-case，Kotlin 使用 camelCase，环境变量使用 `UPPER_SNAKE_CASE`。
 
-### 执行框架和控制面
+```powershell
+Copy-Item `
+  abacusflow-tools/abacusflow-migration/src/main/resources/migration.example.yml `
+  abacusflow-tools/abacusflow-migration/migration.yml
 
-| 文件 | 作用 |
-| --- | --- |
-| `framework/MigrationTask.kt` | 每个可恢复任务的统一契约和任务结果。 |
-| `framework/MigrationTaskId.kt` | 稳定 task key、CLI 任务/任务组选择模型。 |
-| `framework/MigrationContext.kt` | 单次运行的显式依赖集合，避免全局状态。 |
-| `framework/MigrationPlan.kt` | 有向无环任务图及依赖闭包解析的实现位置。 |
-| `framework/MigrationRunner.kt` | 顶层状态编排、失败策略和报告汇总的实现位置。 |
-| `framework/BatchProcessor.kt` | keyset 分页、批写、原子 checkpoint 模板的实现位置。 |
-| `checkpoint/MigrationCheckpointRepository.kt` | checkpoint 模型与仓储端口；支持任务内多个 stream。 |
-| `error/MigrationErrorRepository.kt` | 可重试错误记录端口，不允许落密码或完整个人数据。 |
-| `run/MigrationRunRepository.kt` | run/task 状态和进度持久化端口，使用独立短事务。 |
-| `report/ProgressReporter.kt` | 进度事件端口；控制台速度、ETA 和结构化日志待实现。 |
-
-### 迁移任务
-
-| 文件 | 作用 |
-| --- | --- |
-| `migration/PlannedMigrationTask.kt` | 统一的安全占位；防止未实现任务空跑成功。 |
-| `migration/TenantMigration.kt` | 默认租户与 tenant placement 策略。 |
-| `migration/UserMigration.kt` | 用户、外部身份及旧新用户字段映射边界。 |
-| `migration/MembershipMigration.kt` | 所有旧用户加入默认租户。 |
-| `migration/RoleMigration.kt` | 旧角色到租户角色的映射及预置角色冲突策略。 |
-| `migration/PermissionMigration.kt` | 权限 code/name 和 scope taxonomy 映射。 |
-| `migration/RolePermissionMigration.kt` | 租户角色权限及成员角色两类关联。 |
-| `migration/ProductMigration.kt` | 分类树与产品，按 stream 分阶段迁移。 |
-| `migration/PurchaseOrderMigration.kt` | 供应商、采购单和采购明细，位于库存之前。 |
-| `migration/InventoryMigration.kt` | 仓库、库存与库存单元，保留精确数量和金额。 |
-| `migration/SaleOrderMigration.kt` | 客户、销售单和销售明细，位于库存之后。 |
-| `migration/FinalizeMigration.kt` | identity sequence 校正、统计信息及最终报告。 |
-| `migration/StandardMigrationPlan.kt` | 标准任务的唯一注册与拓扑顺序。 |
-
-### 校验
-
-| 文件 | 作用 |
-| --- | --- |
-| `validation/MigrationValidator.kt` | Validator 契约、结果/报告模型和安全占位。 |
-| `validation/TenantValidator.kt` | 默认租户及 placement 完整性。 |
-| `validation/UserValidator.kt` | 用户数量、ID 集合和关键字段。 |
-| `validation/MembershipValidator.kt` | 每个用户的默认租户成员关系和孤儿引用。 |
-| `validation/AuthorizationValidators.kt` | 角色、权限、角色权限与成员角色关系。 |
-| `validation/ProductValidator.kt` | 分类树、产品、条码与租户归属。 |
-| `validation/TransactionValidators.kt` | 采购/销售主体、明细、数量及金额聚合。 |
-| `validation/InventoryValidator.kt` | 库存记录数、总量、冻结量、金额和引用完整性。 |
-| `validation/FinalizeValidator.kt` | identity sequence 与最终状态。 |
-| `validation/StandardValidationPlan.kt` | Validator 唯一注册清单，并与任务一一对应。 |
-
-### 资源和测试
-
-| 文件 | 作用 |
-| --- | --- |
-| `migration.example.yml` | 无真实密码的配置模板，约定 `${ENV_NAME}` 注入。 |
-| `logback.xml` | 低噪声控制台日志骨架，后续补滚动文件/JSON/脱敏。 |
-| `sql/control-schema.sql` | run、task、checkpoint、error 控制表；由运维审核后显式执行。 |
-| `SkeletonArchitectureTest.kt` | 保护任务/Validator 对齐和 CLI 任务组等战略契约。 |
-
-## 实现前必须冻结的决策
-
-1. **V1 schema 基线**：把生产源库精确 DDL/版本作为测试 fixture；不能凭实体类猜字段。
-2. **完整数据范围**：当前计划覆盖租户、用户授权、产品、采购、库存、销售。`feedback`、平台角色、邀请等 V2 表是否迁移或初始化，需要产品/数据负责人签字。
-3. **预置数据冲突**：V2 `V002__init_data.sql` 已写默认租户、角色、权限和用户数据。必须决定目标库是空 schema、已 seed 后映射，还是先清理；CLI 不应自行删除。
-4. **身份与 RLS**：确认迁移账号的 BYPASSRLS/owner 能力、目标约束和 trigger 行为，并记录批准的权限窗口。
-5. **幂等策略**：逐表决定 insert-only、`ON CONFLICT DO NOTHING` 加校验，或映射表；禁止用无条件 upsert 隐藏脏数据。
-6. **切换窗口**：备份、写入冻结、最终增量/全量复跑、校验、应用切换和回滚触发条件要形成 runbook。
-7. **验收阈值**：数量必须全量一致；金额使用 `BigDecimal` 精确一致；抽样仅用于字段内容，不替代集合/聚合校验。
-
-## 后续实现顺序
-
-1. 完成 `ConfigLoader`、数据库适配器、控制表仓储和资源关闭测试。
-2. 完成 `MigrationPlan.resolve`、`MigrationRunner`、`BatchProcessor`，用小型合成任务验证失败回滚和 checkpoint 恢复。
-3. 按任务拓扑逐个实现迁移与同 ID Validator；每完成一个任务就加入 PostgreSQL Testcontainers 集成测试。
-4. 增加 10 万用户、100 万商品、1000 万库存的生成器/性能测试；记录吞吐、峰值内存、恢复时间，而不是把大数据 fixture 提交到 Git。
-5. 在脱敏生产快照上演练至少一次完整迁移、一次中途 kill/restart、一次回滚。
-
-## 构建与未来用法
-
-```bash
-./gradlew :abacusflow-tools:abacusflow-migration:build
-java -jar abacusflow-tools/abacusflow-migration/build/libs/abacusflow-migration.jar --help
+$env:SOURCE_DB_PASSWORD = "source-password"
+$env:TARGET_DB_PASSWORD = "target-password"
 ```
 
-详细实现完成后支持：
+真实 `migration.yml` 必须位于 JAR 外部，已被 Git 忽略，也被构建任务显式排除在 JAR 之外。
+配置加载器按 UTF-8 读取，统一接受 kebab-case，并拒绝未知字段。
 
-```bash
-java -jar abacusflow-migration.jar migrate
-java -jar abacusflow-migration.jar migrate user
-java -jar abacusflow-migration.jar migrate inventory
-java -jar abacusflow-migration.jar migrate transaction
-java -jar abacusflow-migration.jar validate
+`--config` 的类型是文件系统 `Path`，因此应传实际路径，不能传 `classpath:migration.yml`。
+相对路径始终相对于进程当前工作目录，而不是相对于 `Main.kt` 或 JAR。
+
+## 构建和运行
+
+从仓库根目录构建：
+
+```powershell
+.\gradlew.bat :abacusflow-tools:abacusflow-migration:build
 ```
 
-在组合根、Runner、任务和 Validator 完成以前，`migrate` / `validate` 显式失败是预期行为。
+生成文件：
+
+```text
+abacusflow-tools/abacusflow-migration/build/libs/abacusflow-migration.jar
+```
+
+注意 Java 参数是 `-jar`，不是 `java jar`：
+
+```powershell
+java -jar .\abacusflow-tools\abacusflow-migration\build\libs\abacusflow-migration.jar --help
+```
+
+先执行只读检查：
+
+```powershell
+java -jar .\abacusflow-tools\abacusflow-migration\build\libs\abacusflow-migration.jar `
+  plan `
+  --config .\abacusflow-tools\abacusflow-migration\migration.yml
+```
+
+执行全量迁移：
+
+```powershell
+java -jar .\abacusflow-tools\abacusflow-migration\build\libs\abacusflow-migration.jar `
+  migrate `
+  --config .\abacusflow-tools\abacusflow-migration\migration.yml
+```
+
+执行指定任务或任务组（自动补依赖）：
+
+```powershell
+java -jar .\abacusflow-tools\abacusflow-migration\build\libs\abacusflow-migration.jar `
+  migrate user `
+  --config .\abacusflow-tools\abacusflow-migration\migration.yml
+
+java -jar .\abacusflow-tools\abacusflow-migration\build\libs\abacusflow-migration.jar `
+  migrate transaction `
+  --config .\abacusflow-tools\abacusflow-migration\migration.yml
+```
+
+校验：
+
+```powershell
+java -jar .\abacusflow-tools\abacusflow-migration\build\libs\abacusflow-migration.jar `
+  validate `
+  --config .\abacusflow-tools\abacusflow-migration\migration.yml
+```
+
+退出码：`0` 成功，`1` 程序/参数异常，`2` 迁移任务有错误、schema plan 不可执行或校验未通过。
+
+## 数据库权限与运行前提
+
+- Source 账号由 JDBC 设置为只读，只授予所需 V1 表的 `SELECT`。
+- Target 账号需要业务表读写、sequence 调整、创建控制 schema/表的权限。
+- 目标业务表启用了 RLS；迁移账号应由 DBA 审核并提供 owner 或 `BYPASSRLS` 能力。
+- 迁移前先运行 `plan`，确认 V1/V2 表完整且目标 `flyway_schema_history` 可读。
+- `migrate` / `validate` 会自动初始化控制 schema；`plan` 保持只读，不初始化。
+- 自动初始化只创建缺失对象，不升级旧版控制表；控制面结构变更必须使用版本化升级脚本。
+- 全量迁移前必须完成备份、V1 写入冻结、目标 seed 冲突评审和回滚演练。
+
+## 校验范围
+
+`validate` 不写业务数据。当前校验包括：
+
+- 默认租户和 placement；
+- 对保留 ID 的表比较数量与 `count/sum/min/max(id)` 摘要；
+- membership、角色、权限和关联表数量；
+- 库存数量、冻结量、初始量和精确库存金额；
+- 采购/销售明细数量和金额聚合；
+- identity sequence 不落后于现有最大 ID。
+
+这些校验用于迁移验收，但不能替代脱敏生产快照演练。正式上线前仍应补充业务方认可的字段级抽样、
+V1 写入冻结后的最终差量检查，以及未纳入标准计划表的处置证明。
+
+## 测试
+
+```powershell
+.\gradlew.bat :abacusflow-tools:abacusflow-migration:test `
+  :abacusflow-tools:abacusflow-migration:ktlintCheck
+```
+
+安装 Docker 时，测试会使用临时 `postgres:16-alpine` 容器；没有 Docker 时该冒烟测试自动跳过。
+性能验收（10 万用户、100 万商品、1000 万库存）不应提交巨大 fixture，应在专用环境用数据生成器记录
+吞吐、峰值内存、checkpoint 恢复时间和数据库负载。

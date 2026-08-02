@@ -1,6 +1,13 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.checkpoint.CheckpointKey
+import org.abacusflow.migration.framework.BatchPage
+import org.abacusflow.migration.framework.BatchProcessor
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
+import org.jooq.impl.DSL
+import java.time.Instant
 
 /**
  * 将 V1 role 迁移到 V2 tenant_role，建立 v1_role_id_map 映射表。
@@ -56,4 +63,83 @@ class RoleMigration(
      * 从 v1_tenant_id_map 读取默认租户 ID，为角色记录填充 tenant_id。
      */
     dependencies: Set<MigrationTaskId> = setOf(MigrationTaskId.TENANT),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult {
+        val result =
+            BatchProcessor().processBatches(
+                context = context,
+                checkpointKey = CheckpointKey(id, "tenant-role"),
+                readPage = { lastId, limit ->
+                    context.source.read { dsl ->
+                        val roleId = DSL.field("id", Long::class.javaObjectType)
+                        val rows =
+                            dsl.select(
+                                roleId,
+                                DSL.field("name", String::class.java),
+                                DSL.field("label", String::class.java),
+                                DSL.field("created_at", Instant::class.java),
+                                DSL.field("updated_at", Instant::class.java),
+                            ).from(DSL.table(DSL.name("role")))
+                                .where(lastId?.let(roleId::gt) ?: DSL.noCondition())
+                                .orderBy(roleId)
+                                .limit(limit)
+                                .fetch { record ->
+                                    RoleRow(
+                                        id = requireNotNull(record.value1()),
+                                        name = requireNotNull(record.value2()),
+                                        label = record.value3(),
+                                        createdAt = requireNotNull(record.value4()),
+                                        updatedAt = requireNotNull(record.value5()),
+                                    )
+                                }
+                        BatchPage(rows, rows.lastOrNull()?.id)
+                    }
+                },
+                transformAndWrite = { dsl, rows ->
+                    setTenantContext(dsl, context.options.defaultTenant.id)
+                    val roleMap = dsl.render(DSL.name(context.options.controlSchema, "v1_role_id_map"))
+                    rows.forEach { row ->
+                        val v2Name =
+                            org.abacusflow.migration.migration.mapping.RoleMapping.mapRoleName(row.name)
+                                ?: org.abacusflow.migration.migration.mapping.RoleMapping.resolveV2RoleName(row.name)
+                        val record =
+                            dsl.fetchOne(
+                                """
+                                INSERT INTO tenant_role (name, label, tenant_id, created_at, updated_at)
+                                VALUES (?, ?, ?, CAST(? AS timestamptz), CAST(? AS timestamptz))
+                                ON CONFLICT (tenant_id, name) DO UPDATE SET
+                                    label = EXCLUDED.label,
+                                    updated_at = EXCLUDED.updated_at
+                                RETURNING id
+                                """.trimIndent(),
+                                v2Name,
+                                row.label,
+                                context.options.defaultTenant.id,
+                                row.createdAt,
+                                row.updatedAt,
+                            )
+                        val v2Id = requireNotNull(record?.get("id", Long::class.java))
+                        dsl.execute(
+                            """
+                            INSERT INTO $roleMap (v1_role_id, v2_role_id)
+                            VALUES (?, ?)
+                            ON CONFLICT (v1_role_id) DO UPDATE SET v2_role_id = EXCLUDED.v2_role_id
+                            """.trimIndent(),
+                            row.id,
+                            v2Id,
+                        )
+                    }
+                    rows.size
+                },
+            )
+        return listOf(result).toTaskResult(id)
+    }
+
+    private data class RoleRow(
+        val id: Long,
+        val name: String,
+        val label: String?,
+        val createdAt: Instant,
+        val updatedAt: Instant,
+    )
+}

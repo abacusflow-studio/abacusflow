@@ -44,4 +44,11 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.USER：将校验器与用户迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class UserValidator : PlannedMigrationValidator(MigrationTaskId.USER)
+class UserValidator :
+    TableCountValidator(
+        MigrationTaskId.USER,
+        listOf(
+            TableValidationSpec("user_account", tenantAware = false),
+            TableValidationSpec("user_external_identity", tenantAware = false),
+        ),
+    )

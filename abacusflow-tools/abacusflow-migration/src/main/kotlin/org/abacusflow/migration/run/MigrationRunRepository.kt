@@ -123,6 +123,14 @@ interface MigrationRunRepository {
         result: TaskResult,
     )
 
+    /** 记录任务异常终止，避免 task_run 永久停留在 RUNNING。 */
+    fun taskFailed(
+        runId: UUID,
+        taskId: MigrationTaskId,
+        finishedAt: Instant,
+        message: String?,
+    )
+
     /**
      * 记录迁移运行结束。
      *

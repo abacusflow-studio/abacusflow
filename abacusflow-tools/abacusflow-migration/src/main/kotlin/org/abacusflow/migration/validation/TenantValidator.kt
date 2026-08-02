@@ -1,6 +1,9 @@
 package org.abacusflow.migration.validation
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import java.time.Duration
+import java.time.Instant
 
 /**
  * 租户校验器 —— 校验迁移后的租户数据是否正确。
@@ -34,4 +37,45 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.TENANT：将校验器与租户迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class TenantValidator : PlannedMigrationValidator(MigrationTaskId.TENANT)
+class TenantValidator : MigrationValidator {
+    override val taskId: MigrationTaskId = MigrationTaskId.TENANT
+
+    override fun validate(context: MigrationContext): ValidationResult {
+        val startedAt = Instant.now(context.clock)
+        val tenant = context.options.defaultTenant
+        val violations = mutableListOf<String>()
+        val target =
+            context.target.read { dsl ->
+                dsl.fetchOne(
+                    """
+                    SELECT t.name, t.display_name, t.status::text AS status,
+                           p.cell_id, p.storage_mode::text AS storage_mode
+                    FROM tenant t
+                    LEFT JOIN tenant_placement p ON p.tenant_id = t.id
+                    WHERE t.id = ?
+                    """.trimIndent(),
+                    tenant.id,
+                )
+            }
+        if (target == null) {
+            violations += "Default tenant id=${tenant.id} does not exist"
+        } else {
+            if (target.get("name", String::class.java) != tenant.name) {
+                violations += "Default tenant name does not match '${tenant.name}'"
+            }
+            if (target.get("status", String::class.java) != "ACTIVE") {
+                violations += "Default tenant status is not ACTIVE"
+            }
+            if (target.get("cell_id", String::class.java).isNullOrBlank()) {
+                violations += "Default tenant placement is missing"
+            }
+        }
+        return ValidationResult(
+            taskId = taskId,
+            passed = violations.isEmpty(),
+            metrics = mapOf("tenant-id" to tenant.id.toString()),
+            violations = violations,
+            duration = Duration.between(startedAt, Instant.now(context.clock)),
+        )
+    }
+}

@@ -73,6 +73,14 @@ class SchemaChecker(
         val sourceTablesOk: Boolean,
         /** 目标数据库表是否完整（无缺失表）。 */
         val targetTablesOk: Boolean,
+        /** 实际检查的源 schema。 */
+        val sourceSchema: String,
+        /** 实际检查的目标 schema。 */
+        val targetSchema: String,
+        /** 源 schema 中发现的表数量。 */
+        val sourceTableCount: Int,
+        /** 目标 schema 中发现的表数量。 */
+        val targetTableCount: Int,
         /** 目标数据库的 Flyway 版本号（从 flyway_schema_history 表读取）。 */
         val targetFlywayVersion: String?,
         /** 源数据库中缺失的表名列表。 */
@@ -181,13 +189,16 @@ class SchemaChecker(
 
         // ===== 第一步：检查源数据库（V1）表 =====
         // 查询 V1 数据库 public schema 中的所有表名
-        val sourceTables =
+        val (sourceSchema, sourceTables) =
             source.read { dsl ->
-                dsl.select(DSL.field("tablename", String::class.java))
-                    .from(DSL.table(DSL.name("pg_tables")))
-                    .where(DSL.field("schemaname").eq("public"))
-                    .fetch { it.value1() } // value1() 获取结果集第一列的值
-                    .toSet() // 转为 Set 以便 O(1) 成员判断
+                val currentSchema = dsl.fetchValue("SELECT current_schema()") as String? ?: "public"
+                val tables =
+                    dsl.select(DSL.field("tablename", String::class.java))
+                        .from(DSL.table(DSL.name("pg_tables")))
+                        .where(DSL.field("schemaname").eq(currentSchema))
+                        .fetch { it.value1() } // value1() 获取结果集第一列的值
+                        .toSet() // 转为 Set 以便 O(1) 成员判断
+                currentSchema to tables
             }
 
         // 逐一检查 V1 必需表是否存在
@@ -200,13 +211,16 @@ class SchemaChecker(
 
         // ===== 第二步：检查目标数据库（V2）表 =====
         // 查询 V2 数据库 public schema 中的所有表名
-        val targetTables =
+        val (targetSchema, targetTables) =
             target.read { dsl ->
-                dsl.select(DSL.field("tablename", String::class.java))
-                    .from(DSL.table(DSL.name("pg_tables")))
-                    .where(DSL.field("schemaname").eq("public"))
-                    .fetch { it.value1() }
-                    .toSet()
+                val currentSchema = dsl.fetchValue("SELECT current_schema()") as String? ?: "public"
+                val tables =
+                    dsl.select(DSL.field("tablename", String::class.java))
+                        .from(DSL.table(DSL.name("pg_tables")))
+                        .where(DSL.field("schemaname").eq(currentSchema))
+                        .fetch { it.value1() }
+                        .toSet()
+                currentSchema to tables
             }
 
         // 逐一检查 V2 必需表是否存在
@@ -247,6 +261,10 @@ class SchemaChecker(
         return SchemaCheckResult(
             sourceTablesOk = missingSourceTables.isEmpty(),
             targetTablesOk = missingTargetTables.isEmpty(),
+            sourceSchema = sourceSchema,
+            targetSchema = targetSchema,
+            sourceTableCount = sourceTables.size,
+            targetTableCount = targetTables.size,
             targetFlywayVersion = flywayVersion,
             missingSourceTables = missingSourceTables,
             missingTargetTables = missingTargetTables,
@@ -299,7 +317,7 @@ class SchemaChecker(
             val inserted =
                 dsl.execute(
                     "INSERT INTO ${DSL.name(controlSchema, "migration_lock")} (acquired_at, acquired_by) " +
-                        "VALUES (NOW(), ?)",
+                        "VALUES (NOW(), ?) ON CONFLICT (lock_id) DO NOTHING",
                     runId.toString(),
                 )
             inserted > 0 // 插入成功则表示获取锁成功

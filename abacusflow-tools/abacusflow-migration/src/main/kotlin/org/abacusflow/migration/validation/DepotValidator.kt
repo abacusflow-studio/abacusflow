@@ -38,4 +38,8 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.DEPOT：将校验器与仓库迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class DepotValidator : PlannedMigrationValidator(MigrationTaskId.DEPOT)
+class DepotValidator :
+    TableCountValidator(
+        MigrationTaskId.DEPOT,
+        listOf(TableValidationSpec("depot")),
+    )

@@ -134,6 +134,7 @@ class ConsoleProgressReporter : ProgressReporter {
 
     /** 输出间隔（毫秒），最多每秒输出一次进度，避免控制台刷屏。 */
     private val printIntervalMs: Long = 1000 // 最多每秒输出一次
+    private var currentEstimatedTotal: Long? = null
 
     /**
      * 报告任务开始。
@@ -148,6 +149,7 @@ class ConsoleProgressReporter : ProgressReporter {
         taskId: MigrationTaskId,
         estimatedTotal: Long?,
     ) {
+        currentEstimatedTotal = estimatedTotal
         // ?.let 安全调用：estimatedTotal 不为 null 时格式化为 "/数字"，null 时为空字符串
         val totalStr = estimatedTotal?.let { "/$it" } ?: ""
         println("[${taskId.cliName}] Starting$totalStr...")
@@ -184,9 +186,15 @@ class ConsoleProgressReporter : ProgressReporter {
         // 计算平均处理速度（记录数/秒）
         val seconds = elapsed.seconds
         val rate = if (seconds > 0) processedCount / seconds else processedCount
+        val eta =
+            currentEstimatedTotal
+                ?.takeIf { rate > 0 && it > processedCount }
+                ?.let { total -> " ETA: ${(total - processedCount) / rate}s" }
+                .orEmpty()
 
         // \r 回车符实现行内刷新，末尾空格覆盖前次多出的字符
-        print("\r[${taskId.cliName}] Processed: $processedCount ($rate rec/s)    ")
+        val total = currentEstimatedTotal?.let { "/$it" }.orEmpty()
+        print("\r[${taskId.cliName}] Processed: $processedCount$total ($rate rec/s)$eta    ")
     }
 
     /**
@@ -203,6 +211,7 @@ class ConsoleProgressReporter : ProgressReporter {
      * - Errors：处理失败的记录数（如数据格式错误、外键约束违反）
      */
     override fun taskCompleted(result: TaskResult) {
+        currentEstimatedTotal = null
         // 换行，结束 batchCompleted 的 \r 覆盖模式
         println()
         // 输出任务完成的汇总统计

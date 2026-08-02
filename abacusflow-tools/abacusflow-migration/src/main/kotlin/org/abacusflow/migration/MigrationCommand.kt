@@ -170,10 +170,11 @@ class MigrateCommand(
      *         当前迁移命令不区分失败类型，异常由 Picocli 捕获后以退出码 1 终止。
      */
     override fun call(): Int {
-        applicationFactory.create(configPath).use { application ->
-            application.migrate(MigrationSelection.fromCli(tasks))
-        }
-        return 0
+        val report =
+            applicationFactory.create(configPath).use { application ->
+                application.migrate(MigrationSelection.fromCli(tasks))
+            }
+        return if (report.taskResults.any { it.errorCount > 0 }) 2 else 0
     }
 }
 
@@ -280,6 +281,13 @@ class PlanCommand(
     )
     lateinit var configPath: Path
 
+    @Parameters(
+        arity = "0..*",
+        paramLabel = "TASK",
+        description = ["只规划指定任务/任务组及其依赖；留空表示全量"],
+    )
+    var tasks: List<String> = emptyList()
+
     /**
      * 执行干跑计划命令。
      *
@@ -306,31 +314,23 @@ class PlanCommand(
      * @return 退出码：0（计划输出总是成功，除非程序异常）
      */
     override fun call(): Int {
-        // 加载配置并连接数据库，执行 schema check 和数据量统计
-        val app = applicationFactory.create(configPath)
-        try {
-            println("=== AbacusFlow Migration Plan (Dry Run) ===")
-            println()
-
-            // 输出任务执行顺序
-            println("Task execution order:")
-            for (taskId in org.abacusflow.migration.framework.MigrationTaskId.entries) {
-                println("  ${taskId.ordinal + 1}. ${taskId.cliName}")
+        val report =
+            applicationFactory.create(configPath).use { application ->
+                application.plan(MigrationSelection.fromCli(tasks))
             }
-            println()
 
-            // 输出任务组
-            println("Task groups:")
-            println("  authorization = role, permission, role-permission")
-            println("  transaction   = supplier, purchase-order, purchase-order-item, customer, sale-order, sale-order-item")
-            println("  inventory-group = depot, inventory")
-            println()
-
-            println("Note: This is a dry run. No data will be modified.")
-            println("Run 'migrate' command to execute the actual migration.")
-        } finally {
-            app.close()
+        println("=== AbacusFlow Migration Plan (Dry Run) ===")
+        println("Source schema : ${report.schemaCheck.sourceSchema} (${report.schemaCheck.sourceTableCount} tables)")
+        println("Target schema : ${report.schemaCheck.targetSchema} (${report.schemaCheck.targetTableCount} tables)")
+        println("Target Flyway : ${report.schemaCheck.targetFlywayVersion ?: "not found"}")
+        println("Schema check  : ${if (report.executable) "PASSED" else "FAILED"}")
+        if (report.schemaCheck.errors.isNotEmpty()) {
+            println("Problems:")
+            report.schemaCheck.errors.forEach { println("  - $it") }
         }
-        return 0
+        println("Task execution order:")
+        report.tasks.forEachIndexed { index, taskId -> println("  ${index + 1}. ${taskId.cliName}") }
+        println("No database changes were made.")
+        return if (report.executable) 0 else 2
     }
 }

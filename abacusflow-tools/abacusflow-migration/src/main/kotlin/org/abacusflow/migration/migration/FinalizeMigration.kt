@@ -1,6 +1,9 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
+import org.jooq.impl.DSL
 
 /**
  * 最终化任务：为所有保留原 ID 的 identity/sequence 对齐 next value，
@@ -56,5 +59,47 @@ class FinalizeMigration :
          * 两者合起来覆盖了所有前置业务任务的间接依赖链，
          * 确保收尾操作在所有业务数据迁移完成后才执行。
          */
-        setOf(MigrationTaskId.ROLE_PERMISSION, MigrationTaskId.SALE_ORDER_ITEM),
-    )
+        setOf(
+            MigrationTaskId.ROLE_PERMISSION,
+            MigrationTaskId.PURCHASE_ORDER_ITEM,
+            MigrationTaskId.SALE_ORDER_ITEM,
+        ),
+    ) {
+    override fun execute(context: MigrationContext): TaskResult {
+        var sequenceCount = 0L
+        context.target.transaction { dsl ->
+            setTenantContext(dsl, context.options.defaultTenant.id)
+            val currentSchema = dsl.fetchValue("SELECT current_schema()") as String? ?: "public"
+            val tableName = DSL.field("table_name", String::class.java)
+            val tables =
+                dsl.select(tableName)
+                    .from(DSL.table(DSL.name("information_schema", "columns")))
+                    .where(DSL.field("table_schema").eq(currentSchema))
+                    .and(DSL.field("column_name").eq("id"))
+                    .and(DSL.field("is_identity").eq("YES"))
+                    .fetch(tableName)
+            tables.forEach { table ->
+                val renderedTable = dsl.render(DSL.name(table))
+                val sequence =
+                    requireNotNull(
+                        dsl.fetchValue(
+                            "SELECT pg_get_serial_sequence(?, 'id')",
+                            table,
+                        ) as String?,
+                    ) { "Cannot resolve identity sequence for $table.id" }
+                val maxId =
+                    requireNotNull(
+                        dsl.fetchValue("SELECT COALESCE(MAX(id), 0) FROM $renderedTable") as Number?,
+                    ).toLong()
+                val nextId = maxOf(maxId + 1, 100L)
+                dsl.execute(
+                    "SELECT setval(CAST(? AS regclass), ?, FALSE)",
+                    sequence,
+                    nextId,
+                )
+                sequenceCount++
+            }
+        }
+        return TaskResult(taskId = id, processedCount = sequenceCount)
+    }
+}

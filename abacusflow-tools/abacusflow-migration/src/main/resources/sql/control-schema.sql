@@ -1,5 +1,6 @@
 -- Migration CLI 自己的控制面，不属于 AbacusFlow 业务 schema。
--- 本脚本由运维显式审核/执行；骨架阶段不会自动修改任何数据库。
+-- migrate / validate 会在目标库事务中自动执行本脚本；运维也可以审核后手工执行。
+-- 所有 DDL 均为幂等创建；本脚本不负责修改或升级已经存在的表结构。
 CREATE SCHEMA IF NOT EXISTS abacusflow_migration;
 
 -- 迁移锁：防止多个迁移实例同时执行

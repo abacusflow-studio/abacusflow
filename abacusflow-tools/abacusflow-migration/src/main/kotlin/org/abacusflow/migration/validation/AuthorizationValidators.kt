@@ -33,7 +33,18 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.ROLE：将校验器与角色迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class RoleValidator : PlannedMigrationValidator(MigrationTaskId.ROLE)
+class RoleValidator :
+    TableCountValidator(
+        MigrationTaskId.ROLE,
+        listOf(
+            TableValidationSpec(
+                "role",
+                "tenant_role",
+                targetMayContainSeedRows = true,
+                comparePreservedIds = false,
+            ),
+        ),
+    )
 
 /**
  * 权限校验器 —— 校验迁移后的权限数据是否正确。
@@ -74,7 +85,18 @@ class RoleValidator : PlannedMigrationValidator(MigrationTaskId.ROLE)
  * - 构造函数参数 MigrationTaskId.PERMISSION：将校验器与权限迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class PermissionValidator : PlannedMigrationValidator(MigrationTaskId.PERMISSION)
+class PermissionValidator :
+    TableCountValidator(
+        MigrationTaskId.PERMISSION,
+        listOf(
+            TableValidationSpec(
+                "permission",
+                tenantAware = false,
+                targetMayContainSeedRows = true,
+                comparePreservedIds = false,
+            ),
+        ),
+    )
 
 /**
  * 角色-权限关联校验器 —— 校验迁移后的角色-权限关联数据是否正确。
@@ -110,4 +132,23 @@ class PermissionValidator : PlannedMigrationValidator(MigrationTaskId.PERMISSION
  * - 构造函数参数 MigrationTaskId.ROLE_PERMISSION：将校验器与角色-权限关联迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class RolePermissionValidator : PlannedMigrationValidator(MigrationTaskId.ROLE_PERMISSION)
+class RolePermissionValidator :
+    TableCountValidator(
+        MigrationTaskId.ROLE_PERMISSION,
+        listOf(
+            TableValidationSpec(
+                "role_permission",
+                "tenant_role_permission",
+                tenantAware = false,
+                targetMayContainSeedRows = true,
+                comparePreservedIds = false,
+            ),
+            TableValidationSpec(
+                "user_role",
+                "tenant_membership_role",
+                tenantAware = false,
+                targetMayContainSeedRows = true,
+                comparePreservedIds = false,
+            ),
+        ),
+    )

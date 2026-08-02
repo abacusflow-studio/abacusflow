@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 迁移客户（customer）表，并为所有记录补 tenant_id。
@@ -42,4 +44,15 @@ class CustomerMigration :
          * 租户必须先迁移完成，客户才能正确写入外键引用。
          */
         setOf(MigrationTaskId.TENANT),
-    )
+    ) {
+    override fun execute(context: MigrationContext): TaskResult =
+        listOf(
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "customer",
+                sourceTable = "customer",
+                columns = V1V2Columns.CUSTOMER,
+            ),
+        ).toTaskResult(id)
+}

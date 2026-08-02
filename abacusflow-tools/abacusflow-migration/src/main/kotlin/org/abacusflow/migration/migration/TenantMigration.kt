@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 创建 V2 默认租户（tenant）与租户安置记录（tenant_placement）。
@@ -55,4 +57,46 @@ class TenantMigration(
      * 所有其他迁移任务都直接或间接依赖本任务。
      */
     dependencies: Set<MigrationTaskId> = emptySet(),
-) : PlannedMigrationTask(id, dependencies)
+) : PlannedMigrationTask(id, dependencies) {
+    override fun execute(context: MigrationContext): TaskResult {
+        val tenant = context.options.defaultTenant
+        context.target.transaction { dsl ->
+            val nameAtConfiguredId =
+                dsl.fetchValue("SELECT name FROM tenant WHERE id = ?", tenant.id, String::class.java)
+            check(nameAtConfiguredId == null || nameAtConfiguredId == tenant.name) {
+                "Target tenant id ${tenant.id} is already used by '$nameAtConfiguredId'"
+            }
+            val idForConfiguredName =
+                dsl.fetchValue("SELECT id FROM tenant WHERE name = ?", tenant.name, Long::class.java)
+            check(idForConfiguredName == null || idForConfiguredName == tenant.id) {
+                "Target tenant '${tenant.name}' already exists with id $idForConfiguredName, expected ${tenant.id}"
+            }
+            dsl.execute(
+                """
+                INSERT INTO tenant (id, name, display_name, status)
+                VALUES (?, ?, ?, CAST('ACTIVE' AS tenant_status))
+                ON CONFLICT (id) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    display_name = EXCLUDED.display_name,
+                    status = EXCLUDED.status,
+                    updated_at = NOW()
+                """.trimIndent(),
+                tenant.id,
+                tenant.name,
+                tenant.displayName,
+            )
+            dsl.execute(
+                """
+                INSERT INTO tenant_placement (tenant_id, cell_id, storage_mode)
+                VALUES (?, 'cell-default-01', CAST('SHARED_CELL' AS tenant_storage_mode))
+                ON CONFLICT (tenant_id) DO UPDATE SET
+                    cell_id = EXCLUDED.cell_id,
+                    storage_mode = EXCLUDED.storage_mode,
+                    updated_at = NOW()
+                """.trimIndent(),
+                tenant.id,
+            )
+        }
+        return TaskResult(taskId = id, processedCount = 1)
+    }
+}

@@ -14,7 +14,7 @@ package org.abacusflow.migration.config
  * - `toString()`：格式为 `DatabaseConfig(url=..., username=..., ...)`，方便调试；
  * - `copy()`：创建副本并可修改部分属性，如 `config.copy(schema = "myschema")`；
  * - `component1()` / `component2()` / ...：解构声明支持，如 `val (url, user) = config`。
- * 注意：data class 的 toString() 会包含 password 字段的明文值，因此日志输出时需谨慎。
+ * 本类覆盖 toString()，避免 data class 默认实现意外输出 password 明文。
  *
  * 【安全考量】
  * - password 字段支持 ${ENV_VAR} 环境变量替换，由 [ConfigLoader] 负责解析；
@@ -32,8 +32,8 @@ package org.abacusflow.migration.config
  * - 由 [YamlConfigLoader] 从 YAML 配置文件反序列化生成；
  * - 传递给 [org.abacusflow.migration.database.MigrationDatabaseFactory]
  *   以创建 HikariCP 连接池和 jOOQ DSLContext；
- * - YAML 中的 snake_case 字段（如 connection_timeout_seconds）通过 Jackson 的
- *   SNAKE_CASE 命名策略自动映射到本类的 camelCase 属性。
+ * - YAML 中的 canonical kebab-case 字段（如 connection-timeout-seconds）通过 Jackson 的
+ *   KEBAB_CASE 命名策略自动映射到本类的 camelCase 属性。
  */
 data class DatabaseConfig(
     val url: String,
@@ -41,4 +41,13 @@ data class DatabaseConfig(
     val password: String,
     val schema: String = "public",
     val connectionTimeoutSeconds: Long = 30,
-)
+) {
+    override fun toString(): String =
+        "DatabaseConfig(" +
+            "url=$url, " +
+            "username=$username, " +
+            "password=***, " +
+            "schema=$schema, " +
+            "connectionTimeoutSeconds=$connectionTimeoutSeconds" +
+            ")"
+}

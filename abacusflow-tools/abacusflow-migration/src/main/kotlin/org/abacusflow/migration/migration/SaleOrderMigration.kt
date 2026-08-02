@@ -1,6 +1,8 @@
 package org.abacusflow.migration.migration
 
+import org.abacusflow.migration.framework.MigrationContext
 import org.abacusflow.migration.framework.MigrationTaskId
+import org.abacusflow.migration.framework.TaskResult
 
 /**
  * 迁移销售订单（sale_order）表，并为所有记录补 tenant_id。
@@ -50,4 +52,15 @@ class SaleOrderMigration :
          * 客户和库存都必须先迁移完成，销售订单才能正确写入。
          */
         setOf(MigrationTaskId.CUSTOMER, MigrationTaskId.INVENTORY),
-    )
+    ) {
+    override fun execute(context: MigrationContext): TaskResult =
+        listOf(
+            TableMigrationSupport().migrate(
+                context = context,
+                taskId = id,
+                stream = "sale-order",
+                sourceTable = "sale_order",
+                columns = V1V2Columns.SALE_ORDER,
+            ),
+        ).toTaskResult(id)
+}

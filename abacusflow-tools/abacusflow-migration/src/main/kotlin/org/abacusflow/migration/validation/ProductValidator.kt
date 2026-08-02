@@ -44,4 +44,11 @@ import org.abacusflow.migration.framework.MigrationTaskId
  * - 构造函数参数 MigrationTaskId.PRODUCT：将校验器与产品迁移任务绑定
  * - 类体为空：当前是骨架实现，等待后续填充校验逻辑
  */
-class ProductValidator : PlannedMigrationValidator(MigrationTaskId.PRODUCT)
+class ProductValidator :
+    TableCountValidator(
+        MigrationTaskId.PRODUCT,
+        listOf(
+            TableValidationSpec("product_category"),
+            TableValidationSpec("product"),
+        ),
+    )
