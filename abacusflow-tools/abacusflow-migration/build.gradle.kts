@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.jackson.kotlin)
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${libs.versions.jackson.get()}")
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.testcontainers.postgresql)
@@ -49,6 +51,11 @@ tasks.test {
 tasks.processResources {
     // 真实数据库配置必须位于 JAR 外；classpath 中只允许保留无凭据的示例文件。
     exclude("migration.yml")
+
+    // 迁移 CLI 与 V2 应用必须使用同一套 Flyway 脚本，避免结构发生漂移。
+    from(project(":abacusflow-infra:abacusflow-db").layout.projectDirectory.dir("src/main/resources")) {
+        include("db/migration/**")
+    }
 }
 
 tasks.jar {

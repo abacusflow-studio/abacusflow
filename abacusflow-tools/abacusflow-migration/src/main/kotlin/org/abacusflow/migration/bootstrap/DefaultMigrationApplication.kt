@@ -15,6 +15,7 @@ import org.abacusflow.migration.framework.MigrationSelection
 import org.abacusflow.migration.migration.StandardMigrationPlan
 import org.abacusflow.migration.report.ConsoleProgressReporter
 import org.abacusflow.migration.run.JooqMigrationRunRepository
+import org.abacusflow.migration.schema.TargetSchemaMigrator
 import org.abacusflow.migration.validation.StandardValidationPlan
 import org.abacusflow.migration.validation.ValidationReport
 import java.time.Clock
@@ -88,10 +89,12 @@ class DefaultMigrationApplication(
     private val target: TargetDatabase,
     /** 从 YAML 加载的迁移选项；所有运行期组件必须共享这一份配置。 */
     private val options: MigrationOptions,
+    /** 目标 V2 业务 schema 的版本化初始器；只在 migrate 命令中执行。 */
+    private val targetSchemaMigrator: TargetSchemaMigrator,
 ) : MigrationApplication {
     override fun plan(selection: MigrationSelection): MigrationPlanReport {
-        val schemaCheck = SchemaChecker(source, target, options.controlSchema).check()
         val tasks = StandardMigrationPlan.create().resolve(selection).map { it.id }
+        val schemaCheck = SchemaChecker(source, target, options.controlSchema).check(tasks.toSet())
         return MigrationPlanReport(schemaCheck, tasks)
     }
 
@@ -135,13 +138,18 @@ class DefaultMigrationApplication(
      * @return MigrationReport 包含所有任务的执行结果
      */
     override fun migrate(selection: MigrationSelection): MigrationReport {
+        val migrationPlan = StandardMigrationPlan.create()
+        val requiredTasks = migrationPlan.resolve(selection).mapTo(linkedSetOf()) { it.id }
+        // 先初始化/升级 V2 业务表，然后才能进行严格结构检查和数据写入。
+        // plan 和 validate 不调用它，避免这两个命令隐式创建 V2 业务对象。
+        targetSchemaMigrator.migrate()
         // 必须早于 migration_run 的第一次写入；重复运行只会确认对象已经存在。
         controlSchemaInitializer.initialize()
         // 生成本次迁移运行的唯一 ID，贯穿整个迁移流程
         val runId = UUID.randomUUID()
         val controlSchema = options.controlSchema
         val schemaChecker = SchemaChecker(source, target, controlSchema)
-        val schemaCheck = schemaChecker.check()
+        val schemaCheck = schemaChecker.check(requiredTasks)
         require(schemaCheck.passed) {
             "Migration schema check failed:\n${schemaCheck.errors.joinToString("\n")}"
         }
@@ -160,9 +168,8 @@ class DefaultMigrationApplication(
         // 进度报告器：输出到控制台，每秒刷新一次进度
         val progress = ConsoleProgressReporter()
         // 迁移计划：包含所有迁移任务及其依赖关系
-        val plan = StandardMigrationPlan.create()
         // 迁移运行器：解析依赖图，按拓扑顺序执行任务
-        val runner = MigrationRunner(plan)
+        val runner = MigrationRunner(migrationPlan)
 
         // ===== 构建 MigrationContext =====
         // MigrationContext 是迁移执行的"上下文对象"，传递给所有任务
@@ -241,7 +248,8 @@ class DefaultMigrationApplication(
         // 生成本次验证运行的唯一 ID
         val runId = UUID.randomUUID()
         val controlSchema = options.controlSchema
-        val schemaCheck = SchemaChecker(source, target, controlSchema).check()
+        val requiredTasks = StandardMigrationPlan.create().resolve(selection).mapTo(linkedSetOf()) { it.id }
+        val schemaCheck = SchemaChecker(source, target, controlSchema).check(requiredTasks)
         require(schemaCheck.passed) {
             "Validation schema check failed:\n${schemaCheck.errors.joinToString("\n")}"
         }

@@ -46,7 +46,7 @@ data class MigrationConfig(
  *                       默认 1000，与 batchSize 匹配。
  * @param controlSchema  迁移控制表（checkpoint、error、run）存放的 schema。
  *                       默认 "abacusflow_migration"，与业务数据隔离，避免污染 V2 的业务 schema。
- *                       迁移前需确保该 schema 已在目标库中创建。
+ *                       migrate/validate 会在首次使用前幂等初始化该 schema。
  * @param defaultTenant  V2 系统的默认租户配置。V1 数据没有租户概念，
  *                       迁移时需要将所有 V1 数据归属到默认租户下。
  * @param failFast       遇到错误时是否立即中止整个迁移。true = 快速失败（默认），

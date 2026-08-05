@@ -3,6 +3,7 @@ package org.abacusflow.migration.check
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.abacusflow.migration.database.SourceDatabase
 import org.abacusflow.migration.database.TargetDatabase
+import org.abacusflow.migration.framework.MigrationTaskId
 import org.jooq.impl.DSL
 
 // KotlinLogging：Kotlin 习惯的日志声明方式，通过 {} 延迟求值避免不必要的字符串拼接
@@ -95,69 +96,6 @@ class SchemaChecker(
     }
 
     /**
-     * V1 预期存在的表。
-     *
-     * 这些表是 V1 数据库中必须存在的业务表，迁移任务将从这些表读取数据。
-     * 列表顺序与 StandardMigrationPlan 中的任务顺序一致。
-     * 如果任何表缺失，说明源数据库不是预期的 V1 数据库，
-     * 继续迁移会导致查询失败。
-     */
-    private val v1RequiredTables =
-        listOf(
-            "user_account", // 用户账号表
-            "user_external_identity", // 用户外部身份表（第三方登录）
-            "role", // 角色表
-            "permission", // 权限表
-            "role_permission", // 角色-权限关联表
-            "user_role", // 用户-角色关联表
-            "product_category", // 产品分类表
-            "product", // 产品表
-            "depot", // 仓库表
-            "inventory", // 库存表
-            "inventory_unit", // 库存单位表
-            "supplier", // 供应商表
-            "purchase_order", // 采购订单表
-            "purchase_order_item", // 采购订单明细表
-            "customer", // 客户表
-            "sale_order", // 销售订单表
-            "sale_order_item", // 销售订单明细表
-        )
-
-    /**
-     * V2 预期存在的表。
-     *
-     * 这些表是 V2 数据库中必须存在的业务表，迁移任务将向这些表写入数据。
-     * 与 V1 表的差异体现了 V2 多租户架构的变化：
-     * - 新增 tenant、tenant_placement（租户相关表）
-     * - user_role → tenant_membership + tenant_membership_role（用户-租户-角色三级关联）
-     * - role → tenant_role（角色变为租户级）
-     * - role_permission → tenant_role_permission（角色-权限关联变为租户级）
-     * 如果任何表缺失，说明目标数据库未正确初始化 V2 schema。
-     */
-    private val v2RequiredTables =
-        listOf(
-            "tenant", // 租户表（V2 新增）
-            "tenant_placement", // 租户配置表（V2 新增）
-            "user_account", // 用户账号表（V1→V2 保留）
-            "tenant_membership", // 租户成员关系表（替代 V1 的 user_role）
-            "tenant_role", // 租户角色表（替代 V1 的 role）
-            "permission", // 权限表（V1→V2 保留，但命名规则变化）
-            "tenant_role_permission", // 租户角色-权限关联表（替代 V1 的 role_permission）
-            "tenant_membership_role", // 租户成员-角色关联表（V2 新增，三级关联）
-            "product_category", // 产品分类表
-            "product", // 产品表
-            "depot", // 仓库表
-            "inventory", // 库存表
-            "inventory_unit", // 库存单位表
-            "supplier", // 供应商表
-            "purchase_order", // 采购订单表
-            "purchase_order_item", // 采购订单明细表
-            "customer", // 客户表
-            "sale_order", // 销售订单表
-            "sale_order_item", // 销售订单明细表
-        )
-
-    /**
      * 执行 schema 校验。
      *
      * 【校验流程】
@@ -180,9 +118,11 @@ class SchemaChecker(
      * information_schema.tables 是 SQL 标准视图，兼容性更好但查询更冗长。
      * 由于本项目只支持 PostgreSQL，选择 pg_tables 更合适。
      *
+     * @param requiredTasks 本次运行已经解析依赖闭包的任务集合。
      * @return SchemaCheckResult 包含详细的校验结果
      */
-    fun check(): SchemaCheckResult {
+    fun check(requiredTasks: Set<MigrationTaskId> = MigrationTaskId.entries.toSet()): SchemaCheckResult {
+        val requirements = MigrationSchemaContract.forTasks(requiredTasks)
         val errors = mutableListOf<String>()
         val missingSourceTables = mutableListOf<String>()
         val missingTargetTables = mutableListOf<String>()
@@ -202,7 +142,7 @@ class SchemaChecker(
             }
 
         // 逐一检查 V1 必需表是否存在
-        for (table in v1RequiredTables) {
+        for (table in requirements.sourceTables) {
             if (table !in sourceTables) {
                 missingSourceTables.add(table)
                 errors.add("Source database missing required table: $table")
@@ -224,7 +164,7 @@ class SchemaChecker(
             }
 
         // 逐一检查 V2 必需表是否存在
-        for (table in v2RequiredTables) {
+        for (table in requirements.targetTables) {
             if (table !in targetTables) {
                 missingTargetTables.add(table)
                 errors.add("Target database missing required table: $table")

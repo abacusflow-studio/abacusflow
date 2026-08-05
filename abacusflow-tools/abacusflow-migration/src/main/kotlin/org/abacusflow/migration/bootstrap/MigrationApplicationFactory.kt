@@ -5,6 +5,7 @@ import org.abacusflow.migration.config.ConfigLoader
 import org.abacusflow.migration.config.MigrationConfig
 import org.abacusflow.migration.config.YamlConfigLoader
 import org.abacusflow.migration.database.JooqMigrationDatabaseFactory
+import org.abacusflow.migration.schema.FlywayTargetSchemaMigrator
 import java.nio.file.Path
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -86,7 +87,12 @@ class MigrationApplicationFactory {
             val target = dbFactory.openTarget(config.target)
             // 所有资源就绪，返回装配好的 Application
             // 调用者（MigrateCommand）用 .use {} 确保最终 close()
-            return DefaultMigrationApplication(source, target, config.migration)
+            return DefaultMigrationApplication(
+                source = source,
+                target = target,
+                options = config.migration,
+                targetSchemaMigrator = FlywayTargetSchemaMigrator(config.target),
+            )
         } catch (e: Exception) {
             // target 失败：关闭已创建的 source，再抛出主异常
             runCatching { source.close() }

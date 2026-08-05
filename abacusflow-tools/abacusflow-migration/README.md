@@ -4,7 +4,8 @@
 模块不依赖 Spring Boot、JPA、Hibernate 或业务 Domain 模型。
 
 当前实现包含：双数据库连接、严格 YAML 配置、任务依赖解析、keyset 分页、批事务、
-checkpoint 恢复、控制表自动初始化、单实例迁移锁、运行/错误记录、数据迁移、只读校验、
+checkpoint 恢复、V2 业务 schema 的 Flyway 自动初始化、控制表自动初始化、单实例迁移锁、
+运行/错误记录、数据迁移、只读校验、
 sequence 对齐、dry-run 计划以及可执行 fat JAR。
 
 ## 数据范围
@@ -67,6 +68,7 @@ src/main/kotlin/org/abacusflow/migration/
 ├── check/SchemaChecker.kt          V1/V2 表、Flyway 版本和迁移锁检查
 ├── config/                         UTF-8 YAML、kebab-case 绑定和配置校验
 ├── control/ControlSchemaInitializer.kt  advisory lock 下幂等创建控制面
+├── schema/                         V2 业务 schema 版本管理端口与 Flyway 适配器
 ├── database/                       只读 Source 与事务型 Target 的 jOOQ/Hikari 实现
 ├── framework/
 │   ├── MigrationTask.kt            任务契约、总量估算和 TaskResult
@@ -96,6 +98,7 @@ src/main/kotlin/org/abacusflow/migration/
 | --- | --- |
 | `src/main/resources/migration.example.yml` | 无真实凭据的外部配置模板 |
 | `src/main/resources/sql/control-schema.sql` | run、task、checkpoint、error、ID map、锁的唯一 DDL |
+| `abacusflow-db/src/main/resources/db/migration` | V2 应用和 CLI 共享的官方 Flyway 业务结构脚本 |
 | `SkeletonArchitectureTest.kt` | 任务/Validator 对齐、无占位实现、固定拓扑和依赖闭包 |
 | `BatchProcessorTest.kt` | 断点版本、累计恢复、事务失败不死循环 |
 | `JooqMigrationRunRepositoryTest.kt` | `selected_tasks` 生成 `CAST(? AS JSONB)` |
@@ -181,10 +184,12 @@ java -jar .\abacusflow-tools\abacusflow-migration\build\libs\abacusflow-migratio
 ## 数据库权限与运行前提
 
 - Source 账号由 JDBC 设置为只读，只授予所需 V1 表的 `SELECT`。
-- Target 账号需要业务表读写、sequence 调整、创建控制 schema/表的权限。
+- Target 账号需要业务表读写、sequence 调整以及创建业务/控制 schema 和对象的权限。
 - 目标业务表启用了 RLS；迁移账号应由 DBA 审核并提供 owner 或 `BYPASSRLS` 能力。
-- 迁移前先运行 `plan`，确认 V1/V2 表完整且目标 `flyway_schema_history` 可读。
-- `migrate` / `validate` 会自动初始化控制 schema；`plan` 保持只读，不初始化。
+- `migrate` 会先用 V2 官方 Flyway 脚本初始化或升级业务 schema，再执行严格结构检查和数据迁移。
+- `plan` 保持只读；首次面对空目标 schema 时会如实报告 V2 表缺失，不会隐式建表。
+- `validate` 不初始化业务 schema；`migrate` / `validate` 会幂等初始化迁移控制 schema。
+- Flyway 不会自动 `clean`、`repair` 或 baseline 一个非空且无历史表的 schema，不兼容状态会直接失败。
 - 自动初始化只创建缺失对象，不升级旧版控制表；控制面结构变更必须使用版本化升级脚本。
 - 全量迁移前必须完成备份、V1 写入冻结、目标 seed 冲突评审和回滚演练。
 
