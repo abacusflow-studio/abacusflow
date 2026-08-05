@@ -36,13 +36,7 @@ export default function DraftsScreen() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadDrafts();
-    }, []),
-  );
-
-  const loadDrafts = async () => {
+  const loadDrafts = useCallback(async () => {
     setLoading(true);
     try {
       const data = await listAllDrafts();
@@ -52,7 +46,16 @@ export default function DraftsScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const timer = setTimeout(() => {
+        void loadDrafts();
+      }, 0);
+      return () => clearTimeout(timer);
+    }, [loadDrafts]),
+  );
 
   const handleResume = (draft: Draft) => {
     switch (draft.type) {
@@ -85,7 +88,7 @@ export default function DraftsScreen() {
         style: "destructive",
         onPress: async () => {
           await deleteDraft(draft.type, draft.id);
-          loadDrafts();
+          void loadDrafts();
         },
       },
     ]);

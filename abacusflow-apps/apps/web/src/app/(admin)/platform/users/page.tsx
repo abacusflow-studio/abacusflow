@@ -236,17 +236,25 @@ export default function UsersPage() {
           </Button>
           {record.name !== "admin" && (canUpdate || canDelete) && (
             <>
-              {canUpdate && <Button type="link" size="small" onClick={() => openEdit(record)}>
-                编辑
-              </Button>}
-              {canDelete && <Button
-                type="link"
-                size="small"
-                danger
-                onClick={() => handleDelete(record.id)}
-              >
-                删除
-              </Button>}
+              {canUpdate && (
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => openEdit(record)}
+                >
+                  编辑
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  type="link"
+                  size="small"
+                  danger
+                  onClick={() => handleDelete(record.id)}
+                >
+                  删除
+                </Button>
+              )}
             </>
           )}
         </Space>
@@ -264,11 +272,13 @@ export default function UsersPage() {
           { label: "用户总数", value: allUsers.length },
           { label: "当前显示", value: total },
         ]}
-        actions={canCreate ? (
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            新增用户
-          </Button>
-        ) : undefined}
+        actions={
+          canCreate ? (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              新增用户
+            </Button>
+          ) : undefined
+        }
       />
 
       <div className="card af-filter-card">

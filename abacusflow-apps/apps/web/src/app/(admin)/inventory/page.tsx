@@ -390,7 +390,9 @@ export default function InventoryPage() {
           >
             <div style={{ lineHeight: 1.2 }}>
               <div style={{ whiteSpace: "nowrap" }}>
-                <span style={{ fontSize: 16, fontWeight: 600, color: strokeColor }}>
+                <span
+                  style={{ fontSize: 16, fontWeight: 600, color: strokeColor }}
+                >
                   {remaining}
                 </span>
                 <span style={{ color: "rgba(0,0,0,0.45)" }}>
@@ -505,7 +507,13 @@ export default function InventoryPage() {
         );
       },
     },
-    { title: "储存点", dataIndex: "depotName", key: "depotName", width: 100, ellipsis: true },
+    {
+      title: "储存点",
+      dataIndex: "depotName",
+      key: "depotName",
+      width: 100,
+      ellipsis: true,
+    },
     {
       title: "操作",
       key: "action",
@@ -628,7 +636,10 @@ export default function InventoryPage() {
             </div>
           </div>
           <div className="card af-table-card">
-            <div className="mb-3" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div
+              className="mb-3"
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
               <Button type="primary" size="small" onClick={switchViewMode}>
                 {viewMode === "inventories" ? "显示普通表格" : "显示内嵌表格"}
               </Button>
@@ -641,7 +652,11 @@ export default function InventoryPage() {
                     <Checkbox.Group
                       value={visibleUnitKeys}
                       onChange={(vals) => setVisibleUnitKeys(vals as string[])}
-                      style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
                     >
                       {unitColumnOptions.map((opt) => (
                         <Checkbox key={opt.value} value={opt.value}>
@@ -651,7 +666,9 @@ export default function InventoryPage() {
                     </Checkbox.Group>
                   }
                 >
-                  <Button size="small" icon={<SettingOutlined />}>列设置</Button>
+                  <Button size="small" icon={<SettingOutlined />}>
+                    列设置
+                  </Button>
                 </Popover>
               )}
             </div>
@@ -675,7 +692,9 @@ export default function InventoryPage() {
             ) : (
               <Table<BasicInventoryUnit>
                 columns={unitColumns.filter(
-                  (col) => col.key === "title" || visibleUnitKeys.includes(col.key as string),
+                  (col) =>
+                    col.key === "title" ||
+                    visibleUnitKeys.includes(col.key as string),
                 )}
                 dataSource={inventoryUnits}
                 rowKey="id"

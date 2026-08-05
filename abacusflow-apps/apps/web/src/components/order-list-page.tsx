@@ -169,7 +169,9 @@ export function OrderListPage({
       title: partnerLabel,
       key: partnerKey,
       render: (_, record) =>
-        ((record as unknown as Record<string, unknown>)[partnerKey] as string) ?? "-",
+        ((record as unknown as Record<string, unknown>)[
+          partnerKey
+        ] as string) ?? "-",
     },
     {
       title: "状态",
@@ -196,9 +198,11 @@ export function OrderListPage({
       title: "总金额",
       key: "totalAmount",
       render: (_, record) =>
-        ((record as unknown as Record<string, unknown>)["totalAmount"] as number)?.toLocaleString(
-          "zh-CN",
-        ) ?? "-",
+        (
+          (record as unknown as Record<string, unknown>)[
+            "totalAmount"
+          ] as number
+        )?.toLocaleString("zh-CN") ?? "-",
     },
     { title: "总数量", dataIndex: "totalQuantity", key: "totalQuantity" },
     { title: "明细数", dataIndex: "itemCount", key: "itemCount" },
@@ -317,8 +321,12 @@ export function OrderListPage({
         partnerOptions={partnerOptions}
         itemOptions={itemOptions}
         isAssetProduct={isAssetProduct}
-        onPartnerChange={(id) => setForm((prev) => ({ ...prev, partnerId: id }))}
-        onDateChange={(date) => setForm((prev) => ({ ...prev, orderDate: date }))}
+        onPartnerChange={(id) =>
+          setForm((prev) => ({ ...prev, partnerId: id }))
+        }
+        onDateChange={(date) =>
+          setForm((prev) => ({ ...prev, orderDate: date }))
+        }
         onNoteChange={(note) => setForm((prev) => ({ ...prev, note }))}
         onItemUpdate={updateItem}
         onAddItem={addOrderItem}
@@ -344,7 +352,9 @@ export function OrderListPage({
         confirmLoading={newCustomerSubmitting}
         form={newCustomerForm}
         errors={newCustomerErrors}
-        onChange={(patch) => setNewCustomerForm((prev) => ({ ...prev, ...patch }))}
+        onChange={(patch) =>
+          setNewCustomerForm((prev) => ({ ...prev, ...patch }))
+        }
       />
     </div>
   );

@@ -299,10 +299,10 @@ export default function FeedbackPage() {
                 )}
               {detailItem.status !== "RESOLVED" &&
                 detailItem.status !== "CLOSED" && (
-                <Button danger onClick={() => openAction("close")}>
-                  已拒绝
-                </Button>
-              )}
+                  <Button danger onClick={() => openAction("close")}>
+                    已拒绝
+                  </Button>
+                )}
             </Space>
           )
         }

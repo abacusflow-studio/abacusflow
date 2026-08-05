@@ -51,7 +51,11 @@ export function OrderTrendChart() {
     [granularity, monthRange],
   );
 
-  const { data: purchaseData, loading: l1, error: e1 } = useCubeQuery(purchaseQuery);
+  const {
+    data: purchaseData,
+    loading: l1,
+    error: e1,
+  } = useCubeQuery(purchaseQuery);
   const { data: saleData, loading: l2, error: e2 } = useCubeQuery(saleQuery);
 
   const loading = l1 || l2;
@@ -74,13 +78,21 @@ export function OrderTrendChart() {
       ]),
     );
 
-    const dates = [...new Set([...purchaseMap.keys(), ...saleMap.keys()])].sort();
+    const dates = [
+      ...new Set([...purchaseMap.keys(), ...saleMap.keys()]),
+    ].sort();
     const dataZoom = getTimeSeriesDataZoom(dates.length);
 
     return {
       tooltip: { trigger: "axis" },
       legend: { data: ["采购单", "销售单"], top: 0 },
-      grid: { top: 36, right: 16, bottom: dataZoom ? 48 : 24, left: 48, containLabel: false },
+      grid: {
+        top: 36,
+        right: 16,
+        bottom: dataZoom ? 48 : 24,
+        left: 48,
+        containLabel: false,
+      },
       xAxis: { type: "category", data: dates, axisLabel: { fontSize: 11 } },
       yAxis: { type: "value", axisLabel: { fontSize: 11 }, minInterval: 1 },
       dataZoom,

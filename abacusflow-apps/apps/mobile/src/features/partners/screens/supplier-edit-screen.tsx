@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { partnerApi, type Supplier } from "@abacusflow/core";
@@ -11,20 +11,25 @@ export default function SupplierEditScreen() {
   const [data, setData] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
-    try {
-      const res = await partnerApi.getSupplier({ id: Number(id) });
-      setData(res);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+
+    async function loadData() {
+      try {
+        const res = await partnerApi.getSupplier({ id: Number(id) });
+        if (active) setData(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadData();
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   if (loading) {
     return (
@@ -90,7 +95,8 @@ export default function SupplierEditScreen() {
           id: Number(id),
           updateSupplierInput: {
             name: values.name as string,
-            contactPerson: (values.contactPerson as string)?.trim() || undefined,
+            contactPerson:
+              (values.contactPerson as string)?.trim() || undefined,
             phone: (values.phone as string)?.trim() || undefined,
             email: (values.email as string)?.trim() || undefined,
             address: (values.address as string)?.trim() || undefined,

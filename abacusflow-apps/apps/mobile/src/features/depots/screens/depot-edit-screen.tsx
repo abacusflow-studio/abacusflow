@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { depotApi, type Depot } from "@abacusflow/core";
@@ -11,20 +11,25 @@ export default function DepotEditScreen() {
   const [data, setData] = useState<Depot | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadDepot = useCallback(async () => {
-    try {
-      const res = await depotApi.getDepot({ id: Number(id) });
-      setData(res);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    loadDepot();
-  }, [loadDepot]);
+    let active = true;
+
+    async function loadDepot() {
+      try {
+        const res = await depotApi.getDepot({ id: Number(id) });
+        if (active) setData(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadDepot();
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   if (loading) {
     return (

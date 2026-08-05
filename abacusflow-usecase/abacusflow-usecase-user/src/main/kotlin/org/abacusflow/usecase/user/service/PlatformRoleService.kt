@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.user.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.user.PlatformRoleAssignmentTO
 import org.abacusflow.usecase.user.PlatformRoleInputTO
 import org.abacusflow.usecase.user.PlatformRoleTO

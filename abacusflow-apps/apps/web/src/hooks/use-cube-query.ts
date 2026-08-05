@@ -55,17 +55,19 @@ export function useCubeQuery<T = Record<string, string | number | null>>(
       if (!tokenResponse.ok) {
         throw new Error(`Cube Token 请求失败 (${tokenResponse.status})`);
       }
-      const { token: cubeToken } = (await tokenResponse.json()) as { token: string };
+      const { token: cubeToken } = (await tokenResponse.json()) as {
+        token: string;
+      };
       if (!cubeToken) throw new Error("Cube Token 未配置");
 
       const res = await fetch(`${config.cubeEndpoint}/v1/load`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${cubeToken}`,
-          },
-          body: JSON.stringify({ query: JSON.parse(queryKey) as CubeQuery }),
-        });
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cubeToken}`,
+        },
+        body: JSON.stringify({ query: JSON.parse(queryKey) as CubeQuery }),
+      });
       if (!res.ok) throw new Error(`Cube.js 请求失败 (${res.status})`);
       return res.json() as Promise<{ data: T[]; error?: string }>;
     };

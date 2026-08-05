@@ -53,38 +53,52 @@ export default function ProductEntryScreen() {
   const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
-    loadCategories();
+    let active = true;
+
+    async function loadCategories() {
+      try {
+        const res = await productApi.listSelectableProductCategories();
+        if (active) {
+          setCategories(res.map((c) => ({ id: c.id, name: c.name })));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    void loadCategories();
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (params.draftId) {
-      restoreDraft(params.draftId);
+    const requestedDraftId = params.draftId;
+    if (!requestedDraftId) return;
+
+    let active = true;
+
+    async function restoreDraft() {
+      const drafts = await listDrafts("product");
+      const draft = drafts.find((item) => item.id === requestedDraftId);
+      if (!draft || !active) return;
+
+      const payload = draft.payload;
+      setName((payload.name as string) || "");
+      setBarcode((payload.barcode as string) || "");
+      setType((payload.type as ProductType) || "material");
+      setUnit((payload.unit as ProductUnit) || "piece");
+      setSpecification((payload.specification as string) || "");
+      setCategoryId(payload.categoryId as number | undefined);
+      setNote((payload.note as string) || "");
+      setDraftId(requestedDraftId);
     }
+
+    void restoreDraft();
+    return () => {
+      active = false;
+    };
   }, [params.draftId]);
-
-  const loadCategories = async () => {
-    try {
-      const res = await productApi.listSelectableProductCategories();
-      setCategories(res.map((c) => ({ id: c.id, name: c.name })));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const restoreDraft = async (id: string) => {
-    const drafts = await listDrafts("product");
-    const draft = drafts.find((d) => d.id === id);
-    if (!draft) return;
-    const p = draft.payload;
-    setName((p.name as string) || "");
-    setBarcode((p.barcode as string) || "");
-    setType((p.type as ProductType) || "material");
-    setUnit((p.unit as ProductUnit) || "piece");
-    setSpecification((p.specification as string) || "");
-    setCategoryId(p.categoryId as number | undefined);
-    setNote((p.note as string) || "");
-    setDraftId(id);
-  };
 
   const handleScan = (data: string) => {
     void triggerHaptic("selection");

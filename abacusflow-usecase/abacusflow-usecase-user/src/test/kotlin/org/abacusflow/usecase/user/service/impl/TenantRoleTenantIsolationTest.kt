@@ -4,11 +4,11 @@ import org.abacusflow.commons.tenant.CurrentTenantProvider
 import org.abacusflow.db.tenant.TenantMembershipRepository
 import org.abacusflow.db.user.PermissionRepository
 import org.abacusflow.db.user.TenantRoleRepository
+import org.abacusflow.tenant.TenantRole
 import org.abacusflow.usecase.user.CreateTenantRoleInputTO
 import org.abacusflow.usecase.user.UpdateTenantRoleInputTO
 import org.abacusflow.user.Permission
 import org.abacusflow.user.PermissionScope
-import org.abacusflow.tenant.TenantRole
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any

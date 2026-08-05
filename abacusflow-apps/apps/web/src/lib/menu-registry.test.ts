@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterMenuRegistry, firstVisibleRoute, type PermissionSnapshot } from "./menu-registry.ts";
+import {
+  filterMenuRegistry,
+  firstVisibleRoute,
+  type PermissionSnapshot,
+} from "./menu-registry.ts";
 
 function visibleRoutes(snapshot: PermissionSnapshot): string[] {
   const collect = (entries: ReturnType<typeof filterMenuRegistry>): string[] =>
@@ -12,7 +16,10 @@ function visibleRoutes(snapshot: PermissionSnapshot): string[] {
 }
 
 test("no-tenant invited user sees no protected navigation", () => {
-  const entries = filterMenuRegistry({ platformPermissions: [], tenantPermissions: [] });
+  const entries = filterMenuRegistry({
+    platformPermissions: [],
+    tenantPermissions: [],
+  });
   assert.deepEqual(entries, []);
   assert.equal(firstVisibleRoute(entries), null);
 });
@@ -28,7 +35,11 @@ test("business-only member sees only granted business navigation", () => {
 test("tenant administrator sees tenant administration without platform navigation", () => {
   const routes = visibleRoutes({
     platformPermissions: [],
-    tenantPermissions: ["tenant:profile:read", "tenant:member:read", "tenant:role:read"],
+    tenantPermissions: [
+      "tenant:profile:read",
+      "tenant:member:read",
+      "tenant:role:read",
+    ],
   });
   assert.deepEqual(routes, ["/tenant", "/tenant/members", "/tenant/roles"]);
 });
@@ -46,6 +57,10 @@ test("combined platform and multi-tenant user uses only the selected tenant gran
     platformPermissions: ["platform:tenant:list"],
     tenantPermissions: ["business:sale-order:read", "tenant:member:read"],
   });
-  assert.deepEqual(routes, ["/transaction/sale-order", "/platform/tenants", "/tenant/members"]);
+  assert.deepEqual(routes, [
+    "/transaction/sale-order",
+    "/platform/tenants",
+    "/tenant/members",
+  ]);
   assert.equal(routes.includes("/products"), false);
 });

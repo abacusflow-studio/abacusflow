@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Alert } from "react-native";
 
 interface ToastState {
   visible: boolean;
@@ -38,8 +39,18 @@ export function useToast() {
     setToast((prev) => ({ ...prev, visible: false }));
   }, []);
 
-  // 注册到全局
-  globalShowToast = showToast;
+  useEffect(() => {
+    globalShowToast = showToast;
+
+    return () => {
+      if (globalShowToast === showToast) {
+        globalShowToast = null;
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [showToast]);
 
   return { toast, showToast, hideToast };
 }
@@ -53,7 +64,6 @@ export function showToast(
     globalShowToast(message, type);
   } else {
     // fallback: 如果 Toast 未初始化，用 Alert
-    const { Alert } = require("react-native");
     Alert.alert(type === "error" ? "错误" : "提示", message);
   }
 }

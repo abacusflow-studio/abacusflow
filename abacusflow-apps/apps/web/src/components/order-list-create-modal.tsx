@@ -16,7 +16,11 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { formatCurrency } from "@abacusflow/utils";
-import type { OrderForm, OrderItemForm, SelectOption } from "./order-list-types";
+import type {
+  OrderForm,
+  OrderItemForm,
+  SelectOption,
+} from "./order-list-types";
 
 interface OrderCreateModalProps {
   open: boolean;
@@ -81,11 +85,7 @@ export function OrderCreateModal({
         </Flex>
       ) : (
         <div style={{ marginTop: 16 }}>
-          <Form.Item
-            label={partnerLabel}
-            required
-            style={{ marginBottom: 12 }}
-          >
+          <Form.Item label={partnerLabel} required style={{ marginBottom: 12 }}>
             <Select
               value={form.partnerId || undefined}
               onChange={(val) => onPartnerChange(String(val))}
@@ -294,7 +294,9 @@ function OrderItemRow({
             )}
           </Form.Item>
           <Form.Item label="折后总价" style={{ flex: 1, marginBottom: 8 }}>
-            <Typography.Text strong>{discountedTotalPriceText(item)}</Typography.Text>
+            <Typography.Text strong>
+              {discountedTotalPriceText(item)}
+            </Typography.Text>
           </Form.Item>
         </Flex>
       )}
@@ -316,4 +318,3 @@ function discountedTotalPriceText(item: OrderItemForm): string {
 function FieldError({ children }: { children: React.ReactNode }) {
   return <div style={{ color: "#ff4d4f", fontSize: 12 }}>{children}</div>;
 }
-

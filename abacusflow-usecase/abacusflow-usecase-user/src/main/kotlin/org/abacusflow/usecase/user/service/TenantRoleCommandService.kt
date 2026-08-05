@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.user.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.user.CreateTenantRoleInputTO
 import org.abacusflow.usecase.user.TenantRoleTO
 import org.abacusflow.usecase.user.UpdateTenantRoleInputTO

@@ -46,7 +46,12 @@ export function ProductTypeChart() {
   }, [data]);
 
   return (
-    <ChartCard title="产品分类分布" loading={loading} error={error} height={260}>
+    <ChartCard
+      title="产品分类分布"
+      loading={loading}
+      error={error}
+      height={260}
+    >
       <ReactECharts option={option} style={{ height: "100%" }} />
     </ChartCard>
   );

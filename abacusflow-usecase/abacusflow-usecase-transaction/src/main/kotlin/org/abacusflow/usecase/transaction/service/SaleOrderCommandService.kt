@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.transaction.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.transaction.CreateSaleOrderInputTO
 import org.abacusflow.usecase.transaction.SaleOrderTO
 import org.springframework.security.access.prepost.PreAuthorize

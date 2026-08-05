@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { productApi, type Product } from "@abacusflow/core";
 import {
@@ -14,20 +14,25 @@ export default function ProductDetailScreen() {
   const [data, setData] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
-    try {
-      const res = await productApi.getProduct({ id: Number(id) });
-      setData(res);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+
+    async function loadData() {
+      try {
+        const res = await productApi.getProduct({ id: Number(id) });
+        if (active) setData(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadData();
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   return (
     <DetailScreen

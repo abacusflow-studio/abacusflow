@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.tenant.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.tenant.TenantSummaryTO
 import org.abacusflow.usecase.tenant.TenantTO
 import org.springframework.security.access.prepost.PreAuthorize

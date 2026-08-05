@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { App, Button, Form, Input, Modal, Space, Table, Tag } from 'antd';
-import { CopyOutlined, PlusOutlined, RedoOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import { AdminPageHeader } from '@/components/admin-page-header';
-import { usePermission } from '@/hooks/use-permission';
+import React, { useCallback, useEffect, useState } from "react";
+import { App, Button, Form, Input, Modal, Space, Table, Tag } from "antd";
+import { CopyOutlined, PlusOutlined, RedoOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import { usePermission } from "@/hooks/use-permission";
 import {
   tenantApi,
   type PlatformTenant,
   type UpdateTenantInput,
-} from '@abacusflow/core';
-import { TenantForm } from './TenantForm';
-import { tenantStatusColor, translateTenantStatus } from './utils';
+} from "@abacusflow/core";
+import { TenantForm } from "./TenantForm";
+import { tenantStatusColor, translateTenantStatus } from "./utils";
 
 export function TenantTable() {
   const { message } = App.useApp();
@@ -26,17 +26,19 @@ export function TenantTable() {
   const [submitting, setSubmitting] = useState(false);
   const [deliveryToken, setDeliveryToken] = useState<string | null>(null);
   const [reissueItem, setReissueItem] = useState<PlatformTenant | null>(null);
-  const [reissueEmail, setReissueEmail] = useState('');
+  const [reissueEmail, setReissueEmail] = useState("");
 
-  const canCreate = can('platform:tenant:create');
-  const canUpdate = can('platform:tenant:update');
+  const canCreate = can("platform:tenant:create");
+  const canUpdate = can("platform:tenant:update");
 
   const loadTenants = useCallback(async () => {
     setLoading(true);
     try {
       setTenants(await tenantApi.listPlatformTenants());
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载平台租户目录失败');
+      message.error(
+        error instanceof Error ? error.message : "加载平台租户目录失败",
+      );
     } finally {
       setLoading(false);
     }
@@ -56,7 +58,7 @@ export function TenantTable() {
   const openEdit = (record: PlatformTenant) => {
     setEditItem(record);
     setIsCreateMode(false);
-    form.setFieldsValue({ displayName: record.displayName ?? '' });
+    form.setFieldsValue({ displayName: record.displayName ?? "" });
     setShowForm(true);
   };
 
@@ -73,11 +75,16 @@ export function TenantTable() {
           },
         });
         setDeliveryToken(result.initialInvitation.token ?? null);
-        message.success('租户已创建，等待首位管理员接受邀请');
+        message.success("租户已创建，等待首位管理员接受邀请");
       } else if (editItem) {
-        const input: UpdateTenantInput = { displayName: values.displayName || null };
-        await tenantApi.updatePlatformTenant({ tenantId: editItem.id, updateTenantInput: input });
-        message.success('租户资料已更新');
+        const input: UpdateTenantInput = {
+          displayName: values.displayName || null,
+        };
+        await tenantApi.updatePlatformTenant({
+          tenantId: editItem.id,
+          updateTenantInput: input,
+        });
+        message.success("租户资料已更新");
       }
       setShowForm(false);
       await loadTenants();
@@ -98,35 +105,47 @@ export function TenantTable() {
       });
       setReissueItem(null);
       setDeliveryToken(invitation.token ?? null);
-      message.success('初始管理员邀请已重新签发');
+      message.success("初始管理员邀请已重新签发");
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '重新签发失败');
+      message.error(error instanceof Error ? error.message : "重新签发失败");
     } finally {
       setSubmitting(false);
     }
   };
 
   const columns: ColumnsType<PlatformTenant> = [
-    { title: '租户名称', dataIndex: 'name', key: 'name' },
-    { title: '显示名称', key: 'displayName', render: (_, item) => item.displayName || '-' },
+    { title: "租户名称", dataIndex: "name", key: "name" },
     {
-      title: '状态',
-      key: 'status',
-      render: (_, item) => <Tag color={tenantStatusColor(item.status)}>{translateTenantStatus(item.status)}</Tag>,
+      title: "显示名称",
+      key: "displayName",
+      render: (_, item) => item.displayName || "-",
     },
     {
-      title: '操作',
-      key: 'actions',
+      title: "状态",
+      key: "status",
+      render: (_, item) => (
+        <Tag color={tenantStatusColor(item.status)}>
+          {translateTenantStatus(item.status)}
+        </Tag>
+      ),
+    },
+    {
+      title: "操作",
+      key: "actions",
       render: (_, item) => (
         <Space>
-          {canUpdate && <Button type="link" onClick={() => openEdit(item)}>编辑</Button>}
-          {canUpdate && item.status === 'PENDING_ACTIVATION' && (
+          {canUpdate && (
+            <Button type="link" onClick={() => openEdit(item)}>
+              编辑
+            </Button>
+          )}
+          {canUpdate && item.status === "PENDING_ACTIVATION" && (
             <Button
               type="link"
               icon={<RedoOutlined />}
               onClick={() => {
                 setReissueItem(item);
-                setReissueEmail('');
+                setReissueEmail("");
               }}
             >
               重发首邀
@@ -143,11 +162,23 @@ export function TenantTable() {
         eyebrow="平台中心 / 租户管理"
         title="租户管理"
         description="控制面租户目录；待激活租户不会出现在任何用户的租户切换器中。"
-        metrics={[{ label: '租户总数', value: tenants.length }]}
-        actions={canCreate ? <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新增租户</Button> : undefined}
+        metrics={[{ label: "租户总数", value: tenants.length }]}
+        actions={
+          canCreate ? (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              新增租户
+            </Button>
+          ) : undefined
+        }
       />
       <div className="card af-table-card">
-        <Table columns={columns} dataSource={tenants} rowKey="id" loading={loading} pagination={false} />
+        <Table
+          columns={columns}
+          dataSource={tenants}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+        />
       </div>
       <TenantForm
         open={showForm}
@@ -175,15 +206,20 @@ export function TenantTable() {
         open={Boolean(deliveryToken)}
         title="备用邀请凭证"
         onCancel={() => setDeliveryToken(null)}
-        footer={<Button onClick={() => setDeliveryToken(null)}>我已保存</Button>}
+        footer={
+          <Button onClick={() => setDeliveryToken(null)}>我已保存</Button>
+        }
       >
-        <p>首位管理员使用该邮箱登录后会直接看到邀请，无需输入 token。该凭证仅作为备用交付方式并只展示一次。</p>
+        <p>
+          首位管理员使用该邮箱登录后会直接看到邀请，无需输入
+          token。该凭证仅作为备用交付方式并只展示一次。
+        </p>
         <Input
           readOnly
           value={
-            deliveryToken && typeof window !== 'undefined'
+            deliveryToken && typeof window !== "undefined"
               ? `${window.location.origin}/invitation/accept?token=${encodeURIComponent(deliveryToken)}`
-              : ''
+              : ""
           }
           addonAfter={
             <CopyOutlined

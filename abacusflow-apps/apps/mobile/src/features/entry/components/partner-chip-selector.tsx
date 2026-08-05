@@ -127,7 +127,11 @@ export function PartnerChipSelector({
                   </Text>
                 </Button>
               )}
-              <Button variant="ghost" size="icon" onPress={() => setOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onPress={() => setOpen(false)}
+              >
                 <Ionicons
                   name="close"
                   size={22}

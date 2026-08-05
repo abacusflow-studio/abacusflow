@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Button,
-  Table,
-  Modal,
-  Input,
-  Form,
-  App,
-  Tag,
-} from "antd";
+import { Button, Table, Modal, Input, Form, App, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { usePermission } from "@/hooks/use-permission";
@@ -118,11 +110,12 @@ export default function PermissionManagementPage() {
       title: "操作",
       key: "action",
       width: 100,
-      render: (_, record) => canManage ? (
-        <Button type="link" size="small" onClick={() => openEdit(record)}>
-          编辑
-        </Button>
-      ) : null,
+      render: (_, record) =>
+        canManage ? (
+          <Button type="link" size="small" onClick={() => openEdit(record)}>
+            编辑
+          </Button>
+        ) : null,
     },
   ];
 
@@ -160,7 +153,14 @@ export default function PermissionManagementPage() {
             <Input value={editItem?.name} disabled />
           </Form.Item>
           <Form.Item label="范围（不可修改）">
-            <Input value={editItem ? (scopeLabelMap[editItem.scope] ?? editItem.scope) : ""} disabled />
+            <Input
+              value={
+                editItem
+                  ? (scopeLabelMap[editItem.scope] ?? editItem.scope)
+                  : ""
+              }
+              disabled
+            />
           </Form.Item>
           <Form.Item
             name="label"

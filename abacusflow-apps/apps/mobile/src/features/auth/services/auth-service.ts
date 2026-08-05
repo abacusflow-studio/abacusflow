@@ -34,7 +34,11 @@ export interface MobileAuthSnapshot {
   user?: UserProfile;
   error?: string;
   configIssues: string[];
-  tenantStatus: "NEEDS_ONBOARDING" | "SINGLE_TENANT" | "MULTI_TENANT" | "LOADING";
+  tenantStatus:
+    | "NEEDS_ONBOARDING"
+    | "SINGLE_TENANT"
+    | "MULTI_TENANT"
+    | "LOADING";
   tenants: TenantInfo[];
   currentTenantId: number | null;
 }
@@ -214,16 +218,20 @@ async function syncAuthenticatedSession(): Promise<void> {
 
     // Auto-select tenant for SINGLE_TENANT, or load stored tenant ID
     let selectedTenantId: number | null = null;
-    if (bootstrap.tenantStatus === "SINGLE_TENANT" && bootstrapTenants.length > 0) {
+    if (
+      bootstrap.tenantStatus === "SINGLE_TENANT" &&
+      bootstrapTenants.length > 0
+    ) {
       selectedTenantId = bootstrapTenants[0].tenantId;
     } else if (bootstrap.tenantStatus === "MULTI_TENANT") {
       const storedRaw = await SecureStore.getItemAsync(TENANT_STORE_KEY);
       const storedTenantId = storedRaw ? Number(storedRaw) : null;
-      selectedTenantId = storedTenantId !== null &&
+      selectedTenantId =
+        storedTenantId !== null &&
         Number.isSafeInteger(storedTenantId) &&
         bootstrapTenants.some((tenant) => tenant.tenantId === storedTenantId)
-        ? storedTenantId
-        : null;
+          ? storedTenantId
+          : null;
       if (storedRaw && selectedTenantId === null) {
         await SecureStore.deleteItemAsync(TENANT_STORE_KEY);
       }
@@ -248,7 +256,8 @@ async function syncAuthenticatedSession(): Promise<void> {
       authenticated: true,
       user: currentUser,
       error: undefined,
-      tenantStatus: bootstrap.tenantStatus as MobileAuthSnapshot["tenantStatus"],
+      tenantStatus:
+        bootstrap.tenantStatus as MobileAuthSnapshot["tenantStatus"],
       tenants: bootstrapTenants,
       currentTenantId: selectedTenantId,
     });

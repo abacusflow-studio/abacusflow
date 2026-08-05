@@ -9,13 +9,13 @@ import org.abacusflow.db.user.UserRepository
 import org.abacusflow.tenant.MembershipStatus
 import org.abacusflow.tenant.Tenant
 import org.abacusflow.tenant.TenantMembership
+import org.abacusflow.tenant.TenantRole
 import org.abacusflow.tenant.TenantStatus
 import org.abacusflow.usecase.user.service.OidcUserProfileFetcher
 import org.abacusflow.user.ExternalIdentity
 import org.abacusflow.user.Permission
 import org.abacusflow.user.PlatformRole
 import org.abacusflow.user.PlatformUserRole
-import org.abacusflow.tenant.TenantRole
 import org.abacusflow.user.User
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any

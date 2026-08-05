@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.partner.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.partner.CreateSupplierInputTO
 import org.abacusflow.usecase.partner.SupplierTO
 import org.abacusflow.usecase.partner.UpdateSupplierInputTO

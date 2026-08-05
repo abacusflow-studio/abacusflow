@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.user.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.user.BasicUserTO
 import org.abacusflow.usecase.user.UserTO
 import org.springframework.security.access.prepost.PreAuthorize

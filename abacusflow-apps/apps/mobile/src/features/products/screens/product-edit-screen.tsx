@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { productApi, type Product } from "@abacusflow/core";
@@ -12,20 +12,25 @@ export default function ProductEditScreen() {
   const [data, setData] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProduct = useCallback(async () => {
-    try {
-      const res = await productApi.getProduct({ id: Number(id) });
-      setData(res);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    loadProduct();
-  }, [loadProduct]);
+    let active = true;
+
+    async function loadProduct() {
+      try {
+        const res = await productApi.getProduct({ id: Number(id) });
+        if (active) setData(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadProduct();
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   if (loading) {
     return (
@@ -115,7 +120,8 @@ export default function ProductEditScreen() {
           id: Number(id),
           updateProductInput: {
             name: values.name as string,
-            specification: (values.specification as string)?.trim() || undefined,
+            specification:
+              (values.specification as string)?.trim() || undefined,
             type: values.type as any,
             categoryId: values.categoryId as number | undefined,
             barcode: values.barcode as string | undefined,

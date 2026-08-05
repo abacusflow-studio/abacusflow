@@ -1,21 +1,21 @@
 // Tenant context management for the frontend
 
-const TENANT_STORAGE_KEY = 'abacusflow_current_tenant_id';
+const TENANT_STORAGE_KEY = "abacusflow_current_tenant_id";
 
 const TENANT_SCOPED_API_PATH_PREFIXES = [
-  '/tenant',
-  '/suppliers',
-  '/customers',
-  '/products',
-  '/product-categories',
-  '/depots',
-  '/inventories',
-  '/inventory-units',
-  '/sale-orders',
-  '/purchase-orders',
-  '/feedback',
-  '/files',
-  '/api/cube-token',
+  "/tenant",
+  "/suppliers",
+  "/customers",
+  "/products",
+  "/product-categories",
+  "/depots",
+  "/inventories",
+  "/inventory-units",
+  "/sale-orders",
+  "/purchase-orders",
+  "/feedback",
+  "/files",
+  "/api/cube-token",
 ] as const;
 
 export interface TenantInfo {
@@ -27,7 +27,7 @@ export interface TenantInfo {
 }
 
 export interface TenantContextState {
-  tenantStatus: 'NEEDS_ONBOARDING' | 'SINGLE_TENANT' | 'MULTI_TENANT';
+  tenantStatus: "NEEDS_ONBOARDING" | "SINGLE_TENANT" | "MULTI_TENANT";
   tenants: TenantInfo[];
   currentTenantId: number | null;
 }
@@ -43,12 +43,12 @@ interface TenantStorage {
 
 const localStorageAdapter: TenantStorage = {
   get(): number | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     const stored = localStorage.getItem(TENANT_STORAGE_KEY);
     return stored ? parseInt(stored, 10) : null;
   },
   set(tenantId: number | null): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     if (tenantId !== null) {
       localStorage.setItem(TENANT_STORAGE_KEY, tenantId.toString());
     } else {
@@ -102,9 +102,9 @@ export function getCurrentTenantId(): number | null {
  * stale tenant ID left over from another account or a recreated database.
  */
 export function isTenantScopedApiUrl(url: string): boolean {
-  const requestPath = new URL(url, 'http://abacusflow.local').pathname;
-  const candidatePaths = requestPath.startsWith('/api/')
-    ? [requestPath, requestPath.slice('/api'.length)]
+  const requestPath = new URL(url, "http://abacusflow.local").pathname;
+  const candidatePaths = requestPath.startsWith("/api/")
+    ? [requestPath, requestPath.slice("/api".length)]
     : [requestPath];
   return candidatePaths.some((path) =>
     TENANT_SCOPED_API_PATH_PREFIXES.some(

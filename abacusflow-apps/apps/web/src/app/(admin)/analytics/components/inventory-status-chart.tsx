@@ -23,7 +23,9 @@ export function InventoryStatusChart() {
 
   const option = useMemo((): EChartsOption => {
     const pieData = data.map((row, i) => ({
-      name: STATUS_LABELS[row["inventory_unit.status"]] ?? row["inventory_unit.status"],
+      name:
+        STATUS_LABELS[row["inventory_unit.status"]] ??
+        row["inventory_unit.status"],
       value: Number(row["inventory_unit.count"]),
       itemStyle: { color: PIE_PALETTE[i % PIE_PALETTE.length] },
     }));

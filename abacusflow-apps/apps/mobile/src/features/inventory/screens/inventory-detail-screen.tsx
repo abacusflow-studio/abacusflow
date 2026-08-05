@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import type { BasicInventory } from "@abacusflow/core";
-import { translateProductType } from "@abacusflow/utils";
-import { COLORS } from "@abacusflow/utils";
+import { COLORS, translateProductType } from "@abacusflow/utils";
 import { DetailScreen } from "@components/layout/detail-screen";
 
 import { getInventoryById } from "../services/inventory-service";
@@ -29,15 +28,36 @@ export default function InventoryDetailScreen() {
   }, [inventoryId]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+
+    async function loadInitialData() {
+      try {
+        const item = await getInventoryById(inventoryId);
+        if (active) setData(item);
+      } catch (err) {
+        console.error(err);
+        if (active) setData(null);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadInitialData();
+    return () => {
+      active = false;
+    };
+  }, [inventoryId]);
 
   const warningEditor = useWarningLineEditor(inventoryId, data, loadData);
+  const { syncFromData } = warningEditor;
 
   // Sync warning editor state when data changes
   useEffect(() => {
-    warningEditor.syncFromData(data);
-  }, [data]);
+    const timer = setTimeout(() => {
+      syncFromData(data);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [data, syncFromData]);
 
   const getHealthStatus = (item: BasicInventory) => {
     if (item.safetyStock && item.quantity < item.safetyStock) {

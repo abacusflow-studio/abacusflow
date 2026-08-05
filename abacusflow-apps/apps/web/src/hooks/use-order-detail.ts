@@ -10,7 +10,10 @@ interface UseOrderDetailOptions {
   message: MessageInstance;
 }
 
-export function useOrderDetail({ getDetailFn, message }: UseOrderDetailOptions) {
+export function useOrderDetail({
+  getDetailFn,
+  message,
+}: UseOrderDetailOptions) {
   const [showDetail, setShowDetail] = useState(false);
   const [detailItem, setDetailItem] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);

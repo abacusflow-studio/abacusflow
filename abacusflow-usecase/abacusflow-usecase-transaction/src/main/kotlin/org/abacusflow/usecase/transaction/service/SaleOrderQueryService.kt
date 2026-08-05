@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.transaction.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.transaction.BasicSaleOrderTO
 import org.abacusflow.usecase.transaction.SaleOrderTO
 import org.springframework.data.domain.Page

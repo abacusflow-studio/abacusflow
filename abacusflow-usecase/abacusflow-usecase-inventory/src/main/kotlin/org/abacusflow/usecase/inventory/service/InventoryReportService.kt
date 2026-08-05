@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.inventory.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.springframework.security.access.prepost.PreAuthorize
 
 interface InventoryReportService {

@@ -1,5 +1,8 @@
-import { inventoryApi, type BasicInventoryUnit } from "@abacusflow/core";
-import type { BasicInventory } from "@abacusflow/core";
+import {
+  inventoryApi,
+  type BasicInventory,
+  type BasicInventoryUnit,
+} from "@abacusflow/core";
 
 /** 根据 ID 获取库存详情 */
 export async function getInventoryById(

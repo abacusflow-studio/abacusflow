@@ -99,11 +99,14 @@ export function getPartnerValue(
 ): string | number | undefined {
   const value = getField<unknown>(order, partnerKey);
   if (typeof value === "string" && value) return value;
-  if (orderType === "purchase" && "supplierId" in order) return order.supplierId;
+  if (orderType === "purchase" && "supplierId" in order)
+    return order.supplierId;
   if (orderType === "sale" && "customerId" in order) return order.customerId;
   return undefined;
 }
 
 export function formatTimestamp(value?: string | number): string {
-  return typeof value === "number" ? timestampToLocaleString(value) : (value ?? "");
+  return typeof value === "number"
+    ? timestampToLocaleString(value)
+    : (value ?? "");
 }

@@ -77,7 +77,11 @@ const MENU_ICONS: Record<MenuIcon, React.ReactNode> = {
 function toMenuItem(entry: MenuRegistryEntry): MenuItemType {
   return {
     key: entry.key,
-    label: entry.route ? <Link href={entry.route}>{entry.label}</Link> : entry.label,
+    label: entry.route ? (
+      <Link href={entry.route}>{entry.label}</Link>
+    ) : (
+      entry.label
+    ),
     icon: MENU_ICONS[entry.icon],
     children: entry.children?.map(toMenuItem),
   } as MenuItemType;
@@ -117,7 +121,11 @@ const ROUTE_META = [
   { key: "/feedback", title: "问题反馈", subtitle: "用户反馈查看与处理" },
   { key: "/platform/tenants", title: "租户管理", subtitle: "租户创建与配置" },
   { key: "/platform/users", title: "用户管理", subtitle: "系统用户账号管理" },
-  { key: "/platform/permissions", title: "权限管理", subtitle: "权限定义与配置" },
+  {
+    key: "/platform/permissions",
+    title: "权限管理",
+    subtitle: "权限定义与配置",
+  },
   { key: "/platform/roles", title: "平台角色", subtitle: "全局平台授权" },
   { key: "/tenant", title: "基本信息", subtitle: "当前租户详情" },
   { key: "/tenant/members", title: "成员", subtitle: "成员管理与角色分配" },
@@ -126,7 +134,11 @@ const ROUTE_META = [
 
 const ALL_ROUTE_KEYS = ROUTE_META.map((item) => item.key);
 
-type AuthStatus = "checking" | "authenticated" | "redirecting" | "tenant_redirect";
+type AuthStatus =
+  | "checking"
+  | "authenticated"
+  | "redirecting"
+  | "tenant_redirect";
 
 function getCurrentBrowserPath() {
   if (typeof window === "undefined") {
@@ -157,7 +169,8 @@ export default function AdminLayout({
     setBootstrapData,
     clearTenant,
   } = useTenant();
-  const { platformPermissions, tenantPermissions, setAuthData, clearAuth } = useAuth();
+  const { platformPermissions, tenantPermissions, setAuthData, clearAuth } =
+    useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -208,12 +221,13 @@ export default function AdminLayout({
                 if (bootstrap.tenantStatus === "NEEDS_ONBOARDING") {
                   const destination = pathname.startsWith("/platform")
                     ? null
-                    : firstVisibleRoute(
+                    : (firstVisibleRoute(
                         filterMenuRegistry({
-                          platformPermissions: bootstrap.platformPermissions ?? [],
+                          platformPermissions:
+                            bootstrap.platformPermissions ?? [],
                           tenantPermissions: [],
                         }),
-                      ) ?? "/onboarding";
+                      ) ?? "/onboarding");
                   if (destination) {
                     setAuthStatus("tenant_redirect");
                     router.replace(destination);
@@ -383,7 +397,9 @@ export default function AdminLayout({
                   fontWeight: 500,
                 }}
               >
-                <SwapOutlined style={{ color: "var(--colorPrimary, #16a34a)" }} />
+                <SwapOutlined
+                  style={{ color: "var(--colorPrimary, #16a34a)" }}
+                />
                 <span>{currentTenant.displayName || currentTenant.name}</span>
               </button>
             )}
@@ -483,7 +499,14 @@ export default function AdminLayout({
         width={420}
         destroyOnHidden
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            marginTop: 12,
+          }}
+        >
           {tenants.map((t) => {
             const isCurrent = t.tenantId === currentTenantId;
             return (
@@ -517,13 +540,16 @@ export default function AdminLayout({
                 }}
                 onMouseEnter={(e) => {
                   if (!isCurrent) {
-                    e.currentTarget.style.borderColor = "var(--colorPrimary, #16a34a)";
-                    e.currentTarget.style.background = "rgba(22, 163, 74, 0.04)";
+                    e.currentTarget.style.borderColor =
+                      "var(--colorPrimary, #16a34a)";
+                    e.currentTarget.style.background =
+                      "rgba(22, 163, 74, 0.04)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isCurrent) {
-                    e.currentTarget.style.borderColor = "var(--border-color, #d9d9d9)";
+                    e.currentTarget.style.borderColor =
+                      "var(--border-color, #d9d9d9)";
                     e.currentTarget.style.background = "transparent";
                   }
                 }}
@@ -546,9 +572,17 @@ export default function AdminLayout({
                   {(t.displayName || t.name).charAt(0).toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600 }}>{t.displayName || t.name}</div>
+                  <div style={{ fontWeight: 600 }}>
+                    {t.displayName || t.name}
+                  </div>
                   {t.roleNames.length > 0 && (
-                    <div style={{ fontSize: 12, color: "var(--colorTextSecondary, #666)", marginTop: 2 }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "var(--colorTextSecondary, #666)",
+                        marginTop: 2,
+                      }}
+                    >
                       {t.roleNames.join(", ")}
                     </div>
                   )}

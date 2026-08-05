@@ -47,7 +47,8 @@ export default function OnboardingPage() {
 
       const memberships = await tenantApi.listMyTenants();
       setCanReturnToSystem(
-        memberships.length > 0 || (bootstrap.platformPermissions?.length ?? 0) > 0,
+        memberships.length > 0 ||
+          (bootstrap.platformPermissions?.length ?? 0) > 0,
       );
 
       if (!bootstrap.emailVerified) {
@@ -57,7 +58,9 @@ export default function OnboardingPage() {
 
       setInvitations(await tenantApi.listMyInvitations());
     } catch (error) {
-      message.error(error instanceof Error ? error.message : "加载租户邀请失败");
+      message.error(
+        error instanceof Error ? error.message : "加载租户邀请失败",
+      );
     } finally {
       setLoading(false);
     }
@@ -73,7 +76,9 @@ export default function OnboardingPage() {
       : resolveInvitationOnboardingState(emailVerified, invitations.length);
 
   const removeInvitation = (invitationId: number) => {
-    setInvitations((current) => current.filter((item) => item.id !== invitationId));
+    setInvitations((current) =>
+      current.filter((item) => item.id !== invitationId),
+    );
   };
 
   const acceptInvitation = async (invitation: TenantInvitation) => {
@@ -97,7 +102,9 @@ export default function OnboardingPage() {
   const declineInvitation = async (invitation: TenantInvitation) => {
     setActingId(invitation.id);
     try {
-      await tenantApi.declineMyTenantInvitation({ invitationId: invitation.id });
+      await tenantApi.declineMyTenantInvitation({
+        invitationId: invitation.id,
+      });
       removeInvitation(invitation.id);
       message.success(`已拒绝「${invitation.tenantName}」的邀请`);
     } catch (error) {
@@ -117,7 +124,9 @@ export default function OnboardingPage() {
     >
       <div style={{ width: "100%", maxWidth: 760, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <MailOutlined style={{ fontSize: 48, color: "#16a34a", marginBottom: 16 }} />
+          <MailOutlined
+            style={{ fontSize: 48, color: "#16a34a", marginBottom: 16 }}
+          />
           <Title level={2} style={{ marginBottom: 8 }}>
             租户邀请
           </Title>
@@ -130,7 +139,9 @@ export default function OnboardingPage() {
 
         {loading ? (
           <Card>
-            <div style={{ display: "flex", justifyContent: "center", padding: 48 }}>
+            <div
+              style={{ display: "flex", justifyContent: "center", padding: 48 }}
+            >
               <Spin size="large" tip="正在查询你的邀请..." />
             </div>
           </Card>
@@ -145,9 +156,13 @@ export default function OnboardingPage() {
                   请先验证登录邮箱
                 </Title>
                 <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                  {email
-                    ? <>当前邮箱 <Text code>{email}</Text> 尚未通过身份服务验证。</>
-                    : "当前登录身份没有可验证的邮箱。"}
+                  {email ? (
+                    <>
+                      当前邮箱 <Text code>{email}</Text> 尚未通过身份服务验证。
+                    </>
+                  ) : (
+                    "当前登录身份没有可验证的邮箱。"
+                  )}
                 </Paragraph>
               </div>
 
@@ -165,7 +180,9 @@ export default function OnboardingPage() {
               <div style={{ textAlign: "center" }}>
                 <Space wrap>
                   {canReturnToSystem && (
-                    <Button onClick={() => router.replace("/dashboard")}>返回系统</Button>
+                    <Button onClick={() => router.replace("/dashboard")}>
+                      返回系统
+                    </Button>
                   )}
                   <Button
                     type="primary"
@@ -185,7 +202,9 @@ export default function OnboardingPage() {
               description={
                 <Space direction="vertical" size={4}>
                   <Text strong>当前没有待处理邀请</Text>
-                  <Text type="secondary">如需加入租户，请联系租户管理员向你的登录邮箱发出邀请。</Text>
+                  <Text type="secondary">
+                    如需加入租户，请联系租户管理员向你的登录邮箱发出邀请。
+                  </Text>
                 </Space>
               }
             >
@@ -221,18 +240,23 @@ export default function OnboardingPage() {
                       <Title level={4} style={{ margin: 0 }}>
                         {invitation.tenantName}
                       </Title>
-                      {invitation.initialAdministrator && <Tag color="purple">首位租户管理员</Tag>}
+                      {invitation.initialAdministrator && (
+                        <Tag color="purple">首位租户管理员</Tag>
+                      )}
                     </Space>
                     <div style={{ marginBottom: 8 }}>
                       <Text type="secondary">邀请角色：</Text>
                       {invitation.roleNames.length > 0 ? (
-                        invitation.roleNames.map((role) => <Tag key={role}>{role}</Tag>)
+                        invitation.roleNames.map((role) => (
+                          <Tag key={role}>{role}</Tag>
+                        ))
                       ) : (
                         <Tag>默认成员</Tag>
                       )}
                     </div>
                     <Text type="secondary">
-                      邀请有效期至 {new Date(invitation.expiresAt).toLocaleString()}
+                      邀请有效期至{" "}
+                      {new Date(invitation.expiresAt).toLocaleString()}
                     </Text>
                   </div>
                   <Space>

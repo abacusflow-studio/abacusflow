@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { partnerApi, type Customer } from "@abacusflow/core";
@@ -11,20 +11,25 @@ export default function CustomerEditScreen() {
   const [data, setData] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
-    try {
-      const res = await partnerApi.getCustomer({ id: Number(id) });
-      setData(res);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+
+    async function loadData() {
+      try {
+        const res = await partnerApi.getCustomer({ id: Number(id) });
+        if (active) setData(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadData();
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   if (loading) {
     return (

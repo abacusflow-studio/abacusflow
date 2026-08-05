@@ -82,7 +82,9 @@ export function OrderDetailModal({
               {getTotalAmount(order)}
             </Descriptions.Item>
             <Descriptions.Item label="备注">
-              {(order as unknown as Record<string, unknown>)["note"] as string ?? "-"}
+              {((order as unknown as Record<string, unknown>)[
+                "note"
+              ] as string) ?? "-"}
             </Descriptions.Item>
             <Descriptions.Item label="创建时间">
               {formatTimestamp(order.createdAt)}
@@ -96,7 +98,10 @@ export function OrderDetailModal({
             </Descriptions.Item>
           </Descriptions>
           <div>
-            <Typography.Text strong style={{ display: "block", marginBottom: 8 }}>
+            <Typography.Text
+              strong
+              style={{ display: "block", marginBottom: 8 }}
+            >
               订单明细
             </Typography.Text>
             <Table<OrderItem>
@@ -128,7 +133,9 @@ function OrderStatusTag({ status }: { status: OrderStatus }) {
   );
 }
 
-function buildItemColumns(orderType: "purchase" | "sale"): ColumnsType<OrderItem> {
+function buildItemColumns(
+  orderType: "purchase" | "sale",
+): ColumnsType<OrderItem> {
   return [
     {
       title: orderType === "purchase" ? "产品" : "库存单元",
@@ -138,9 +145,7 @@ function buildItemColumns(orderType: "purchase" | "sale"): ColumnsType<OrderItem
         record.inventoryUnitTitle ??
         record.title ??
         (record.productId ? `产品 #${record.productId}` : undefined) ??
-        (record.inventoryUnitId
-          ? `库存单元 #${record.inventoryUnitId}`
-          : "-"),
+        (record.inventoryUnitId ? `库存单元 #${record.inventoryUnitId}` : "-"),
     },
     { title: "数量", dataIndex: "quantity", key: "quantity" },
     {

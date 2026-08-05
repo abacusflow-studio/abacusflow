@@ -58,6 +58,8 @@ export default function PurchaseEntryScreen() {
   const form = useOrderForm<PurchaseOrderItem>();
   const draft = useDraftPersistence("purchase", params.draftId);
   const { scanning, setScanning } = useBarcodeScanning(products);
+  const { items, note, orderDate, setItems, setNote, setOrderDate } = form;
+  const { autoSave, restoreDraft } = draft;
 
   useFocusEffect(
     useCallback(() => {
@@ -87,30 +89,39 @@ export default function PurchaseEntryScreen() {
       partners.length > 0 &&
       products.length > 0
     ) {
-      draft.restoreDraft(params.draftId).then((payload) => {
+      void restoreDraft(params.draftId).then((payload) => {
         if (!payload) return;
         restoredDraftIdRef.current = params.draftId;
         setSelectedPartnerId(payload.supplierId as number | undefined);
-        form.setOrderDate((payload.orderDate as string) || form.orderDate);
-        form.setItems((payload.items as PurchaseOrderItem[]) || []);
-        form.setNote((payload.note as string) || "");
+        setOrderDate((payload.orderDate as string) || orderDate);
+        setItems((payload.items as PurchaseOrderItem[]) || []);
+        setNote((payload.note as string) || "");
       });
     }
-  }, [params.draftId, partners, products]);
+  }, [
+    orderDate,
+    params.draftId,
+    partners,
+    products,
+    restoreDraft,
+    setItems,
+    setNote,
+    setOrderDate,
+  ]);
 
   useEffect(() => {
-    if (form.items.length > 0) {
-      draft.autoSave(
+    if (items.length > 0) {
+      void autoSave(
         {
           supplierId: selectedPartnerId,
-          orderDate: form.orderDate,
-          items: form.items,
-          note: form.note,
+          orderDate,
+          items,
+          note,
         },
-        `${form.items.length} 个产品`,
+        `${items.length} 个产品`,
       );
     }
-  }, [form.items, selectedPartnerId, form.note]);
+  }, [autoSave, items, note, orderDate, selectedPartnerId]);
 
   const markScanCompleted = useCallback((message = "已记录，继续扫描") => {
     setScanFeedback(message);
@@ -376,7 +387,9 @@ export default function PurchaseEntryScreen() {
                 onSelect={(id) => setSelectedPartnerId(id)}
                 label="选择供应商"
                 createLabel="新增供应商"
-                onCreatePress={() => router.push("/partner/supplier/add" as any)}
+                onCreatePress={() =>
+                  router.push("/partner/supplier/add" as any)
+                }
               />
             </CardContent>
           </AnimatedCard>

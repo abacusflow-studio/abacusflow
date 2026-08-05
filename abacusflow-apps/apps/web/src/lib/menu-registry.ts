@@ -231,7 +231,10 @@ export const MENU_REGISTRY = [
   },
 ] as const satisfies readonly MenuRegistryEntry[];
 
-export function canPermission(permission: string, snapshot: PermissionSnapshot): boolean {
+export function canPermission(
+  permission: string,
+  snapshot: PermissionSnapshot,
+): boolean {
   if (permission.startsWith("platform:")) {
     return snapshot.platformPermissions.includes(permission);
   }
@@ -246,18 +249,27 @@ export function filterMenuRegistry(
   entries: readonly MenuRegistryEntry[] = MENU_REGISTRY,
 ): MenuRegistryEntry[] {
   return entries.flatMap((entry) => {
-    const children = entry.children ? filterMenuRegistry(snapshot, entry.children) : undefined;
+    const children = entry.children
+      ? filterMenuRegistry(snapshot, entry.children)
+      : undefined;
     if (children) {
       return children.length > 0 ? [{ ...entry, children }] : [];
     }
-    return entry.requiredPermission && canPermission(entry.requiredPermission, snapshot) ? [entry] : [];
+    return entry.requiredPermission &&
+      canPermission(entry.requiredPermission, snapshot)
+      ? [entry]
+      : [];
   });
 }
 
-export function firstVisibleRoute(entries: readonly MenuRegistryEntry[]): string | null {
+export function firstVisibleRoute(
+  entries: readonly MenuRegistryEntry[],
+): string | null {
   for (const entry of entries) {
     if (entry.route) return entry.route;
-    const childRoute = entry.children ? firstVisibleRoute(entry.children) : null;
+    const childRoute = entry.children
+      ? firstVisibleRoute(entry.children)
+      : null;
     if (childRoute) return childRoute;
   }
   return null;

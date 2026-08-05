@@ -132,7 +132,9 @@ export default function MemberManagementPage() {
         email: values.email,
         roleIds: values.roleIds || [],
       };
-      const invitation = await tenantApi.createTenantInvitation({ createTenantInvitationInput: input });
+      const invitation = await tenantApi.createTenantInvitation({
+        createTenantInvitationInput: input,
+      });
       setDeliveryToken(invitation.token ?? null);
       message.success("邀请已创建，对方登录后即可直接接受或拒绝");
       setShowInviteForm(false);
@@ -210,9 +212,11 @@ export default function MemberManagementPage() {
       title: "角色",
       key: "roleNames",
       render: (_, record) =>
-        record.roleNames.length > 0
-          ? record.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
-          : <Tag>无角色</Tag>,
+        record.roleNames.length > 0 ? (
+          record.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
+        ) : (
+          <Tag>无角色</Tag>
+        ),
     },
     {
       title: "状态",
@@ -228,25 +232,34 @@ export default function MemberManagementPage() {
       title: "操作",
       key: "action",
       width: 180,
-      render: (_, record) => (canUpdate || canRemove) ? (
-        <Space size="small">
-          {canUpdate && <Button type="link" size="small" onClick={() => openEditRoles(record)}>
-            编辑角色
-          </Button>}
-          {canRemove && <Popconfirm
-            title="确认移除"
-            description={`确定要将「${record.userName}」从租户中移除吗？用户账号不会被删除。`}
-            onConfirm={() => handleRemoveMember(record)}
-            okText="移除"
-            cancelText="取消"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" size="small" danger>
-              移除
-            </Button>
-          </Popconfirm>}
-        </Space>
-      ) : null,
+      render: (_, record) =>
+        canUpdate || canRemove ? (
+          <Space size="small">
+            {canUpdate && (
+              <Button
+                type="link"
+                size="small"
+                onClick={() => openEditRoles(record)}
+              >
+                编辑角色
+              </Button>
+            )}
+            {canRemove && (
+              <Popconfirm
+                title="确认移除"
+                description={`确定要将「${record.userName}」从租户中移除吗？用户账号不会被删除。`}
+                onConfirm={() => handleRemoveMember(record)}
+                okText="移除"
+                cancelText="取消"
+                okButtonProps={{ danger: true }}
+              >
+                <Button type="link" size="small" danger>
+                  移除
+                </Button>
+              </Popconfirm>
+            )}
+          </Space>
+        ) : null,
     },
   ];
 
@@ -260,9 +273,11 @@ export default function MemberManagementPage() {
       title: "角色",
       key: "roleNames",
       render: (_, record) =>
-        record.roleNames.length > 0
-          ? record.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
-          : <Tag>无角色</Tag>,
+        record.roleNames.length > 0 ? (
+          record.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
+        ) : (
+          <Tag>无角色</Tag>
+        ),
     },
     {
       title: "状态",
@@ -309,11 +324,17 @@ export default function MemberManagementPage() {
         title="成员管理"
         description="管理当前租户的成员，通过邀请链接邀请新成员加入。"
         metrics={[{ label: "成员总数", value: members.length }]}
-        actions={canInvite ? (
-          <Button type="primary" icon={<MailOutlined />} onClick={openInviteMember}>
-            邀请成员
-          </Button>
-        ) : undefined}
+        actions={
+          canInvite ? (
+            <Button
+              type="primary"
+              icon={<MailOutlined />}
+              onClick={openInviteMember}
+            >
+              邀请成员
+            </Button>
+          ) : undefined
+        }
       />
 
       <div className="card af-table-card">
@@ -392,7 +413,10 @@ export default function MemberManagementPage() {
         onCancel={() => setDeliveryToken(null)}
         footer={<Button onClick={() => setDeliveryToken(null)}>完成</Button>}
       >
-        <p>被邀请人无需输入 token；下面的链接仅用于你需要通过其他渠道提醒对方时备用。</p>
+        <p>
+          被邀请人无需输入
+          token；下面的链接仅用于你需要通过其他渠道提醒对方时备用。
+        </p>
         <Input
           readOnly
           value={

@@ -129,7 +129,10 @@ export default function RoleManagementPage() {
           label: values.label || undefined,
           permissionIds: values.permissionIds || [],
         };
-        await tenantRoleApi.updateTenantRole({ roleId: editItem.id, updateTenantRoleInput: input });
+        await tenantRoleApi.updateTenantRole({
+          roleId: editItem.id,
+          updateTenantRoleInput: input,
+        });
         message.success("更新成功");
       }
 
@@ -175,25 +178,26 @@ export default function RoleManagementPage() {
       title: "操作",
       key: "action",
       width: 200,
-      render: (_, record) => canManage ? (
-        <Space size="small">
-          <Button type="link" size="small" onClick={() => openEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确认删除"
-            description={`确定要删除角色「${record.label || record.name}」吗？`}
-            onConfirm={() => handleDelete(record.id)}
-            okText="删除"
-            cancelText="取消"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" size="small" danger>
-              删除
+      render: (_, record) =>
+        canManage ? (
+          <Space size="small">
+            <Button type="link" size="small" onClick={() => openEdit(record)}>
+              编辑
             </Button>
-          </Popconfirm>
-        </Space>
-      ) : null,
+            <Popconfirm
+              title="确认删除"
+              description={`确定要删除角色「${record.label || record.name}」吗？`}
+              onConfirm={() => handleDelete(record.id)}
+              okText="删除"
+              cancelText="取消"
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="link" size="small" danger>
+                删除
+              </Button>
+            </Popconfirm>
+          </Space>
+        ) : null,
     },
   ];
 
@@ -204,11 +208,13 @@ export default function RoleManagementPage() {
         title="角色管理"
         description="管理当前租户的角色定义和权限分配。"
         metrics={[{ label: "角色总数", value: roles.length }]}
-        actions={canManage ? (
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            新增角色
-          </Button>
-        ) : undefined}
+        actions={
+          canManage ? (
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+              新增角色
+            </Button>
+          ) : undefined
+        }
       />
 
       <div className="card af-table-card">

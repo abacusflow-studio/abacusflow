@@ -99,6 +99,8 @@ export default function SaleEntryScreen() {
   const form = useOrderForm<SaleOrderItem>();
   const draft = useDraftPersistence("sale", params.draftId);
   const { scanning, setScanning } = useBarcodeScanning(products);
+  const { items, note, orderDate, setItems, setNote, setOrderDate } = form;
+  const { autoSave, restoreDraft } = draft;
 
   useFocusEffect(
     useCallback(() => {
@@ -127,32 +129,40 @@ export default function SaleEntryScreen() {
       restoredDraftIdRef.current !== params.draftId &&
       partners.length > 0
     ) {
-      draft.restoreDraft(params.draftId).then((payload) => {
+      void restoreDraft(params.draftId).then((payload) => {
         if (!payload) return;
         restoredDraftIdRef.current = params.draftId;
         setSelectedPartnerId(payload.customerId as number | undefined);
-        form.setOrderDate((payload.orderDate as string) || form.orderDate);
-        form.setItems((payload.items as SaleOrderItem[]) || []);
+        setOrderDate((payload.orderDate as string) || orderDate);
+        setItems((payload.items as SaleOrderItem[]) || []);
         setDiscountFactor((payload.discountFactor as string) || "");
-        form.setNote((payload.note as string) || "");
+        setNote((payload.note as string) || "");
       });
     }
-  }, [params.draftId, partners]);
+  }, [
+    orderDate,
+    params.draftId,
+    partners,
+    restoreDraft,
+    setItems,
+    setNote,
+    setOrderDate,
+  ]);
 
   useEffect(() => {
-    if (form.items.length > 0) {
-      draft.autoSave(
+    if (items.length > 0) {
+      void autoSave(
         {
           customerId: selectedPartnerId,
-          orderDate: form.orderDate,
-          items: form.items,
+          orderDate,
+          items,
           discountFactor,
-          note: form.note,
+          note,
         },
-        `${form.items.length} 个库存单元`,
+        `${items.length} 个库存单元`,
       );
     }
-  }, [form.items, selectedPartnerId, discountFactor, form.note]);
+  }, [autoSave, discountFactor, items, note, orderDate, selectedPartnerId]);
 
   const isUnitAlreadySelected = useCallback(
     (unit: BasicInventoryUnit) =>
@@ -565,7 +575,9 @@ export default function SaleEntryScreen() {
                 onSelect={(id) => setSelectedPartnerId(id)}
                 label="选择客户"
                 createLabel="新增客户"
-                onCreatePress={() => router.push("/partner/customer/add" as any)}
+                onCreatePress={() =>
+                  router.push("/partner/customer/add" as any)
+                }
               />
             </CardContent>
           </AnimatedCard>

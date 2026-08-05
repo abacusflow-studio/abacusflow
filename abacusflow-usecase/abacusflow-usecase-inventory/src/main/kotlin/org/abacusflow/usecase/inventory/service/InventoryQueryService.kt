@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.inventory.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.inventory.BasicInventoryTO
 import org.abacusflow.usecase.inventory.InventoryTO
 import org.springframework.data.domain.Page

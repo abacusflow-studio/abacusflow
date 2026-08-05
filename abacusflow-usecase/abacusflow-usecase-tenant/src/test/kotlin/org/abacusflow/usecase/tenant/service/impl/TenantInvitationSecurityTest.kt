@@ -9,8 +9,8 @@ import org.abacusflow.db.user.TenantRoleRepository
 import org.abacusflow.tenant.Tenant
 import org.abacusflow.tenant.TenantInvitation
 import org.abacusflow.tenant.TenantMembership
-import org.abacusflow.tenant.TenantStatus
 import org.abacusflow.tenant.TenantRole
+import org.abacusflow.tenant.TenantStatus
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
@@ -242,15 +242,14 @@ class TenantInvitationSecurityTest {
     private fun invitation(
         expiresAt: Instant = Instant.now().plus(1, ChronoUnit.DAYS),
         initialAdministrator: Boolean = true,
-    ) =
-        TenantInvitation(
-            tenantId = TENANT_ID,
-            email = "admin@example.com",
-            roleIds = mutableSetOf(ROLE_ID),
-            token = TOKEN,
-            expiresAt = expiresAt,
-            initialAdministrator = initialAdministrator,
-        )
+    ) = TenantInvitation(
+        tenantId = TENANT_ID,
+        email = "admin@example.com",
+        roleIds = mutableSetOf(ROLE_ID),
+        token = TOKEN,
+        expiresAt = expiresAt,
+        initialAdministrator = initialAdministrator,
+    )
 
     private fun tenant(status: TenantStatus = TenantStatus.PENDING_ACTIVATION) =
         Tenant("tenant", status).also {

@@ -33,7 +33,9 @@ export function OrderFilterBar({
           <label>订单编号</label>
           <Input
             value={(filters.orderNo as string) ?? ""}
-            onChange={(e) => updateFilter("orderNo", e.target.value || undefined)}
+            onChange={(e) =>
+              updateFilter("orderNo", e.target.value || undefined)
+            }
             placeholder={`请输入${orderLabel}单号`}
           />
         </div>
@@ -42,7 +44,9 @@ export function OrderFilterBar({
           <Input
             type="date"
             value={(filters.orderDate as string) ?? ""}
-            onChange={(e) => updateFilter("orderDate", e.target.value || undefined)}
+            onChange={(e) =>
+              updateFilter("orderDate", e.target.value || undefined)
+            }
           />
         </div>
         <div className="form-item">

@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.tenant.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.tenant.CreateTenantInputTO
 import org.abacusflow.usecase.tenant.TenantProvisioningTO
 import org.abacusflow.usecase.tenant.TenantTO

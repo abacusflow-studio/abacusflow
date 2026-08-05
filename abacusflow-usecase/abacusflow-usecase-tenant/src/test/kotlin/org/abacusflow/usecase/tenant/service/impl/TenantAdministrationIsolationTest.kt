@@ -8,8 +8,8 @@ import org.abacusflow.db.tenant.TenantRepository
 import org.abacusflow.db.user.TenantRoleRepository
 import org.abacusflow.db.user.UserRepository
 import org.abacusflow.tenant.TenantMembership
-import org.abacusflow.user.Permission
 import org.abacusflow.tenant.TenantRole
+import org.abacusflow.user.Permission
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any

@@ -40,14 +40,22 @@ export function RevenueTrendChart() {
 
   const option = useMemo((): EChartsOption => {
     const dateKey = `sale_order.order_date.${granularity}`;
-    const dates = data.map((r) => fmtDate(String(r[dateKey] ?? ""), granularity));
+    const dates = data.map((r) =>
+      fmtDate(String(r[dateKey] ?? ""), granularity),
+    );
     const revenues = data.map((r) => Number(r["sale_order_item.revenue"]));
     const profits = data.map((r) => Number(r["sale_order_item.profit"]));
     const dataZoom = getTimeSeriesDataZoom(dates.length);
     return {
       tooltip: { trigger: "axis" },
       legend: { data: ["收入", "利润"], top: 0 },
-      grid: { top: 36, right: 16, bottom: dataZoom ? 48 : 24, left: 56, containLabel: false },
+      grid: {
+        top: 36,
+        right: 16,
+        bottom: dataZoom ? 48 : 24,
+        left: 56,
+        containLabel: false,
+      },
       xAxis: { type: "category", data: dates, axisLabel: { fontSize: 11 } },
       yAxis: { type: "value", axisLabel: { fontSize: 11 } },
       dataZoom,

@@ -22,8 +22,12 @@ export function resolveBootstrapTenantId(
   return null;
 }
 
-export function shouldShowPendingInvitations(pendingInvitationCount: number): boolean {
-  return Number.isSafeInteger(pendingInvitationCount) && pendingInvitationCount > 0;
+export function shouldShowPendingInvitations(
+  pendingInvitationCount: number,
+): boolean {
+  return (
+    Number.isSafeInteger(pendingInvitationCount) && pendingInvitationCount > 0
+  );
 }
 
 export type InvitationOnboardingState =

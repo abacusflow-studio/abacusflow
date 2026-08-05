@@ -44,7 +44,12 @@ export function TopCustomersChart() {
           data: revenues,
           barMaxWidth: 20,
           itemStyle: { color: COLORS.sale, borderRadius: [0, 4, 4, 0] },
-          label: { show: true, position: "right", fontSize: 11, formatter: "{c}" },
+          label: {
+            show: true,
+            position: "right",
+            fontSize: 11,
+            formatter: "{c}",
+          },
         },
       ],
     };

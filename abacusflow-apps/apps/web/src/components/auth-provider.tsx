@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 interface AuthContextType {
   platformPermissions: string[];
@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   platformRoles: [],
   tenantPermissions: [],
   isAuthenticated: false,
-  displayName: '',
+  displayName: "",
   setAuthData: () => {},
   clearAuth: () => {},
 });
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [platformPermissions, setPlatformPermissions] = useState<string[]>([]);
   const [platformRoles, setPlatformRoles] = useState<string[]>([]);
   const [tenantPermissions, setTenantPermissions] = useState<string[]>([]);
-  const [displayName, setDisplayName] = useState('');
+  const [displayName, setDisplayName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const setAuthData = useCallback(
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPlatformPermissions([]);
     setPlatformRoles([]);
     setTenantPermissions([]);
-    setDisplayName('');
+    setDisplayName("");
     setIsAuthenticated(false);
   }, []);
 

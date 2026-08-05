@@ -9,10 +9,10 @@ import org.abacusflow.db.user.TenantRoleRepository
 import org.abacusflow.tenant.Tenant
 import org.abacusflow.tenant.TenantInvitation
 import org.abacusflow.tenant.TenantPlacement
+import org.abacusflow.tenant.TenantRole
 import org.abacusflow.tenant.TenantStatus
 import org.abacusflow.usecase.tenant.CreateTenantInputTO
 import org.abacusflow.user.Permission
-import org.abacusflow.tenant.TenantRole
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock

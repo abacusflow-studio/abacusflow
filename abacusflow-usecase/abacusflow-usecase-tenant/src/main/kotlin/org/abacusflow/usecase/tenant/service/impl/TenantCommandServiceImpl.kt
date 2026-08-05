@@ -10,6 +10,7 @@ import org.abacusflow.db.user.TenantRoleRepository
 import org.abacusflow.tenant.Tenant
 import org.abacusflow.tenant.TenantInvitation
 import org.abacusflow.tenant.TenantPlacement
+import org.abacusflow.tenant.TenantRole
 import org.abacusflow.tenant.TenantStatus
 import org.abacusflow.usecase.tenant.CreateTenantInputTO
 import org.abacusflow.usecase.tenant.TenantProvisioningTO
@@ -17,7 +18,6 @@ import org.abacusflow.usecase.tenant.TenantTO
 import org.abacusflow.usecase.tenant.mapper.toTO
 import org.abacusflow.usecase.tenant.service.TenantCommandService
 import org.abacusflow.user.PermissionScope
-import org.abacusflow.tenant.TenantRole
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant

@@ -2,11 +2,7 @@
 
 import React, { useRef } from "react";
 import { Button } from "antd";
-import {
-  AlertOutlined,
-  PlusOutlined,
-  SwapOutlined,
-} from "@ant-design/icons";
+import { AlertOutlined, PlusOutlined, SwapOutlined } from "@ant-design/icons";
 import { useMouseGlow } from "../../../hooks/use-mouse-glow";
 
 export default function DashboardPage() {

@@ -96,7 +96,11 @@ export function AuthGate({ children }: AuthGateProps) {
             </Text>
             <View style={styles.featureRow}>
               <View style={styles.featurePill}>
-                <Ionicons name="person-circle-outline" size={17} color="#0f766e" />
+                <Ionicons
+                  name="person-circle-outline"
+                  size={17}
+                  color="#0f766e"
+                />
                 <Text style={styles.featureText}>同步资料</Text>
               </View>
               <View style={styles.featurePill}>
@@ -106,7 +110,11 @@ export function AuthGate({ children }: AuthGateProps) {
             </View>
             {auth.error && (
               <View style={styles.errorBox}>
-                <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={18}
+                  color={COLORS.danger}
+                />
                 <Text style={styles.errorText}>{auth.error}</Text>
               </View>
             )}
@@ -128,7 +136,11 @@ export function AuthGate({ children }: AuthGateProps) {
               <ActivityIndicator color={COLORS.white} />
             ) : (
               <>
-                <Ionicons name="log-in-outline" size={20} color={COLORS.white} />
+                <Ionicons
+                  name="log-in-outline"
+                  size={20}
+                  color={COLORS.white}
+                />
                 <Text style={styles.primaryButtonText}>登录</Text>
               </>
             )}
@@ -140,14 +152,24 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   // Tenant selection: show picker if multi-tenant with no tenant selected
-  if (auth.authenticated && auth.tenantStatus === "MULTI_TENANT" && auth.currentTenantId === null && auth.tenants.length > 0) {
+  if (
+    auth.authenticated &&
+    auth.tenantStatus === "MULTI_TENANT" &&
+    auth.currentTenantId === null &&
+    auth.tenants.length > 0
+  ) {
     return (
       <SafeAreaView style={styles.screen}>
         <View style={styles.tenantPanel}>
           <Ionicons name="business-outline" size={48} color={COLORS.primary} />
           <Text style={styles.tenantTitle}>选择租户</Text>
-          <Text style={styles.tenantDesc}>您属于多个租户，请选择要进入的租户</Text>
-          <ScrollView style={styles.tenantList} contentContainerStyle={{ gap: 10 }}>
+          <Text style={styles.tenantDesc}>
+            您属于多个租户，请选择要进入的租户
+          </Text>
+          <ScrollView
+            style={styles.tenantList}
+            contentContainerStyle={{ gap: 10 }}
+          >
             {auth.tenants.map((t) => (
               <Pressable
                 key={t.tenantId}
@@ -163,12 +185,20 @@ export function AuthGate({ children }: AuthGateProps) {
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.tenantItemName}>{t.displayName || t.name}</Text>
+                  <Text style={styles.tenantItemName}>
+                    {t.displayName || t.name}
+                  </Text>
                   {t.roleNames.length > 0 && (
-                    <Text style={styles.tenantItemRoles}>{t.roleNames.join(", ")}</Text>
+                    <Text style={styles.tenantItemRoles}>
+                      {t.roleNames.join(", ")}
+                    </Text>
                   )}
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={COLORS.textTertiary}
+                />
               </Pressable>
             ))}
           </ScrollView>

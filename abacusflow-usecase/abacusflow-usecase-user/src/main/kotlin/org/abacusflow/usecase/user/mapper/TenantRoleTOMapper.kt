@@ -1,9 +1,9 @@
 package org.abacusflow.usecase.user.mapper
 
+import org.abacusflow.tenant.TenantRole
 import org.abacusflow.usecase.user.PermissionTO
 import org.abacusflow.usecase.user.TenantRoleTO
 import org.abacusflow.user.Permission
-import org.abacusflow.tenant.TenantRole
 
 fun TenantRole.toTO() =
     TenantRoleTO(

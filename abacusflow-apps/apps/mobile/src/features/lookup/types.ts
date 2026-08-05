@@ -3,9 +3,6 @@ import type {
   BasicInventory,
   BasicPurchaseOrder,
   BasicSaleOrder,
-  BasicCustomer,
-  BasicSupplier,
-  BasicDepot,
 } from "@abacusflow/core";
 
 /** 查询模式 */

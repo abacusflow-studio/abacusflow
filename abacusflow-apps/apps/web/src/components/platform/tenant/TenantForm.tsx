@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Modal, Input, Form } from 'antd';
-import type { PlatformTenant } from '@abacusflow/core';
+import React from "react";
+import { Modal, Input, Form } from "antd";
+import type { PlatformTenant } from "@abacusflow/core";
 
 interface TenantFormProps {
   open: boolean;
@@ -26,7 +26,7 @@ export function TenantForm({
   return (
     <Modal
       open={open}
-      title={isCreateMode ? '新增租户' : '编辑租户'}
+      title={isCreateMode ? "新增租户" : "编辑租户"}
       onCancel={onCancel}
       onOk={onOk}
       confirmLoading={submitting}
@@ -38,7 +38,7 @@ export function TenantForm({
           <Form.Item
             name="name"
             label="租户名称"
-            rules={[{ required: true, message: '请输入租户名称' }]}
+            rules={[{ required: true, message: "请输入租户名称" }]}
           >
             <Input placeholder="请输入租户名称（英文/数字，创建后不可修改）" />
           </Form.Item>
@@ -55,8 +55,8 @@ export function TenantForm({
             name="initialAdministratorEmail"
             label="首位租户管理员邮箱"
             rules={[
-              { required: true, message: '请输入首位管理员邮箱' },
-              { type: 'email', message: '请输入有效邮箱地址' },
+              { required: true, message: "请输入首位管理员邮箱" },
+              { type: "email", message: "请输入有效邮箱地址" },
             ]}
             extra="租户将保持待激活状态，直到此邮箱对应的已验证用户接受邀请。"
           >

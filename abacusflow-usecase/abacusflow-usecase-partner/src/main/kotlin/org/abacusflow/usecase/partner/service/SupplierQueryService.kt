@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.partner.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.partner.BasicSupplierTO
 import org.abacusflow.usecase.partner.SupplierTO
 import org.springframework.data.domain.Page

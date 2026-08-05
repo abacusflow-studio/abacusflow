@@ -40,14 +40,24 @@ export function PurchaseCostChart() {
 
   const option = useMemo((): EChartsOption => {
     const dateKey = `purchase_order.order_date.${granularity}`;
-    const dates = data.map((r) => fmtDate(String(r[dateKey] ?? ""), granularity));
+    const dates = data.map((r) =>
+      fmtDate(String(r[dateKey] ?? ""), granularity),
+    );
     const costs = data.map((r) => Number(r["purchase_order_item.cost"]));
-    const quantities = data.map((r) => Number(r["purchase_order_item.quantity"]));
+    const quantities = data.map((r) =>
+      Number(r["purchase_order_item.quantity"]),
+    );
     const dataZoom = getTimeSeriesDataZoom(dates.length);
     return {
       tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
       legend: { data: ["采购成本", "采购数量"], top: 0 },
-      grid: { top: 36, right: 56, bottom: dataZoom ? 48 : 24, left: 56, containLabel: false },
+      grid: {
+        top: 36,
+        right: 56,
+        bottom: dataZoom ? 48 : 24,
+        left: 56,
+        containLabel: false,
+      },
       xAxis: { type: "category", data: dates, axisLabel: { fontSize: 11 } },
       yAxis: [
         {

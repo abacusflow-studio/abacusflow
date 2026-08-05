@@ -197,11 +197,7 @@ export default function ProductCategoriesPage() {
           <Button type="link" size="small" onClick={() => openCreate(record)}>
             新增
           </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => openEdit(record)}
-          >
+          <Button type="link" size="small" onClick={() => openEdit(record)}>
             编辑
           </Button>
           <Button
@@ -332,16 +328,11 @@ export default function ProductCategoriesPage() {
                 name="parentId"
                 label="父类别"
                 rules={
-                  editItem
-                    ? [{ required: true, message: "请选择父类别" }]
-                    : []
+                  editItem ? [{ required: true, message: "请选择父类别" }] : []
                 }
               >
                 {editItem ? (
-                  <Select
-                    options={parentOptions}
-                    placeholder="请选择父类别"
-                  />
+                  <Select options={parentOptions} placeholder="请选择父类别" />
                 ) : (
                   <Select
                     options={categoryOptions}

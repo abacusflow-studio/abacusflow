@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.inventory.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.inventory.BasicInventoryUnitTO
 import org.abacusflow.usecase.inventory.InventoryUnitForExportTO
 import org.abacusflow.usecase.inventory.InventoryUnitTO

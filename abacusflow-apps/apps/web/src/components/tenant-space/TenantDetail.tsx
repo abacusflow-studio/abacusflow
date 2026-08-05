@@ -1,20 +1,28 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Descriptions, Tag, Spin, App, Button, Modal, Input, Form } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
-import { AdminPageHeader } from '@/components/admin-page-header';
-import { useTenant } from '@/components/tenant-provider';
-import { usePermission } from '@/hooks/use-permission';
-import { tenantApi, type TenantDetail, type UpdateTenantInput } from '@abacusflow/core';
-import { translateTenantStatus, tenantStatusColor, formatTimestamp } from '../platform/tenant/utils';
+import React, { useEffect, useState } from "react";
+import { Descriptions, Tag, Spin, App, Button, Modal, Input, Form } from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import { useTenant } from "@/components/tenant-provider";
+import { usePermission } from "@/hooks/use-permission";
+import {
+  tenantApi,
+  type TenantDetail,
+  type UpdateTenantInput,
+} from "@abacusflow/core";
+import {
+  translateTenantStatus,
+  tenantStatusColor,
+  formatTimestamp,
+} from "../platform/tenant/utils";
 
 export function TenantDetail() {
   const { message } = App.useApp();
   const [editForm] = Form.useForm();
   const { currentTenantId, updateTenantInList } = useTenant();
   const { can } = usePermission();
-  const canUpdate = can('tenant:profile:update');
+  const canUpdate = can("tenant:profile:update");
 
   const [detail, setDetail] = useState<TenantDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +42,9 @@ export function TenantDetail() {
       })
       .catch((err) => {
         if (!cancelled) {
-          message.error(err instanceof Error ? err.message : '加载租户信息失败');
+          message.error(
+            err instanceof Error ? err.message : "加载租户信息失败",
+          );
         }
       })
       .finally(() => {
@@ -48,7 +58,7 @@ export function TenantDetail() {
 
   const openEdit = () => {
     if (!detail) return;
-    editForm.setFieldsValue({ displayName: detail.displayName ?? '' });
+    editForm.setFieldsValue({ displayName: detail.displayName ?? "" });
     setShowEdit(true);
   };
 
@@ -63,7 +73,7 @@ export function TenantDetail() {
       const updated = await tenantApi.updateCurrentTenant({
         updateTenantInput: payload,
       });
-      message.success('更新成功');
+      message.success("更新成功");
       setShowEdit(false);
       setDetail(updated);
       updateTenantInList(detail.tenantId, {
@@ -86,7 +96,13 @@ export function TenantDetail() {
           title="基本信息"
           description="当前租户的基本信息"
         />
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem 0' }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "3rem 0",
+          }}
+        >
           <Spin size="large" />
         </div>
       </div>
@@ -101,7 +117,13 @@ export function TenantDetail() {
           title="基本信息"
           description="当前租户的基本信息"
         />
-        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--colorTextSecondary, #666)' }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "3rem 0",
+            color: "var(--colorTextSecondary, #666)",
+          }}
+        >
           无法加载租户信息
         </div>
       </div>
@@ -114,11 +136,13 @@ export function TenantDetail() {
         eyebrow="租户空间 / 基本信息"
         title="基本信息"
         description="当前租户的基本信息与配置"
-        actions={canUpdate ? (
-          <Button icon={<EditOutlined />} onClick={openEdit}>
-            编辑
-          </Button>
-        ) : undefined}
+        actions={
+          canUpdate ? (
+            <Button icon={<EditOutlined />} onClick={openEdit}>
+              编辑
+            </Button>
+          ) : undefined
+        }
       />
 
       <div className="card" style={{ padding: 24 }}>
@@ -127,11 +151,9 @@ export function TenantDetail() {
           size="middle"
           styles={{ label: { width: 120, fontWeight: 500 } }}
         >
-          <Descriptions.Item label="租户名称">
-            {detail.name}
-          </Descriptions.Item>
+          <Descriptions.Item label="租户名称">{detail.name}</Descriptions.Item>
           <Descriptions.Item label="显示名称">
-            {detail.displayName ?? '-'}
+            {detail.displayName ?? "-"}
           </Descriptions.Item>
           <Descriptions.Item label="状态">
             <Tag color={tenantStatusColor(detail.status)}>
@@ -141,7 +163,7 @@ export function TenantDetail() {
           <Descriptions.Item label="角色">
             {detail.roleNames.length > 0
               ? detail.roleNames.map((r) => <Tag key={r}>{r}</Tag>)
-              : '-'}
+              : "-"}
           </Descriptions.Item>
           <Descriptions.Item label="创建时间">
             {formatTimestamp(detail.createdAt)}
@@ -154,11 +176,11 @@ export function TenantDetail() {
         {detail.permissionNames && detail.permissionNames.length > 0 && (
           <div style={{ marginTop: 24 }}>
             <div style={{ fontWeight: 500, marginBottom: 8 }}>权限列表</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {detail.permissionNames.map((p) => {
-                const isPlatform = p.startsWith('platform:');
+                const isPlatform = p.startsWith("platform:");
                 return (
-                  <Tag key={p} color={isPlatform ? 'purple' : 'blue'}>
+                  <Tag key={p} color={isPlatform ? "purple" : "blue"}>
                     {p}
                   </Tag>
                 );

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { TenantTable } from '@/components/platform/tenant/TenantTable';
+import { TenantTable } from "@/components/platform/tenant/TenantTable";
 
 export default function PlatformTenantsPage() {
   return <TenantTable />;

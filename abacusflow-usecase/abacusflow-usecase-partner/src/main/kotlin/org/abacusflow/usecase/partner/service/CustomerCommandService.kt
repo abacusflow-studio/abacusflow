@@ -1,7 +1,6 @@
 package org.abacusflow.usecase.partner.service
 
 import org.abacusflow.usecase.commons.security.RequiredAuthority
-
 import org.abacusflow.usecase.partner.CreateCustomerInputTO
 import org.abacusflow.usecase.partner.CustomerTO
 import org.abacusflow.usecase.partner.UpdateCustomerInputTO
