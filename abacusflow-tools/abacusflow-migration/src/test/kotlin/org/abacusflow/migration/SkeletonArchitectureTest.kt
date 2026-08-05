@@ -29,7 +29,7 @@ class SkeletonArchitectureTest {
         val tasks = StandardMigrationPlan.create().tasks
         val taskIds = tasks.map { it.id }
 
-        assertEquals(MigrationTaskId.entries, taskIds)
+        assertEquals(ACTIVE_TASK_IDS, taskIds)
         tasks.forEachIndexed { index, task ->
             val predecessors = taskIds.take(index).toSet()
             assertTrue(
@@ -126,12 +126,29 @@ class SkeletonArchitectureTest {
     fun `finalize selection resolves the complete plan`() {
         val closure = MigrationSelection.resolveClosure(setOf(MigrationTaskId.FINALIZE))
 
-        assertEquals(MigrationTaskId.entries.toSet(), closure)
+        assertEquals(ACTIVE_TASK_IDS.toSet(), closure)
     }
 
     @Test
     fun `subcommand help never initializes the migration application`() {
         assertEquals(0, CommandLine(MigrateCommand()).execute("--help"))
         assertEquals(0, CommandLine(ValidateCommand()).execute("--help"))
+    }
+
+    private companion object {
+        val ACTIVE_TASK_IDS =
+            listOf(
+                MigrationTaskId.TENANT,
+                MigrationTaskId.PRODUCT,
+                MigrationTaskId.DEPOT,
+                MigrationTaskId.SUPPLIER,
+                MigrationTaskId.PURCHASE_ORDER,
+                MigrationTaskId.PURCHASE_ORDER_ITEM,
+                MigrationTaskId.INVENTORY,
+                MigrationTaskId.CUSTOMER,
+                MigrationTaskId.SALE_ORDER,
+                MigrationTaskId.SALE_ORDER_ITEM,
+                MigrationTaskId.FINALIZE,
+            )
     }
 }

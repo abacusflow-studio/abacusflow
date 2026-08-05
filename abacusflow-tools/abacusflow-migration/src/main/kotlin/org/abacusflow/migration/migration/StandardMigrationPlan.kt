@@ -84,17 +84,7 @@ object StandardMigrationPlan {
                 // ===== 第一层：基础实体 =====
                 // 租户是 V2 多租户架构的根基，必须最先创建
                 TenantMigration(),
-                // 用户迁移依赖租户（每个用户必须归属某个租户）
-                UserMigration(),
-                // 成员关系迁移依赖租户和用户（建立用户与租户的归属关系）
-                MembershipMigration(),
-                // ===== 第二层：权限体系 =====
-                // 角色迁移依赖租户（V2 角色是租户级的 tenant_role）
-                RoleMigration(),
-                // 权限迁移依赖租户（V2 权限按租户分配）
-                PermissionMigration(),
-                // 角色-权限关联依赖角色和权限都已迁移完成
-                RolePermissionMigration(),
+                // 用户、成员、角色和权限直接使用 V2 Flyway seed，不从 V1 迁移。
                 // ===== 第三层：业务实体 =====
                 // 产品迁移依赖租户（V2 产品是租户级的）
                 ProductMigration(),

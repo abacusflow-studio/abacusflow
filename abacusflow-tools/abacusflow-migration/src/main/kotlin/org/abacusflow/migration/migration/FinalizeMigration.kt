@@ -30,9 +30,8 @@ import org.jooq.impl.DSL
  *    需由数据库负责人审核，不能自动执行未经审核的 DDL
  *
  * 【与其他组件的连接】
- * - 依赖 ROLE_PERMISSION 任务：代表授权层（第二层）已全部完成
  * - 依赖 SALE_ORDER_ITEM 任务：代表交易层（第四层）已全部完成，
- *   这两个依赖覆盖了所有前置业务任务的间接依赖链
+ *   与 PURCHASE_ORDER_ITEM 一起覆盖所有业务数据的间接依赖链
  * - 被依赖：无——本任务是迁移管线的最后一个任务
  * - MigrationRunner：在所有前置任务成功后调用本任务的 execute，
  *   本任务返回成功后，MigrationRunner 标记整次 run 为"完成"
@@ -60,7 +59,6 @@ class FinalizeMigration :
          * 确保收尾操作在所有业务数据迁移完成后才执行。
          */
         setOf(
-            MigrationTaskId.ROLE_PERMISSION,
             MigrationTaskId.PURCHASE_ORDER_ITEM,
             MigrationTaskId.SALE_ORDER_ITEM,
         ),

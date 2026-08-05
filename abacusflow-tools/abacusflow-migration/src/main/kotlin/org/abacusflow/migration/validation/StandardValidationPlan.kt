@@ -72,17 +72,7 @@ object StandardValidationPlan {
             // ===== 第一层：基础实体 =====
             // 租户校验：默认租户唯一、状态正确、tenant_placement 有效
             TenantValidator(),
-            // 用户校验：用户总数、ID 集合摘要、关键字段空值/重复
-            UserValidator(),
-            // 成员关系校验：默认 membership 唯一、无孤儿引用
-            MembershipValidator(),
-            // ===== 第二层：授权体系 =====
-            // 角色校验：角色数量、业务键唯一、默认租户归属
-            RoleValidator(),
-            // 权限校验：code/name 映射完整、scope 合法、无静默丢弃
-            PermissionValidator(),
-            // 角色-权限关联校验：关联数量、孤儿记录、业务键比对
-            RolePermissionValidator(),
+            // 用户和授权数据未从 V1 迁移，不做源/目标数量对比。
             // ===== 第三层：产品与库存 =====
             // 产品校验：分类树、产品数量、ID/条码集合、引用完整性
             ProductValidator(),

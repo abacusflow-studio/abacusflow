@@ -10,7 +10,7 @@ sequence 对齐、dry-run 计划以及可执行 fat JAR。
 
 ## 数据范围
 
-标准计划共 16 个任务，固定顺序如下：
+标准计划注册 11 个任务，用户和授权相关任务已关闭。
 
 ```text
 tenant
@@ -30,8 +30,6 @@ tenant
 
 覆盖的 V1 表：
 
-- 用户与身份：`user_account`、`user_external_identity`
-- 授权：`role`、`permission`、`role_permission`、`user_role`
 - 商品：`product_category`、`product`
 - 仓储采购：`depot`、`supplier`、`purchase_order`、`purchase_order_item`
 - 库存：`inventory`、`inventory_unit`
@@ -42,9 +40,7 @@ tenant
 
 ## ID 与重复执行策略
 
-- `user_account`、`user_external_identity` 和同名业务表保留 V1 主键；原有业务外键因此可直接保留。
-- 角色和权限会与 V2 seed 按名称合并，并写入 `v1_role_id_map`、`v1_permission_id_map`。
-- 用户保留 ID，同时写入 `v1_user_id_map`，供 membership 和成员角色转换使用。
+- 同名业务表保留 V1 主键；原有业务外键因此可直接保留。
 - 同一主键重复执行采用确定性 upsert；源数据覆盖该主键下的目标字段。
 - 非主键唯一约束冲突不会被吞掉，会回滚整批并在 `migration_error` 中记录失败源记录。
 - checkpoint 与业务写入处于同一个目标库事务；失败时二者一起回滚。
@@ -80,7 +76,7 @@ src/main/kotlin/org/abacusflow/migration/
 ├── migration/
 │   ├── TableMigrationSupport.kt    保留 ID 表的通用分页/upsert 模板
 │   ├── V1V2Columns.kt              V1/V2 权威列、类型和显式 PostgreSQL cast
-│   ├── *Migration.kt               16 个具体任务
+│   ├── *Migration.kt               16 个具体实现，标准计划注册 11 个
 │   └── mapping/                     角色、权限和字段转换规则
 ├── checkpoint/                     checkpoint 模型与 jOOQ 仓储
 ├── error/                          独立短事务错误仓储

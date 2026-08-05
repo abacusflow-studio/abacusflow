@@ -276,12 +276,7 @@ class DefaultMigrationApplication(
 
         // ===== 执行验证器 =====
         // 从 StandardValidationPlan 获取所有验证器实例
-        val selectedTaskIds =
-            when (selection) {
-                MigrationSelection.All -> org.abacusflow.migration.framework.MigrationTaskId.entries.toSet()
-                is MigrationSelection.Selected -> MigrationSelection.resolveClosure(selection.taskIds)
-            }
-        val validators = StandardValidationPlan.create().filter { it.taskId in selectedTaskIds }
+        val validators = StandardValidationPlan.create().filter { it.taskId in requiredTasks }
         // 逐个执行验证器，捕获未实现的验证器异常
         val results =
             validators.map { validator ->

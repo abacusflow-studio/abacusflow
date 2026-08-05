@@ -286,7 +286,7 @@ CREATE TABLE customer (
     tenant_id BIGINT NOT NULL REFERENCES tenant(id),
     created_at TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_customer_tenant_name UNIQUE (tenant_id, name)
+    CONSTRAINT uq_customer_tenant_name UNIQUE (tenant_id, name, phone)
 );
 
 CREATE TABLE supplier (
@@ -299,7 +299,7 @@ CREATE TABLE supplier (
     tenant_id BIGINT NOT NULL REFERENCES tenant(id),
     created_at TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP(6) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_supplier_tenant_name UNIQUE (tenant_id, name)
+    CONSTRAINT uq_supplier_tenant_name UNIQUE (tenant_id, name, phone)
 );
 
 -- ✅ 仓库

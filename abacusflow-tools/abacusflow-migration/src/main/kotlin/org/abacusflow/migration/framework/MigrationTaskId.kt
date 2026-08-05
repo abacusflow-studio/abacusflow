@@ -239,7 +239,6 @@ sealed interface MigrationSelection {
                 MigrationTaskId.SALE_ORDER_ITEM to setOf(MigrationTaskId.SALE_ORDER),
                 MigrationTaskId.FINALIZE to
                     setOf(
-                        MigrationTaskId.ROLE_PERMISSION,
                         MigrationTaskId.PURCHASE_ORDER_ITEM,
                         MigrationTaskId.SALE_ORDER_ITEM,
                     ),
