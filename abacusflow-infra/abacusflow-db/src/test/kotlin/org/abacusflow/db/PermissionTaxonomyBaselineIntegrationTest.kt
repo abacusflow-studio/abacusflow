@@ -28,6 +28,16 @@ class PermissionTaxonomyBaselineIntegrationTest {
     @BeforeAll
     fun initializeDatabase() {
         postgres.start()
+        ownerConnection().use { connection ->
+            connection.createStatement().use { statement ->
+                statement.execute(
+                    """
+                    CREATE ROLE abacusflow_api LOGIN PASSWORD 'api-password';
+                    CREATE ROLE abacusflow_cube LOGIN PASSWORD 'cube-password';
+                    """.trimIndent(),
+                )
+            }
+        }
         flyway =
             Flyway.configure()
                 .dataSource(postgres.jdbcUrl, postgres.username, postgres.password)
@@ -71,6 +81,25 @@ class PermissionTaxonomyBaselineIntegrationTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    fun `database login roles inherit only their intended permission roles`() {
+        ownerConnection().use { connection ->
+            assertEquals(1, roleMembershipCount(connection, "abacusflow_api", "abacusflow_runtime"))
+            assertEquals(1, roleMembershipCount(connection, "abacusflow_cube", "abacusflow_cube_reader"))
+            assertEquals(0, roleMembershipCount(connection, "abacusflow_cube", "abacusflow_runtime"))
+            assertEquals(0, roleMembershipCount(connection, "abacusflow_api", "abacusflow_cube_reader"))
+            assertEquals(
+                0,
+                queryLong(
+                    connection,
+                    "SELECT count(*) FROM pg_roles WHERE rolname IN " +
+                        "('abacusflow_api', 'abacusflow_cube') " +
+                        "AND (rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls)",
+                ),
+            )
         }
     }
 
@@ -192,6 +221,19 @@ class PermissionTaxonomyBaselineIntegrationTest {
                     "JOIN tenant_role role ON role.id = link.role_id WHERE role.name = '$roleName' AND role.tenant_id = 1",
             )
         }
+
+    private fun roleMembershipCount(
+        connection: Connection,
+        memberRole: String,
+        grantedRole: String,
+    ): Long =
+        queryLong(
+            connection,
+            "SELECT count(*) FROM pg_auth_members membership " +
+                "JOIN pg_roles granted_role ON granted_role.oid = membership.roleid " +
+                "JOIN pg_roles member_role ON member_role.oid = membership.member " +
+                "WHERE member_role.rolname = '$memberRole' AND granted_role.rolname = '$grantedRole'",
+        )
 
     private fun queryLong(
         connection: Connection,

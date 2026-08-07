@@ -477,22 +477,3 @@ ALTER SEQUENCE tenant_invitation_id_seq RESTART WITH 100;
 ALTER SEQUENCE tenant_placement_id_seq RESTART WITH 100;
 ALTER SEQUENCE platform_role_id_seq RESTART WITH 100;
 ALTER SEQUENCE platform_user_role_id_seq RESTART WITH 100;
-
--- ✅ 运行时数据库角色权限（登录角色由 script/initdb/01-create-runtime-role.sh 创建）
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'abacusflow_runtime') THEN
-        CREATE ROLE abacusflow_runtime
-            NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
-    END IF;
-END
-$$;
-
-GRANT USAGE ON SCHEMA public TO abacusflow_runtime;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO abacusflow_runtime;
-GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO abacusflow_runtime;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO abacusflow_runtime;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO abacusflow_runtime;
