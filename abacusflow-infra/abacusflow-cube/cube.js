@@ -12,138 +12,20 @@ const PostgresDriver = require('@cubejs-backend/postgres-driver');
  */
 const devMode = process.env.CUBEJS_DEV_MODE === 'true';
 
-/**
- * Cube 支持的认证模式：
- *
- * shared-secret
- *   AbacusFlow Server 自己签发 Cube Token，
- *   Cube 使用共享密钥验证 JWT。
- *
- * jwk
- *   Cube 通过 JWK URL 获取公钥，
- *   例如直接验证 Auth0 / OIDC Provider 签发的 JWT。
- */
-const SUPPORTED_AUTH_MODES = ['shared-secret', 'jwk'];
-
-/**
- * JWK 模式相关环境变量。
- *
- * shared-secret 模式下明确禁止配置这些变量，
- * 避免 Docker / 宿主机继承的环境变量意外开启 Cube JWT/JWK 验证。
- */
-const JWK_ENVIRONMENT_VARIABLES = [
-  'CUBEJS_JWK_URL',
-  'CUBEJS_JWT_AUDIENCE',
-  'CUBEJS_JWT_ISSUER',
-  'CUBEJS_JWT_ALGS',
-];
-
-
 // ============================================================================
-// 2. 环境变量工具函数
+// 2. Cube 原生认证配置校验
 // ============================================================================
 
 /**
- * 获取可选环境变量。
+ * 认证完全交给 Cube 官方环境变量处理，不在 cube.js 中重复实现：
  *
- * - 自动 trim
- * - 空字符串视为未配置
+ * - 未配置 CUBEJS_JWK_URL：Cube 使用 CUBEJS_API_SECRET 验证共享密钥 JWT。
+ * - 配置 CUBEJS_JWK_URL：Cube 使用 JWK、issuer、audience 等官方配置验证 JWT。
  *
- * @param {string} name 环境变量名称
- * @returns {string | undefined}
+ * Dockerfile 和 shared-secret 部署中不能写入空的 CUBEJS_JWK_* / CUBEJS_JWT_*
+ * 变量，否则 Cube 仍可能将“存在但为空”的变量识别为 JWK 校验配置。
  */
-function getOptionalEnvironmentVariable(name) {
-  return process.env[name]?.trim() || undefined;
-}
-
-/**
- * 获取必需环境变量。
- *
- * 如果变量不存在或者为空，则直接在 Cube 启动阶段失败，
- * 避免服务启动成功后才在查询阶段暴露配置错误。
- *
- * @param {string} name 环境变量名称
- * @param {string} [condition] 补充错误条件说明
- * @returns {string}
- */
-function requireEnvironmentVariable(name, condition) {
-  const value = getOptionalEnvironmentVariable(name);
-
-  if (!value) {
-    throw new Error(
-      `${name} must be set${condition ? ` ${condition}` : ''}`,
-    );
-  }
-
-  return value;
-}
-
-/**
- * 禁止指定环境变量出现。
- *
- * 注意这里使用 Object.hasOwn，而不是判断值是否为空。
- *
- * 这是故意的：
- * 即使 Docker 中存在：
- *
- *   CUBEJS_JWK_URL=
- *
- * 也会被认为“已经配置”。
- *
- * 这样可以防止 Cube 自身读取官方环境变量后，
- * 意外启用另一套 JWT 验证逻辑。
- *
- * @param {string[]} names
- * @param {string} condition
- */
-function rejectEnvironmentVariables(names, condition) {
-  const configuredNames = names.filter((name) =>
-    Object.hasOwn(process.env, name),
-  );
-
-  if (configuredNames.length > 0) {
-    throw new Error(
-      `${configuredNames.join(', ')} must not be set ${condition}`,
-    );
-  }
-}
-
-
-// ============================================================================
-// 3. 认证配置校验
-// ============================================================================
-
-/**
- * Cube 官方使用 CUBEJS_JWK_URL。
- *
- * CUBEJS_JWT_JWK_URL 不是当前项目支持的配置项，
- * 显式拒绝它可以避免因为变量名称写错导致难以排查的问题。
- */
-if (Object.hasOwn(process.env, 'CUBEJS_JWT_JWK_URL')) {
-  throw new Error(
-    'CUBEJS_JWT_JWK_URL is not supported; use CUBEJS_JWK_URL in jwk mode',
-  );
-}
-
-const authMode = requireEnvironmentVariable(
-  'CUBEJS_AUTH_MODE',
-).toLowerCase();
-
-if (!SUPPORTED_AUTH_MODES.includes(authMode)) {
-  throw new Error(
-    'CUBEJS_AUTH_MODE must be either shared-secret or jwk',
-  );
-}
-
-/**
- * Cube API Secret。
- *
- * 即使是 JWK 模式仍然保留该配置检查，
- * 因为 Cube 自身部分内部能力仍可能依赖 CUBEJS_API_SECRET。
- */
-const apiSecret = requireEnvironmentVariable(
-  'CUBEJS_API_SECRET',
-);
+const apiSecret = process.env.CUBEJS_API_SECRET?.trim() || '';
 
 if (!devMode && apiSecret.length < 32) {
   throw new Error(
@@ -151,91 +33,8 @@ if (!devMode && apiSecret.length < 32) {
   );
 }
 
-/**
- * shared-secret 模式下禁止出现 JWK 配置。
- *
- * 原因不是这些变量一定会被下面的代码读取，
- * 而是 Cube 本身也可能直接读取官方 JWT 环境变量。
- *
- * 因此必须从配置层阻止两套认证机制同时存在。
- */
-if (authMode === 'shared-secret') {
-  rejectEnvironmentVariables(
-    JWK_ENVIRONMENT_VARIABLES,
-    'when CUBEJS_AUTH_MODE=shared-secret',
-  );
-}
-
-/**
- * 解析 JWK 模式允许使用的 JWT 签名算法。
- *
- * 默认：
- *   RS256
- *
- * 也支持：
- *   CUBEJS_JWT_ALGS=RS256,RS512
- *
- * @returns {string[]}
- */
-function getConfiguredJwtAlgorithms() {
-  const algorithms = (
-    getOptionalEnvironmentVariable('CUBEJS_JWT_ALGS') || 'RS256'
-  )
-    .split(',')
-    .map((algorithm) => algorithm.trim())
-    .filter(Boolean);
-
-  if (algorithms.length === 0) {
-    throw new Error(
-      'CUBEJS_JWT_ALGS must contain at least one algorithm ' +
-      'when CUBEJS_AUTH_MODE=jwk',
-    );
-  }
-
-  return algorithms;
-}
-
-/**
- * 根据认证模式构造 Cube JWT 配置。
- *
- * shared-secret 模式：
- *   返回 undefined，不向 Cube 注入 JWK 配置。
- *
- * jwk 模式：
- *   要求完整配置 URL / audience / issuer / algorithms。
- */
-function createJwtConfig() {
-  if (authMode !== 'jwk') {
-    return undefined;
-  }
-
-  return {
-    jwkUrl: requireEnvironmentVariable(
-      'CUBEJS_JWK_URL',
-      'when CUBEJS_AUTH_MODE=jwk',
-    ),
-
-    audience: requireEnvironmentVariable(
-      'CUBEJS_JWT_AUDIENCE',
-      'when CUBEJS_AUTH_MODE=jwk',
-    ),
-
-    issuer: [
-      requireEnvironmentVariable(
-        'CUBEJS_JWT_ISSUER',
-        'when CUBEJS_AUTH_MODE=jwk',
-      ),
-    ],
-
-    algorithms: getConfiguredJwtAlgorithms(),
-  };
-}
-
-const jwt = createJwtConfig();
-
-
 // ============================================================================
-// 4. 租户上下文
+// 3. 租户上下文
 // ============================================================================
 
 /**
@@ -289,7 +88,7 @@ function tenantContextId(tenantId) {
 
 
 // ============================================================================
-// 5. PostgreSQL Driver：注入 PostgreSQL RLS 租户上下文
+// 4. PostgreSQL Driver：注入 PostgreSQL RLS 租户上下文
 // ============================================================================
 
 /**
@@ -359,7 +158,7 @@ class TenantPostgresDriver extends PostgresDriver {
 
 
 // ============================================================================
-// 6. Query Rewrite：查询层再次强制增加 tenant_id 条件
+// 5. Query Rewrite：查询层再次强制增加 tenant_id 条件
 // ============================================================================
 
 /**
@@ -462,17 +261,10 @@ function rewriteQueryForTenant(query, securityContext) {
 
 
 // ============================================================================
-// 7. Cube 配置导出
+// 6. Cube 配置导出
 // ============================================================================
 
 module.exports = {
-  /**
-   * 仅 JWK 模式下注入 JWT/JWK 配置。
-   *
-   * shared-secret 模式下不设置 jwt 字段。
-   */
-  ...(jwt ? { jwt } : {}),
-
   /**
    * 按 tenantId 隔离 Cube App。
    *

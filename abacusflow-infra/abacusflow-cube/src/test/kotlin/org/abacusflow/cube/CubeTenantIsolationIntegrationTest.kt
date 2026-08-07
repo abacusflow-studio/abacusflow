@@ -78,7 +78,6 @@ class CubeTenantIsolationIntegrationTest {
                 withNetwork(network)
                 withExposedPorts(4000)
                 withEnv("CUBEJS_API_SECRET", CUBE_API_SECRET)
-                withEnv("CUBEJS_AUTH_MODE", "shared-secret")
                 withEnv("CUBEJS_DEV_MODE", "false")
                 withEnv("CUBEJS_DB_TYPE", "postgres")
                 withEnv("CUBEJS_DB_HOST", "host.testcontainers.internal")
