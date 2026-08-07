@@ -54,7 +54,7 @@ class PermissionTaxonomyBaselineIntegrationTest {
 
     @Test
     fun `fresh database applies only schema and seed migrations`() {
-        assertEquals(listOf("001", "002"), flyway.info().applied().map { it.version.version })
+        assertEquals(listOf("001", "002", "003"), flyway.info().applied().map { it.version.version })
 
         ownerConnection().use { connection ->
             assertEquals(51, queryLong(connection, "SELECT count(*) FROM permission"))
@@ -85,7 +85,7 @@ class PermissionTaxonomyBaselineIntegrationTest {
                 0,
                 queryLong(
                     connection,
-                    "SELECT count(*) FROM role_permission link " +
+                    "SELECT count(*) FROM tenant_role_permission link " +
                         "JOIN permission ON permission.id = link.permission_id " +
                         "WHERE permission.scope = 'PLATFORM'",
                 ),
@@ -94,8 +94,8 @@ class PermissionTaxonomyBaselineIntegrationTest {
                 0,
                 queryLong(
                     connection,
-                    "SELECT count(*) FROM role_permission link " +
-                        "JOIN role ON role.id = link.role_id " +
+                    "SELECT count(*) FROM tenant_role_permission link " +
+                        "JOIN tenant_role role ON role.id = link.role_id " +
                         "JOIN permission ON permission.id = link.permission_id " +
                         "WHERE role.name IN ('reader', 'operator') AND permission.scope = 'TENANT'",
                 ),
@@ -188,8 +188,8 @@ class PermissionTaxonomyBaselineIntegrationTest {
         } else {
             queryLong(
                 connection,
-                "SELECT count(*) FROM role_permission link " +
-                    "JOIN role ON role.id = link.role_id WHERE role.name = '$roleName' AND role.tenant_id = 1",
+                "SELECT count(*) FROM tenant_role_permission link " +
+                    "JOIN tenant_role role ON role.id = link.role_id WHERE role.name = '$roleName' AND role.tenant_id = 1",
             )
         }
 

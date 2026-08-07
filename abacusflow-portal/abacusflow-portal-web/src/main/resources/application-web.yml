@@ -22,6 +22,8 @@ management:
       show-details: never
 
 abacusflow:
+  cube:
+    api-secret: ${ABACUSFLOW_CUBE_API_SECRET}
   cors:
     allowed-origin-patterns: ${ABACUSFLOW_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,https://abacusflow-web.vercel.app,https://abacusflow-web-*.vercel.app}
   oidc:

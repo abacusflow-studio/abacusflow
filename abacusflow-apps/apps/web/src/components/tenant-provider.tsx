@@ -7,6 +7,10 @@ import {
   setStoredTenantId,
   clearTenantContext,
 } from "@abacusflow/core";
+import {
+  clearCubeRequestState,
+  retainCubeRequestTenant,
+} from "../lib/cube-request-coordinator";
 
 interface TenantContextType {
   tenantStatus:
@@ -57,6 +61,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           `Tenant ${tenantId} is not available to the current user`,
         );
       }
+      retainCubeRequestTenant(tenantId);
       setCurrentTenantId(tenantId);
       setStoredTenantId(tenantId);
     },
@@ -82,6 +87,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       )
         ? candidateId
         : null;
+      retainCubeRequestTenant(validatedId);
       setCurrentTenantId(validatedId);
       setStoredTenantId(validatedId);
     },
@@ -92,6 +98,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     setTenantStatus("LOADING");
     setTenants([]);
     setCurrentTenantId(null);
+    clearCubeRequestState();
     clearTenantContext();
   }, []);
 

@@ -28,11 +28,16 @@
 ## 5. Files, Cube, And Frontend Context
 
 - [x] 5.1 Replace permanent public file URLs with private short-lived access while retaining tenant-prefixed keys.
-- [x] 5.2 Add expiration to backend Cube tokens and make Web Cube queries use them.
+- [x] 5.2 Add expiration to backend Cube tokens, fail closed on missing signing configuration, and make Web Cube queries use them.
 - [x] 5.3 Add the tenant header to direct Web/mobile upload requests.
 - [x] 5.4 Validate stored tenant IDs against current memberships and clear tenant-local client state on switch/logout.
+- [x] 5.5 Inject one generated Cube signing secret into the backend and Cube, remove the committed secret, and disable Cube production development mode.
+- [x] 5.6 Cache Cube tokens per selected tenant, deduplicate in-flight token requests, and clear analytics state on switch/logout.
+- [x] 5.7 Provision a dedicated read-only Cube database identity and keep PostgreSQL RLS active by setting the verified tenant on Cube connections.
+- [x] 5.8 Bound concurrent dashboard Cube queries to reduce database and Cube memory pressure.
+- [x] 5.9 Add real two-tenant Cube/PostgreSQL tests for joined queries and forged tenant tokens.
 
 ## 6. Verification
 
-- [ ] 6.1 Run backend tests, Web lint/build checks, mobile typecheck/lint, and `git diff --check`.
+- [x] 6.1 Run backend tests, Web lint/build checks, mobile typecheck/lint, and `git diff --check`.
 - [x] 6.2 Execute the PostgreSQL cross-tenant matrix with two tenants and a restricted runtime DB identity.

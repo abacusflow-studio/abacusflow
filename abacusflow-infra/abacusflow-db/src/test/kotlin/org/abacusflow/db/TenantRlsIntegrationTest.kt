@@ -144,7 +144,7 @@ class TenantRlsIntegrationTest {
                 0,
                 queryInt(
                     connection,
-                    "SELECT count(*) FROM role_permission link " +
+                    "SELECT count(*) FROM tenant_role_permission link " +
                         "JOIN permission permission ON permission.id = link.permission_id " +
                         "WHERE permission.scope = 'PLATFORM'",
                 ),

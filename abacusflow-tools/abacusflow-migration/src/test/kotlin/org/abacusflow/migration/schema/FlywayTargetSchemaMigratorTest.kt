@@ -56,7 +56,7 @@ class FlywayTargetSchemaMigratorTest {
                     "SELECT COUNT(*) FROM $TARGET_SCHEMA.flyway_schema_history WHERE success AND version IS NOT NULL",
                 ).use { result ->
                     result.next()
-                    assertEquals(2, result.getInt(1))
+                        assertEquals(3, result.getInt(1))
                 }
                 statement.executeQuery("SELECT COUNT(*) FROM $TARGET_SCHEMA.tenant WHERE name = 'default'").use { result ->
                     result.next()

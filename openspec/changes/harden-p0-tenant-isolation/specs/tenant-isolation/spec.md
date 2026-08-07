@@ -52,6 +52,23 @@ Scheduled work, files, frontend requests, and Cube analytics MUST retain the sel
 - **THEN** it uses a short-lived backend-issued token containing the selected tenant ID
 - **AND** Cube appends the matching tenant filter
 
+#### Scenario: Cube signing secret is missing
+- **WHEN** the backend or Cube starts without the shared production signing secret
+- **THEN** startup fails instead of serving an empty token or unauthenticated analytics API
+
+#### Scenario: Concurrent dashboard queries
+- **WHEN** multiple charts mount for the same selected tenant
+- **THEN** the Web client performs one in-flight Cube token request
+- **AND** bounds concurrent Cube data requests
+
+#### Scenario: Forged Cube tenant token
+- **WHEN** a Cube request carries a token with an invalid signature or a tenant outside the authenticated user's memberships
+- **THEN** the request is rejected before cross-tenant analytics data is returned
+
+#### Scenario: Joined Cube query
+- **WHEN** a Cube query joins tenant-scoped fact and dimension tables
+- **THEN** PostgreSQL RLS and Cube filtering restrict every joined table to the token tenant
+
 ### Requirement: Inventory concurrency does not oversell
 Concurrent reservations or deductions for the same inventory unit MUST serialize or fail atomically without producing a negative available quantity or a committed order without stock.
 

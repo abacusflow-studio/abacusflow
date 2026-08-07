@@ -40,6 +40,10 @@ The scheduler coordinator enumerates active tenants without wrapping the whole l
 
 Stored object keys retain `tenants/{tenantId}/...`; clients receive an application-controlled or presigned short-lived URL rather than a permanent public URL. Cube queries use a backend-issued JWT containing `tenantId` and `exp`, and Cube always appends the tenant predicate.
 
+Cube authentication fails closed in production: the backend signing secret and Cube verification secret come from the same deployment secret, Cube development mode is disabled, and a missing or weak signing secret prevents startup. The Web client caches the short-lived token in memory per selected tenant, deduplicates concurrent token requests, and clears the cache on tenant switch or logout.
+
+Cube connects through a dedicated read-only, non-superuser PostgreSQL role. A tenant-specific query orchestrator owns a small connection pool, and the Postgres driver sets `app.tenant_id` from the verified Cube security context before every query so PostgreSQL RLS remains an independent backstop. Cube query concurrency is bounded to avoid a dashboard mount creating an unbounded database burst. The P0 single-instance deployment uses the in-process memory queue/cache explicitly; introducing a separate Cube Store process is deferred until capacity justifies its additional baseline memory.
+
 ## Risks / Trade-offs
 
 - Restricting the runtime DB role can expose control-plane flows that accidentally depended on RLS bypass; cover tenant creation and invitation acceptance before enabling it in production.

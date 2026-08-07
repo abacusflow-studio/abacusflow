@@ -48,6 +48,8 @@ bin/
 !.vscode/extensions.json
 
 .env
+.env.*
+!.env.example
 
 ### AbacusFlow Migration CLI local configuration ###
 abacusflow-tools/abacusflow-migration/migration.yml

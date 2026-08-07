@@ -1,74 +1,84 @@
-services:
-  minio:
-    container_name: minio
-    image: minio/minio:latest
-    environment:
-      - MINIO_ROOT_USER=${S3_ACCESS_KEY:-minioadmin}
-      - MINIO_ROOT_PASSWORD=${S3_SECRET_KEY:-minioadmin}
-    volumes:
-      - minio_data:/data
-    networks:
-      - abacusflow-network
-    ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
-    command: server /data --console-address ":9001"
+# 全面启用托管故而废弃
 
-  postgres:
-    container_name: postgres
-    image: postgres:${POSTGRES_VERSION}
-    environment:
-      - TZ=Asia/Shanghai
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_APP_USER=${POSTGRES_APP_USER:-abacusflow_app}
-      - POSTGRES_APP_PASSWORD=${POSTGRES_APP_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./script/initdb:/docker-entrypoint-initdb.d
-    networks:
-      - abacusflow-network
-    expose:
-      - 5432
-    ports:
-      - "${POSTGRES_PORT}:5432"
-
-  cube:
-    container_name: cube
-    image: cubejs/cube:${CUBE_VERSION}
-    environment:
-      - CUBEJS_API_SECRET=123ABCdef*1qaz2wsx3edc4rfv5tgb6yhn7ujm # 仅本地开发用，生产环境改用 Auth0 JWKS（CUBEJS_JWT_URL）验证，无需此项
-      - CUBEJS_DEV_MODE=true
-      - CUBEJS_DB_TYPE=postgres
-      - CUBEJS_DB_HOST=postgres
-      - CUBEJS_DB_PORT=${POSTGRES_PORT}
-      - CUBEJS_DB_NAME=${POSTGRES_DB}
-      - CUBEJS_DB_USER=${POSTGRES_USER}
-      - CUBEJS_DB_PASS=${POSTGRES_PASSWORD}
-#      - CUBEJS_CUBESTORE_HOST=cubestore
-#    depends_on:
-#      - cubestore
-    networks:
-      - abacusflow-network
-    ports:
-      - 4000:4000
-    expose:
-      - 4000
-    volumes:
-      - ./abacusflow-infra/abacusflow-cube:/cube/conf
-
-#  cubestore:
-#    container_name: cubestore
-#    image: cubejs/cubestore:${CUBE_VERSION}
-#    expose:
-#      - 3030
+#services:
+#  minio:
+#    container_name: minio
+#    image: minio/minio:latest
+#    environment:
+#      - MINIO_ROOT_USER=${S3_ACCESS_KEY:-minioadmin}
+#      - MINIO_ROOT_PASSWORD=${S3_SECRET_KEY:-minioadmin}
+#    volumes:
+#      - minio_data:/data
 #    networks:
 #      - abacusflow-network
-networks:
-  abacusflow-network:
-    driver: bridge
-    name: abacusflow-network
-
-volumes:
-  postgres_data:
-  minio_data:
+#    ports:
+#      - "${MINIO_API_PORT:-9000}:9000"
+#      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+#    command: server /data --console-address ":9001"
+#
+#  postgres:
+#    container_name: postgres
+#    image: postgres:${POSTGRES_VERSION}
+#    environment:
+#      - TZ=Asia/Shanghai
+#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#      - POSTGRES_USER=${POSTGRES_USER}
+#      - POSTGRES_USER=${POSTGRES_USER:-abacusflow_app}
+#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#      - POSTGRES_CUBE_USER=${POSTGRES_CUBE_USER:-abacusflow_cube}
+#      - POSTGRES_CUBE_PASSWORD=${POSTGRES_CUBE_PASSWORD:?POSTGRES_CUBE_PASSWORD must be set}
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#      - ./script/initdb:/docker-entrypoint-initdb.d
+#    networks:
+#      - abacusflow-network
+#    expose:
+#      - 5432
+#    ports:
+#      - "${POSTGRES_PORT}:5432"
+#
+#  cube:
+#    container_name: cube
+#    image: cubejs/cube:${CUBE_VERSION}
+#    environment:
+#      - CUBEJS_API_SECRET=${ABACUSFLOW_CUBE_API_SECRET:?ABACUSFLOW_CUBE_API_SECRET must be set}
+#      - CUBEJS_DEV_MODE=${CUBEJS_DEV_MODE:-false}
+#      - CUBEJS_DB_TYPE=postgres
+#      - CUBEJS_DB_HOST=postgres
+#      - CUBEJS_DB_PORT=${POSTGRES_PORT}
+#      - CUBEJS_DB_NAME=${POSTGRES_DB}
+#      - CUBEJS_DB_USER=${POSTGRES_CUBE_USER:-abacusflow_cube}
+#      - CUBEJS_DB_PASS=${POSTGRES_CUBE_PASSWORD:?POSTGRES_CUBE_PASSWORD must be set}
+#      - CUBEJS_DB_MAX_POOL=${CUBEJS_DB_MAX_POOL:-2}
+#      - CUBEJS_CONCURRENCY=${CUBEJS_CONCURRENCY:-2}
+#      - CUBEJS_CACHE_AND_QUEUE_DRIVER=${CUBEJS_CACHE_AND_QUEUE_DRIVER:-memory}
+#      - CUBEJS_SCHEDULED_REFRESH_TIMER=${CUBEJS_SCHEDULED_REFRESH_TIMER:-false}
+##      - CUBEJS_CUBESTORE_HOST=cubestore
+##    depends_on:
+##      - cubestore
+#    networks:
+#      - abacusflow-network
+#    depends_on:
+#      - postgres
+#    ports:
+#      - "127.0.0.1:${ABACUSFLOW_CUBE_PORT:-4000}:4000"
+#    expose:
+#      - 4000
+#    volumes:
+#      - ./abacusflow-infra/abacusflow-cube:/cube/conf
+#
+##  cubestore:
+##    container_name: cubestore
+##    image: cubejs/cubestore:${CUBE_VERSION}
+##    expose:
+##      - 3030
+##    networks:
+##      - abacusflow-network
+#networks:
+#  abacusflow-network:
+#    driver: bridge
+#    name: abacusflow-network
+#
+#volumes:
+#  postgres_data:
+#  minio_data:

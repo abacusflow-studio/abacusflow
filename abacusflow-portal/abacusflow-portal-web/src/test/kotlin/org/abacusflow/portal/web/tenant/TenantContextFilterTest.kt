@@ -278,6 +278,26 @@ class TenantContextFilterTest {
     }
 
     @Test
+    fun `forged tenant header cannot obtain a Cube token`() {
+        val request = mock(HttpServletRequest::class.java)
+        val response = mock(HttpServletResponse::class.java)
+        val filterChain = mock(FilterChain::class.java)
+
+        `when`(request.getHeader("X-Tenant-Id")).thenReturn("2001")
+        `when`(request.requestURI).thenReturn("/api/cube-token")
+        `when`(request.contextPath).thenReturn("")
+        setAuthenticatedUser(
+            userId = 101L,
+            memberships = listOf(membership(1001L)),
+        )
+
+        filter.doFilter(request, response, filterChain)
+
+        verify(response).sendError(403, "User does not have access to tenant 2001")
+        verify(filterChain, never()).doFilter(request, response)
+    }
+
+    @Test
     fun `tenant context is always cleared after filter execution`() {
         val request = mock(HttpServletRequest::class.java)
         val response = mock(HttpServletResponse::class.java)
