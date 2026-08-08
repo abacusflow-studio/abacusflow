@@ -1,9 +1,7 @@
--- Database role bootstrap
--- =======================
--- PostgreSQL users are LOGIN roles. Their passwords are deployment secrets and
--- must never be committed to Flyway migrations. For Supabase, run the following
--- once before Flyway executes this migration, replacing both password
--- placeholders with independent strong random secrets:
+-- 数据库角色、权限与租户 RLS 初始化
+-- ================================
+-- PostgreSQL 用户本质上是 LOGIN 角色，其密码属于部署密钥，不能提交到 Flyway。
+-- Supabase 需要在执行 Flyway 前手动运行一次以下语句，并替换为两个独立强密码：
 --
 -- CREATE ROLE abacusflow_api
 --     LOGIN
@@ -23,7 +21,7 @@
 --     INHERIT
 --     NOBYPASSRLS;
 --
--- This migration then creates the NOLOGIN permission roles and establishes:
+-- 本迁移创建不可登录的权限角色、启用租户 RLS，并建立以下继承关系：
 --
 -- abacusflow_api (LOGIN)
 --   -> abacusflow_runtime (backend read/write privileges, constrained by RLS)
@@ -31,7 +29,7 @@
 -- abacusflow_cube (LOGIN)
 --   -> abacusflow_cube_reader (analytics SELECT-only privileges, constrained by RLS)
 --
--- In executable form, the memberships established below are equivalent to:
+-- 对应的角色继承语句为：
 --
 -- GRANT abacusflow_runtime TO abacusflow_api;
 -- GRANT abacusflow_cube_reader TO abacusflow_cube;
@@ -50,15 +48,52 @@ BEGIN
 END
 $$;
 
--- Permission roles never log in and can never bypass tenant RLS.
+-- 权限角色不可登录，也不能绕过租户 RLS。
 ALTER ROLE abacusflow_runtime
     NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
 
 ALTER ROLE abacusflow_cube_reader
     NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
 
--- The backend API can read and write business data. RLS still restricts every
--- tenant-scoped table by the app.tenant_id connection setting.
+-- ============================================================
+-- 租户行级安全：所有业务查询和写入都受 app.tenant_id 限制
+-- ============================================================
+DO $$
+DECLARE
+    target_table TEXT;
+BEGIN
+    FOREACH target_table IN ARRAY ARRAY[
+        'product',
+        'product_category',
+        'inventory',
+        'inventory_unit',
+        'purchase_order',
+        'purchase_order_item',
+        'sale_order',
+        'sale_order_item',
+        'customer',
+        'supplier',
+        'depot',
+        'feedback',
+        'tenant_role'
+    ]
+    LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', target_table);
+        EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', target_table);
+        EXECUTE format(
+            'CREATE POLICY %I ON %I ' ||
+            'USING (tenant_id = NULLIF(CURRENT_SETTING(''app.tenant_id'', TRUE), '''')::BIGINT) ' ||
+            'WITH CHECK (tenant_id = NULLIF(CURRENT_SETTING(''app.tenant_id'', TRUE), '''')::BIGINT)',
+            target_table || '_tenant_policy',
+            target_table
+        );
+    END LOOP;
+END
+$$;
+
+-- ============================================================
+-- 后端 API：业务表读写权限，实际可见行仍由 RLS 限制
+-- ============================================================
 GRANT USAGE ON SCHEMA public TO abacusflow_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO abacusflow_runtime;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO abacusflow_runtime;
@@ -68,7 +103,9 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO abacusflow_runtime;
 
--- Cube can only read the tables exposed by the analytics schema.
+-- ============================================================
+-- Cube：仅授予分析模型所需业务表的只读权限
+-- ============================================================
 GRANT USAGE ON SCHEMA public TO abacusflow_cube_reader;
 GRANT SELECT ON TABLE
     customer,
@@ -84,6 +121,9 @@ GRANT SELECT ON TABLE
     supplier
 TO abacusflow_cube_reader;
 
+-- ============================================================
+-- 登录账号继承权限角色；账号不存在时由部署流程先行创建
+-- ============================================================
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'abacusflow_api') THEN

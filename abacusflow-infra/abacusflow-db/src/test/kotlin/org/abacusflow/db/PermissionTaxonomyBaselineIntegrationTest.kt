@@ -63,7 +63,7 @@ class PermissionTaxonomyBaselineIntegrationTest {
     }
 
     @Test
-    fun `fresh database applies only schema and seed migrations`() {
+    fun `fresh database applies the three initialization migrations`() {
         assertEquals(listOf("001", "002", "003"), flyway.info().applied().map { it.version.version })
 
         ownerConnection().use { connection ->

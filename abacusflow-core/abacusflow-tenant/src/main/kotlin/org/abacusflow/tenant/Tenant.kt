@@ -11,6 +11,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import org.abacusflow.commons.tenant.TenantFilterParameterResolver
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.FilterDef
 import org.hibernate.annotations.JdbcType
@@ -37,7 +38,14 @@ import java.time.Instant
 )
 @FilterDef(
     name = "tenantFilter",
-    parameters = [ParamDef(name = "tenantId", type = Long::class)],
+    parameters = [
+        ParamDef(
+            name = "tenantId",
+            type = Long::class,
+            resolver = TenantFilterParameterResolver::class,
+        ),
+    ],
+    autoEnabled = true,
     applyToLoadByKey = true,
 )
 class Tenant(

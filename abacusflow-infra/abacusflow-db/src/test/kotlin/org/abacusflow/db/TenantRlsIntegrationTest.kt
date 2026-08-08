@@ -128,6 +128,32 @@ class TenantRlsIntegrationTest {
     }
 
     @Test
+    fun `database rejects assigning an inventory unit to another tenant depot`() {
+        ownerConnection().use { connection ->
+            val tenantADepotId = seedDepot(connection, tenantA.id, "tenant-a-depot")
+            val tenantBDepotId = seedDepot(connection, tenantB.id, "tenant-b-depot")
+            connection.autoCommit = false
+
+            assertFailsWith<PSQLException> {
+                connection.prepareStatement("UPDATE inventory_unit SET depot_id = ? WHERE id = ?").use { statement ->
+                    statement.setLong(1, tenantBDepotId)
+                    statement.setLong(2, inventoryUnitId)
+                    statement.executeUpdate()
+                }
+            }
+            connection.rollback()
+
+            // 同租户关联仍然允许写入，证明约束只阻止越界关系。
+            connection.prepareStatement("UPDATE inventory_unit SET depot_id = ? WHERE id = ?").use { statement ->
+                statement.setLong(1, tenantADepotId)
+                statement.setLong(2, inventoryUnitId)
+                assertEquals(1, statement.executeUpdate())
+            }
+            connection.rollback()
+        }
+    }
+
+    @Test
     fun `authorization baseline separates tenant memberships and global platform grants`() {
         ownerConnection().use { connection ->
             assertEquals(
@@ -261,6 +287,26 @@ class TenantRlsIntegrationTest {
             }
         }
     }
+
+    private fun seedDepot(
+        connection: Connection,
+        tenantId: Long,
+        name: String,
+    ): Long =
+        connection.prepareStatement(
+            """
+            INSERT INTO depot (capacity, enabled, name, tenant_id)
+            VALUES (100, TRUE, ?, ?)
+            RETURNING id
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, name)
+            statement.setLong(2, tenantId)
+            statement.executeQuery().use { result ->
+                result.next()
+                result.getLong(1)
+            }
+        }
 
     private fun reserveWithLock(
         tenantId: Long,

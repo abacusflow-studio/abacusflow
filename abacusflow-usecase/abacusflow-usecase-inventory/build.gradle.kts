@@ -10,4 +10,5 @@ dependencies {
     implementation(project(":abacusflow-core:abacusflow-depot"))
     implementation(libs.openpdf)
     implementation(libs.poi.ooxml)
+    testImplementation(libs.spring.boot.starter.test)
 }

@@ -8,13 +8,11 @@ import org.springframework.stereotype.Component
 /**
  * 租户上下文自动设置切面。
  *
- * 在每个 @Transactional 方法执行前，自动完成两层租户隔离：
- * 1. 启用 Hibernate Filter（应用层隔离）—— 自动为所有 TenantScopedEntity 查询追加 tenant_id 条件
- * 2. 设置 PostgreSQL RLS 变量（数据库层隔离）—— 即使应用层遗漏，数据库也会拦截跨租户访问
+ * 在每个 @Transactional 方法执行前，设置 PostgreSQL RLS 使用的当前租户变量。
  *
- * 这两层防线确保租户数据隔离的可靠性：
- * - Hibernate Filter 是第一道防线，在应用层自动过滤
- * - PostgreSQL RLS 是第二道防线，在数据库层强制隔离
+ * Hibernate Filter 已通过 `@FilterDef(autoEnabled = true)` 全局自动启用，并由
+ * TenantFilterParameterResolver 从请求上下文解析租户 ID，不再依赖本切面或业务方法的事务注解。
+ * 本切面只负责数据库层 RLS；即使应用层查询出现疏漏，数据库仍会强制隔离。
  */
 @Aspect
 @Component
@@ -27,7 +25,7 @@ class TenantFilterAspect(
         "@within(org.springframework.transaction.annotation.Transactional) || " +
             "@annotation(org.springframework.transaction.annotation.Transactional)",
     )
-    fun setupTenantContext() {
+    fun setupTenantRlsContext() {
         val tenantId = currentTenantProvider.getCurrentTenantId()
         if (tenantId != null) {
             tenantPersistenceContext.activate(tenantId)

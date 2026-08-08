@@ -162,31 +162,88 @@ class TenantPostgresDriver extends PostgresDriver {
 // ============================================================================
 
 /**
- * 从 Cube Query 中推断当前查询针对哪个 Cube。
+ * 从成员名中提取 Cube 名称。
  *
- * 优先顺序：
+ * 例如 `inventory_unit.quantity` 会得到 `inventory_unit`。
+ * 无效成员名返回 undefined，交由后续的“未找到 Cube”校验统一处理。
  *
- * 1. measures
- * 2. dimensions
- * 3. segments
- *
- * 例如：
- *
- *   Product.count
- *
- * 将解析出：
- *
- *   Product
- *
- * @param {object} query
+ * @param {*} member
  * @returns {string | undefined}
  */
-function resolveCubeName(query) {
-  return (
-    query.measures?.[0]?.split('.')[0] ||
-    query.dimensions?.[0]?.split('.')[0] ||
-    query.segments?.[0]?.split('.')[0]
-  );
+function cubeNameFromMember(member) {
+  if (typeof member !== 'string') {
+    return undefined;
+  }
+
+  const separatorIndex = member.indexOf('.');
+  if (separatorIndex <= 0) {
+    return undefined;
+  }
+
+  return member.slice(0, separatorIndex);
+}
+
+/**
+ * 收集查询中引用的全部 Cube，而不是只处理第一个 measure 所属的 Cube。
+ *
+ * 关联查询可能同时包含：
+ *
+ * - measures / dimensions / segments
+ * - timeDimensions
+ * - 嵌套的 and / or filters
+ * - object 或 tuple-array 两种 order 格式
+ *
+ * 如果只给第一个 Cube 增加租户条件，`inventory_unit + depot` 这类关联分析
+ * 就可能遗漏关联表的查询层过滤。
+ *
+ * @param {object} query
+ * @returns {string[]}
+ */
+function resolveCubeNames(query) {
+  const cubeNames = new Set();
+
+  const addMember = (member) => {
+    const cubeName = cubeNameFromMember(member);
+    if (cubeName) {
+      cubeNames.add(cubeName);
+    }
+  };
+
+  const addMembers = (members) => {
+    if (Array.isArray(members)) {
+      members.forEach(addMember);
+    }
+  };
+
+  const visitFilter = (filter) => {
+    if (!filter || typeof filter !== 'object') {
+      return;
+    }
+
+    addMember(filter.member || filter.dimension);
+    filter.and?.forEach(visitFilter);
+    filter.or?.forEach(visitFilter);
+  };
+
+  addMembers(query.measures);
+  addMembers(query.dimensions);
+  addMembers(query.segments);
+  query.timeDimensions?.forEach(({ dimension }) => addMember(dimension));
+  query.filters?.forEach(visitFilter);
+
+  if (Array.isArray(query.order)) {
+    query.order.forEach((orderEntry) => {
+      if (Array.isArray(orderEntry)) {
+        addMember(orderEntry[0]);
+      } else {
+        addMember(orderEntry?.id || orderEntry?.member);
+      }
+    });
+  } else if (query.order && typeof query.order === 'object') {
+    Object.keys(query.order).forEach(addMember);
+  }
+
+  return [...cubeNames];
 }
 
 /**
@@ -236,9 +293,9 @@ function resolveCubeName(query) {
  */
 function rewriteQueryForTenant(query, securityContext) {
   const tenantId = requireTenantId(securityContext);
-  const cubeName = resolveCubeName(query);
+  const cubeNames = resolveCubeNames(query);
 
-  if (!cubeName) {
+  if (cubeNames.length === 0) {
     throw new Error(
       'Unable to determine the tenant-scoped cube for this query',
     );
@@ -249,12 +306,11 @@ function rewriteQueryForTenant(query, securityContext) {
 
     filters: [
       ...(query.filters || []),
-
-      {
+      ...cubeNames.map((cubeName) => ({
         member: `${cubeName}.tenant_id`,
         operator: 'equals',
         values: [tenantId.toString()],
-      },
+      })),
     ],
   };
 }
