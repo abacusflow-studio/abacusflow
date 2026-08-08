@@ -10,38 +10,6 @@ import { appConfig } from "../config/app-config";
 let auth0Client: Auth0Client | null = null;
 let loginRedirectPromise: Promise<void> | null = null;
 
-function apiUrl(path: string): string {
-  return `${appConfig.apiBaseUrl.replace(/\/$/, "")}${path}`;
-}
-
-export async function bootstrapWebAuthSession(): Promise<void> {
-  if (!auth0Client) {
-    throw new Error("Auth0 client is not initialized.");
-  }
-
-  const accessToken = await auth0Client.getTokenSilently({
-    timeoutInSeconds: 10,
-  });
-  if (!accessToken) {
-    throw new Error("Unable to get access token for user bootstrap.");
-  }
-
-  const response = await fetch(apiUrl("/me/bootstrap"), {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(
-      `User bootstrap failed with ${response.status}${detail ? `: ${detail}` : ""}`,
-    );
-  }
-}
-
 export async function initWebAuth(): Promise<void> {
   const authorizationParams = {
     audience: appConfig.auth0.audience,

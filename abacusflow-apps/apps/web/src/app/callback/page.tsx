@@ -2,34 +2,69 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getAuthClient } from "@abacusflow/core";
-import { bootstrapWebAuthSession } from "../../lib/auth-provider";
+import { getAuthClient, type AuthClient } from "@abacusflow/core";
 
-let isHandlingCallback = false;
+let callbackPromise: Promise<void> | null = null;
+
+function completeCallbackOnce(auth: AuthClient): Promise<void> {
+  if (!callbackPromise) {
+    callbackPromise = (async () => {
+      await auth.handleRedirectCallback();
+      if (!(await auth.isAuthenticated())) {
+        throw new Error("Authentication callback completed without a session.");
+      }
+    })().catch((error) => {
+      // 真实失败后允许刷新页面重试；React Strict Mode 的重复 Effect 会共享同一个 Promise。
+      callbackPromise = null;
+      throw error;
+    });
+  }
+  return callbackPromise;
+}
+
+function consumeReturnTo(): string {
+  const value = sessionStorage.getItem("auth_return_to");
+  sessionStorage.removeItem("auth_return_to");
+
+  // 只允许站内绝对路径，避免错误值再次把用户送回登录或回调页。
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.startsWith("/login") ||
+    value.startsWith("/callback")
+  ) {
+    return "/dashboard";
+  }
+  return value;
+}
 
 export default function CallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const handleCallback = async () => {
-      if (isHandlingCallback) return;
-      isHandlingCallback = true;
+    let cancelled = false;
 
+    const handleCallback = async () => {
       try {
         const auth = getAuthClient();
-        await auth.handleRedirectCallback();
-        await bootstrapWebAuthSession();
-
-        const returnTo =
-          sessionStorage.getItem("auth_return_to") || "/dashboard";
-        sessionStorage.removeItem("auth_return_to");
-        router.replace(returnTo);
+        await completeCallbackOnce(auth);
+        if (!cancelled) {
+          router.replace(consumeReturnTo());
+        }
       } catch (err) {
         console.error("[callback] error:", err);
-        router.replace("/login");
+        if (!cancelled) {
+          sessionStorage.removeItem("auth_return_to");
+          router.replace("/login");
+        }
       }
     };
-    handleCallback();
+    void handleCallback();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return (

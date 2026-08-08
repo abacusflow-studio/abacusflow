@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button } from "antd";
 import {
   BarChartOutlined,
@@ -18,11 +19,33 @@ import { useTheme } from "../../components/providers";
 import { ParticleNetwork } from "../../components/particle-network";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const { themeMode, toggleTheme } = useTheme();
   useMouseGlow(cardRef);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const redirectAuthenticatedUser = async () => {
+      try {
+        const auth = getAuthClient();
+        if ((await auth.isAuthenticated()) && !cancelled) {
+          // 回调已经建立会话时，登录页不能继续把用户困在这里。
+          router.replace("/dashboard");
+        }
+      } catch (err) {
+        console.warn("[login] failed to restore existing session:", err);
+      }
+    };
+
+    void redirectAuthenticatedUser();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const handleLogin = async () => {
     try {
