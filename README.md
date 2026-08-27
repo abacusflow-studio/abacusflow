@@ -44,5 +44,5 @@ AbacusFlow 内置模块涵盖典型的进销存场景：
 * **合作伙伴管理（Partner Management）**：管理业务合作伙伴信息，包括客户和供应商，并关联相关交易记录。
 * **储存点管理（Storage Point Management）**：管理库存存储地点（仓库/储存点），包括库位分配和容量规划。
 
-## 演示
-[演示地址]https://demo.abacusflow.dpdns.org/analytics
+## 官网
+[官网地址]https://abacusflow.dpdns.org
